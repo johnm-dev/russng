@@ -24,7 +24,7 @@ docs:
 
 install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
-	if test -e ${INSTALL_DIR}; then rm -rf ${INSTALL_DIR}; fi
+	#if test -e ${INSTALL_DIR}; then rm -rf ${INSTALL_DIR}; fi
 	:
 	(cd src/bin; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	#(cd static; tar cf - share) | (cd $(INSTALL_DIR); tar xvf -)
