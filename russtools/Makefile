@@ -27,4 +27,4 @@ install:
 	#if test -e ${INSTALL_DIR}; then rm -rf ${INSTALL_DIR}; fi
 	:
 	(cd src/bin; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	#(cd static; tar cf - share) | (cd $(INSTALL_DIR); tar xvf -)
+	(cd static; tar cf - share) | (cd $(INSTALL_DIR); tar xvf -)
