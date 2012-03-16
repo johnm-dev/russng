@@ -57,7 +57,7 @@ class russ_conn_Structure(ctypes.Structure):
     _fields_ = [
         ("conn_type", ctypes.c_int),
         ("cred", russ_credentials_Structure),
-        ("req", ctypes.POINTER(russ_request_Structure)),
+        ("req", russ_request_Structure),
         ("sd", ctypes.c_int),
         ("fds", ctypes.c_int*3),
     ]
@@ -65,6 +65,8 @@ class russ_conn_Structure(ctypes.Structure):
 #
 # C library interfaces
 #
+
+# russ_dialv
 libruss.russ_dialv.argtypes = [
     ctypes.c_char_p,
     ctypes.c_char_p,
@@ -74,14 +76,17 @@ libruss.russ_dialv.argtypes = [
 ]
 libruss.russ_dialv.restype = ctypes.c_void_p
 
+# russ_close_conn
 libruss.russ_close_conn.argtypes = [ctypes.c_void_p]
 libruss.russ_close_conn.restype = None
 
+# russ_free_conn
 libruss.russ_free_conn_argtypes = [
     ctypes.c_void_p,
 ]
 libruss.russ_free_conn.restype = None
 
+# russ_announce
 libruss.russ_announce.argtypes = [
     ctypes.c_char_p,
     ctypes.c_uint,
@@ -90,12 +95,14 @@ libruss.russ_announce.argtypes = [
 ]
 libruss.russ_announce.restype = ctypes.c_void_p
 
+# russ_answer
 libruss.russ_answer.argtypes = [
     ctypes.c_void_p,
     ctypes.c_int,
 ]
 libruss.russ_answer.restype = ctypes.c_void_p
 
+# russ_accept
 libruss.russ_accept.argtypes = [
     ctypes.c_void_p,
     ctypes.c_int*3,
@@ -103,16 +110,25 @@ libruss.russ_accept.argtypes = [
 ]
 libruss.russ_accept.restype = ctypes.c_void_p
 
+# russ_await_request
+libruss.russ_await_request.argtypes = [
+    ctypes.c_void_p,
+]
+libruss.russ_await_request.restype = ctypes.c_int
+
+# russ_close_listener
 libruss.russ_close_listener.argtypes = [
     ctypes.c_void_p,
 ]
 libruss.russ_close_listener.restype = None
 
+# russ_free_listener
 libruss.russ_free_listener.argtypes = [
     ctypes.c_void_p,
 ]
 libruss.russ_free_listener.restype = ctypes.c_void_p
 
+# russ_loop
 libruss.russ_loop.argtypes = [
     ctypes.c_void_p,
     ctypes.c_void_p,
@@ -179,7 +195,7 @@ class ServerConn(Conn):
         libruss.russ_await_request(self.raw_conn)
 
     def get_request(self):
-        return Request(self.ptr_conn.contents.req)
+        return self.ptr_conn.req
 
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
@@ -200,12 +216,3 @@ class Listener:
         def raw_handler(raw_conn):
             return handler(ServerConn(raw_conn))
         libruss.russ_loop(self.raw_lis, HANDLERFUNC(raw_handler))
-
-class Request:
-    def __init__(self, raw_req):
-        self.raw_req = raw_req
-        self.ptr_req = ctypes.cast(raw_req, ctypes.POINTER(russ_request_Structure))
-        self.protocol_string = str(self.ptr_req.contents.protocol_string)
-        self.spath = str(self.ptr_req.contents.spath)
-        self.op = str(self.ptr_req.contents.op)
-        self.args = [str(self.ptr_req.contents.argv[i]) for i in range(self.ptr_req.contents.argc)]
