@@ -44,7 +44,7 @@ class russ_listener_Structure(ctypes.Structure):
         ("sd", ctypes.c_int),
     ]
 
-class russ_req_Structure(ctypes.Structure):
+class russ_request_Structure(ctypes.Structure):
     _fields_ = [
         ("protocol_string", ctypes.c_char_p),
         ("spath", ctypes.c_char_p),
@@ -57,7 +57,7 @@ class russ_conn_Structure(ctypes.Structure):
     _fields_ = [
         ("conn_type", ctypes.c_int),
         ("cred", russ_credentials_Structure),
-        ("req", ctypes.c_void_p),
+        ("req", ctypes.POINTER(russ_request_Structure)),
         ("sd", ctypes.c_int),
         ("fds", ctypes.c_int*3),
     ]
@@ -179,7 +179,7 @@ class ServerConn(Conn):
         libruss.russ_await_request(self.raw_conn)
 
     def get_request(self):
-        return PyRussRequest(self.ptr_conn.contents.req)
+        return Request(self.ptr_conn.contents.req)
 
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
@@ -200,3 +200,12 @@ class Listener:
         def raw_handler(raw_conn):
             return handler(ServerConn(raw_conn))
         libruss.russ_loop(self.raw_lis, HANDLERFUNC(raw_handler))
+
+class Request:
+    def __init__(self, raw_req):
+        self.raw_req = raw_req
+        self.ptr_req = ctypes.cast(raw_req, ctypes.POINTER(russ_request_Structure))
+        self.protocol_string = str(self.ptr_req.contents.protocol_string)
+        self.spath = str(self.ptr_req.contents.spath)
+        self.op = str(self.ptr_req.contents.op)
+        self.args = [str(self.ptr_req.contents.argv[i]) for i in range(self.ptr_req.contents.argc)]
