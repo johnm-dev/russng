@@ -57,9 +57,9 @@ char *russ_enc_string(char *, char *, int);
 int russ_poll(struct pollfd *, int, int);
 
 /* request.c */
-struct russ_request *russ_new_request(char *, char *, char *, int, char **);
-int russ_free_request(struct russ_request *);
-int russ_send_request(struct russ_conn *, struct russ_request *, int);
+int russ_init_request(struct russ_conn *, char *, char *, char *, int, char **);
+void russ_free_request_members(struct russ_conn *);
+int russ_send_request(struct russ_conn *, int);
 
 /* socket.c */
 int russ_get_credentials(int, struct russ_credentials *);
