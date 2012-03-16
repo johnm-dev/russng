@@ -6,7 +6,7 @@
 include ../../Makefile.inc
 
 LIBS=
-BINS=rusrv_barrier rusrv_echo
+BINS=rudial rusrv_barrier rusrv_echo
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
@@ -18,13 +18,14 @@ endif
 
 .PHONY: install
 
-all: rudial rusrv_barrier rusrv_echo
+all: $(BINS)
 
 clean:
-	rm -f rusrv_barrier rusrv_echo
+	rm -f $(BINS)
 
 install:
-	(mkdir -p $(INSTALL_DIR)/bin; cp $(BINS) $(INSTALL_DIR)/bin)
+	mkdir -p $(INSTALL_DIR)/bin
+	(cp $(BINS) $(INSTALL_DIR)/bin)
 	(cd $(INSTALL_DIR)/bin; ln -s rudial ruhelp; ln -s rudial ruinfo)
 
 rudial:	rudial.c
