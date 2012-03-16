@@ -165,6 +165,10 @@ class Conn:
     def close_fd(self, i):
         return libruss.russ_close_fds(i, self.raw_conn.fds)
 
+    def get_cred(self):
+        cred = self.ptr_conn.contents.cred
+        return (cred.pid, cred.uid, cred.gid)
+
     def get_fd(self, i):
         return self.ptr_conn.contents.fds[i]
 
