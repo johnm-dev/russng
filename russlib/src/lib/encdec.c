@@ -134,6 +134,6 @@ russ_enc_bytes(char *b, char *s, int count, int buf_size) {
 
 char *
 russ_enc_string(char *b, char *s, int buf_size) {
-	return russ_enc_bytes(b, s, strlen(s), buf_size);
+	return russ_enc_bytes(b, s, strlen(s)+1, buf_size);
 }
 
