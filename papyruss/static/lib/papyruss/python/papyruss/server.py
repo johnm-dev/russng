@@ -16,8 +16,7 @@ class ServiceTree:
     called based on the connection request.
     """
 
-    def __init__(self, session_cls):
-        self.session_cls = session_cls
+    def __init__(self):
         self.svc_handlers = {}
         self.op_handlers = {
             "help": self.op_help,
