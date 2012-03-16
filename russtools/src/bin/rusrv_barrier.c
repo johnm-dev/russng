@@ -159,10 +159,10 @@ req_handler(struct russ_conn *conn) {
 	int	i;
 
 	outfd = conn->fds[1];
-	if (strcmp(conn->req->op, "execute") == 0) {
-		if (strcmp(conn->req->spath, "/wait") == 0) {
-			if (conn->req->argc > 0) {
-				barrier->items[barrier->nitems].tag = strdup(conn->req->argv[0]);
+	if (strcmp(conn->req.op, "execute") == 0) {
+		if (strcmp(conn->req.spath, "/wait") == 0) {
+			if (conn->req.argc > 0) {
+				barrier->items[barrier->nitems].tag = strdup(conn->req.argv[0]);
 			} else {
 				/* use pid as tag */
 				snprintf(buf, sizeof(buf), "%ld", conn->cred.pid);
@@ -180,18 +180,18 @@ req_handler(struct russ_conn *conn) {
 				exit(0);
 			}
 		} else {
-			if (strcmp(conn->req->spath, "/count") == 0) {
+			if (strcmp(conn->req.spath, "/count") == 0) {
 				fdprintf(outfd, "%d\n", barrier->count);
-			} else if (strcmp(conn->req->spath, "/wcount") == 0) {
+			} else if (strcmp(conn->req.spath, "/wcount") == 0) {
 				fdprintf(outfd, "%d\n", barrier->nitems);
-			} else if (strcmp(conn->req->spath, "/kill") == 0) {
+			} else if (strcmp(conn->req.spath, "/kill") == 0) {
 				release_barrier('k');
 				exit(0);
-			} else if (strcmp(conn->req->spath, "/tags") == 0) {
+			} else if (strcmp(conn->req.spath, "/tags") == 0) {
 				for (i = 0; i < barrier->nitems; i++) {
 					fdprintf(outfd, "%s\n", barrier->items[i].conn->fds[1]);
 				}
-			} else if (strcmp(conn->req->spath, "/ttl") == 0) {
+			} else if (strcmp(conn->req.spath, "/ttl") == 0) {
 				if (barrier->timeout == -1) {
 					fdprintf(outfd, "infinite\n");
 				} else {
@@ -202,7 +202,7 @@ req_handler(struct russ_conn *conn) {
 			}
 			goto close_conn;
 		}
-	} else if (strcmp(conn->req->op, "list") == 0) {
+	} else if (strcmp(conn->req.op, "list") == 0) {
 		print_service_usage(conn);
 		goto close_conn;
 	} else {

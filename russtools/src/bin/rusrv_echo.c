@@ -40,7 +40,7 @@
 
 int
 req_handler(struct russ_conn *conn) {
-	if (strcmp(conn->req->op, "execute") == 0) {
+	if (strcmp(conn->req.op, "execute") == 0) {
 		/* serve the input from fd passed to client */
 		char	buf[1024];
 		ssize_t	n;
