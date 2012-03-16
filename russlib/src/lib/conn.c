@@ -96,11 +96,16 @@ __new_conn(void) {
 	conn->cred.pid = -1;
 	conn->cred.uid = -1;
 	conn->cred.gid = -1;
-	russ_init_request(conn, NULL, NULL, NULL, 0, NULL);
+	if (russ_init_request(conn, NULL, NULL, NULL, 0, NULL) < 0) {
+		goto free_conn;
+	}
 	conn->sd = -1;
 	__init_fds(3, conn->fds, -1);
 
 	return conn;
+free_conn:
+	free(conn);
+	return NULL;
 }
 
 /**
