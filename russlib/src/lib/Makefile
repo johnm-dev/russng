@@ -8,7 +8,7 @@ include ../../Makefile.inc
 SRCS=conn.c encdec.c io.c misc.c request.c socket.c server.c
 OBJS=conn.o encdec.o io.o misc.o request.o socket.o server.o
 
-all: libruss.a
+all: libruss.a libruss.so
 
 clean:
 	rm -f *.o *.a *.so
@@ -20,4 +20,6 @@ install:
 libruss.a: $(SRCS)
 	$(CC) $(CFLAGS) -fPIC -g -c -I../include $(SRCS)
 	$(AR) rv libruss.a $(OBJS)
-	$(CC) -shared -o libruss.so $(OBJS)
+
+libruss.so:	libruss.a
+	$(CC) -shared -o $@ $(OBJS)
