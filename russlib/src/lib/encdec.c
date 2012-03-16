@@ -67,9 +67,10 @@ russ_dec_b(char *b, int *count) {
 	int	_count;
 
 	_count = russ_dec_I(b, count);
+	b += *count;
 	if (dst = malloc(_count)) {
-		memcpy(dst, b+*count, _count);
-		*count = *count+_count;
+		memcpy(dst, b, _count);
+		*count += _count;
 	}
 	return dst;
 }
