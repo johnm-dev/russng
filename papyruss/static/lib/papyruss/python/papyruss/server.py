@@ -39,7 +39,7 @@ class ServiceTree:
         if op_handler:
             op_handler(conn)
         else:
-            op_error(conn)
+            self.op_error(conn)
         conn.close()
         del conn
 
