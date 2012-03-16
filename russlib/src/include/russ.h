@@ -104,18 +104,19 @@ int russ_accept(struct russ_conn *, int *, int *);
 void russ_close_listener(struct russ_listener *);
 struct russ_listener *russ_free_listener(struct russ_listener *);
 
-int russ_await_request(struct russ_conn *);
-int russ_stream_fd(int, int, long, long);
-
 /* io.c */
 ssize_t russ_read(int, char *, size_t);
 ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);
 ssize_t russ_writen(int, char *, size_t);
 ssize_t russ_writen_timeout(int, char *, size_t, int);
+int russ_stream_fd(int, int, long, long);
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);
+
+/* request.c */
+int russ_await_request(struct russ_conn *);
 
 /* server.c */
 void russ_loop(struct russ_listener *, russ_req_handler);
