@@ -82,6 +82,7 @@ russ_free_request_members(struct russ_conn *conn) {
 		free(req->argv[i]);
 	}
 	free(req->argv);
+	russ_init_request(conn, NULL, NULL, NULL, 0, NULL);
 }
 
 
