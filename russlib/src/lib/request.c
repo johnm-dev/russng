@@ -145,6 +145,7 @@ russ_await_request(struct russ_conn *conn) {
 	if (russ_readn(conn->sd, bp, size) < 0) {
 		return -1;
 	}
+	req = &(conn->req);
 	req->protocol_string = russ_dec_s(bp, &count); bp += count;
 	req->spath = russ_dec_s(bp, &count); bp += count;
 	req->op = russ_dec_s(bp, &count); bp += count;
