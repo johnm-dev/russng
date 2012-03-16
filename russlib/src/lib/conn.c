@@ -289,7 +289,6 @@ russ_diall(char *saddr, char *op, int timeout, ...) {
 */
 void
 russ_close_conn(struct russ_conn *conn) {
-	russ_free_request(conn->req);
 	__close_fds(3, conn->fds);
 	__close_fds(1, &conn->sd);
 }
