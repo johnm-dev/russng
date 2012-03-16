@@ -100,4 +100,4 @@ class Server:
 
     def loop(self):
         if self.server_type == "fork":
-            papyruss.loop(self.lis, self.service_tree.handler)
+            self.lis.loop(self.service_tree.handler)
