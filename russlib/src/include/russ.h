@@ -76,7 +76,7 @@ struct russ_request {
 struct russ_conn {
 	int			conn_type;	/**< client or server */
 	struct russ_credentials	cred;		/**< credentials */
-	struct russ_request	*req;		/**< request */
+	struct russ_request	req;		/**< request */
 	int			sd;		/**< socket descriptor */
 	int			fds[3];		/**< std{in,out,err} */
 };

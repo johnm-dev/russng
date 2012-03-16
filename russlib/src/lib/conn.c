@@ -96,7 +96,7 @@ __new_conn(void) {
 	conn->cred.pid = -1;
 	conn->cred.uid = -1;
 	conn->cred.gid = -1;
-	conn->req = NULL;
+	russ_init_request(conn, NULL, NULL, NULL, 0, NULL);
 	conn->sd = -1;
 	__init_fds(3, conn->fds, -1);
 
@@ -224,8 +224,8 @@ russ_dialv(char *saddr, char *op, int timeout, int argc, char **argv) {
 		goto free_path;
 	}
 	if (((conn->sd = __connect(path)) < 0)
-		|| ((req = russ_new_request(PROTOCOL_STRING, spath, op, argc, argv)) == NULL)
-		|| (russ_send_request(conn, req, timeout) < 0)
+		|| (russ_init_request(conn, PROTOCOL_STRING, spath, op, argc, argv) < 0)
+		|| (russ_send_request(conn, timeout) < 0)
 		|| (__recvfds(conn) < 0)) {
 		goto close_conn;
 	}
@@ -302,6 +302,7 @@ russ_close_conn(struct russ_conn *conn) {
 */
 struct russ_conn *
 russ_free_conn(struct russ_conn *conn) {
+	russ_free_request_members(conn);
 	free(conn);
 	return NULL;
 }

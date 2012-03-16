@@ -31,78 +31,74 @@
 #include "russ_priv.h"
 
 /**
-* Create new request. All provided (non NULL) information is duplicated.
+* Initialize connection request. All provided (non NULL) information is duplicated.
 */
-struct russ_request *
-russ_new_request(char *protocol_string, char *spath, char *op, int argc, char **argv) {
+int
+russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, char *op, int argc, char **argv) {
 	struct russ_request	*req;
 	int			i;
 
-	if (req = malloc(sizeof(struct russ_request))) {
-		req->protocol_string = NULL;
-		req->spath = NULL;
-		req->op = NULL;
-		req->argc = 0;
-		req->argv = NULL;
+	req = &(conn->req);
+	req->protocol_string = NULL;
+	req->spath = NULL;
+	req->op = NULL;
+	req->argc = 0;
+	req->argv = NULL;
 
-		if (((protocol_string) && ((req->protocol_string = strdup(protocol_string)) == NULL))
-			|| ((spath) && ((req->spath = strdup(spath)) == NULL))
-			|| ((op) && ((req->op = strdup(op)) == NULL))) {
-			goto free_req;
-		}
-		if (argc) {
-			if ((req->argv = malloc(sizeof(char *)*argc)) == NULL) {
-				goto free_req;
-			}
-			req->argc = argc;
-			for (i = 0; i < argc; i++) {
-				if ((req->argv[i] = strdup(argv[i])) == NULL) {
-					req->argc = i;
-					goto free_req;
-				}
-			}
-		}
+	if (((protocol_string) && ((req->protocol_string = strdup(protocol_string)) == NULL))
+		|| ((spath) && ((req->spath = strdup(spath)) == NULL))
+		|| ((op) && ((req->op = strdup(op)) == NULL))) {
+		goto free_req_items;
 	}
-	return req;
-
-free_req:
-	russ_free_request(req);
-	return NULL;
-}
-
-/*
-** Free request object and members.
-*/
-int
-russ_free_request(struct russ_request *req) {
-	int	i;
-
-	if (req) {
-		free(req->protocol_string);
-		free(req->spath);
-		free(req->op);
-		for (i = 0; i < req->argc; i++) {
-			free(req->argv[i]);
+	if (argc) {
+		if ((req->argv = malloc(sizeof(char *)*argc)) == NULL) {
+			goto free_req_items;
 		}
-		free(req->argv);
-		free(req);
+		req->argc = argc;
+		for (i = 0; i < argc; i++) {
+			if ((req->argv[i] = strdup(argv[i])) == NULL) {
+				req->argc = i;
+				goto free_req_items;
+			}
+		}
 	}
 	return 0;
+
+free_req_items:
+	russ_free_request_members(conn);
+	return -1;
 }
 
+void
+russ_free_request_members(struct russ_conn *conn) {
+	struct russ_request	*req;
+	int			i;
+
+	req = &(conn->req);
+	free(req->protocol_string);
+	free(req->spath);
+	free(req->op);
+	for (i = 0; i < req->argc; i++) {
+		free(req->argv[i]);
+	}
+	free(req->argv);
+}
+
+
 /**
-* Send request to conn.
+* Send request over conn.
 *
 * @param russ_conn	connection object
-* @param req		request object
 * @param timeout	time in which to complete the send
 * @return	0 on success, -1 on error
 */
 int
-russ_send_request(struct russ_conn *conn, struct russ_request *req, int timeout) {
-	char	buf[16384], *bp, *buf_end;
-	int	i;
+russ_send_request(struct russ_conn *conn, int timeout) {
+	struct russ_request	*req;
+	char			buf[16384], *bp, *buf_end;
+	int			i;
 
+	req = &(conn->req);
 	bp = buf;
 	buf_end = buf+sizeof(buf)-1;
 
@@ -137,9 +133,6 @@ russ_await_request(struct russ_conn *conn) {
 	char			buf[16384], *bp;
 	int			argc, count, i, size;
 
-	/* create empty request object */
-	req = russ_new_request(NULL, NULL, NULL, 0, NULL);
-
 	/* get request size */
 	bp = buf;
 	if (russ_readn(conn->sd, bp, 4) < 0) {
@@ -156,19 +149,18 @@ russ_await_request(struct russ_conn *conn) {
 	req->op = russ_dec_s(bp, &count); bp += count;
 	argc = russ_dec_i(bp, &count); bp += count;
 	if ((req->argv = malloc(sizeof(char *)*argc)) == NULL) {
-		goto free_req;
+		goto free_req_items;
 	}
 	for (i = 0; i < argc; i++) {
 		if ((req->argv[i] = russ_dec_s(bp, &count)) == NULL) {
 			req->argc = i;
-			goto free_req;
+			goto free_req_items;
 		}
 		bp += count;
 	}
 	req->argc = argc;
-	conn->req = req;
 	return 0;
-free_req:
-	russ_free_request(req);
+free_req_items:
+	russ_free_request_members(conn);
 	return -1;
 }
