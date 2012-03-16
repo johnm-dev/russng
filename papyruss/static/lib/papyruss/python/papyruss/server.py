@@ -34,7 +34,8 @@ class ServiceTree:
     def handler(self, conn):
         """Select op handler and call.
         """
-        op_handler = self.op_handlers.get(conn.spath)
+        req = conn.get_request()
+        op_handler = self.op_handlers.get(req.spath)
         if op_handler:
             op_handler(conn)
         else:
@@ -60,7 +61,8 @@ class ServiceTree:
     def op_execute(self, conn):
         """Execute the service.
         """
-        handler = self.svc_handlers.get(conn.spath)
+        req = conn.get_request()
+        handler = self.svc_handlers.get(req.spath)
         if handler:
             handler(conn)
 
