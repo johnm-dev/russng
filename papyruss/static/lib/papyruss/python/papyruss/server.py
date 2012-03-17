@@ -35,7 +35,7 @@ class ServiceTree:
         """Select op handler and call.
         """
         req = conn.get_request()
-        op_handler = self.op_handlers.get(req.spath)
+        op_handler = self.op_handlers.get(req.op)
         if op_handler:
             op_handler(conn)
         else:
