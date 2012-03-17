@@ -172,6 +172,13 @@ class Conn:
     def get_fd(self, i):
         return self.ptr_conn.contents.fds[i]
 
+    def get_request(self):
+        return self.ptr_conn.contents.req
+
+    def get_request_args(self):
+        req = self.ptr_conn.contents.req
+        return [req.argv[i] for i in range(req.argc)]
+
     def get_sd(self):
         return self.ptr_conn.contents.sd
 
