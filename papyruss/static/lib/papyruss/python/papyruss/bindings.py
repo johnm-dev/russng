@@ -218,5 +218,6 @@ class Listener:
 
     def loop(self, handler):
         def raw_handler(raw_conn):
-            return handler(ServerConn(raw_conn))
+            handler(ServerConn(raw_conn))
+            return 0    # TODO: allow a integer return value from handler
         libruss.russ_loop(self.raw_lis, HANDLERFUNC(raw_handler))
