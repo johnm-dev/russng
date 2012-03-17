@@ -108,7 +108,7 @@ libruss.russ_accept.argtypes = [
     ctypes.c_int*3,
     ctypes.c_int*3,
 ]
-libruss.russ_accept.restype = ctypes.c_void_p
+libruss.russ_accept.restype = ctypes.c_int
 
 # russ_await_request
 libruss.russ_await_request.argtypes = [
@@ -199,7 +199,7 @@ class ServerConn(Conn):
         libruss.russ_await_request(self.raw_conn)
 
     def get_request(self):
-        return self.ptr_conn.req
+        return self.ptr_conn.contents.req
 
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
