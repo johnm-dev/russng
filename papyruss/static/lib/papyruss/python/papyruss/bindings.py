@@ -224,9 +224,6 @@ class ServerConn(Conn):
     def await_request(self):
         libruss.russ_await_request(self.raw_conn)
 
-    def get_request(self):
-        return self.ptr_conn.contents.req
-
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
 class Listener:
