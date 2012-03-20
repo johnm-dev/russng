@@ -31,10 +31,49 @@
 #include "russ_priv.h"
 
 /**
+* Duplicate a string array.
+*
+* @param src	source string array
+* @param copy_cnt	# of elements copied
+* @param max_cnt	max # of elements supported
+* @return	duplicated array
+*/
+char **
+dup_str_array(char **src, int *copy_cnt, int max_cnt) {
+	char	**dst;
+	int	i, cnt;
+
+	if (src == NULL) {
+		return NULL;
+	}
+	for (cnt = 0; (cnt < max_cnt) && (src[cnt] != NULL); i++);
+	cnt++;
+
+	if ((dst = malloc(sizeof(char *)*(cnt))) == NULL) {
+		return NULL;
+	}
+	for (i = 0; i < cnt; i++) {
+		if (src[i] == NULL) {
+			dst[i] = NULL;
+		} else if ((dst[i] = strdup(src[i])) == NULL) {
+			goto free_dst;
+		}
+	}
+	*copy_cnt = cnt;
+	return dst;
+free_dst:
+	for (; i >= 0; i--) {
+		free(dst[i]);
+	}
+	*copy_cnt = 0;
+	return NULL;
+}
+
+/**
 * Initialize connection request. All provided (non NULL) information is duplicated.
 */
 int
-russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, char *op, int argc, char **argv) {
+russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, char *op, char **attrv, int argc, char **argv) {
 	struct russ_request	*req;
 	int			i;
 
@@ -42,6 +81,8 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 	req->protocol_string = NULL;
 	req->spath = NULL;
 	req->op = NULL;
+	req->attrc = 0;
+	req->attrv = NULL;
 	req->argc = 0;
 	req->argv = NULL;
 
@@ -50,17 +91,11 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 		|| ((op) && ((req->op = strdup(op)) == NULL))) {
 		goto free_req_items;
 	}
-	if (argc) {
-		if ((req->argv = malloc(sizeof(char *)*argc)) == NULL) {
-			goto free_req_items;
-		}
-		req->argc = argc;
-		for (i = 0; i < argc; i++) {
-			if ((req->argv[i] = strdup(argv[i])) == NULL) {
-				req->argc = i;
-				goto free_req_items;
-			}
-		}
+	if (attrv && ((req->attrv = dup_str_array(attrv, &(req->attrc), MAX_ATTRC)) == NULL)) {
+		goto free_req_items;
+	}
+	if (req->argv && ((req->argv = dup_str_array(argv, &(req->argc), argc+1)) == NULL)) {
+		goto free_req_items;
 	}
 	return 0;
 
@@ -78,11 +113,15 @@ russ_free_request_members(struct russ_conn *conn) {
 	free(req->protocol_string);
 	free(req->spath);
 	free(req->op);
+	for (i = 0; i < req->attrc; i++) {
+		free(req->attrv[i]);
+	}
+	free(req->attrv);
 	for (i = 0; i < req->argc; i++) {
 		free(req->argv[i]);
 	}
 	free(req->argv);
-	russ_init_request(conn, NULL, NULL, NULL, 0, NULL);
+	russ_init_request(conn, NULL, NULL, NULL, NULL, 0, NULL);
 }
 
 
@@ -103,12 +142,26 @@ russ_send_request(struct russ_conn *conn, int timeout) {
 	bp = buf;
 	buf_end = buf+sizeof(buf)-1;
 
-	/* dummy size, send protocol, op, and args */
+	/* dummy size, send protocol, op */
 	if (((bp = russ_enc_i(bp, 0, buf_end-bp)) == NULL)
 		|| ((bp = russ_enc_string(bp, req->protocol_string, buf_end-bp)) == NULL)
 		|| ((bp = russ_enc_string(bp, req->spath, buf_end-bp)) == NULL)
-		|| ((bp = russ_enc_string(bp, req->op, buf_end-bp)) == NULL)
-		|| ((bp = russ_enc_i(bp, req->argc, buf_end-bp)) == NULL)) {
+		|| ((bp = russ_enc_string(bp, req->op, buf_end-bp)) == NULL)) {
+		return -1;
+	}
+
+	/* attributes */
+	if ((bp = russ_enc_i(bp, req->attrc, buf_end-bp)) == NULL) {
+		return -1;
+	}
+	for (i = 0; i < req->attrc; i++) {
+		if ((bp = russ_enc_string(bp, req->attrv[i], buf_end-bp)) == NULL) {
+			return -1;
+		}
+	}
+
+	/* args */
+	if ((bp = russ_enc_i(bp, req->argc, buf_end-bp)) == NULL) {
 		return -1;
 	}
 	for (i = 0; i < req->argc; i++) {
@@ -132,7 +185,7 @@ int
 russ_await_request(struct russ_conn *conn) {
 	struct russ_request	*req;
 	char			buf[16384], *bp;
-	int			argc, count, i, size;
+	int			attrc, argc, count, i, size;
 
 	/* get request size */
 	bp = buf;
@@ -149,6 +202,20 @@ russ_await_request(struct russ_conn *conn) {
 	req->protocol_string = russ_dec_s(bp, &count); bp += count;
 	req->spath = russ_dec_s(bp, &count); bp += count;
 	req->op = russ_dec_s(bp, &count); bp += count;
+
+	attrc = russ_dec_i(bp, &count); bp += count;
+	if ((req->argv = malloc(sizeof(char *)*attrc)) == NULL) {
+		goto free_req_items;
+	}
+	for (i = 0; i < attrc; i++) {
+		if ((req->attrv[i] = russ_dec_s(bp, &count)) == NULL) {
+			req->attrc = i;
+			goto free_req_items;
+		}
+		bp += count;
+	}
+	req->attrc = attrc;
+
 	argc = russ_dec_i(bp, &count); bp += count;
 	if ((req->argv = malloc(sizeof(char *)*argc)) == NULL) {
 		goto free_req_items;

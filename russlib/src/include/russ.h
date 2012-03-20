@@ -66,6 +66,8 @@ struct russ_request {
 	char	*protocol_string;	/**< identifies russ protocol */
 	char	*spath;		/**< service path */
 	char	*op;		/**< operation string */
+	int	attrc;		/**< # of attrs */
+	char	**attrv;	/**< NULL terminated array of attributes (as name=value strings) */
 	int	argc;		/**< # of args */
 	char	**argv;		/**< array of args */
 };
@@ -93,8 +95,8 @@ char *russ_find_service_addr(char *);
 /* conn.c */
 void russ_close_fd(struct russ_conn *, int);
 
-struct russ_conn *russ_dialv(char *, char *, int, int, char **);
-struct russ_conn *russ_diall(char *, char *, int, ...);
+struct russ_conn *russ_dialv(char *, char *, int, char **, int, char **);
+struct russ_conn *russ_diall(char *, char *, int, char **, ...);
 void russ_close_conn(struct russ_conn *);
 struct russ_conn *russ_free_conn(struct russ_conn *);
 

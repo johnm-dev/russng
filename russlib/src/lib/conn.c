@@ -96,7 +96,7 @@ __new_conn(void) {
 	conn->cred.pid = -1;
 	conn->cred.uid = -1;
 	conn->cred.gid = -1;
-	if (russ_init_request(conn, NULL, NULL, NULL, 0, NULL) < 0) {
+	if (russ_init_request(conn, NULL, NULL, NULL, NULL, 0, NULL) < 0) {
 		goto free_conn;
 	}
 	conn->sd = -1;
@@ -208,12 +208,13 @@ close_fds:
 * @param saddr	service address
 * @param op	operation string
 * @param timeout	time allowed to complete dial
+* @param attrv	array of attributes (as name=value strings)
 * @param argc	# of args
 * @param argv	array of args
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
-russ_dialv(char *saddr, char *op, int timeout, int argc, char **argv) {
+russ_dialv(char *saddr, char *op, int timeout, char **attrv, int argc, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
 	char			*path, *spath;
@@ -229,7 +230,7 @@ russ_dialv(char *saddr, char *op, int timeout, int argc, char **argv) {
 		goto free_path;
 	}
 	if (((conn->sd = __connect(path)) < 0)
-		|| (russ_init_request(conn, PROTOCOL_STRING, spath, op, argc, argv) < 0)
+		|| (russ_init_request(conn, PROTOCOL_STRING, spath, op, attrv, argc, argv) < 0)
 		|| (russ_send_request(conn, timeout) < 0)
 		|| (__recvfds(conn) < 0)) {
 		goto close_conn;
@@ -251,11 +252,12 @@ free_path:
 * @param saddr	service address
 * @param op	operation string
 * @param timeout	time allowed to complete dial
+* @param attrv	array of attributes (as name=value strings)
 * @param ...	variable argument list of "char *" with NULL sentinel
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
-russ_diall(char *saddr, char *op, int timeout, ...) {
+russ_diall(char *saddr, char *op, int timeout, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	void			*p;
@@ -263,7 +265,7 @@ russ_diall(char *saddr, char *op, int timeout, ...) {
 	char			**argv;
 
 	/* count args */
-	va_start(ap, timeout);
+	va_start(ap, attrv);
 	for (argc = 0; argc < MAX_ARGC; argc++) {
 		if ((p = va_arg(ap, char *)) == NULL) {
 			break;
@@ -275,13 +277,13 @@ russ_diall(char *saddr, char *op, int timeout, ...) {
 	if ((argv = malloc(sizeof(char *)*argc)) == NULL) {
 		return NULL;
 	}
-	va_start(ap, timeout);
+	va_start(ap, attrv);
 	for (i = 0; i < argc; i++) {
 		argv[i] = va_arg(ap, char *);
 	}
 	va_end(ap);
 
-	conn = russ_dialv(saddr, op, timeout, argc, argv);
+	conn = russ_dialv(saddr, op, timeout, attrv, argc, argv);
 	free(argv);
 
 	return conn;
