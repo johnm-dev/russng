@@ -94,7 +94,6 @@ _dec2_s_array0(char *b, char ***v, int *alen, int append_null) {
 			goto free_array;
 		}
 		array[i] = s;
-		}
 	}
 	if (append_null) {
 		array[*alen] = NULL;
