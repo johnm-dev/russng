@@ -172,7 +172,7 @@ int
 russ_await_request(struct russ_conn *conn) {
 	struct russ_request	*req;
 	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
-	int			attrc, argc, size;
+	int			size;
 
 	/* get request size, load, and upack */
 	bp = buf;
