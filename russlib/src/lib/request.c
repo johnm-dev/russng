@@ -207,35 +207,14 @@ russ_await_request(struct russ_conn *conn) {
 		return -1;
 	}
 	req = &(conn->req);
-	req->protocol_string = russ_dec_s(bp, &count); bp += count;
-	req->spath = russ_dec_s(bp, &count); bp += count;
-	req->op = russ_dec_s(bp, &count); bp += count;
+	if (((bp = russ_dec2_s(bp, &(req->protocol_string))) == NULL)
+		|| ((bp = russ_dec2_s(bp, &(req->spath))) == NULL)
+		|| ((bp = russ_dec2_s(bp, &(req->op))) == NULL)
+		|| ((bp = russ_dec2_s_array0(bp, &(req->attrv), &(req->attrc))) == NULL)
+		|| ((bp = russ_dec2_s_array0(bp, &(req->argv), &(req->argc))) == NULL)) {
 
-	attrc = russ_dec_i(bp, &count); bp += count;
-	if ((req->argv = malloc(sizeof(char *)*attrc)) == NULL) {
 		goto free_req_items;
 	}
-	for (i = 0; i < attrc; i++) {
-		if ((req->attrv[i] = russ_dec_s(bp, &count)) == NULL) {
-			req->attrc = i;
-			goto free_req_items;
-		}
-		bp += count;
-	}
-	req->attrc = attrc;
-
-	argc = russ_dec_i(bp, &count); bp += count;
-	if ((req->argv = malloc(sizeof(char *)*argc)) == NULL) {
-		goto free_req_items;
-	}
-	for (i = 0; i < argc; i++) {
-		if ((req->argv[i] = russ_dec_s(bp, &count)) == NULL) {
-			req->argc = i;
-			goto free_req_items;
-		}
-		bp += count;
-	}
-	req->argc = argc;
 	return 0;
 free_req_items:
 	russ_free_request_members(conn);
