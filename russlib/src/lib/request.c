@@ -91,11 +91,19 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 		|| ((op) && ((req->op = strdup(op)) == NULL))) {
 		goto free_req_items;
 	}
-	if (attrv && ((req->attrv = dup_str_array(attrv, &(req->attrc), MAX_ATTRC)) == NULL)) {
-		goto free_req_items;
+	if (attrv) {
+		if ((req->attrv = dup_str_array(attrv, &(req->attrc), MAX_ATTRC)) == NULL) {
+			goto free_req_items;
+		}
+		/* do not count the NULL sentinel */
+		req->attrc--;
 	}
-	if (argv && ((req->argv = dup_str_array(argv, &(req->argc), argc+1)) == NULL)) {
-		goto free_req_items;
+	if (argv) {
+		if ((req->argv = dup_str_array(argv, &(req->argc), argc+1)) == NULL) {
+			goto free_req_items;
+		}
+		/* do not count the NULL sentinel */
+		req->argc--;
 	}
 	return 0;
 
