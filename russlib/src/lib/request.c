@@ -46,7 +46,7 @@ dup_str_array(char **src, int *copy_cnt, int max_cnt) {
 	if (src == NULL) {
 		return NULL;
 	}
-	for (cnt = 0; (cnt < max_cnt) && (src[cnt] != NULL); i++);
+	for (cnt = 0; (cnt < max_cnt) && (src[cnt] != NULL); cnt++);
 	cnt++;
 
 	if ((dst = malloc(sizeof(char *)*(cnt))) == NULL) {
@@ -94,7 +94,7 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 	if (attrv && ((req->attrv = dup_str_array(attrv, &(req->attrc), MAX_ATTRC)) == NULL)) {
 		goto free_req_items;
 	}
-	if (req->argv && ((req->argv = dup_str_array(argv, &(req->argc), argc+1)) == NULL)) {
+	if (argv && ((req->argv = dup_str_array(argv, &(req->argc), argc+1)) == NULL)) {
 		goto free_req_items;
 	}
 	return 0;
