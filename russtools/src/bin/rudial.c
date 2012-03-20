@@ -249,7 +249,7 @@ main(int argc, char **argv) {
 	addr = argv[argi];
 	argi++;
 
-	if ((conn = russ_dialv(addr, op, timeout, argc-argi, &argv[argi])) == NULL) {
+	if ((conn = russ_dialv(addr, op, timeout, NULL, argc-argi, &argv[argi])) == NULL) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
 	}
