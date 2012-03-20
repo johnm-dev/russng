@@ -177,7 +177,7 @@ russ_await_request(struct russ_conn *conn) {
 	/* get request size, load, and upack */
 	bp = buf;
 	if ((russ_readn(conn->sd, bp, 4) < 0)
-		|| ((bp = russ_dec2_i(bp, &size)) == NULL) {
+		|| ((bp = russ_dec2_i(bp, &size)) == NULL)
 		|| (russ_readn(conn->sd, bp, size) < 0)) {
 		return -1;
 	}
