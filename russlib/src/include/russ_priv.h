@@ -38,7 +38,7 @@
 
 #define MAX_ATTRC		1024
 #define MAX_ARGC		1024
-#define PROTOCOL_STRING		"0003"
+#define PROTOCOL_STRING		"0004"
 #define FORWARD_BLOCK_SIZE	(1<<16)
 
 /* encdec.c */
