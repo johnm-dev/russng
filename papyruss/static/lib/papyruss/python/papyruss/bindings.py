@@ -49,9 +49,9 @@ class russ_request_Structure(ctypes.Structure):
         ("protocol_string", ctypes.c_char_p),
         ("spath", ctypes.c_char_p),
         ("op", ctypes.c_char_p),
+        ("attrs", ctypes.POINTER(ctypes.c_char_p)),
         ("argc", ctypes.c_int),
         ("argv", ctypes.POINTER(ctypes.c_char_p)),
-        ("env", ctypes.POINTER(ctypes.c_char_p)),
     ]
 
 class russ_conn_Structure(ctypes.Structure):
@@ -140,14 +140,14 @@ libruss.russ_loop.restype = None
 #
 # Application-facing classes
 #
-def dial(saddr, op, timeout, args, env):
+def dial(saddr, op, timeout, attrs, args):
     """Dial a service.
     """
-    env_list = ["%s=%s" % (k, v) for k, v in env.items()]
+    attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
+    c_attrs = (ctypes.c_char_p*(len(attrs)+1))(*attrs_list)
+    c_attrs[len(attrs)] = None
     c_argv = (ctypes.c_char_p*len(args))(*args)
-    c_env = (ctypes.c_char_p*(len(env)+1))(*env_list)
-    c_env[len(env)] = None
-    return ClientConn(libruss.russ_dialv(saddr, op, timeout, len(args), c_argv), c_env)
+    return ClientConn(libruss.russ_dialv(saddr, op, timeout, c_attrs, len(args), c_argv))
 
 def announce(path, mode, uid, gid):
     """Announce a service.
@@ -184,19 +184,19 @@ class Conn:
         req = self.ptr_conn.contents.req
         return [req.argv[i] for i in range(req.argc)]
 
-    def get_request_env(self):
+    def get_request_attrs(self):
         req = self.ptr_conn.contents.req
-        env = {}
+        attrs = {}
         while True:
-            s = req[len(env)]
+            s = req[len(attrs)]
             if s == None:
                 break
             try:
                 k, v = s.split("=", 1)
-                env[k] = v
+                attrs[k] = v
             except:
                 pass
-        return env
+        return attrs
 
     def get_sd(self):
         return self.ptr_conn.contents.sd
