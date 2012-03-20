@@ -36,6 +36,7 @@
 
 #define MAX( a,b ) (((a) > (b)) ? (a) : (b))
 
+#define MAX_ATTRC		1024
 #define MAX_ARGC		1024
 #define PROTOCOL_STRING		"0003"
 #define FORWARD_BLOCK_SIZE	(1<<16)
@@ -57,7 +58,7 @@ char *russ_enc_string(char *, char *, int);
 int russ_poll(struct pollfd *, int, int);
 
 /* request.c */
-int russ_init_request(struct russ_conn *, char *, char *, char *, int, char **);
+int russ_init_request(struct russ_conn *, char *, char *, char *, char **, int, char **);
 void russ_free_request_members(struct russ_conn *);
 int russ_send_request(struct russ_conn *, int);
 
