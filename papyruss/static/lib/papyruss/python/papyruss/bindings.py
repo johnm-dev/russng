@@ -72,8 +72,8 @@ libruss.russ_dialv.argtypes = [
     ctypes.c_char_p,
     ctypes.c_char_p,
     ctypes.c_int,
-    ctypes.c_int,
     ctypes.POINTER(ctypes.c_char_p),
+    ctypes.c_int,
     ctypes.POINTER(ctypes.c_char_p),
 ]
 libruss.russ_dialv.restype = ctypes.c_void_p
