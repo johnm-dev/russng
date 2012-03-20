@@ -80,23 +80,27 @@ _dec2_s_array0(char *b, char ***v, int *alen, int append_null) {
 	int	_bcount, i;
 
 	b = russ_dec2_I(b, alen);
-	if (append_null) {
-		array = malloc(sizeof(char *)*(*alen+1));
-	} else {
-		array = malloc(sizeof(char *)*(*alen));
-	}
-	if (array == NULL) {
-		return NULL;
-	}
-	for (i = 0; i < *alen; i++) {
-		b = russ_dec2_s(b, &s);
-		if (b == NULL) {
-			goto free_array;
+	if (*alen > 0) {
+		if (append_null) {
+			array = malloc(sizeof(char *)*(*alen+1));
+		} else {
+			array = malloc(sizeof(char *)*(*alen));
 		}
-		array[i] = s;
-	}
-	if (append_null) {
-		array[*alen] = NULL;
+		if (array == NULL) {
+			return NULL;
+		}
+		for (i = 0; i < *alen; i++) {
+			b = russ_dec2_s(b, &s);
+			if (b == NULL) {
+				goto free_array;
+			}
+			array[i] = s;
+		}
+		if (append_null) {
+			array[*alen] = NULL;
+		}
+	} else {
+		array = NULL;
 	}
 	*v = array;
 	return b;
@@ -208,7 +212,7 @@ russ_enc2_bytes(char *b, char *bend, char *v, int alen) {
 	}
 	b = russ_enc2_I(b, bend, alen);
 	memcpy(b, v, alen);
-	return b+4+alen;
+	return b+alen;
 }
 
 /**
@@ -231,7 +235,7 @@ russ_enc2_string(char *b, char *bend, char *v) {
 *
 * @param b	buffer
 * @param bend	end of buffer
-* @param v	array of strings
+* @param v	array of strings (ignored if alen==0)
 * @param alen	# of array items
 * @return	updated buffer position; NULL on failure
 */
@@ -256,16 +260,20 @@ russ_enc2_s_arrayn(char *b, char *bend, char **v, int alen) {
 *
 * @param b	buffer
 * @param bend	end of buffer
-* @param v	array of strings
+* @param v	array of strings (may also be NULL)
 * @return	updated buffer position; NULL on failure
 */
 char *
 russ_enc2_s_array0(char *b, char *bend, char **v) {
 	int	alen;
 
-	for (alen = 0; (alen < 16384) && (v[alen] != NULL); alen++);
-	if (alen == 16384) {
-		return NULL;
+	if (v == NULL) {
+		alen = 0;
+	} else {
+		for (alen = 0; (alen < 16384) && (v[alen] != NULL); alen++);
+		if (alen == 16384) {
+			return NULL;
+		}
 	}
 	return russ_enc2_s_arrayn(b, bend, v, alen);
 }
