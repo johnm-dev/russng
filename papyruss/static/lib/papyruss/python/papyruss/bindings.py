@@ -49,7 +49,8 @@ class russ_request_Structure(ctypes.Structure):
         ("protocol_string", ctypes.c_char_p),
         ("spath", ctypes.c_char_p),
         ("op", ctypes.c_char_p),
-        ("attrs", ctypes.POINTER(ctypes.c_char_p)),
+        ("attrc", ctypes.c_int),
+        ("attrv", ctypes.POINTER(ctypes.c_char_p)),
         ("argc", ctypes.c_int),
         ("argv", ctypes.POINTER(ctypes.c_char_p)),
     ]
