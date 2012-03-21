@@ -163,6 +163,7 @@ russ_sendfd(int sd, int fd) {
 	return sendmsg(sd, &msgh, 0);
 }
 
+#if 0
 /*
 ** forward bytes between in fd and out fd
 **
@@ -213,3 +214,4 @@ russ_forward_bytes_vp(void *vp) {
 	pfds = (struct pipe_fds *)vp;
 	russ_forward_bytes(pfds->in_fd, pfds->out_fd);
 }
+#endif
