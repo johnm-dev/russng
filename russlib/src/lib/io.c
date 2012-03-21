@@ -230,8 +230,8 @@ fprintf(stderr, "russ_poll rv (%d)\n", rv);
 	return rv;
 }
 
-static
-int _stream_fd(int in_fd, int out_fd, char *buf, int bsize) {
+static int
+_stream_fd(int in_fd, int out_fd, char *buf, int bsize) {
 	long	nread, nwrite;
 
 	if ((nread = russ_read(in_fd, buf, bsize)) < 0) {
@@ -274,7 +274,7 @@ russ_stream_fd(int in_fd, int out_fd, long count, long blocksize) {
 		total = 0;
 		while (count > 0) {
 			nread = (blocksize < count) ? blocksize : count;
-			if ((rv = _steam_fd(in_fd, out_fd, buf, nread)) <= 0) {
+			if ((rv = _stream_fd(in_fd, out_fd, buf, nread)) <= 0) {
 				return rv;
 			}
 			count -= nread;
