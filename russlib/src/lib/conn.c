@@ -230,7 +230,7 @@ russ_dialv(char *saddr, char *op, int timeout, char **attrv, int argc, char **ar
 		goto free_path;
 	}
 	if (((conn->sd = __connect(path)) < 0)
-		|| (russ_init_request(conn, PROTOCOL_STRING, spath, op, attrv, argc, argv) < 0)
+		|| (russ_init_request(conn, RUSS_PROTOCOL_STRING, spath, op, attrv, argc, argv) < 0)
 		|| (russ_send_request(conn, timeout) < 0)
 		|| (__recvfds(conn) < 0)) {
 		goto close_conn;
