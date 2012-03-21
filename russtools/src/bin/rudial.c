@@ -74,14 +74,17 @@ print_usage(char *prog_name) {
 "\n"
 "Alias for rudial -h ...\n");
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
+		fprintf(stderr,
 "usage: ruinfo <addr>\n"
 "\n"
 "Alias for rudial -i ...\n");
 	} else if (strcmp(prog_name, "ruls") == 0) {
+		fprintf(stderr,
 "usage: ruls <addr>\n",
 "\n"
 "Alias for rudial -l ...\n");
 	} else if (strcmp(prog_name, "rudial") == 0) {
+		fprintf(stderr,
 "usage: rudial [<option>] <addr> [<arg> ...]\n"
 "\n"
 "Dial service at <addr>. A service may support one or more\n"
@@ -105,7 +108,7 @@ print_usage(char *prog_name) {
 "-o|--op <op>   request operation <op> from service\n"
 "-t|--timeout <seconds>\n"
 "               quit the dial if it does not connect within the\n"
-"               given time\n"
+"               given time\n");
 	}
 }
 
