@@ -283,3 +283,106 @@ russ_stream_fd(int in_fd, int out_fd, long count, long blocksize) {
 	}
 	return 0;
 }
+
+/*
+* The actual byte forwarding code.
+*
+* @param fwd	forwarding struct
+* @return	NULL on success, !NULL on failure
+*/
+static void *
+_forward_bytes(void *_fwd) {
+	struct russ_forwarding	*fwd;
+	char			buf[1<<20], *bp;
+	long			nread, nwrite, count;
+	int			rv = 0;
+
+	/* setup */
+	fwd = (struct russ_forwarding *)_fwd;
+	if (fwd->blocksize <= 1<<20) {
+		bp = buf;
+	} else {
+		if ((buf = malloc(fwd->blocksize)) == NULL) {
+			return NULL;
+		}
+	}
+
+	/* transfer */
+	if (count == -1) {
+		while (1) {
+			if ((rv = _stream_fd(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize)) <= 0) {
+				break;
+			}
+		}
+	} else {
+		count = fwd->count;
+		while (count > 0) {
+			nread = (fwd->blocksize < count) ? fwd->blocksize : count;
+			if ((rv = _stream_fd(fwd->in_fd, fwd->out_fd, bp, nread)) <= 0) {
+				break;
+			}
+			count -= nread;
+		}
+	}
+
+	/* release */
+	if (bp != buf) {
+		free(buf);
+	}
+	if (rv) {
+		return !NULL;
+	}
+	return NULL;
+}
+
+/**
+* Initializes 'forwarding' struct with values.
+*
+* @param fwd	the struct to populate
+* @param to_join	sets to_join member
+* @param in_fd	sets in_fd member
+* @param out_fd	sets out_fd member
+* @param count	sets count member
+* @param blocksize	sets blocksize member
+* @param how	sets the how member
+*/
+void
+russ_forwarding_init(struct forwarding *fwd, int to_join, int in_fd, int out_fd, int count, int blocksize, int how) {
+	fwd->to_join = to_join;
+	fwd->in_fd = in_fd;
+	fwd->out_fd = out_fd;
+	fwd->count = count;
+	fwd->blocksize = blocksize;
+	fwd->how = how;
+}
+
+/**
+* Forward bytes for n pairs of fds.
+*
+* @param nfwds	# of pairs
+* @param fwds	array of pairs (with other info)
+* @return	0 on success; -1 on failure
+*/
+int
+russ_forward_bytes(int nfwds, struct russ_forwarding *fwds) {
+	int	i;
+
+	/* set up/start threads */
+	for (i = 0; i < nfwds; i++) {
+		if (pthread_create(&(fwds[i].th), NULL, _forward_bytes, (void *)&(fwds[i])) < 0) {
+			goto kill_threads;
+		}
+	}
+	/* join threads */
+	for (i = 0; i < nfwds; i++) {
+		if (fwds[i].to_join) {
+			pthread_join(&(fwds[i].th), NULL);
+		}
+	}
+	return 0;
+kill_threads:
+	for (i--; i >= 0; i++) {
+		pthread_destroy(&(fwds[i].th));
+	}
+	return -1;
+}

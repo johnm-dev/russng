@@ -84,6 +84,19 @@ struct russ_conn {
 	int			fds[3];		/**< std{in,out,err} */
 };
 
+/**
+* Container for byte forwarding information.
+*/
+struct russ_forwarding {
+	pthread_t	th;		/**< thread doing forwarding */
+	int		to_join;	/**< 1 to join thread */
+	int		in_fd;		/**< input fd */
+	int		out_fd;		/**< output fd */
+	int		count;		/**< # of bytes to forward */
+	int		blocksize;	/**< max size of blocks at once */
+	int		how;		/**< 0 for normal read, 1 for readline */
+};
+
 /* TODO: is this necessary */
 struct pipe_fds {
 	int in_fd, out_fd;
@@ -113,7 +126,10 @@ ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);
 ssize_t russ_writen(int, char *, size_t);
 ssize_t russ_writen_timeout(int, char *, size_t, int);
+
 int russ_stream_fd(int, int, long, long);
+void russ_forwarding_init(struct forwarding *, int, int, int, int, int, int);
+int russ_forward_bytes(int, struct russ_forwarding *);
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);
