@@ -230,6 +230,21 @@ fprintf(stderr, "russ_poll rv (%d)\n", rv);
 	return rv;
 }
 
+static
+int _stream_fd(int in_fd, int out_fd, char *buf, int bsize) {
+	long	nread, nwrite;
+
+	if ((nread = russ_read(in_fd, buf, bsize)) < 0) {
+		return -1;
+	} else if (nread == 0) {
+		return 0;
+	}
+	if ((nwrite = russ_writen(out_fd, buf, nread)) != nread) {
+		return -1;
+	}
+	return nwrite;
+}
+
 /**
 * Generic function to stream data between descriptors.
 *
@@ -243,7 +258,7 @@ fprintf(stderr, "russ_poll rv (%d)\n", rv);
 int
 russ_stream_fd(int in_fd, int out_fd, long count, long blocksize) {
 	char	*buf;
-	long	rv, total;
+	long	rv, total, nread;
 
 	if ((buf = malloc(blocksize)) == NULL) {
 		return -1;
@@ -267,19 +282,4 @@ russ_stream_fd(int in_fd, int out_fd, long count, long blocksize) {
 		}
 	}
 	return 0;
-}
-
-static
-int _stream_fd(int in_fd, int out_fd, char *buf, int bsize) {
-	long	nread, nwrite;
-
-	if ((nread = russ_read(in_fd, buf, bsize)) < 0) {
-		return -1;
-	} else if (nread == 0) {
-		return 0;
-	}
-	if ((nwrite = russ_writen(out_fd, buf, nread)) != nread) {
-		return -1;
-	}
-	return nwrite;
 }
