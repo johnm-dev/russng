@@ -266,7 +266,7 @@ russ_diall(char *saddr, char *op, int timeout, char **attrv, ...) {
 
 	/* count args */
 	va_start(ap, attrv);
-	for (argc = 0; argc < MAX_ARGC; argc++) {
+	for (argc = 0; argc < RUSS_MAX_ARGC; argc++) {
 		if ((p = va_arg(ap, char *)) == NULL) {
 			break;
 		}
