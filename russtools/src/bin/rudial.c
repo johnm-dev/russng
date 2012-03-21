@@ -59,7 +59,6 @@ _stream_bytes(int in_fd, int out_fd, int count, int blocksize) {
 	ss->out_fd = out_fd;
 	ss->count = count;
 	ss->blocksize = blocksize;
-	if (pthread_create(&(ss->th), NULL, _streamer_thread, ss) < 0) {
 	if (pthread_create(&(ss->th), NULL, _streamer_thread, (void *)ss) < 0) {
 		free(ss);
 		return NULL;
@@ -206,21 +205,17 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
-fprintf(stderr, "CCC argi (%d) argc (%d)\n", argi, argc);
 	/* addr and args */
 	if (argi+1 >= argc) {
 		fprintf(stderr, "error: bad/missing arguments\n");
 		exit(-1);
 	}
 	addr = argv[argi++];
-fprintf(stderr, "addr (%s) attrv (%p)\n", addr, attrv);
 	args = &(argv[argi]);
-fprintf(stderr, "CCC\n");
 	if ((conn = russ_dialv(addr, op, timeout, NULL, argc-argi, args)) == NULL) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
 	}
-fprintf(stderr, "DDD\n");
 
 	/* stream bytes between fds */
 	if (((ss_in = _stream_bytes(STDIN_FILENO, conn->fds[0], -1, 16384)) == NULL)
