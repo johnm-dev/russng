@@ -6,7 +6,7 @@
 include ../../Makefile.inc
 
 LIBS=
-BINS=rudial rusrv_barrier rusrv_echo
+BINS=rudial rudial2 rusrv_barrier rusrv_echo
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
@@ -29,6 +29,9 @@ install:
 	(cd $(INSTALL_DIR)/bin; ln -s rudial ruhelp; ln -s rudial ruinfo)
 
 rudial:	rudial.c
+	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+
+rudial2:	rudial2.c
 	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_echo:	rusrv_echo.c
