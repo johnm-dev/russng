@@ -34,7 +34,7 @@
 #include "russ.h"
 
 struct streamer_struct {
-	pthread_t	*th;
+	pthread_t	th;
 	int		in_fd, out_fd;
 	int		count, blocksize;
 };
@@ -60,6 +60,7 @@ _stream_bytes(int in_fd, int out_fd, int count, int blocksize) {
 	ss->count = count;
 	ss->blocksize = blocksize;
 	if (pthread_create(&(ss->th), NULL, _streamer_thread, ss) < 0) {
+	if (pthread_create(&(ss->th), NULL, _streamer_thread, (void *)ss) < 0) {
 		free(ss);
 		return NULL;
 	}
@@ -113,12 +114,15 @@ print_usage(char *prog_name) {
 }
 
 int
-main(int argv, char **argv) {
+main(int argc, char **argv) {
+	struct russ_conn	*conn;
 	struct streamer_struct	*ss_in, *ss_out, *ss_err;
 	char			*prog_name;
-	char			*op, *arg, *addr;
-	char			**args, *attrv[RUSS_MAX_ATTRC];
-	int			argi, attrc;
+	char			*op, *addr;
+	char			*arg, **args;
+	char			*attrv[RUSS_MAX_ATTRC];
+	int			argi;
+	int			attrc;
 	int			timeout;
 
 	prog_name = basename(strdup(argv[0]));
@@ -147,8 +151,8 @@ main(int argv, char **argv) {
 	while (argi < argc) {
 		arg = argv[argi++];
 
-		if (strncmp(arg, "-") != 0) {
-			arg--;
+		if (strncmp(arg, "-", 1) != 0) {
+			argi--;
 			break;
 		}
 		if ((strcmp(arg, "--help") == 0)
@@ -180,7 +184,7 @@ main(int argv, char **argv) {
 			&& (argi < argc)) {
 
 			arg = argv[argi++];
-			if (sscanf(argv[argi], "%d", timeout) >= 0) {
+			if (sscanf(argv[argi], "%d", &timeout) >= 0) {
 				continue;
 			}
 		} else if (((strcmp(arg, "--attr") == 0) || (strcmp(arg, "-a") == 0))
@@ -202,18 +206,26 @@ main(int argv, char **argv) {
 		exit(-1);
 	}
 
+fprintf(stderr, "CCC argi (%d) argc (%d)\n", argi, argc);
 	/* addr and args */
+	if (argi+1 >= argc) {
+		fprintf(stderr, "error: bad/missing arguments\n");
+		exit(-1);
+	}
 	addr = argv[argi++];
+fprintf(stderr, "addr (%s) attrv (%p)\n", addr, attrv);
 	args = &(argv[argi]);
-	if ((conn = russ_dialv(addr, op, timeout, attrc ? attrv : NULL, argc-argi, args)) == NULL) {
+fprintf(stderr, "CCC\n");
+	if ((conn = russ_dialv(addr, op, timeout, NULL, argc-argi, args)) == NULL) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
 	}
+fprintf(stderr, "DDD\n");
 
 	/* stream bytes between fds */
-	if (((ss_in = stream_bytes(STDIN_FILENO, conn->fds[0], -1, 16384)) == NULL)
-		|| ((ss_out = stream_bytes(STDOUT_FILENO, conn->fds[1], -1, 16384)) == NULL)
-		|| ((ss_err = stream_bytes(STDERR_FILENO, conn->fds[2], -1, 16384)) == NULL)) {
+	if (((ss_in = _stream_bytes(STDIN_FILENO, conn->fds[0], -1, 16384)) == NULL)
+		|| ((ss_out = _stream_bytes(STDOUT_FILENO, conn->fds[1], -1, 16384)) == NULL)
+		|| ((ss_err = _stream_bytes(STDERR_FILENO, conn->fds[2], -1, 16384)) == NULL)) {
 		fprintf(stderr, "error: failed to stream\n");
 		exit(-1);
 	}
