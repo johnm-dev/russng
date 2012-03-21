@@ -59,7 +59,7 @@ _stream_bytes(int in_fd, int out_fd, int count, int blocksize) {
 	ss->out_fd = out_fd;
 	ss->count = count;
 	ss->blocksize = blocksize;
-	if (pthread_create(&(ss->th), NULL, _stream_thread, ss) < 0) {
+	if (pthread_create(&(ss->th), NULL, _streamer_thread, ss) < 0) {
 		free(ss);
 		return NULL;
 	}
