@@ -39,9 +39,10 @@
 #define dprintf(...)
 #endif
 
+#define RUSS_MAX_ATTRC		1024
+#define RUSS_MAX_ARGC		1024
+#define RUSS_PROTOCOL_STRING	"0004"
 #define RUSS_SERVICE_DIR	"/srv/russ"
-#define ERROR_DIAL_LOCAL	120
-#define ERROR_DIAL_CALL	121
 
 /**
 * Client credentials object. Obtained from connection.

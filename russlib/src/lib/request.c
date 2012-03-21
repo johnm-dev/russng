@@ -92,7 +92,7 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 		goto free_req_items;
 	}
 	if (attrv) {
-		if ((req->attrv = dup_str_array(attrv, &(req->attrc), MAX_ATTRC)) == NULL) {
+		if ((req->attrv = dup_str_array(attrv, &(req->attrc), RUSS_MAX_ATTRC)) == NULL) {
 			goto free_req_items;
 		}
 		/* do not count the NULL sentinel */
