@@ -302,7 +302,7 @@ _forward_bytes(void *_fwd) {
 	if (fwd->blocksize <= 1<<20) {
 		bp = buf;
 	} else {
-		if ((buf = malloc(fwd->blocksize)) == NULL) {
+		if ((bp = malloc(fwd->blocksize)) == NULL) {
 			return NULL;
 		}
 	}
@@ -327,10 +327,10 @@ _forward_bytes(void *_fwd) {
 
 	/* release */
 	if (bp != buf) {
-		free(buf);
+		free(bp);
 	}
 	if (rv) {
-		return !NULL;
+		return (void *)!NULL;
 	}
 	return NULL;
 }
@@ -347,7 +347,7 @@ _forward_bytes(void *_fwd) {
 * @param how	sets the how member
 */
 void
-russ_forwarding_init(struct forwarding *fwd, int to_join, int in_fd, int out_fd, int count, int blocksize, int how) {
+russ_forwarding_init(struct russ_forwarding *fwd, int to_join, int in_fd, int out_fd, int count, int blocksize, int how) {
 	fwd->to_join = to_join;
 	fwd->in_fd = in_fd;
 	fwd->out_fd = out_fd;

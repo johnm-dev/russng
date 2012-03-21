@@ -128,7 +128,7 @@ ssize_t russ_writen(int, char *, size_t);
 ssize_t russ_writen_timeout(int, char *, size_t, int);
 
 int russ_stream_fd(int, int, long, long);
-void russ_forwarding_init(struct forwarding *, int, int, int, int, int, int);
+void russ_forwarding_init(struct russ_forwarding *, int, int, int, int, int, int);
 int russ_forward_bytes(int, struct russ_forwarding *);
 
 /* misc.c */
