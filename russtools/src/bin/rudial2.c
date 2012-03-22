@@ -33,39 +33,6 @@
 
 #include "russ.h"
 
-struct streamer_struct {
-	pthread_t	th;
-	int		in_fd, out_fd;
-	int		count, blocksize;
-};
-
-static void *
-_streamer_thread(void *v) {
-	struct streamer_struct	*ss;
-
-	ss = v;
-	russ_stream_fd(ss->in_fd, ss->out_fd, ss->count, ss->blocksize);
-	return NULL;
-}
-
-static struct streamer_struct *
-_stream_bytes(int in_fd, int out_fd, int count, int blocksize) {
-	struct streamer_struct	*ss;
-
-	if ((ss = malloc(sizeof(struct streamer_struct))) == NULL) {
-		return NULL;
-	}
-	ss->in_fd = in_fd;
-	ss->out_fd = out_fd;
-	ss->count = count;
-	ss->blocksize = blocksize;
-	if (pthread_create(&(ss->th), NULL, _streamer_thread, (void *)ss) < 0) {
-		free(ss);
-		return NULL;
-	}
-	return ss;
-}
-
 void
 print_usage(char *prog_name) {
 	if (strcmp(prog_name, "ruhelp") == 0) {
@@ -115,7 +82,7 @@ print_usage(char *prog_name) {
 int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
-	struct streamer_struct	*ss_in, *ss_out, *ss_err;
+	struct russ_forwarding	fwds[3];
 	char			*prog_name;
 	char			*op, *addr;
 	char			*arg, **args;
@@ -217,16 +184,14 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	/* stream bytes between fds */
-	if (((ss_in = _stream_bytes(STDIN_FILENO, conn->fds[0], -1, 16384)) == NULL)
-		|| ((ss_out = _stream_bytes(STDOUT_FILENO, conn->fds[1], -1, 16384)) == NULL)
-		|| ((ss_err = _stream_bytes(STDERR_FILENO, conn->fds[2], -1, 16384)) == NULL)) {
-		fprintf(stderr, "error: failed to stream\n");
+	/* start forwarding threads */
+	russ_forwarding_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0);
+	russ_forwarding_init(&(fwds[1]), 1, conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
+	russ_forwarding_init(&(fwds[2]), 1, conn->fds[2], STDERR_FILENO, -1, 16384, 0);
+	if (russ_forward_bytes(3, fwds) < 0) {
+		fprintf(stderr, "error: could not forward bytes\n");
 		exit(-1);
 	}
-
-	pthread_join(ss_out->th, NULL);
-	pthread_join(ss_err->th, NULL);
 
 	russ_close_conn(conn);
 	conn = russ_free_conn(conn);
