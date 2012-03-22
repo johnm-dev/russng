@@ -382,7 +382,7 @@ russ_forward_bytes(int nfwds, struct russ_forwarding *fwds) {
 	return 0;
 kill_threads:
 	for (i--; i >= 0; i++) {
-		pthread_destroy(&(fwds[i].th));
+		pthread_cancel(fwds[i].th);
 	}
 	return -1;
 }
