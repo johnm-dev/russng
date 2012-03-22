@@ -285,6 +285,38 @@ russ_stream_fd(int in_fd, int out_fd, long count, long blocksize) {
 }
 
 /*
+* Forward a block by bunch of bytes or line.
+*
+* @param in_fd	input fd
+* @param out_fd	output fd
+* @param buf	buffer
+* @param bsize	buffer size
+* @param how	0 for bunch, 1 for line
+* @return	# of bytes forwarded, -1 on failure
+*/
+static int
+_forward_block(int in_fd, int out_fd, char *buf, int bsize, int how) {
+	long	nread, nwrite;
+
+	if (how == 0) {
+		if ((nread = russ_read(in_fd, buf, bsize)) < 0) {
+			return -1;
+		}
+	} else {
+		if ((nread = russ_readline(in_fd, buf, bsize)) < 0) {
+			return -1;
+		}
+	}
+	if (nread == 0) {
+		return 0;
+	}
+	if ((nwrite = russ_writen(out_fd, buf, nread)) != nread) {
+		return -1;
+	}
+	return nwrite;
+}
+
+/*
 * The actual byte forwarding code.
 *
 * @param fwd	forwarding struct
@@ -310,7 +342,7 @@ _forward_bytes(void *_fwd) {
 	/* transfer */
 	if (fwd->count == -1) {
 		while (1) {
-			if ((rv = _stream_fd(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize)) <= 0) {
+			if ((rv = _forward_block(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize, fwd->how)) <= 0) {
 				break;
 			}
 		}
@@ -318,7 +350,7 @@ _forward_bytes(void *_fwd) {
 		count = fwd->count;
 		while (count > 0) {
 			nread = (fwd->blocksize < count) ? fwd->blocksize : count;
-			if ((rv = _stream_fd(fwd->in_fd, fwd->out_fd, bp, nread)) <= 0) {
+			if ((rv = _forward_block(fwd->in_fd, fwd->out_fd, bp, nread, fwd->how)) <= 0) {
 				break;
 			}
 			count -= nread;
