@@ -36,29 +36,6 @@
 
 #include "russ.h"
 
-#define ERROR_DIAL_LOCAL	120
-#define ERROR_DIAL_CALL	121
-
-int	forwarding = 1;
-
-int
-list_dir(char *path) {
-	DIR		*dir;
-	struct dirent	*dirent;
-
-	if ((dir = opendir(path)) == NULL) {
-		return(-1);
-	}
-
-	while ((dirent = readdir(dir)) != NULL) {
-		if (strncmp(dirent->d_name, ".", 1) != 0) {
-			printf("%s\n", dirent->d_name);
-		}
-	}
-	closedir(dir);
-	return 0;
-}
-
 /* forward bytes between fds */
 void
 __forward_bytes(int *fds, int how) {
@@ -166,8 +143,7 @@ print_usage(char **argv) {
 "		Allow timeout seconds to complete connection. Default\n"
 "		is no timeout.\n"
 "\n"
-"Exit values of %d (local error) and %d (call error) are\n"
-"reserved by rudial.\n", ERROR_DIAL_LOCAL, ERROR_DIAL_CALL);
+"Exit value of -1 on error.\n");
 	}
 	free(name);
 }
