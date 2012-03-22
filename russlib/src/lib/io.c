@@ -230,60 +230,6 @@ fprintf(stderr, "russ_poll rv (%d)\n", rv);
 	return rv;
 }
 
-static int
-_stream_fd(int in_fd, int out_fd, char *buf, int bsize) {
-	long	nread, nwrite;
-
-	if ((nread = russ_read(in_fd, buf, bsize)) < 0) {
-		return -1;
-	} else if (nread == 0) {
-		return 0;
-	}
-	if ((nwrite = russ_writen(out_fd, buf, nread)) != nread) {
-		return -1;
-	}
-	return nwrite;
-}
-
-/**
-* Generic function to stream data between descriptors.
-*
-* @param in_fd	input descriptor
-* @param out_fd	output descriptor
-* @param count	# of bytes to stream; -1 to stream without limit
-* @param blocksize	upto # of bytes to send at a time; also the
-*			buffer size
-* @return	0 on success, -1 or error/EOF
-*/
-int
-russ_stream_fd(int in_fd, int out_fd, long count, long blocksize) {
-	char	*buf;
-	long	rv, total, nread;
-
-	if ((buf = malloc(blocksize)) == NULL) {
-		return -1;
-	}
-
-	if (count == -1) {
-		while (1) {
-			if ((rv = _stream_fd(in_fd, out_fd, buf, blocksize)) <= 0) {
-				return rv;
-			}
-		}
-	} else {
-		total = 0;
-		while (count > 0) {
-			nread = (blocksize < count) ? blocksize : count;
-			if ((rv = _stream_fd(in_fd, out_fd, buf, nread)) <= 0) {
-				return rv;
-			}
-			count -= nread;
-			total += nread;
-		}
-	}
-	return 0;
-}
-
 /*
 * Forward a block by bunch of bytes or line.
 *
