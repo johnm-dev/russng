@@ -6,7 +6,7 @@
 include ../../Makefile.inc
 
 LIBS=
-BINS=rudial rudial2 rusrv_barrier rusrv_echo
+BINS=rudial rusrv_barrier rusrv_echo
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
