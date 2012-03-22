@@ -36,69 +36,6 @@
 
 #include "russ.h"
 
-/* forward bytes between fds */
-void
-__forward_bytes(int *fds, int how) {
-	char	buf[1<<20];
-	int	rcount, wcount;
-	int	src_fd, dst_fd, close_fd;
-
-	/* unpack */
-	src_fd = ((int *)fds)[0];
-	dst_fd = ((int *)fds)[1];
-	close_fd = ((int *)fds)[2];
-
-	while (1) {
-		if (how == 0) {
-			rcount = russ_readn(src_fd, buf, sizeof(buf));
-		} else {
-			rcount = russ_readline(src_fd, buf, sizeof(buf));
-		}
-		if (rcount <= 0) {
-			/* EOF or error */
-			break;
-		}
-		wcount = russ_writen(dst_fd, buf, rcount);
-		if (wcount != rcount) {
-			/* error */
-			break;
-		}
-		fsync(dst_fd);
-	}
-	if (close_fd > -1) {
-		close(close_fd);
-	}
-	free(fds);
-}
-
-/* forward bytes between fds (pthread-friendly) */
-void *
-forward_bytes(void *fds) {
-	__forward_bytes(fds, 0);
-	return NULL;
-}
-
-/* forward lines between fds (pthread-friendly) */
-void *
-forward_lines(void *fds) {
-	__forward_bytes(fds, 1);
-	return NULL;
-}
-
-/* spawn thread to forward bytes */
-int
-spawn_forward_bytes(pthread_t *th, int src_fd, int dst_fd, int close_fd) {
-	int	*fds;
-
-	if ((fds = malloc(sizeof(int)*3)) == NULL) {
-		return -1;
-	}
-	fds[0] = src_fd;
-	fds[1] = dst_fd;
-	fds[2] = close_fd;
-	return pthread_create(th, NULL, forward_lines, (void *)fds);
-}
-
 void
 print_usage(char **argv) {
 	char	*name, *bname;
