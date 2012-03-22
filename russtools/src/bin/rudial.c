@@ -174,8 +174,9 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	char			*prog_name;
 	struct russ_conn	*conn;
+	struct russ_forwarding	fwds[3];
+	char			*prog_name;
 	char			*addr, *saddr, *spath, *op;
 	int			exit_value;
 	pthread_t		in_th, out_th, err_th;
@@ -269,6 +270,14 @@ main(int argc, char **argv) {
 	pthread_join(err_th, NULL);
 	/* don't join in_th because a closed out and err mean the end */
 	/*pthread_join(in_th, NULL);*/
+
+	russ_forwarding_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0);
+	russ_forwarding_init(&(fwds[1]), 1, conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
+	russ_forwarding_init(&(fwds[2]), 1, conn->fds[2], STDERR_FILENO, -1, 16384, 0);
+	if (russ_forward_bytes(3, fwds) < 0) {
+		fprintf(stderr, "error: could not forward bytes\n");
+		exit(-1);
+	}
 
 	russ_close_conn(conn);
 	conn = russ_free_conn(conn);
