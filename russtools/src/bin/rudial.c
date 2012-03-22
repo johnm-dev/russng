@@ -258,6 +258,7 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
+#if 0
 	if ((spawn_forward_bytes(&in_th, STDIN_FILENO, conn->fds[0], conn->fds[0]) < 0)
 		|| (spawn_forward_bytes(&out_th, conn->fds[1], STDOUT_FILENO, conn->fds[1]) < 0)
 		|| (spawn_forward_bytes(&err_th, conn->fds[2], STDERR_FILENO, conn->fds[2]) < 0)) {
@@ -270,6 +271,7 @@ main(int argc, char **argv) {
 	pthread_join(err_th, NULL);
 	/* don't join in_th because a closed out and err mean the end */
 	/*pthread_join(in_th, NULL);*/
+#endif
 
 	russ_forwarding_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0);
 	russ_forwarding_init(&(fwds[1]), 1, conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
