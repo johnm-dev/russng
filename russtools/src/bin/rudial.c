@@ -161,7 +161,7 @@ main(int argc, char **argv) {
 
 	if ((argc < 2) && (strcmp(prog_name, "ruls") != 0)) {
 		print_usage(argv);
-		exit(ERROR_DIAL_LOCAL);
+		exit(-1);
 	}
 
 	if (strcmp(prog_name, "ruhelp") == 0) {
@@ -181,7 +181,7 @@ main(int argc, char **argv) {
 			|| (strcmp(argv[1], "-o") == 0)) {
 			if (argc < 3) {
 				fprintf(stderr, "error: missing op\n");
-				exit(ERROR_DIAL_LOCAL);
+				exit(-1);
 			} else {
 				op = argv[2];
 			}
@@ -208,7 +208,7 @@ main(int argc, char **argv) {
 				}
 			} else {
 				fprintf(stderr, "error: unknown op (%s)\n", argv[1]);
-				exit(ERROR_DIAL_CALL);
+				exit(-1);
 			}
 			argi = 2;
 		} else {
