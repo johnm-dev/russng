@@ -104,11 +104,12 @@ main(int argc, char **argv) {
 		op = "info";
 	} else if (strcmp(prog_name, "ruls") == 0) {
 		op = "list";
-	} else if (strcmp(prog_name, "rudial") == 0) {
-		op = "execute";
 	} else {
-		fprintf(stderr, "error: unknown alias\n");
-		exit(-1);
+		op = "execute";
+		if (strcmp(prog_name, "rudial") != 0) {
+			fprintf(stderr, "warning: unknown alias, running as rudial\n");
+			prog_name = "rudial";
+		}
 	}
 
 	/* options */
