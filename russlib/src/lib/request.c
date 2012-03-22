@@ -148,12 +148,12 @@ russ_send_request(struct russ_conn *conn, int timeout) {
 	req = &(conn->req);
 	bp = buf;
 	bend = buf+sizeof(buf);
-	if (((bp = russ_enc2_i(bp, bend, 0)) == NULL)
-		|| ((bp = russ_enc2_string(bp, bend, req->protocol_string)) == NULL)
-		|| ((bp = russ_enc2_string(bp, bend, req->spath)) == NULL)
-		|| ((bp = russ_enc2_string(bp, bend, req->op)) == NULL)
-		|| ((bp = russ_enc2_s_array0(bp, bend, req->attrv)) == NULL)
-		|| ((bp = russ_enc2_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
+	if (((bp = russ_enc_i(bp, bend, 0)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->protocol_string)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->spath)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->op)) == NULL)
+		|| ((bp = russ_enc_s_array0(bp, bend, req->attrv)) == NULL)
+		|| ((bp = russ_enc_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
 		return -1;
 	}
 
@@ -177,17 +177,17 @@ russ_await_request(struct russ_conn *conn) {
 	/* get request size, load, and upack */
 	bp = buf;
 	if ((russ_readn(conn->sd, bp, 4) < 0)
-		|| ((bp = russ_dec2_i(bp, &size)) == NULL)
+		|| ((bp = russ_dec_i(bp, &size)) == NULL)
 		|| (russ_readn(conn->sd, bp, size) < 0)) {
 		return -1;
 	}
 
 	req = &(conn->req);
-	if (((bp = russ_dec2_s(bp, &(req->protocol_string))) == NULL)
-		|| ((bp = russ_dec2_s(bp, &(req->spath))) == NULL)
-		|| ((bp = russ_dec2_s(bp, &(req->op))) == NULL)
-		|| ((bp = russ_dec2_s_array0(bp, &(req->attrv), &(req->attrc))) == NULL)
-		|| ((bp = russ_dec2_s_array0(bp, &(req->argv), &(req->argc))) == NULL)) {
+	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
+		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
+		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
+		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &(req->attrc))) == NULL)
+		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &(req->argc))) == NULL)) {
 
 		goto free_req_items;
 	}
