@@ -40,34 +40,21 @@
 #define FORWARD_BLOCK_SIZE	(1<<16)
 
 /* encdec.c */
-uint16_t russ_dec_H(char *, int *);
-uint32_t russ_dec_I(char *, int *);
-int32_t russ_dec_i(char *, int *);
-char *russ_dec_b(char *, int *);
-char *russ_dec_s(char *, int *);
+char *russ_dec_H(char *, uint16_t *);
+char *russ_dec_I(char *, uint32_t *);
+char *russ_dec_i(char *, int32_t *);
+char *russ_dec_b(char *, char **);
+char *russ_dec_s(char *, char **);
+char *russ_dec_s_array0(char *, char ***, int *);
+char *russ_dec_s_arrayn(char *, char ***, int *);
 
-char *russ_enc_H(char *, uint16_t, int);
-char *russ_enc_I(char *, uint32_t, int);
-char *russ_enc_i(char *, int32_t, int);
-char *russ_enc_bytes(char *, char *, int, int);
-char *russ_enc_string(char *, char *, int);
-
-/* encdec2.c */
-char *russ_dec2_H(char *, uint16_t *);
-char *russ_dec2_I(char *, uint32_t *);
-char *russ_dec2_i(char *, int32_t *);
-char *russ_dec2_b(char *, char **);
-char *russ_dec2_s(char *, char **);
-char *russ_dec2_s_array0(char *, char ***, int *);
-char *russ_dec2_s_arrayn(char *, char ***, int *);
-
-char *russ_enc2_H(char *, char *, uint16_t);
-char *russ_enc2_I(char *, char *, uint32_t);
-char *russ_enc2_i(char *, char *, int32_t);
-char *russ_enc2_bytes(char *, char *, char *, int);
-char *russ_enc2_string(char *, char *, char *);
-char *russ_enc2_s_arrayn(char *, char *, char **, int);
-char *russ_enc2_s_array0(char *, char *, char **);
+char *russ_enc_H(char *, char *, uint16_t);
+char *russ_enc_I(char *, char *, uint32_t);
+char *russ_enc_i(char *, char *, int32_t);
+char *russ_enc_bytes(char *, char *, char *, int);
+char *russ_enc_string(char *, char *, char *);
+char *russ_enc_s_arrayn(char *, char *, char **, int);
+char *russ_enc_s_array0(char *, char *, char **);
 
 /* io.c */
 int russ_poll(struct pollfd *, int, int);

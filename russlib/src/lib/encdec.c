@@ -1,5 +1,5 @@
 /*
-* encdec2.c
+* encdec.c
 */
 
 /*
@@ -32,33 +32,33 @@
 #include "russ_priv.h"
 
 char *
-russ_dec2_H(char *b, uint16_t *v) {
+russ_dec_H(char *b, uint16_t *v) {
 	*v = (uint8_t)(b[0]) | ((uint8_t)(b[1])<<8);
 	return b+2;
 }
 
 char *
-russ_dec2_I(char *b, uint32_t *v) {
+russ_dec_I(char *b, uint32_t *v) {
 	*v = (uint8_t)(b[0]) | ((uint8_t)(b[1])<<8)
 		| ((uint8_t)(b[2])<<16) | ((uint8_t)(b[3])<<24);
 	return b+4;
 }
 
 char *
-russ_dec2_i(char *b, int32_t *v) {
+russ_dec_i(char *b, int32_t *v) {
 	uint32_t	v2;
 	char		*b2;
 
-	b2 = russ_dec2_I(b, &v2);
+	b2 = russ_dec_I(b, &v2);
 	*v = (int32_t)v2;
 	return b2;
 }
 
 char *
-russ_dec2_b(char *b, char **bp) {
+russ_dec_b(char *b, char **bp) {
 	int	count;
 
-	if (((b = russ_dec2_I(b, &count)) == NULL)
+	if (((b = russ_dec_I(b, &count)) == NULL)
 		|| ((*bp = malloc(count)) == NULL)) {
 		return NULL;
 	}
@@ -67,19 +67,19 @@ russ_dec2_b(char *b, char **bp) {
 }
 
 char *
-russ_dec2_s(char *b, char **bp) {
-	return russ_dec2_b(b, bp);
+russ_dec_s(char *b, char **bp) {
+	return russ_dec_b(b, bp);
 }
 
 /**
 * Shared function for decoding string arrays.
 */
 static char *
-_dec2_s_array0(char *b, char ***v, int *alen, int append_null) {
+_dec_s_array0(char *b, char ***v, int *alen, int append_null) {
 	char	**array, *s;
 	int	_bcount, i;
 
-	b = russ_dec2_I(b, alen);
+	b = russ_dec_I(b, alen);
 	if (*alen > 0) {
 		if (append_null) {
 			array = malloc(sizeof(char *)*(*alen+1));
@@ -90,7 +90,7 @@ _dec2_s_array0(char *b, char ***v, int *alen, int append_null) {
 			return NULL;
 		}
 		for (i = 0; i < *alen; i++) {
-			b = russ_dec2_s(b, &s);
+			b = russ_dec_s(b, &s);
 			if (b == NULL) {
 				goto free_array;
 			}
@@ -120,8 +120,8 @@ free_array:
 * @return	new buffer position; NULL if failure
 */
 char *
-russ_dec2_s_array0(char *b, char ***vpp, int *alen) {
-	return _dec2_s_array0(b, vpp, alen, 1);
+russ_dec_s_array0(char *b, char ***vpp, int *alen) {
+	return _dec_s_array0(b, vpp, alen, 1);
 }
 
 /**
@@ -132,8 +132,8 @@ russ_dec2_s_array0(char *b, char ***vpp, int *alen) {
 * @return	new buffer position; NULL if failure
 */
 char *
-russ_dec2_s_arrayn(char *b, char ***vpp, int *alen) {
-	return _dec2_s_array0(b, vpp, alen, 0);
+russ_dec_s_arrayn(char *b, char ***vpp, int *alen) {
+	return _dec_s_array0(b, vpp, alen, 0);
 }
 
 /***** encoders *****/
@@ -147,7 +147,7 @@ russ_dec2_s_arrayn(char *b, char ***vpp, int *alen) {
 * @return	new buffer position; NULL if failure
 */
 char *
-russ_enc2_H(char *b, char *bend, uint16_t v) {
+russ_enc_H(char *b, char *bend, uint16_t v) {
 	if ((bend-b) < 2) {
 		return NULL;
 	}
@@ -165,7 +165,7 @@ russ_enc2_H(char *b, char *bend, uint16_t v) {
 * @return	new buffer position; NULL if failure
 */
 char *
-russ_enc2_I(char *b, char *bend, uint32_t v) {
+russ_enc_I(char *b, char *bend, uint32_t v) {
 	if ((bend-b) < 4) {
 		return NULL;
 	}
@@ -185,7 +185,7 @@ russ_enc2_I(char *b, char *bend, uint32_t v) {
 * @return	new buffer position; NULL if failure
 */
 char *
-russ_enc2_i(char *b, char *bend, int32_t v) {
+russ_enc_i(char *b, char *bend, int32_t v) {
 	if ((bend-b) < 4) {
 		return NULL;
 	}
@@ -206,11 +206,11 @@ russ_enc2_i(char *b, char *bend, int32_t v) {
 * @return	new buffer position; NULL if failure
 */
 char *
-russ_enc2_bytes(char *b, char *bend, char *v, int alen) {
+russ_enc_bytes(char *b, char *bend, char *v, int alen) {
 	if ((bend-b) < 4+alen) {
 		return NULL;
 	}
-	b = russ_enc2_I(b, bend, alen);
+	b = russ_enc_I(b, bend, alen);
 	memcpy(b, v, alen);
 	return b+alen;
 }
@@ -225,8 +225,8 @@ russ_enc2_bytes(char *b, char *bend, char *v, int alen) {
 * @return	new buffer position; NULL if failure
 */
 char *
-russ_enc2_string(char *b, char *bend, char *v) {
-	return russ_enc2_bytes(b, bend, v, strlen(v)+1);
+russ_enc_string(char *b, char *bend, char *v) {
+	return russ_enc_bytes(b, bend, v, strlen(v)+1);
 }
 
 /**
@@ -240,14 +240,14 @@ russ_enc2_string(char *b, char *bend, char *v) {
 * @return	updated buffer position; NULL on failure
 */
 char *
-russ_enc2_s_arrayn(char *b, char *bend, char **v, int alen) {
+russ_enc_s_arrayn(char *b, char *bend, char **v, int alen) {
 	int	i;
 
-	if ((b = russ_enc2_I(b, bend, alen)) == NULL) {
+	if ((b = russ_enc_I(b, bend, alen)) == NULL) {
 		return NULL;
 	}
 	for (i = 0; i < alen; i++) {
-		if ((b = russ_enc2_string(b, bend, v[i])) == NULL) {
+		if ((b = russ_enc_string(b, bend, v[i])) == NULL) {
 			return NULL;
 		}
 	}
@@ -264,7 +264,7 @@ russ_enc2_s_arrayn(char *b, char *bend, char **v, int alen) {
 * @return	updated buffer position; NULL on failure
 */
 char *
-russ_enc2_s_array0(char *b, char *bend, char **v) {
+russ_enc_s_array0(char *b, char *bend, char **v) {
 	int	alen;
 
 	if (v == NULL) {
@@ -275,5 +275,5 @@ russ_enc2_s_array0(char *b, char *bend, char **v) {
 			return NULL;
 		}
 	}
-	return russ_enc2_s_arrayn(b, bend, v, alen);
+	return russ_enc_s_arrayn(b, bend, v, alen);
 }
