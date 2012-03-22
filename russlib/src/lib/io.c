@@ -308,7 +308,7 @@ _forward_bytes(void *_fwd) {
 	}
 
 	/* transfer */
-	if (count == -1) {
+	if (fwd->count == -1) {
 		while (1) {
 			if ((rv = _stream_fd(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize)) <= 0) {
 				break;
@@ -376,7 +376,7 @@ russ_forward_bytes(int nfwds, struct russ_forwarding *fwds) {
 	/* join threads */
 	for (i = 0; i < nfwds; i++) {
 		if (fwds[i].to_join) {
-			pthread_join(&(fwds[i].th), NULL);
+			pthread_join(fwds[i].th, NULL);
 		}
 	}
 	return 0;
