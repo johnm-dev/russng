@@ -85,7 +85,7 @@ main(int argc, char **argv) {
 	struct russ_forwarding	fwds[3];
 	char			*prog_name;
 	char			*op, *addr;
-	char			*arg, **args;
+	char			*arg;
 	char			*attrv[RUSS_MAX_ATTRC];
 	int			argi;
 	int			attrc;
@@ -113,6 +113,7 @@ main(int argc, char **argv) {
 	}
 
 	/* options */
+	timeout = -1;
 	argi = 1;
 	attrc = 0;
 	while (argi < argc) {
@@ -179,8 +180,7 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 	addr = argv[argi++];
-	args = &(argv[argi]);
-	if ((conn = russ_dialv(addr, op, timeout, NULL, argc-argi, args)) == NULL) {
+	if ((conn = russ_dialv(addr, op, timeout, NULL, argc-argi, &(argv[argi]))) == NULL) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
 	}
