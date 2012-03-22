@@ -1,32 +1,29 @@
 /*
-** rudial.c
-**
-** front-end for russ services
+* rudial.c
 */
 
 /*
-# GPL--start
-# This file is part of russ
-# Copyright (C) 2011 Environment/Environnement Canada
+# license--start
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2
-# of the License.
-# 
+# This file is part of RUSS tools.
+# Copyright (C) 2012 John Marshall
+#
+# RUSS tools is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-# GPL--end
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# license--end
 */
 
-#include <dirent.h>
-#include <errno.h>
 #include <libgen.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -37,52 +34,49 @@
 #include "russ.h"
 
 void
-print_usage(char **argv) {
-	char	*name, *bname;
-
-	name = strdup(argv[0]);
-	bname = basename(name);
-
-	if (strcmp(bname, "ruhelp") == 0) {
-		fprintf(stderr,
+print_usage(char *prog_name) {
+	if (strcmp(prog_name, "ruhelp") == 0) {
+		fprintf(stderr, 
 "usage: ruhelp <addr>\n"
 "\n"
-"An alias for 'rudial -h ...'.\n");
-
-	} else if (strcmp(bname, "ruinfo") == 0) {
+"Alias for rudial -h ...\n");
+	} else if (strcmp(prog_name, "ruinfo") == 0) {
 		fprintf(stderr,
-"usage: ruinfo -i <addr>\n"
+"usage: ruinfo <addr>\n"
 "\n"
-"An alias for 'rudial -i ...'.\n");
-
-	} else if (strcmp(bname, "ruls") == 0) {
+"Alias for rudial -i ...\n");
+	} else if (strcmp(prog_name, "ruls") == 0) {
 		fprintf(stderr,
-"usage: ruls [<addr>]\n"
+"usage: ruls <addr>\n",
 "\n"
-"An alias for 'rudial -l ...'.\n");
-
-	} else {
+"Alias for rudial -l ...\n");
+	} else if (strcmp(prog_name, "rudial") == 0) {
 		fprintf(stderr,
 "usage: rudial [<option>] <addr> [<arg> ...]\n"
 "\n"
-"Dial service at <addr> with given arguments.\n"
+"Dial service at <addr>. A service may support one or more\n"
+"operations (e.g., execute, list); execute is the default operation.\n"
+"Most other services are for obtaining state information.\n"
 "\n"
-"Where <option> is:\n"
-"--execute	Execute service request (shortcut for '--op execute';\n"
-"		default	if <option> is not given).\n"
-"--id		Return unique server id.\n"
-"-h|--help	Show help for the (sub)service.\n"
-"-i|--info	Show name=value information for server.\n"
-"-l|--list	List (sub)service(s) (shortcut for '--op list').\n"
-"-o|--op <op>	Use operation name (e.g., execute) but not supported\n"
-"		otherwise.\n"
+"A successful dial will effectively connect the stdin, stdout, and\n"
+"stderr of the service to that of the rudial. I.e., input to stdin\n"
+"of rudial will be forwarded to the service, stdout and stderr of\n"
+"the service will be forwarded to the same of rudial.\n"
+"\n"
+"An exit value of < 0 indicates a failure to connect. Otherwise a 0\n"
+"exit value is returned.\n"
+"\n"
+"Options:\n"
+"-h|--help      print this information\n"
+"-i|--info      show server-specific information as zero or more\n"
+"               name=value lines\n"
+"-l|--list      list services provided by the server as paths to be\n"
+"               used in the <addr> argument\n"
+"-o|--op <op>   request operation <op> from service\n"
 "-t|--timeout <seconds>\n"
-"		Allow timeout seconds to complete connection. Default\n"
-"		is no timeout.\n"
-"\n"
-"Exit value of -1 on error.\n");
+"               quit the dial if it does not connect within the\n"
+"               given time\n");
 	}
-	free(name);
 }
 
 int
@@ -90,82 +84,108 @@ main(int argc, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_forwarding	fwds[3];
 	char			*prog_name;
-	char			*addr, *saddr, *spath, *op;
+	char			*op, *addr;
+	char			*arg;
+	char			*attrv[RUSS_MAX_ATTRC];
 	int			argi;
+	int			attrc;
 	int			timeout;
 
 	prog_name = basename(strdup(argv[0]));
-
-	if ((argc < 2) && (strcmp(prog_name, "ruls") != 0)) {
-		print_usage(argv);
+	if (argc < 2) {
+		fprintf(stderr, "error: bad/missing arguments\n");
 		exit(-1);
 	}
 
+	/* aliases */
 	if (strcmp(prog_name, "ruhelp") == 0) {
 		op = "help";
-		argi = 1;
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
 		op = "info";
-		argi = 1;
 	} else if (strcmp(prog_name, "ruls") == 0) {
 		op = "list";
-		argi = 1;
 	} else {
-		/* TODO: arg parsing does not handle multiple options properly */
-		/* rudial */
-		timeout = -1;
-		if ((strcmp(argv[1], "--op") == 0)
-			|| (strcmp(argv[1], "-o") == 0)) {
-			if (argc < 3) {
-				fprintf(stderr, "error: missing op\n");
-				exit(-1);
-			} else {
-				op = argv[2];
-			}
-			argi = 3;
-		} else if (strncmp(argv[1], "-", 1) == 0) {
-			if (strcmp(argv[1], "--execute") == 0) {
-				op = "execute";
-			} else if ((strcmp(argv[1], "--help") == 0)
-				|| (strcmp(argv[1], "-h") == 0)) {
-				op = "help";
-			} else if ((strcmp(argv[1], "--info") == 0)
-				|| (strcmp(argv[1], "-i") == 0)) {
-				op = "info";
-			} else if (strcmp(argv[1], "--id") == 0) {
-				op = "id";
-			} else if ((strcmp(argv[1], "--list") == 0)
-				|| (strcmp(argv[1], "-l") == 0)) {
-				op = "list";
-			} else if (((strcmp(argv[1], "--timeout") == 0) || (strcmp(argv[1], "-t")))
-					&& (argc > 1)) {
-				if (sscanf(argv[1], "%d", &timeout) < 0) {
-					fprintf(stderr, "error: bad timeout value\n");
-					exit(-1);
-				}
-			} else {
-				fprintf(stderr, "error: unknown op (%s)\n", argv[1]);
-				exit(-1);
-			}
-			argi = 2;
-		} else {
-			op = "execute";
-			argi = 1;
+		op = "execute";
+		if (strcmp(prog_name, "rudial") != 0) {
+			fprintf(stderr, "warning: unknown alias, running as rudial\n");
+			prog_name = "rudial";
 		}
 	}
-	if (argi >= argc) {
-		print_usage(argv);
+
+	/* options */
+	timeout = -1;
+	argi = 1;
+	attrc = 0;
+	while (argi < argc) {
+		arg = argv[argi++];
+
+		if (strncmp(arg, "-", 1) != 0) {
+			argi--;
+			break;
+		}
+		if ((strcmp(arg, "--help") == 0)
+			|| (strcmp(arg, "-h") == 0)) {
+
+			print_usage(prog_name);
+			exit(0);
+		} else if (strcmp(arg, "--id") == 0) {
+
+			op = "id";
+			continue;
+		} else if ((strcmp(arg, "--info") == 0)
+			|| (strcmp(arg, "-i") == 0)) {
+
+			op = "info";
+			continue;
+		} else if ((strcmp(arg, "--list") == 0)
+			|| (strcmp(arg, "-l") == 0)) {
+
+			op = "list";
+			continue;
+		} else if (((strcmp(arg, "--op") == 0) || (strcmp(arg, "-o") == 0))
+			&& (argi < argc)) {
+			
+			arg = argv[argi++];
+			op = arg;
+			continue;
+		} else if (((strcmp(arg, "--timeout") == 0) || (strcmp(arg, "-t") == 0))
+			&& (argi < argc)) {
+
+			arg = argv[argi++];
+			if (sscanf(argv[argi], "%d", &timeout) >= 0) {
+				continue;
+			}
+		} else if (((strcmp(arg, "--attr") == 0) || (strcmp(arg, "-a") == 0))
+			&& (argi < argc)) {
+			
+			arg = argv[argi++];
+			if (attrc >= RUSS_MAX_ATTRC-1) {
+				fprintf(stderr, "error: too many attributes\n");
+				exit(-1);
+			}
+			if (strstr(arg, "=") == NULL) {
+				fprintf(stderr, "error: bad attribute format\n");
+				exit(-1);
+			}
+			attrv[attrc++] = arg;
+			attrv[attrc] = NULL;
+		}
+		fprintf(stderr, "error: bad/missing arguments\n");
 		exit(-1);
 	}
 
-	addr = argv[argi];
-	argi++;
-
-	if ((conn = russ_dialv(addr, op, timeout, NULL, argc-argi, &argv[argi])) == NULL) {
+	/* addr and args */
+	if (argi+1 >= argc) {
+		fprintf(stderr, "error: bad/missing arguments\n");
+		exit(-1);
+	}
+	addr = argv[argi++];
+	if ((conn = russ_dialv(addr, op, timeout, NULL, argc-argi, &(argv[argi]))) == NULL) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
 	}
 
+	/* start forwarding threads */
 	russ_forwarding_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0);
 	russ_forwarding_init(&(fwds[1]), 1, conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
 	russ_forwarding_init(&(fwds[2]), 1, conn->fds[2], STDERR_FILENO, -1, 16384, 0);
@@ -176,6 +196,5 @@ main(int argc, char **argv) {
 
 	russ_close_conn(conn);
 	conn = russ_free_conn(conn);
-
 	exit(0);
 }
