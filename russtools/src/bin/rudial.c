@@ -178,12 +178,7 @@ main(int argc, char **argv) {
 	struct russ_forwarding	fwds[3];
 	char			*prog_name;
 	char			*addr, *saddr, *spath, *op;
-	int			exit_value;
-	pthread_t		in_th, out_th, err_th;
-	int			pass_fds[3];
-	struct pipe_fds		pipes[3];
 	int			argi;
-	int			line_buffering;
 	int			timeout;
 
 	prog_name = basename(strdup(argv[0]));
@@ -257,21 +252,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
 	}
-
-#if 0
-	if ((spawn_forward_bytes(&in_th, STDIN_FILENO, conn->fds[0], conn->fds[0]) < 0)
-		|| (spawn_forward_bytes(&out_th, conn->fds[1], STDOUT_FILENO, conn->fds[1]) < 0)
-		|| (spawn_forward_bytes(&err_th, conn->fds[2], STDERR_FILENO, conn->fds[2]) < 0)) {
-		fprintf(stderr, "error: failed to start thread for forwarder\n");
-		exit(-1);
-	}
-
-	dprintf("waiting...\n");
-	pthread_join(out_th, NULL);
-	pthread_join(err_th, NULL);
-	/* don't join in_th because a closed out and err mean the end */
-	/*pthread_join(in_th, NULL);*/
-#endif
 
 	russ_forwarding_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0);
 	russ_forwarding_init(&(fwds[1]), 1, conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
