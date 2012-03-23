@@ -7,31 +7,31 @@
 
 # system imports
 try:
-    import ConfigParser as configparser
+    from ConfigParser import ConfigParser as _ConfigParser
 except:
-    import configparser
+    from configparser import ConfigParser as _ConfigParser
 import os
 
 #
 import papyruss
 
-class ConfigParser(configparser.ConfigParser):
+class ConfigParser(_ConfigParser):
 
     def get(self, section, option, default=None):
         try:
-            return ConfigParser.get(self, section, option)
+            return _ConfigParser.get(self, section, option)
         except:
             return default
 
     def getint(self, section, option, default=None):
         try:
-            return ConfigParser.getint(self, section, option)
+            return _ConfigParser.getint(self, section, option)
         except:
             return default
 
     def getfloat(self, section, option, default=None):
         try:
-            return ConfigParser.getfloat(self, section, option)
+            return _ConfigParser.getfloat(self, section, option)
         except:
             return default
 
