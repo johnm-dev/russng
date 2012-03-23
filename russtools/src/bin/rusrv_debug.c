@@ -72,20 +72,29 @@ _daytime_handler(struct russ_conn *conn) {
 }
 
 static void
-print_discard_stats(int fd, time_t elapsed, long total) {
+print_discard_stats(int fd, float elapsed, long total) {
 	float	total_mb;
 
 	total_mb = (float)total/(1<<20);
-	russ_dprintf(fd, "total (MB): %.4f  elapsed (s): %d  throughput (MB/s): %.4f\n",
+	russ_dprintf(fd, "total (MB): %.4f  elapsed (s): %.4f  throughput (MB/s): %.4f\n",
 		total_mb, elapsed, total_mb/elapsed);
+}
+
+static double
+gettimeofday_float(void) {
+	struct timeval	tv;
+
+	gettimeofday(&tv, NULL);
+	return ((double)tv.tv_sec)+((double)tv.tv_usec)/1000000.0;
 }
 
 int
 _discard_handler(struct russ_conn *conn) {
-	char	*buf;
-	int	buf_size;
-	time_t	t0, last_t1;
-	long	n, total;
+	struct timeval	tv;
+	double		t0, t1, last_t1;
+	char		*buf;
+	int		buf_size;
+	long		n, total;
 
 	/* 8MB */
 	buf_size = 1<<23;
@@ -93,17 +102,18 @@ _discard_handler(struct russ_conn *conn) {
 		return _error_handler(conn, "error: cannot allocate buffer\n");
 	}
 	if ((conn->req.argc) && (strcmp(conn->req.argv[0], "--perf") == 0)) {
-		t0 = time(NULL);
+		t0 = gettimeofday_float();
 		last_t1 = t0;
 		total = 0;
 		while ((n = russ_read(conn->fds[0], buf, buf_size)) > 0) {
 			total += n;
-			if (time(NULL)-last_t1 > 2) {
-				last_t1 = time(NULL);
-				print_discard_stats(conn->fds[2], last_t1-t0, total);
+			t1 = gettimeofday_float();
+			if (t1-last_t1 > 2) {
+				print_discard_stats(conn->fds[2], t1-t0, total);
+				last_t1 = t1;
 			}
 		}
-		print_discard_stats(conn->fds[2], time(NULL)-t0, total);
+		print_discard_stats(conn->fds[2], gettimeofday_float()-t0, total);
 	} else {
 		while ((n = russ_read(conn->fds[0], buf, buf_size)) > 0);
 	}
@@ -139,7 +149,6 @@ master_handler(struct russ_conn *conn) {
 		} else if (strcmp(req->spath, "/daytime") == 0) {
 			rv = _daytime_handler(conn);
 		} else if (strcmp(req->spath, "/discard") == 0) {
-fprintf(stderr, "discarding...\n");
 			rv = _discard_handler(conn);
 		} else if (strcmp(req->spath, "/echo") == 0) {
 			rv = _echo_handler(conn);
