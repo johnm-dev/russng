@@ -6,10 +6,133 @@
 """
 
 # system imports
+try:
+    import ConfigParser as configparser
+except:
+    import configparser
 import os
 
 #
 import papyruss
+
+class ConfigParser(configparser.ConfigParser):
+
+    def get(self, section, option, default=None):
+        try:
+            return ConfigParser.get(self, section, option)
+        except:
+            return default
+
+    def getint(self, section, option, default=None):
+        try:
+            return ConfigParser.getint(self, section, option)
+        except:
+            return default
+
+    def getfloat(self, section, option, default=None):
+        try:
+            return ConfigParser.getfloat(self, section, option)
+        except:
+            return default
+
+class ServiceNode:
+    def __init__(self, handler=None, typ=None):
+        self.handler = handler
+        self.typ = typ
+        self.children = {}
+
+class ServiceTree2:
+
+    def __init__(self):
+        self.root = ServiceNode()
+
+    def add(self, path, handler):
+        """Add service node to tree.
+        """
+        node = self.root
+        comps = path.split("/")
+        for comp in comps[1:-1]:
+            next_node = node.children.get(comp)
+            if next_node == None:
+                node = node.children[comp] = ServiceNode()
+        node.children[comps[-1]] = ServiceNode(handler)
+
+    def _find(self, comps):
+        """Find node for path comps.
+        """
+        node = self.root
+        for comp in comps:
+            node = node.children.get(comp)
+            if node == None:
+                break
+        return node
+
+    def find(self, path):
+        """Find node for path.
+        """
+        node = self.root
+        return self._find(path.split("/")[1:])
+
+    def find_children(self, path):
+        """Find node for path and return node's children.
+        """
+        node = self._find(path.split("/")[1:])
+        if node:
+            return node.children
+        else:
+            return None
+
+    def remove(self, path):
+        """Remove node from tree: handler if node has children,
+        otherwise whole node.
+        """
+        comps = path.split("/")
+        parent_node = self._find(comps[1:-1])
+        try:
+            node = parent_node.children.get(comps[-1])
+            if len(node.children) == 0:
+                del parent_node[comps[-1]]
+            else:
+                node.handler = None
+                node.typ = None
+        except:
+            pass
+
+    def remove_all(self, path):
+        """Remove node and children from tree.
+        """
+        comps = path.split("/")
+        parent_node = self._find(comps[1:-1])
+        try:
+            del parent_node[comps[-1]]
+        except:
+            pass
+
+    def handler(self, conn):
+        """Select op handler and call.
+        """
+        req = conn.get_request()
+        svc_handler = self.find(req.spath)
+        if svc_handler:
+            svc_handler(conn)
+        else:
+            self.fallback_handler(conn)
+        conn.close()
+        del conn
+
+    def fallback_handler(self, conn):
+        op = conn.op
+        req = conn.get_request()
+        if op == "help":
+            os.write(conn.get_fd(2), "error: no service available\n")
+        elif op == "execute":
+            os.write(conn.get_fd(2), "error: no service available\n")
+        elif op == "info":
+            os.write(conn.get_fd(2), "error: no service available\n")
+        elif op == "list":
+            os.write(conn.get_fd(2), "error: no service available\n")
+        else:
+            os.write(conn.get_fd(2), "error: no service available\n")
 
 class ServiceTree:
     """Manage hierarchical (or not) service names and handlers to be
