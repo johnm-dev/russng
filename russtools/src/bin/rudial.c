@@ -131,29 +131,26 @@ main(int argc, char **argv) {
 		} else if (strcmp(arg, "--id") == 0) {
 
 			op = "id";
-			continue;
 		} else if ((strcmp(arg, "--info") == 0)
 			|| (strcmp(arg, "-i") == 0)) {
 
 			op = "info";
-			continue;
 		} else if ((strcmp(arg, "--list") == 0)
 			|| (strcmp(arg, "-l") == 0)) {
 
 			op = "list";
-			continue;
 		} else if (((strcmp(arg, "--op") == 0) || (strcmp(arg, "-o") == 0))
 			&& (argi < argc)) {
 			
 			arg = argv[argi++];
 			op = arg;
-			continue;
 		} else if (((strcmp(arg, "--timeout") == 0) || (strcmp(arg, "-t") == 0))
 			&& (argi < argc)) {
 
 			arg = argv[argi++];
-			if (sscanf(argv[argi], "%d", &timeout) >= 0) {
-				continue;
+			if (sscanf(argv[argi], "%d", &timeout) < 0) {
+				fprintf(stderr, "error: bad timeout value\n");
+				exit(-1);
 			}
 		} else if (((strcmp(arg, "--attr") == 0) || (strcmp(arg, "-a") == 0))
 			&& (argi < argc)) {
@@ -169,9 +166,10 @@ main(int argc, char **argv) {
 			}
 			attrv[attrc++] = arg;
 			attrv[attrc] = NULL;
+		} else {
+			fprintf(stderr, "error: bad option and/or missing arguments\n");
+			exit(-1);
 		}
-		fprintf(stderr, "error: bad option and/or missing arguments\n");
-		exit(-1);
 	}
 
 	/* addr and args */
@@ -180,7 +178,7 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 	addr = argv[argi++];
-	if ((conn = russ_dialv(addr, op, timeout, NULL, argc-argi, &(argv[argi]))) == NULL) {
+	if ((conn = russ_dialv(addr, op, timeout, attrv, argc-argi, &(argv[argi]))) == NULL) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
 	}
