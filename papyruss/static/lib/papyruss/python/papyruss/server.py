@@ -131,7 +131,11 @@ class ServiceTree2:
         elif op == "info":
             os.write(conn.get_fd(2), "error: no service available\n")
         elif op == "list":
-            os.write(conn.get_fd(2), "error: no service available\n")
+            node = self.find(req.spath)
+            if node:
+                os.write(conn.get_fd(1), "\n".join(node.children))
+            else:
+                os.write(conn.get_fd(2), "error: no service available\n")
         else:
             os.write(conn.get_fd(2), "error: no service available\n")
 
