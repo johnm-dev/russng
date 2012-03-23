@@ -36,7 +36,8 @@ class ConfigParser(_ConfigParser):
             return default
 
 class ServiceNode:
-    def __init__(self, handler=None, typ=None):
+    def __init__(self, ops=None, handler=None, typ=None):
+        self.ops = ops
         self.handler = handler
         self.typ = typ
         self.children = {}
@@ -46,7 +47,7 @@ class ServiceTree2:
     def __init__(self):
         self.root = ServiceNode()
 
-    def add(self, path, handler):
+    def add(self, path, ops, handler, typ=None):
         """Add service node to tree.
         """
         node = self.root
@@ -55,7 +56,7 @@ class ServiceTree2:
             next_node = node.children.get(comp)
             if next_node == None:
                 node = node.children[comp] = ServiceNode()
-        node.children[comps[-1]] = ServiceNode(handler)
+        node.children[comps[-1]] = ServiceNode(ops, handler, typ)
 
     def _find(self, comps):
         """Find node for path comps.
@@ -113,7 +114,7 @@ class ServiceTree2:
         """
         req = conn.get_request()
         node = self.find(req.spath)
-        if node and node.handler:
+        if node and node.handler and (req.op in node.ops or req.op == None):
             node.handler(conn)
         else:
             self.fallback_handler(conn)
@@ -121,8 +122,8 @@ class ServiceTree2:
         del conn
 
     def fallback_handler(self, conn):
-        op = conn.op
         req = conn.get_request()
+        op = req.op
         if op == "help":
             os.write(conn.get_fd(2), "error: no service available\n")
         elif op == "execute":
