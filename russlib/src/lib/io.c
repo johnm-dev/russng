@@ -303,6 +303,10 @@ _forward_bytes(void *_fwd) {
 		}
 	}
 
+	/* close fd */
+	close(fwd->in_fd);
+	close(fwd->out_fd);
+
 	/* release */
 	if (bp != buf) {
 		free(bp);
