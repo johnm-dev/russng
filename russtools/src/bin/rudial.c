@@ -170,7 +170,7 @@ main(int argc, char **argv) {
 			attrv[attrc++] = arg;
 			attrv[attrc] = NULL;
 		}
-		fprintf(stderr, "error: bad/missing arguments\n");
+		fprintf(stderr, "error: bad option and/or missing arguments\n");
 		exit(-1);
 	}
 
