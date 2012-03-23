@@ -175,7 +175,7 @@ main(int argc, char **argv) {
 	}
 
 	/* addr and args */
-	if (argi+1 >= argc) {
+	if (argi+1 > argc) {
 		fprintf(stderr, "error: bad/missing arguments\n");
 		exit(-1);
 	}
