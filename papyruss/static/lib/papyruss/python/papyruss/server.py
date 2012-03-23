@@ -112,9 +112,9 @@ class ServiceTree2:
         """Select op handler and call.
         """
         req = conn.get_request()
-        svc_handler = self.find(req.spath)
-        if svc_handler:
-            svc_handler(conn)
+        node = self.find(req.spath)
+        if node and node.handler:
+            node.handler(conn)
         else:
             self.fallback_handler(conn)
         conn.close()
