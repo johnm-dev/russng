@@ -16,10 +16,19 @@ import os
 import papyruss
 
 class ConfigParser(_ConfigParser):
+    """New ConfigParser which support an optional default value
+    parameter like dict.get().
+    """
 
     def get(self, section, option, default=None):
         try:
             return _ConfigParser.get(self, section, option)
+        except:
+            return default
+
+    def getboolean(self, section, option, default=None):
+        try:
+            return _ConfigParser.getboolean(self, section, option)
         except:
             return default
 
@@ -36,13 +45,26 @@ class ConfigParser(_ConfigParser):
             return default
 
 class ServiceNode:
+    """Used by ServiceTree in support of a hierarchy organized by
+    path components. Each node contains ops, handler, type
+    information.
+    """
+
     def __init__(self, ops=None, handler=None, typ=None):
         self.ops = ops
         self.handler = handler
         self.typ = typ
         self.children = {}
 
-class ServiceTree2:
+class ServiceTree:
+    """Provides a hierarchy of ServiceNode objects. Nodes in the
+    hierarchy can be added, removed, and searched for based on a
+    path. The ServiceTree provides a handler method matched by path
+    and op; no match falls back to the fallback_handler method. Each
+    of the handler methods may be overridden. The default
+    fallback_handler implementation supports the "list" operation
+    which returns a list of children for the path.
+    """
 
     def __init__(self):
         self.root = ServiceNode()
@@ -138,68 +160,6 @@ class ServiceTree2:
                 os.write(conn.get_fd(2), "error: no service available\n")
         else:
             os.write(conn.get_fd(2), "error: no service available\n")
-
-class ServiceTree:
-    """Manage hierarchical (or not) service names and handlers to be
-    called based on the connection request.
-    """
-
-    def __init__(self):
-        self.svc_handlers = {}
-        self.op_handlers = {
-            "help": self.op_help,
-            "info": self.op_info,
-            "execute": self.op_execute,
-            "list": self.op_list,
-        }
-
-    def add_op_handler(self, name, handler):
-        self.op_handlers[name] = handler
-
-    def add_service(self, name, handler):
-        self.svc_handlers[name] = handler
-
-    def handler(self, conn):
-        """Select op handler and call.
-        """
-        req = conn.get_request()
-        op_handler = self.op_handlers.get(req.op)
-        if op_handler:
-            op_handler(conn)
-        else:
-            self.op_error(conn)
-        conn.close()
-        del conn
-
-    def op_error(self, conn):
-        """Fallback operation; send error message.
-        """
-        os.write(conn.get_fd(2), "error: operation not supported\n")
-
-    def op_help(self, conn):
-        """Send help/usage information.
-        """
-        os.write(conn.get_fd(2), "error: help not available\n")
-
-    def op_info(self, conn):
-        """Send optional server information.
-        """
-        os.write(conn.get_fd(2), "error: server info not available\n")
-
-    def op_execute(self, conn):
-        """Execute the service.
-        """
-        req = conn.get_request()
-        handler = self.svc_handlers.get(req.spath)
-        if handler:
-            handler(conn)
-
-    def op_list(self, conn):
-        """Send a list of service names.
-        """
-        keys = sorted(self.handlers.keys())
-        keys.append("")
-        os.write(conn.get_fd(1), "\n".join(keys))
 
 class Server:
     """Server to handle requests and service them.
