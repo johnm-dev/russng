@@ -155,7 +155,8 @@ class ServiceTree:
         elif op == "list":
             node = self.find(req.spath)
             if node:
-                os.write(conn.get_fd(1), "\n".join(node.children))
+                if node.children:
+                    os.write(conn.get_fd(1), "%s\n" % "\n".join(node.children))
             else:
                 os.write(conn.get_fd(2), "error: no service available\n")
         else:
