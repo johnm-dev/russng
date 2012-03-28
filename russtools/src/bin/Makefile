@@ -6,7 +6,7 @@
 include ../../Makefile.inc
 
 LIBS=
-BINS=rudial rusrv_barrier rusrv_debug rusrv_echo
+BINS=rudial rusrv_barrier rusrv_debug rusrv_echo rusrv_exec
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
@@ -41,4 +41,7 @@ rusrv_debug:	rusrv_debug.c
 	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_echo:	rusrv_echo.c
+	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+
+rusrv_exec:	rusrv_exec.c
 	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
