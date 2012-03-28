@@ -188,10 +188,8 @@ class Conn:
     def get_request_attrs(self):
         req = self.ptr_conn.contents.req
         attrs = {}
-        while True:
-            s = req[len(attrs)]
-            if s == None:
-                break
+        for i in xrange(req.attrc):
+            s = req.attrv[i]
             try:
                 k, v = s.split("=", 1)
                 attrs[k] = v
