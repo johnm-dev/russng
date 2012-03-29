@@ -16,7 +16,7 @@ clean:
 	(cd src/lib; $(MAKE) clean)
 
 docs:
-	#(doxygen doxygen.conf)
+	(doxygen doxygen.conf)
 
 install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
