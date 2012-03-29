@@ -117,6 +117,7 @@ free_array:
 *
 * @param b	buffer
 * @param[out] vpp	string array with NULL sentinel
+* @param[out] alen	length of array (including sentinel)
 * @return	new buffer position; NULL if failure
 */
 char *
@@ -129,6 +130,7 @@ russ_dec_s_array0(char *b, char ***vpp, int *alen) {
 *
 * @param b	buffer
 * @param[out] vpp	string array with NULL sentinel
+* @param[out] alen	length of array (including sentinel)
 * @return	new buffer position; NULL if failure
 */
 char *
@@ -203,6 +205,7 @@ russ_enc_i(char *b, char *bend, int32_t v) {
 * @param b	buffer
 * @param bend	end of buffer
 * @param v	array of bytes
+* @param alen	length of array
 * @return	new buffer position; NULL if failure
 */
 char *

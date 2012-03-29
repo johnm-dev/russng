@@ -207,7 +207,7 @@ close_fds:
 *
 * @param saddr	service address
 * @param op	operation string
-* @param timeout	time allowed to complete dial
+* @param timeout	time allowed to complete operation
 * @param attrv	array of attributes (as name=value strings)
 * @param argc	# of args
 * @param argv	array of args
@@ -251,7 +251,7 @@ free_path:
 *
 * @param saddr	service address
 * @param op	operation string
-* @param timeout	time allowed to complete dial
+* @param timeout	time allowed to complete operation
 * @param attrv	array of attributes (as name=value strings)
 * @param ...	variable argument list of "char *" with NULL sentinel
 * @return	connection object; NULL on failure
@@ -359,6 +359,7 @@ free_lis:
 * Answer dial.
 *
 * @param lis	listener object
+* @param timeout	time allowed to complete operation
 * @return	connection object with credentials; not fully established
 */
 struct russ_conn *
@@ -409,7 +410,7 @@ free_conn:
 *
 * @param conn	answered connection object
 * @param cfds	array of descriptors to send to client
-* @param sdfs	array of descriptors for server side
+* @param sfds	array of descriptors for server side
 * @return	0 on success; -1 on error
 */
 int
