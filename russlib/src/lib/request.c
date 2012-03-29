@@ -136,7 +136,7 @@ russ_free_request_members(struct russ_conn *conn) {
 /**
 * Send request over conn.
 *
-* @param russ_conn	connection object
+* @param conn	connection object
 * @param timeout	time in which to complete the send
 * @return	0 on success, -1 on error
 */
