@@ -377,7 +377,11 @@ russ_answer(struct russ_listener *lis, int timeout) {
 
 	poll_fds[0].fd = lis->sd;
 	poll_fds[0].events = POLLIN;
-	due_time = time(NULL)+timeout;
+	if ((timeout == -1) || (timeout == 0)) {
+		due_time = timeout;
+	} else {
+		due_time = time(NULL)+timeout;
+	}
 
 	servaddr_len = sizeof(struct sockaddr_un);
 	while (1) {
