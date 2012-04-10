@@ -35,48 +35,39 @@
 
 void
 print_usage(char *prog_name) {
-	if (strcmp(prog_name, "ruhelp") == 0) {
-		fprintf(stderr, 
-"usage: ruhelp <addr>\n"
+	if (strcmp(prog_name, "rudial") == 0) {
+		printf(
+"usage: rudial [<option>] <op> <addr> [<arg> ...]\n"
 "\n"
-"Alias for rudial -h ...\n");
-	} else if (strcmp(prog_name, "ruinfo") == 0) {
-		fprintf(stderr,
-"usage: ruinfo <addr>\n"
-"\n"
-"Alias for rudial -i ...\n");
-	} else if (strcmp(prog_name, "ruls") == 0) {
-		fprintf(stderr,
-"usage: ruls <addr>\n",
-"\n"
-"Alias for rudial -l ...\n");
-	} else if (strcmp(prog_name, "rudial") == 0) {
-		fprintf(stderr,
-"usage: rudial [<option>] <addr> [<arg> ...]\n"
-"\n"
-"Dial service at <addr>. A service may support one or more\n"
-"operations (e.g., execute, list); execute is the default operation.\n"
-"Most other services are for obtaining state information.\n"
+"Dial service at <addr> to perform <op>. A service may support one\n"
+"or more operations (e.g., execute, help, info, list).\n"
 "\n"
 "A successful dial will effectively connect the stdin, stdout, and\n"
-"stderr of the service to that of the rudial. I.e., input to stdin\n"
-"of rudial will be forwarded to the service, stdout and stderr of\n"
-"the service will be forwarded to the same of rudial.\n"
+"stderr of the service. Once connected, rudial forwards the stdin,\n"
+"stdout, and sterr I/O data between the caller and the service.\n"
 "\n"
 "An exit value of < 0 indicates a failure to connect. Otherwise a 0\n"
 "exit value is returned.\n"
+);
+	} else if (strcmp(prog_name, "ruexec") == 0) {
+		printf( 
+"usage: ruexec [<option>] <addr>\n"
+"\n"
+"Execute service at <addr>.\n"
+);
+	} else {
+		return;
+	}
+	/* common help */
+	printf(
 "\n"
 "Options:\n"
-"-h|--help      print this information\n"
-"-i|--info      show server-specific information as zero or more\n"
-"               name=value lines\n"
-"-l|--list      list services provided by the server as paths to be\n"
-"               used in the <addr> argument\n"
-"-o|--op <op>   request operation <op> from service\n"
-"-t|--timeout <seconds>\n"
-"               quit the dial if it does not connect within the\n"
-"               given time\n");
-	}
+"-a|--attr <name=vaue>\n" \
+"               pass a 'name=value' string to the service.\n"
+"\n"
+"-t|--timeout <seconds>\n" \
+"               allow a given amount of time to connect before\n"
+);
 }
 
 int
@@ -90,32 +81,17 @@ main(int argc, char **argv) {
 	int			argi;
 	int			attrc;
 	int			timeout;
+	int			req_opt_mask;
 
 	prog_name = basename(strdup(argv[0]));
-	if (argc < 2) {
-		fprintf(stderr, "error: bad/missing arguments\n");
-		exit(-1);
-	}
 
-	/* aliases */
-	if (strcmp(prog_name, "ruhelp") == 0) {
-		op = "help";
-	} else if (strcmp(prog_name, "ruinfo") == 0) {
-		op = "info";
-	} else if (strcmp(prog_name, "ruls") == 0) {
-		op = "list";
-	} else {
-		op = "execute";
-		if (strcmp(prog_name, "rudial") != 0) {
-			fprintf(stderr, "warning: unknown alias, running as rudial\n");
-			prog_name = "rudial";
-		}
-	}
-
-	/* options */
+	/* initialize */
 	timeout = -1;
 	argi = 1;
 	attrc = 0;
+	op = NULL;
+
+	/* options */
 	while (argi < argc) {
 		arg = argv[argi++];
 
@@ -123,36 +99,8 @@ main(int argc, char **argv) {
 			argi--;
 			break;
 		}
-		if ((strcmp(arg, "--help") == 0)
-			|| (strcmp(arg, "-h") == 0)) {
 
-			print_usage(prog_name);
-			exit(0);
-		} else if (strcmp(arg, "--id") == 0) {
-
-			op = "id";
-		} else if ((strcmp(arg, "--info") == 0)
-			|| (strcmp(arg, "-i") == 0)) {
-
-			op = "info";
-		} else if ((strcmp(arg, "--list") == 0)
-			|| (strcmp(arg, "-l") == 0)) {
-
-			op = "list";
-		} else if (((strcmp(arg, "--op") == 0) || (strcmp(arg, "-o") == 0))
-			&& (argi < argc)) {
-			
-			arg = argv[argi++];
-			op = arg;
-		} else if (((strcmp(arg, "--timeout") == 0) || (strcmp(arg, "-t") == 0))
-			&& (argi < argc)) {
-
-			arg = argv[argi++];
-			if (sscanf(argv[argi], "%d", &timeout) < 0) {
-				fprintf(stderr, "error: bad timeout value\n");
-				exit(-1);
-			}
-		} else if (((strcmp(arg, "--attr") == 0) || (strcmp(arg, "-a") == 0))
+		if (((strcmp(arg, "--attr") == 0) || (strcmp(arg, "-a") == 0))
 			&& (argi < argc)) {
 			
 			arg = argv[argi++];
@@ -166,19 +114,39 @@ main(int argc, char **argv) {
 			}
 			attrv[attrc++] = arg;
 			attrv[attrc] = NULL;
+		} else if ((strcmp(arg, "-h") == 0) || (strcmp(arg, "--help") == 0)) {
+			print_usage(prog_name);
+			exit(0);
+		} else if (((strcmp(arg, "--timeout") == 0) || (strcmp(arg, "-t") == 0))
+			&& (argi < argc)) {
+
+			arg = argv[argi++];
+			if (sscanf(argv[argi], "%d", &timeout) < 0) {
+				fprintf(stderr, "error: bad timeout value\n");
+				exit(-1);
+			}
 		} else {
 			fprintf(stderr, "error: bad option and/or missing arguments\n");
 			exit(-1);
 		}
 	}
 
-	/* addr and args */
-	if (argi+1 > argc) {
+	/* [op], addr and args */
+	if ((strcmp(prog_name, "ruexec") == 0)
+		&& (argi=1 <= argc)) {
+		addr = argv[argi++];
+		conn = russ_execv(addr, timeout, attrv, argc-argi, &(argv[argi]));
+	} else if ((strcmp(prog_name, "rudial") == 0) 
+		&& (argi+2 <= argc)) {
+		op = argv[argi++];
+		addr = argv[argi++];
+		conn = russ_dialv(addr, op, timeout, attrv, argc-argi, &(argv[argi]));
+	} else {
 		fprintf(stderr, "error: bad/missing arguments\n");
 		exit(-1);
 	}
-	addr = argv[argi++];
-	if ((conn = russ_dialv(addr, op, timeout, attrv, argc-argi, &(argv[argi]))) == NULL) {
+
+	if (conn == NULL) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
 	}
