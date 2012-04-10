@@ -111,6 +111,7 @@ void russ_close_fd(struct russ_conn *, int);
 
 struct russ_conn *russ_dialv(char *, char *, int, char **, int, char **);
 struct russ_conn *russ_diall(char *, char *, int, char **, ...);
+
 void russ_close_conn(struct russ_conn *);
 struct russ_conn *russ_free_conn(struct russ_conn *);
 
@@ -119,6 +120,13 @@ struct russ_conn *russ_answer(struct russ_listener *, int);
 int russ_accept(struct russ_conn *, int *, int *);
 void russ_close_listener(struct russ_listener *);
 struct russ_listener *russ_free_listener(struct russ_listener *);
+
+/* helpers.c */
+struct russ_conn *russ_execv(char *, int, char **, int, char **);
+struct russ_conn *russ_execl(char *, int, char **, ...);
+struct russ_conn *russ_help(char *, int);
+struct russ_conn *russ_info(char *, int);
+struct russ_conn *russ_list(char *, int);
 
 /* io.c */
 ssize_t russ_read(int, char *, size_t);
