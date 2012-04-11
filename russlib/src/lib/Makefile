@@ -15,7 +15,10 @@ clean:
 
 install:
 	mkdir -p $(INSTALL_DIR)/lib
-	(cp libruss.a libruss.so $(INSTALL_DIR)/lib)
+	(cp libruss.a $(INSTALL_DIR)/lib)
+	if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
+		(cp libruss.so $(INSTALL_DIR)/lib) \
+	fi
 
 libruss.a: $(SRCS)
 	$(CC) $(CFLAGS) -fPIC -g -c -I../include $(SRCS)
