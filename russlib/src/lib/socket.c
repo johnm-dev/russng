@@ -69,8 +69,16 @@ russ_get_credentials(int sd, struct russ_credentials *cred) {
 	cred->pid = (long)_cred.pid;
 	cred->uid = (long)_cred.uid;
 	cred->gid = (long)_cred.gid;
-#elif BSD
-	/* no support */
+#elif FREEBSD
+	struct ucred	_cred;
+
+	_cred_len = sizeof(struct ucred);
+	if (getsockopt(sd, SOL_SOCKET, SO_PEERCRED, &_cred, &_cred_len) < 0) {
+		return -1;
+	}
+	cred->pid = (long)_cred.pid;
+	cred->uid = (long)_cred.uid;
+	cred->gid = (long)_cred.gid;
 #endif
 	return 0;
 }
