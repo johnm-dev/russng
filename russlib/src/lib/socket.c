@@ -31,6 +31,7 @@
 
 #include <errno.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -70,15 +71,20 @@ russ_get_credentials(int sd, struct russ_credentials *cred) {
 	cred->uid = (long)_cred.uid;
 	cred->gid = (long)_cred.gid;
 #elif FREEBSD
-	struct ucred	_cred;
-
-	_cred_len = sizeof(struct ucred);
-	if (getsockopt(sd, SOL_SOCKET, SO_PEERCRED, &_cred, &_cred_len) < 0) {
+	if (getpeereid(sd, (uid_t *)&(cred->uid), (gid_t *)&(cred->gid)) < 0) {
 		return -1;
 	}
-	cred->pid = (long)_cred.pid;
-	cred->uid = (long)_cred.uid;
-	cred->gid = (long)_cred.gid;
+	cred->pid = -1;
+#elif FREEBSD_ALT
+	struct xucred	_cred;
+
+	_cred_len = sizeof(struct xucred);
+	if (getsockopt(sd, SOL_SOCKET, LOCAL_PEERCRED, &_cred, &_cred_len) < 0) {
+		return -1;
+	}
+	cred->pid = (long)-1;
+	cred->uid = (long)_cred.cr_uid;
+	cred->gid = (long)_cred.cr_groups[0];
 #endif
 	return 0;
 }
