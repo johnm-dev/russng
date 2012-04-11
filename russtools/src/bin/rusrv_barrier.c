@@ -155,8 +155,8 @@ req_handler(struct russ_conn *conn) {
 				barrier->items[barrier->nitems].tag = strdup(buf);
 			}
 			barrier->items[barrier->nitems++].conn = conn;
-			close(conn->fds[0]);
-			conn->fds[0] = -1;
+			//close(conn->fds[0]);
+			//conn->fds[0] = -1;
 			close(conn->fds[2]);
 			conn->fds[2] = -1;
 
