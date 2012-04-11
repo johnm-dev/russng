@@ -30,25 +30,25 @@ install:
 	(cd $(INSTALL_DIR)/bin; ln -fs ruls ruhelp; ln -fs ruls ruinfo)
 
 rudial:	rudial.c
-	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rudial2:	rudial2.c
-	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 ruls:	ruls.c
-	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_barrier:	rusrv_barrier.c
-	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_debug:	rusrv_debug.c
-	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_echo:	rusrv_echo.c
-	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_exec:	rusrv_exec.c
-	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_pexec:	rusrv_pexec.c
-	$(CC) -static $(CFLAGS) -g -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)

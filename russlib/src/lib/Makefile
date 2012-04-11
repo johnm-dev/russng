@@ -21,7 +21,7 @@ install:
 	fi
 
 libruss.a: $(SRCS)
-	$(CC) $(CFLAGS) -fPIC -g -c -I../include $(SRCS)
+	$(CC) $(CFLAGS) -fPIC -c -I../include $(SRCS)
 	$(AR) rv libruss.a $(OBJS)
 
 libruss.so:	libruss.a
