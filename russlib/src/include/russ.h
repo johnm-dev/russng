@@ -27,6 +27,8 @@
 #ifndef RUSS_H
 #define RUSS_H
 
+#include <pthread.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
