@@ -175,7 +175,7 @@ req_handler(struct russ_conn *conn) {
 				exit(0);
 			} else if (strcmp(conn->req.spath, "/tags") == 0) {
 				for (i = 0; i < barrier->nitems; i++) {
-					russ_dprintf(outfd, "%s\n", barrier->items[i].conn->fds[1]);
+					russ_dprintf(outfd, "%s\n", barrier->items[i].tag);
 				}
 			} else if (strcmp(conn->req.spath, "/ttl") == 0) {
 				if (barrier->timeout == -1) {
