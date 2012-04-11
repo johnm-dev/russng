@@ -17,3 +17,9 @@ ifeq ($(UNAME_SYSTEM),Linux)
 	CC=gcc
 	CFLAGS="-DLINUX"
 endif
+
+ifeq ($UNAME_SYSTEM),FreeBSD)
+	CC=gcc
+	CFLAGS="-DFREEBSD"
+	MAKE=gmake
+endif
