@@ -22,4 +22,6 @@ libruss.a: $(SRCS)
 	$(AR) rv libruss.a $(OBJS)
 
 libruss.so:	libruss.a
-	$(CC) -shared -o $@ $(OBJS)
+	if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
+		$(CC) -shared -o $@ $(OBJS) \
+	fi
