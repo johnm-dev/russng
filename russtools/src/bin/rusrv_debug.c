@@ -194,7 +194,7 @@ master_handler(struct russ_conn *conn) {
 		russ_dprintf(conn->fds[1], "see server usage for details\n");
 		rv = 0;
 	} else if (strcmp(req->op, "list") == 0) {
-		russ_dprintf(conn->fds[1], "/chargen\n/daytime\n/discard\n/echo\n/request\n");
+		russ_dprintf(conn->fds[1], "/chargen\n/conn\n/daytime\n/discard\n/echo\n/request\n");
 		rv = 0;
 	} else {
 		rv = _error_handler(conn, "error: unsupported operation\n");
@@ -213,6 +213,7 @@ print_usage(char **argv) {
 "\n"
 ".../chargen	character generator outputting to stdout; follows\n"
 "		the RFC 864 protocol sequence\n"
+".../conn       display russ connection information\n"
 ".../daytime	returns the date and time to the stdout\n"
 ".../discard [--perf]\n"
 "		discards all data received from stdin; if --perf is\n"
