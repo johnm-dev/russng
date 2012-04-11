@@ -117,31 +117,17 @@ release_barrier(char ch) {
 	free(barrier->items);
 }
 
-int
-fdprintf(int fd, char *format, ...) {
-	char	buf[4096];
-	int	n;
-	va_list	ap;
-
-	va_start(ap, format);
-	n = vsnprintf(buf, sizeof(buf), format, ap);
-	va_end(ap);
-
-//fprintf(stderr, "fd (%d) format (%s) n (%d) buf (%s)\n", fd, format, n, buf);
-	write(fd, buf, n);
-	fsync(fd);
-	return n;
-}
-
 void
 print_service_usage(struct russ_conn *conn) {
-	fdprintf(conn->fds[2],
+	russ_dprintf(conn->fds[2],
 "Barrier service.\n"
 "\n"
-"/count		print # of waiters currently waiting\n"
+"/count		print # of waiters expected\n"
 "/kill		kill barrier and release all waiters\n"
+"/tags		print tags of waiters\n"
 "/ttl		print time-to-live remaining\n"
-"/wait		wait on barrier\n"
+"/wait [<tag>]	wait on barrier; register optional tag\n"
+"/wcount	print # of waiters currently waiting\n"
 );
 }
 
@@ -181,32 +167,35 @@ req_handler(struct russ_conn *conn) {
 			}
 		} else {
 			if (strcmp(conn->req.spath, "/count") == 0) {
-				fdprintf(outfd, "%d\n", barrier->count);
+				russ_dprintf(outfd, "%d\n", barrier->count);
 			} else if (strcmp(conn->req.spath, "/wcount") == 0) {
-				fdprintf(outfd, "%d\n", barrier->nitems);
+				russ_dprintf(outfd, "%d\n", barrier->nitems);
 			} else if (strcmp(conn->req.spath, "/kill") == 0) {
 				release_barrier('k');
 				exit(0);
 			} else if (strcmp(conn->req.spath, "/tags") == 0) {
 				for (i = 0; i < barrier->nitems; i++) {
-					fdprintf(outfd, "%s\n", barrier->items[i].conn->fds[1]);
+					russ_dprintf(outfd, "%s\n", barrier->items[i].conn->fds[1]);
 				}
 			} else if (strcmp(conn->req.spath, "/ttl") == 0) {
 				if (barrier->timeout == -1) {
-					fdprintf(outfd, "infinite\n");
+					russ_dprintf(outfd, "infinite\n");
 				} else {
-					fdprintf(outfd, "%d\n", barrier->due_time-time(NULL));
+					russ_dprintf(outfd, "%d\n", barrier->due_time-time(NULL));
 				}
 			} else {
-				fdprintf(conn->fds[2], "error: unknown service\n");
+				russ_dprintf(conn->fds[2], "error: unknown service\n");
 			}
 			goto close_conn;
 		}
-	} else if (strcmp(conn->req.op, "list") == 0) {
+	} else if (strcmp(conn->req.op, "help") == 0) {
 		print_service_usage(conn);
 		goto close_conn;
+	} else if (strcmp(conn->req.op, "list") == 0) {
+		russ_dprintf(conn->fds[1], "/count\n/kill\n/tags\n/ttl\n/wait\n/wcount\n");
+		goto close_conn;
 	} else {
-		fdprintf(conn->fds[2], "error: unknown operation\n");
+		russ_dprintf(conn->fds[2], "error: unknown operation\n");
 		goto close_conn;
 	}
 	return 0;
