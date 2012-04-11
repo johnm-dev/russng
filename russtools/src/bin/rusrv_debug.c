@@ -61,6 +61,13 @@ _chargen_handler(struct russ_conn *conn) {
 }
 
 int
+_conn_handler(struct russ_conn *conn) {
+	russ_dprintf(conn->fds[1], "uid (%d)\ngid (%d)\npid (%d)\n",
+		conn->cred.uid, conn->cred.gid, conn->cred.pid);
+	return 0;
+}
+
+int
 _daytime_handler(struct russ_conn *conn) {
 	char		buf[1024];
 	time_t		now;
@@ -170,6 +177,8 @@ master_handler(struct russ_conn *conn) {
 	if (strcmp(req->op, "execute") == 0) {
 		if (strcmp(req->spath, "/chargen") == 0) {
 			rv = _chargen_handler(conn);
+		} else if (strcmp(req->spath, "/conn") == 0) {
+			rv = _conn_handler(conn);
 		} else if (strcmp(req->spath, "/daytime") == 0) {
 			rv = _daytime_handler(conn);
 		} else if (strcmp(req->spath, "/discard") == 0) {
