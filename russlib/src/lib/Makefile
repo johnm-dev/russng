@@ -16,8 +16,8 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)/lib
 	(cp libruss.a $(INSTALL_DIR)/lib)
-	if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
-		(cp libruss.so $(INSTALL_DIR)/lib) \
+	@if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
+		(cp libruss.so $(INSTALL_DIR)/lib); \
 	fi
 
 libruss.a: $(SRCS)
@@ -25,6 +25,6 @@ libruss.a: $(SRCS)
 	$(AR) rv libruss.a $(OBJS)
 
 libruss.so:	libruss.a
-	if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
-		$(CC) -shared -o $@ $(OBJS) \
+	@if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
+		$(CC) -shared -o $@ $(OBJS); \
 	fi
