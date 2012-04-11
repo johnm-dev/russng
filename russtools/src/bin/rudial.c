@@ -133,7 +133,7 @@ main(int argc, char **argv) {
 
 	/* [op], addr and args */
 	if ((strcmp(prog_name, "ruexec") == 0)
-		&& (argi=1 <= argc)) {
+		&& (argi+1 <= argc)) {
 		addr = argv[argi++];
 		conn = russ_execv(addr, timeout, attrv, argc-argi, &(argv[argi]));
 	} else if ((strcmp(prog_name, "rudial") == 0) 
