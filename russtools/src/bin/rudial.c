@@ -89,6 +89,7 @@ main(int argc, char **argv) {
 	timeout = -1;
 	argi = 1;
 	attrc = 0;
+	attrv[0] = NULL;
 	op = NULL;
 
 	/* options */
