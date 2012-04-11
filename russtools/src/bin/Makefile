@@ -3,7 +3,7 @@
 #
 # expect INSTALL_DIR
 
-include ../../Makefile.inc
+include ../../../Makefile.inc
 
 LIBS=
 BINS=rudial ruls rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pexec
