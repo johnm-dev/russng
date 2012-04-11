@@ -3,7 +3,7 @@
 #
 # expect INSTALL_DIR
 
-include ../../Makefile.inc
+include ../../../Makefile.inc
 
 SRCS=conn.c encdec.c helpers.c io.c misc.c request.c socket.c server.c
 OBJS=conn.o encdec.o helpers.o io.o misc.o request.o socket.o server.o

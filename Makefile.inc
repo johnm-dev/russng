@@ -5,21 +5,22 @@
 UNAME_SYSTEM=$(shell uname -s)
 
 ifeq ($(UNAME_SYSTEM),AIX)
-	CC=xlc_r -q32
-	CFLAGS="-DAIX"
-	LIBS="-lbsd"
-	OBJECT_MODE=32
+	# OBJECT_MODE should be set externally
+	CC=xlc_r
+	CFLAGS=-DAIX -g -bstatic
+	LIBS=-lbsd
 	PYTHON=python2.6
 	MAKE=gmake
 endif
 
 ifeq ($(UNAME_SYSTEM),Linux)
 	CC=gcc
-	CFLAGS="-DLINUX"
+	CFLAGS=-DLINUX -g -static
+	MAKE=make
 endif
 
 ifeq ($(UNAME_SYSTEM),FreeBSD)
 	CC=gcc
-	CFLAGS="-DFREEBSD"
+	CFLAGS=-DFREEBSD -g -static
 	MAKE=gmake
 endif
