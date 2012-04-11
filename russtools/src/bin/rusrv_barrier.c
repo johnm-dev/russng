@@ -54,7 +54,7 @@ struct barrier {
 	time_t			timeout;
 	time_t			due_time;
 	struct barrier_item	*items;
-	int	nitems;
+	int			nitems;
 };
 
 struct barrier	*barrier;
@@ -122,12 +122,12 @@ print_service_usage(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[2],
 "Barrier service.\n"
 "\n"
-"/count		print # of waiters expected\n"
-"/kill		kill barrier and release all waiters\n"
-"/tags		print tags of waiters\n"
-"/ttl		print time-to-live remaining\n"
-"/wait [<tag>]	wait on barrier; register optional tag\n"
-"/wcount	print # of waiters currently waiting\n"
+"/count         print # of waiters expected\n"
+"/kill          kill barrier and release all waiters\n"
+"/tags          print tags of waiters\n"
+"/ttl           print time-to-live remaining\n"
+"/wait [<tag>]  wait on barrier; register optional tag\n"
+"/wcount        print # of waiters currently waiting\n"
 );
 }
 
