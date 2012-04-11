@@ -179,6 +179,12 @@ master_handler(struct russ_conn *conn) {
 		} else {
 			rv = _error_handler(conn, "error: unknown service\n");
 		}
+	} else if (strcmp(req->op, "help") == 0) {
+		russ_dprintf(conn->fds[1], "see server usage for details\n");
+		rv = 0;
+	} else if (strcmp(req->op, "list") == 0) {
+		russ_dprintf(conn->fds[1], "/chargen\n/daytime\n/discard\n/echo\n/request\n");
+		rv = 0;
 	} else {
 		rv = _error_handler(conn, "error: unsupported operation\n");
 	}
