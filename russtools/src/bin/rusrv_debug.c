@@ -57,6 +57,7 @@ _chargen_handler(struct russ_conn *conn) {
 		}
 		usleep(100000);
 	}
+	return 0;
 }
 
 int
@@ -69,6 +70,7 @@ _daytime_handler(struct russ_conn *conn) {
 	now_tm = localtime(&now);
 	strftime(buf, sizeof(buf), "%A, %B %d, %Y %T-%Z", now_tm);
 	russ_dprintf(conn->fds[2], "%s\n", buf);
+	return 0;
 }
 
 static void
