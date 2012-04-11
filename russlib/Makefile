@@ -16,7 +16,11 @@ clean:
 	(cd src/lib; $(MAKE) clean)
 
 docs:
-	(doxygen doxygen.conf)
+	@if [ `doxygen -h 2> /dev/null` ]; then \
+		(doxygen doxygen.conf); \
+	else \
+		echo "warning: doxygen not available to produce documentation"; \
+	fi
 
 install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
