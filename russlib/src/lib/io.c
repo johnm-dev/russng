@@ -348,13 +348,17 @@ russ_forwarding_init(struct russ_forwarding *fwd, int to_join, int in_fd, int ou
 */
 int
 russ_forward_bytes(int nfwds, struct russ_forwarding *fwds) {
-	int	i;
+	pthread_attr_t	attr;
+	int		i;
 
 	/* set up/start threads */
 	for (i = 0; i < nfwds; i++) {
-		if (pthread_create(&(fwds[i].th), NULL, _forward_bytes, (void *)&(fwds[i])) < 0) {
+		pthread_attr_init(&attr);
+		pthread_attr_setstacksize(&attr, (1<<20)+(1<<20));
+		if (pthread_create(&(fwds[i].th), &attr, _forward_bytes, (void *)&(fwds[i])) < 0) {
 			goto kill_threads;
 		}
+		pthread_attr_destroy(&attr);
 	}
 	/* join threads */
 	for (i = 0; i < nfwds; i++) {
