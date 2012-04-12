@@ -184,6 +184,7 @@ russ_await_request(struct russ_conn *conn) {
 
 	req = &(conn->req);
 	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
+		|| (strcmp(RUSS_PROTOCOL_STRING, req->protocol_string) != 0)
 		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
 		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
 		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &(req->attrc))) == NULL)
