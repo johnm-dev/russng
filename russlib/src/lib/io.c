@@ -210,8 +210,8 @@ russ_poll(struct pollfd *poll_fds, int nfds, int due_time) {
 	int	poll_timeout;
 	int	rv;
 
-fprintf(stderr, "russ_poll rv (%d)\n", rv);
 	while ((due_time > time(NULL)) || (due_time == -1) || (due_time == 0)) {
+//fprintf(stderr, "russ_poll rv (%d) errno (%d)\n", rv, errno);
 		if ((due_time == -1) || (due_time == 0)) {
 			poll_timeout = due_time;
 		} else {
@@ -227,7 +227,8 @@ fprintf(stderr, "russ_poll rv (%d)\n", rv);
 			break;
 		}
 	}
-fprintf(stderr, "russ_poll rv (%d)\n", rv);
+//fprintf(stderr, "poll_fds (%d) nfds (%d) poll_timeout (%d)\n", poll_fds[0], nfds, poll_timeout);
+//fprintf(stderr, "russ_poll rv (%d) errno (%d)\n", rv, errno);
 	return rv;
 }
 
