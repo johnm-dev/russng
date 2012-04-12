@@ -7,7 +7,8 @@ UNAME_SYSTEM=$(shell uname -s)
 ifeq ($(UNAME_SYSTEM),AIX)
 	# OBJECT_MODE should be set externally
 	CC=xlc_r
-	CFLAGS=-DAIX -g -bstatic
+	#CFLAGS=-DAIX -g -bstatic
+	CFLAGS=-DAIX -g
 	LIBS=-lbsd
 	PYTHON=python2.6
 	MAKE=gmake
