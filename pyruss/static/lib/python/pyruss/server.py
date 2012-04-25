@@ -1,6 +1,26 @@
 #! /usr/bin/env python
 #
-# papyruss/server.py
+# pyruss/server.py
+
+# license--start
+#
+#  This file is part of the pyruss library.
+#  Copyright (C) 2012 John Marshall
+#
+#  The RUSS library is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# license--end
 
 """Server and support for RUSS-based services.
 """
@@ -13,7 +33,7 @@ except:
 import os
 
 #
-import papyruss
+import pyruss
 
 class ConfigParser(_ConfigParser):
     """New ConfigParser which support an optional default value
@@ -177,8 +197,8 @@ class Server:
         self.lis = None
 
     def __del__(self):
-        papyruss.close_listener_conn(self.lis)
-        papyruss.free_listener_conn(self.lis)
+        pyruss.close_listener_conn(self.lis)
+        pyruss.free_listener_conn(self.lis)
 
     def announce(self, saddr, mode, uid, gid):
         """Announce service on filesystem.
@@ -187,7 +207,7 @@ class Server:
         self.mode = mode
         self.uid = uid
         self.gid = gid
-        self.lis = papyruss.announce(saddr, mode, uid, gid)
+        self.lis = pyruss.announce(saddr, mode, uid, gid)
 
     def loop(self):
         if self.server_type == "fork":
