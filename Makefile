@@ -11,17 +11,17 @@ HERE_DIR:=$(shell dirname $(HERE_FILE))
 all:
 	(cd russlib; $(MAKE))
 	(cd russtools; $(MAKE))
-	(cd papyruss; $(MAKE))
+	(cd pyruss; $(MAKE))
 
 clean:
 	(cd russlib; $(MAKE) clean)
 	(cd russtools; $(MAKE) clean)
-	(cd papyruss; $(MAKE) clean)
+	(cd pyruss; $(MAKE) clean)
 
 docs:
 	(cd russlib; $(MAKE) docs)
 	#(cd russtools; $(MAKE) docs)
-	#(cd papyruss; $(MAKE) docs)
+	#(cd pyruss; $(MAKE) docs)
 
 install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
@@ -29,4 +29,4 @@ install:
 	:
 	(cd russlib; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd russtools; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	(cd papyruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
+	(cd pyruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})

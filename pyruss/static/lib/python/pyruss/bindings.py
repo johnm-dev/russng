@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 #
-# papyruss/bindings.py
+# pyruss/bindings.py
 
 # license--start
 #
-#  This file is part of the papyruss library.
+#  This file is part of the pyruss library.
 #  Copyright (C) 2012 John Marshall
 #
 #  The RUSS library is free software: you can redistribute it and/or modify

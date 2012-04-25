@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#  lib/papyruss/__init__.py
+#  lib/pyruss/__init__.py
 
 from bindings import *
 from server import *
