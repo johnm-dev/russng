@@ -12,16 +12,19 @@ all:
 	(cd russlib; $(MAKE))
 	(cd russtools; $(MAKE))
 	(cd pyruss; $(MAKE))
+	(cd rbruss; $(MAKE))
 
 clean:
 	(cd russlib; $(MAKE) clean)
 	(cd russtools; $(MAKE) clean)
 	(cd pyruss; $(MAKE) clean)
+	(cd rbruss; $(MAKE) clean)
 
 docs:
 	(cd russlib; $(MAKE) docs)
 	#(cd russtools; $(MAKE) docs)
 	#(cd pyruss; $(MAKE) docs)
+	#(cd rbruss; $(MAKE) docs)
 
 install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
@@ -30,3 +33,4 @@ install:
 	(cd russlib; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd russtools; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd pyruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
+	(cd rbruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
