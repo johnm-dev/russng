@@ -27,16 +27,17 @@
 
 require "ffi"
 
-module RussLib
+module Russ
   extend FFI::Library
   ffi_lib "libruss.so"
 
-  # russ_dialv
-  attach_function 'russ_dialv', [ :string, :string, :int, :pointer, :int, :pointer ], :pointer
-  attach_function 'russ_close_conn', [ :pointer ], :void
-  attach_function 'russ_close_fd', [ :pointer, :int ], :void
-  attach_function 'russ_free_conn', [ :pointer ], :void
-  attach_function 'russ_loop', [ :pointer, :pointer ], :void
+  #
+  # C API structures
+  #
+
+  class Russ_Listener_Structure < FFI::Struct
+    layout :sd, :int
+  end
 
   class Russ_Credentials_Structure < FFI::Struct
     layout :pid, :long,
@@ -62,13 +63,56 @@ module RussLib
       :fds, [ :int, 3 ]
   end
 
-  # Dial a service
+  #
+  # C API signatures
+  #
+
+  callback :handler_func, [:int, :pointer], :int
+
+  attach_function 'russ_dialv', [:string, :string, :int, :pointer, :int, :pointer], :pointer
+  attach_function 'russ_close_conn', [:pointer], :void
+  attach_function 'russ_close_fd', [:pointer, :int], :void
+  attach_function 'russ_free_conn', [:pointer], :void
+  attach_function 'russ_loop', [:pointer, :pointer], :void
+  attach_function 'russ_answer', [:pointer, :int], :pointer
+  attach_function 'russ_accept', [:pointer, :pointer, :pointer], :int
+  attach_function 'russ_await_request', [:pointer], :int
+  attach_function 'russ_close_listener', [:pointer], :void
+  attach_function 'russ_free_listener', [:pointer], :pointer
+  attach_function 'russ_loop', [:pointer, :handler_func], :void
+
+  # not supporting russ_exec*()
+  attach_function 'russ_help', [:string, :int], :pointer
+  attach_function 'russ_info', [:string, :int], :pointer
+  attach_function 'russ_list', [:string, :int], :pointer
+
+  #
+  # ruby API
+  #
+
+  def self.exec(saddr, timeout, attrs, args)
+    return self.dial(saddr, "execute", timeout, attrs, args)
+  end
+
+  def self.help(saddr, timeout)
+    return ClientConn.new(Russ.russ_help(saddr, timeout))
+  end
+
+  def self.info(saddr, timeout)
+    return ClientConn.new(Russ.russ_info(saddr, timeout))
+  end
+
+  def self.list(saddr, timeout)
+    return ClientConn.new(Russ.russ_list(saddr, timeout))
+  end
+
+  # dial a service
   def self.dial(saddr, op, timeout, attrs, args)
     if attrs.nil? or attrs.length == 0
-      p = "AA.1"
+      c_attrs = nil
     else
       c_attrs = FFI::MemoryPointer.new(:pointer, attrs.length+1)
-      (0..attrs.length).to_a.zip(attrs.keys) {|i, k|
+      (0..attrs.length).zip(attrs.keys) {|i, k|
         c_attrs[i] = "${k}=${attrs[k]}"
       }
       c_attrs[attrs.length] = nil
@@ -80,15 +124,21 @@ module RussLib
       args_length = 0
     else
       c_argv = FFI::MemoryPointer.new(:pointer, args.length+1)
-      (0..args.length).to_a.zip(args) {|i, v|
+      #(0..args.length).to_a.zip(args) {|i, v|
+      args.each_with_index {|v, i|
         c_argv[i] = args[i]
       }
       args_length = args.length
     end
-    return ClientConn.new(RussLib.russ_dialv(saddr, op, timeout, c_attrs, args_length, c_argv))
+    return ClientConn.new(Russ.russ_dialv(saddr, op, timeout, c_attrs, args_length, c_argv))
   end
 
-  # Common (client, server) connection.
+  # announce service
+  def announce(path, mode, uid, gid)
+    return Listener.new(Russ.russ_announce(path, mode, uid, gid))
+  end
+
+  # common (client, server) connection
   class Conn
     @raw_conn
     @ptr_conn
@@ -100,68 +150,113 @@ module RussLib
     end
 
     def release
-      RussLib.russ_free_conn(@raw_conn)
+      Russ.russ_free_conn(@raw_conn)
       @raw_conn = nil
       @ptr_conn = nil
     end
 
     def close_fd(i)
-      return RussLib.russ_close_fds(i, @raw_conn.fds)
+      return Russ.russ_close_fds(i, @raw_conn.fds)
     end
 
-    #def get_cred(self):
-        #cred = self.ptr_conn.cred
-        #return (cred.pid, cred.uid, cred.gid)
+    def get_cred
+        cred = @ptr_conn[:cred]
+        return [cred.pid, cred.uid, cred.gid]
+    end
 
     def get_fd(i)
-      #return @ptr_conn.fds[i]
       return @ptr_conn[:fds][i]
-    end
-
-    def get_fd2(i)
-      p @raw_conn.inspect
-      p @ptr_conn.inspect
-      fds = @ptr_conn[:fds].read_array_of_int(3)
     end
 
     def debug
       p "conn_type #{@ptr_conn[:conn_type]}"
       p "cred #{@ptr_conn[:cred]}"
       p "req #{@ptr_conn[:req]}"
-      (0..2).to_a.each {|i| p "fds[#{i}] #{@ptr_conn[:fds][i]}" }
+      (0..2).each {|i| p "fds[#{i}] #{@ptr_conn[:fds][i]}" }
       p "sd #{@ptr_conn[:sd]}"
       nil
     end
 
-    #def get_request(self):
-        #return self.ptr_conn.contents.req
+    def get_request
+      return @ptr_conn[:req]
+    end
 
-    #def get_request_args(self):
-        #req = self.ptr_conn.contents.req
-        #return [req.argv[i] for i in range(req.argc)]
+    def get_request_args
+      req = @ptr_conn[:req]
+      args = []
+      (0..req[:argc]).each {|i|
+        args.push(req[:argv][i])
+      }
+    end
 
-    #def get_request_attrs(self):
-        #req = self.ptr_conn.contents.req
-        #attrs = {}
-        #for i in xrange(req.attrc):
-            #s = req.attrv[i]
-            #try:
-                #k, v = s.split("=", 1)
-                #attrs[k] = v
-            #except:
-                #pass
-        #return attrs
+    def get_request_attrs
+      req = @ptr_conn[:req]
+      attrs = {}
+      (0..req[:attrc]).each {|i|
+        s = req[:attrv][i]
+        begin
+          k, v = s.split("=", 2)
+          attrs[k] = v
+        rescue => detail
+        end
+      }
+      return attrs
+    end
 
     def get_sd
       return @ptr_conn[:sd]
     end
 
     def close
-      RussLib.russ_close_conn(@raw_conn)
+      Russ.russ_close_conn(@raw_conn)
     end
   end
 
-  # Client connection.
+  # client connection
   class ClientConn < Conn
+  end
+
+  # server connection
+  class ServerConn < Conn
+    def accept(cfds, sfds)
+      _cfds = FFI::MemoryPointer(:int, 3)
+      _sfds = FFI::MemoryPointer(:int, 3)
+      _cfds.write_array_of_int(cfds)
+      _sfds.write_array_of_int(sfds)
+      Russ.russ_accept(@raw_conn, _cfds, _sfds)
+    end
+
+    def await_request
+      Russ.russ_await_request(@raw_conn)
+    end
+  end
+
+  class Listener
+    @raw_lis
+
+    def initialize(raw_lis)
+      @raw_lis = raw_lis
+    end
+
+    def release
+      Russ.russ_free_listener(@raw_lis)
+      @raw_lis = nil
+    end
+
+    def answer(timeout)
+      return ServerConn(Russ.russ_answer(@raw_lis, timeout))
+    end
+
+    def close
+      Russ.russ_close_listener(@raw_lis)
+    end
+
+    def loop(handler)
+      def raw_handler(raw_conn)
+        handler(ServerConn(raw_conn))
+        return 0    # TODO: allow a integer return value from handler
+      end
+      Russ.russ_loop(@raw_lis, raw_handler)
+    end
   end
 end
