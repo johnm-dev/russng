@@ -127,8 +127,8 @@ void russ_close_listener(struct russ_listener *);
 struct russ_listener *russ_free_listener(struct russ_listener *);
 
 /* helpers.c */
-struct russ_conn *russ_execv(char *, int, char **, int, char **);
-struct russ_conn *russ_execl(char *, int, char **, ...);
+struct russ_conn *russ_execv(russ_timeout, char *, char **, int, char **);
+struct russ_conn *russ_execl(russ_timeout, char *, char **, ...);
 struct russ_conn *russ_help(russ_timeout, char *);
 struct russ_conn *russ_info(russ_timeout, char *);
 struct russ_conn *russ_list(russ_timeout, char *);
