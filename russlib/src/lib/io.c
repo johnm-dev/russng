@@ -200,9 +200,9 @@ russ_writen_timeout(int fd, char *b, size_t count, int timeout) {
 /**
 * Guaranteed modified poll with automatic restart on EINTR.
 *
+* @param due_time	timeout at this time (-1 is infinity, 0 is now)
 * @param poll_fds	initialized pollfd structure
 * @param nfds		# of descriptors in poll_fds
-* @param due_time	timeout at this time (-1 is infinity, 0 is now)
 * @return		value as returned by system poll
 */
 int
