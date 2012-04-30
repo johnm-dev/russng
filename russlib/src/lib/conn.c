@@ -207,16 +207,16 @@ close_fds:
 /**
 * Dial service.
 *
+* @param timeout	time allowed to complete operation
 * @param saddr	service address
 * @param op	operation string
-* @param timeout	time allowed to complete operation
 * @param attrv	array of attributes (as name=value strings)
 * @param argc	# of args
 * @param argv	array of args
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
-russ_dialv(char *saddr, char *op, int timeout, char **attrv, int argc, char **argv) {
+russ_dialv(russ_timeout timeout, char *saddr, char *op, char **attrv, int argc, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
 	char			*path, *spath;
@@ -233,7 +233,7 @@ russ_dialv(char *saddr, char *op, int timeout, char **attrv, int argc, char **ar
 	}
 	if (((conn->sd = __connect(path)) < 0)
 		|| (russ_init_request(conn, RUSS_PROTOCOL_STRING, spath, op, attrv, argc, argv) < 0)
-		|| (russ_send_request(conn, timeout) < 0)
+		|| (russ_send_request(timeout, conn) < 0)
 		|| (__recvfds(conn) < 0)) {
 		goto close_conn;
 	}
@@ -251,15 +251,15 @@ free_path:
 /**
 * Dial service using variable argument list.
 *
+* @param timeout	time allowed to complete operation
 * @param saddr	service address
 * @param op	operation string
-* @param timeout	time allowed to complete operation
 * @param attrv	array of attributes (as name=value strings)
 * @param ...	variable argument list of "char *" with NULL sentinel
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
-russ_diall(char *saddr, char *op, int timeout, char **attrv, ...) {
+russ_diall(russ_timeout timeout, char *saddr, char *op, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	void			*p;
@@ -285,7 +285,7 @@ russ_diall(char *saddr, char *op, int timeout, char **attrv, ...) {
 	}
 	va_end(ap);
 
-	conn = russ_dialv(saddr, op, timeout, attrv, argc, argv);
+	conn = russ_dialv(timeout, saddr, op, attrv, argc, argv);
 	free(argv);
 
 	return conn;
@@ -360,12 +360,12 @@ free_lis:
 /**
 * Answer dial.
 *
-* @param lis	listener object
 * @param timeout	time allowed to complete operation
+* @param lis	listener object
 * @return	connection object with credentials; not fully established
 */
 struct russ_conn *
-russ_answer(struct russ_listener *lis, int timeout) {
+russ_answer(russ_timeout timeout, struct russ_listener *lis) {
 	struct russ_conn	*conn;
 	struct sockaddr_un	servaddr;
 	int			servaddr_len;
@@ -387,7 +387,7 @@ russ_answer(struct russ_listener *lis, int timeout) {
 
 	servaddr_len = sizeof(struct sockaddr_un);
 	while (1) {
-		if (russ_poll(poll_fds, 1, due_time) < 0) {
+		if (russ_poll(due_time, poll_fds, 1) < 0) {
 			goto free_conn;
 		}
 		if ((conn->sd = accept(lis->sd, (struct sockaddr *)&servaddr, &servaddr_len)) >= 0) {

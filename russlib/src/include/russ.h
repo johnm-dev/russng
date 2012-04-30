@@ -28,6 +28,7 @@
 #define RUSS_H
 
 #include <pthread.h>
+#include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -104,6 +105,8 @@ struct pipe_fds {
 	int in_fd, out_fd;
 };
 
+typedef uint64_t	russ_timeout;
+
 typedef int (*russ_req_handler)(struct russ_conn *);
 
 char *russ_find_service_addr(char *);
@@ -111,8 +114,8 @@ char *russ_find_service_addr(char *);
 /* conn.c */
 void russ_close_fd(struct russ_conn *, int);
 
-struct russ_conn *russ_dialv(char *, char *, int, char **, int, char **);
-struct russ_conn *russ_diall(char *, char *, int, char **, ...);
+struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, int, char **);
+struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
 
 void russ_close_conn(struct russ_conn *);
 struct russ_conn *russ_free_conn(struct russ_conn *);
@@ -126,9 +129,9 @@ struct russ_listener *russ_free_listener(struct russ_listener *);
 /* helpers.c */
 struct russ_conn *russ_execv(char *, int, char **, int, char **);
 struct russ_conn *russ_execl(char *, int, char **, ...);
-struct russ_conn *russ_help(char *, int);
-struct russ_conn *russ_info(char *, int);
-struct russ_conn *russ_list(char *, int);
+struct russ_conn *russ_help(russ_timeout, char *);
+struct russ_conn *russ_info(russ_timeout, char *);
+struct russ_conn *russ_list(russ_timeout, char *);
 
 /* io.c */
 ssize_t russ_read(int, char *, size_t);

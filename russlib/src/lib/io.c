@@ -206,7 +206,7 @@ russ_writen_timeout(int fd, char *b, size_t count, int timeout) {
 * @return		value as returned by system poll
 */
 int
-russ_poll(struct pollfd *poll_fds, int nfds, int due_time) {
+russ_poll(russ_timeout due_time, struct pollfd *poll_fds, int nfds) {
 	int	poll_timeout;
 	int	rv;
 

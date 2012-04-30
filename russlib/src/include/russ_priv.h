@@ -62,7 +62,7 @@ int russ_poll(struct pollfd *, int, int);
 /* request.c */
 int russ_init_request(struct russ_conn *, char *, char *, char *, char **, int, char **);
 void russ_free_request_members(struct russ_conn *);
-int russ_send_request(struct russ_conn *, int);
+int russ_send_request(russ_timeout, struct russ_conn *);
 
 /* socket.c */
 int russ_get_credentials(int, struct russ_credentials *);
