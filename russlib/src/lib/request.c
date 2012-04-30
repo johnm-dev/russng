@@ -136,12 +136,12 @@ russ_free_request_members(struct russ_conn *conn) {
 /**
 * Send request over conn.
 *
-* @param conn	connection object
 * @param timeout	time in which to complete the send
+* @param conn	connection object
 * @return	0 on success, -1 on error
 */
 int
-russ_send_request(struct russ_conn *conn, int timeout) {
+russ_send_request(russ_timeout timeout, struct russ_conn *conn) {
 	struct russ_request	*req;
 	char			buf[MAX_REQUEST_BUF_SIZE], *bp, *bend;
 
