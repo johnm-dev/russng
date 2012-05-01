@@ -162,14 +162,14 @@ russ_writen(int fd, char *b, size_t count) {
 /**
 * Guaranteed write. Return on success, timeout, or unrecoverable error.
 *
+* @param timeout	time in which to complete call
 * @param fd		output descriptor
 * @param b		buffer
 * @param count		# of bytes to write
-* @param timeout	time in which to complete call
 * @return		# of bytes written; < count on error
 */
 ssize_t
-russ_writen_timeout(int fd, char *b, size_t count, int timeout) {
+russ_writen_timeout(russ_timeout timeout, int fd, char *b, size_t count) {
 	struct pollfd	poll_fds[1];
 	int		rv, due_time;
 	ssize_t		n;
@@ -177,15 +177,10 @@ russ_writen_timeout(int fd, char *b, size_t count, int timeout) {
 
 	poll_fds[0].fd = fd;
 	poll_fds[0].events = POLLOUT|POLLHUP;
-	if (timeout > 0) {
-		due_time = time(NULL)+timeout;
-	} else {
-		due_time = timeout;
-	}
 
 	bend = b+count;
 	while (b < bend) {
-		rv = russ_poll(poll_fds, 1, due_time);
+		rv = russ_poll(timeout, poll_fds, 1);
 		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
 			break;
 		}
@@ -200,30 +195,43 @@ russ_writen_timeout(int fd, char *b, size_t count, int timeout) {
 /**
 * Guaranteed modified poll with automatic restart on EINTR.
 *
-* @param due_time	timeout at this time (-1 is infinity, 0 is now)
+* @param timeout	timeout at this time (time, RUSS_TIMEOUT_NEVER, RUSS_TIMEOUT_NOW)
 * @param poll_fds	initialized pollfd structure
 * @param nfds		# of descriptors in poll_fds
 * @return		value as returned by system poll
 */
 int
-russ_poll(russ_timeout due_time, struct pollfd *poll_fds, int nfds) {
-	int	poll_timeout;
-	int	rv;
+russ_poll(russ_timeout timeout, struct pollfd *poll_fds, int nfds) {
+	russ_timeout	deadline;
+	int		poll_timeout;
+	int		rv;
 
-	while ((due_time > time(NULL)) || (due_time == -1) || (due_time == 0)) {
+	switch (timeout) {
+	case RUSS_TIMEOUT_NEVER:
+		deadline = -1;
+		poll_timeout = -1;
+		break;
+	case RUSS_TIMEOUT_NOW:
+		deadline = 0;
+		poll_timeout = 0;
+		break;
+	default:
+		deadline = (time(NULL)*1000)+timeout;
+	}
+
+	while ((deadline > time(NULL)) || (deadline == RUSS_TIMEOUT_NEVER) || (deadline == RUSS_TIMEOUT_NOW)) {
 //fprintf(stderr, "russ_poll rv (%d) errno (%d)\n", rv, errno);
-		if ((due_time == -1) || (due_time == 0)) {
-			poll_timeout = due_time;
-		} else {
-			poll_timeout = due_time-time(NULL);
-			poll_timeout = MAX(0, poll_timeout)*1000;
+
+		if ((deadline != RUSS_TIMEOUT_NEVER) && (deadline != RUSS_TIMEOUT_NOW)) {
+			poll_timeout = deadline-(time(NULL)*1000);
+			poll_timeout = MAX(0, poll_timeout);
 		}
 		if ((rv = poll(poll_fds, nfds, poll_timeout)) < 0) {
 			if (errno != EINTR) {
 				break;
 			}
 		}
-		if ((due_time == 0) || (rv > 0)) {
+		if ((deadline == RUSS_TIMEOUT_NOW) || (rv > 0)) {
 			break;
 		}
 	}
