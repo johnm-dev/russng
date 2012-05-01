@@ -74,13 +74,13 @@ int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_forwarding	fwds[3];
+	russ_timeout		timeout;
 	char			*prog_name;
 	char			*op, *addr;
 	char			*arg;
 	char			*attrv[RUSS_MAX_ATTRC];
 	int			argi;
 	int			attrc;
-	int			timeout;
 	int			req_opt_mask;
 
 	prog_name = basename(strdup(argv[0]));
@@ -122,10 +122,11 @@ main(int argc, char **argv) {
 			&& (argi < argc)) {
 
 			arg = argv[argi++];
-			if (sscanf(argv[argi], "%d", &timeout) < 0) {
+			if (sscanf(argv[argi], "%d", (int *)&timeout) < 0) {
 				fprintf(stderr, "error: bad timeout value\n");
 				exit(-1);
 			}
+			timeout *= 1000;
 		} else {
 			fprintf(stderr, "error: bad option and/or missing arguments\n");
 			exit(-1);
@@ -136,12 +137,12 @@ main(int argc, char **argv) {
 	if ((strcmp(prog_name, "ruexec") == 0)
 		&& (argi+1 <= argc)) {
 		addr = argv[argi++];
-		conn = russ_execv(addr, timeout, attrv, argc-argi, &(argv[argi]));
+		conn = russ_execv(timeout, addr, attrv, argc-argi, &(argv[argi]));
 	} else if ((strcmp(prog_name, "rudial") == 0) 
 		&& (argi+2 <= argc)) {
 		op = argv[argi++];
 		addr = argv[argi++];
-		conn = russ_dialv(addr, op, timeout, attrv, argc-argi, &(argv[argi]));
+		conn = russ_dialv(timeout, addr, op, attrv, argc-argi, &(argv[argi]));
 	} else {
 		fprintf(stderr, "error: bad/missing arguments\n");
 		exit(-1);
