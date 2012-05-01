@@ -141,7 +141,7 @@ ssize_t russ_read(int, char *, size_t);
 ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);
 ssize_t russ_writen(int, char *, size_t);
-ssize_t russ_writen_timeout(int, char *, size_t, int);
+ssize_t russ_writen_timeout(russ_timeout, int, char *, size_t);
 
 void russ_forwarding_init(struct russ_forwarding *, int, int, int, int, int, int);
 int russ_forward_bytes(int, struct russ_forwarding *);

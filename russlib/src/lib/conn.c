@@ -379,7 +379,7 @@ russ_answer(russ_timeout timeout, struct russ_listener *lis) {
 
 	poll_fds[0].fd = lis->sd;
 	poll_fds[0].events = POLLIN;
-	if ((timeout == -1) || (timeout == 0)) {
+	if ((timeout == RUSS_TIMEOUT_NEVER) || (timeout == RUSS_TIMEOUT_NOW)) {
 		due_time = timeout;
 	} else {
 		due_time = time(NULL)+timeout;

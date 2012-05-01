@@ -43,7 +43,7 @@ russ_loop(struct russ_listener *lis, russ_req_handler handler) {
 	struct russ_conn	*conn;
 
 	while (1) {
-		if ((conn = russ_answer(lis, -1)) == NULL) {
+		if ((conn = russ_answer(RUSS_TIMEOUT_NEVER, lis)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
