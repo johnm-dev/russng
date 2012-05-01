@@ -370,8 +370,7 @@ russ_answer(russ_timeout timeout, struct russ_listener *lis) {
 	struct sockaddr_un	servaddr;
 	int			servaddr_len;
 	struct pollfd		poll_fds[1];
-	int			poll_timeout;
-	time_t			due_time;
+	russ_timeout		deadline;
 
 	if ((conn = __new_conn()) == NULL) {
 		return NULL;
@@ -380,14 +379,14 @@ russ_answer(russ_timeout timeout, struct russ_listener *lis) {
 	poll_fds[0].fd = lis->sd;
 	poll_fds[0].events = POLLIN;
 	if ((timeout == RUSS_TIMEOUT_NEVER) || (timeout == RUSS_TIMEOUT_NOW)) {
-		due_time = timeout;
+		deadline = timeout;
 	} else {
-		due_time = time(NULL)+timeout;
+		deadline = (time(NULL)*1000)+timeout;
 	}
 
 	servaddr_len = sizeof(struct sockaddr_un);
 	while (1) {
-		if (russ_poll(due_time, poll_fds, 1) < 0) {
+		if (russ_poll(deadline, poll_fds, 1) < 0) {
 			goto free_conn;
 		}
 		if ((conn->sd = accept(lis->sd, (struct sockaddr *)&servaddr, &servaddr_len)) >= 0) {

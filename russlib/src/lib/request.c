@@ -159,7 +159,7 @@ russ_send_request(russ_timeout timeout, struct russ_conn *conn) {
 
 	/* patch size and send */
 	russ_enc_i(buf, bend, bp-buf-4);
-	if (russ_writen_timeout(conn->sd, buf, bp-buf, timeout) < bp-buf) {
+	if (russ_writen_timeout(timeout, conn->sd, buf, bp-buf) < bp-buf) {
 		return -1;
 	}
 	return 0;

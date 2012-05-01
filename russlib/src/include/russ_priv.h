@@ -57,7 +57,7 @@ char *russ_enc_s_arrayn(char *, char *, char **, int);
 char *russ_enc_s_array0(char *, char *, char **);
 
 /* io.c */
-int russ_poll(struct pollfd *, int, int);
+int russ_poll(russ_timeout, struct pollfd *, int);
 
 /* request.c */
 int russ_init_request(struct russ_conn *, char *, char *, char *, char **, int, char **);
