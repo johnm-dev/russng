@@ -47,6 +47,9 @@
 #define RUSS_PROTOCOL_STRING	"0004"
 #define RUSS_SERVICE_DIR	"/srv/russ"
 
+#define RUSS_TIMEOUT_NEVER	-1
+#define RUSS_TIMEOUT_NOW	0
+
 /**
 * Client credentials object. Obtained from connection.
 */
@@ -105,7 +108,7 @@ struct pipe_fds {
 	int in_fd, out_fd;
 };
 
-typedef uint64_t	russ_timeout;
+typedef int64_t	russ_timeout;
 
 typedef int (*russ_req_handler)(struct russ_conn *);
 
