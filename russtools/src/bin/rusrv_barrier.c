@@ -319,7 +319,7 @@ main(int argc, char **argv) {
 			};
 		} else {
 			if (poll_fds[0].revents && POLLIN) {
-				if ((conn = russ_answer(lis, -1)) == NULL) {
+				if ((conn = russ_answer(RUSS_TIMEOUT_NEVER, lis)) == NULL) {
 					continue;
 				}
 				if ((russ_await_request(conn) < 0)

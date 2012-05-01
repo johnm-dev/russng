@@ -64,7 +64,7 @@ main(int argc, char **argv) {
 	struct russ_forwarding	fwds[3];
 	char			*prog_name;
 	char			*addr;
-	int			timeout;
+	russ_timeout		timeout;
 
 	prog_name = basename(strdup(argv[0]));
 
@@ -74,14 +74,15 @@ main(int argc, char **argv) {
 			print_usage(prog_name);
 			exit(0);
 		}
-		timeout = -1;
+		timeout = RUSS_TIMEOUT_NEVER;
 		addr = argv[1];
 	} else if (argc == 5) {
 		if ((strcmp(argv[1], "-t") == 0) || (strcmp(argv[1], "--timeout") == 0)) {
-			if (sscanf(argv[2], "%d", &timeout) < 0) {
+			if (sscanf(argv[2], "%d", (int *)&timeout) < 0) {
 				fprintf(stderr, "error: bad timeout value\n");
 				exit(-1);
 			}
+			timeout *= 1000;
 		} else {
 			fprintf(stderr, "error: bad/missing arguments\n");
 		}
@@ -92,11 +93,11 @@ main(int argc, char **argv) {
 	}
 
 	if (strcmp(prog_name, "ruhelp") == 0) {
-		conn = russ_help(addr, timeout);
+		conn = russ_help(timeout, addr);
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
-		conn = russ_info(addr, timeout);
+		conn = russ_info(timeout, addr);
 	} else if (strcmp(prog_name, "ruls") == 0) {
-		conn = russ_list(addr, timeout);
+		conn = russ_list(timeout, addr);
 	} else {
 		fprintf(stderr, "error: unknown program name\n");
 		exit(-1);
