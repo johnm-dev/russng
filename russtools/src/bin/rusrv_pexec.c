@@ -203,7 +203,7 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_exec [--ttl <timeout>] <saddr>\n"
+"usage: rusrv_pexec [--ttl <timeout>] <saddr>\n"
 "\n"
 "Russ-based personal exec server to execute programs.\n"
 );
