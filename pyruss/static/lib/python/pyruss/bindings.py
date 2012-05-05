@@ -70,9 +70,9 @@ class russ_conn_Structure(ctypes.Structure):
 
 # russ_dialv
 libruss.russ_dialv.argtypes = [
+    ctypes.c_int64,  # russ_timeout
     ctypes.c_char_p,
     ctypes.c_char_p,
-    ctypes.c_int,
     ctypes.POINTER(ctypes.c_char_p),
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_char_p),
@@ -100,8 +100,8 @@ libruss.russ_announce.restype = ctypes.c_void_p
 
 # russ_answer
 libruss.russ_answer.argtypes = [
+    ctypes.c_int64,  # russ_timeout
     ctypes.c_void_p,
-    ctypes.c_int,
 ]
 libruss.russ_answer.restype = ctypes.c_void_p
 
@@ -141,14 +141,14 @@ libruss.russ_loop.restype = None
 #
 # Application-facing classes
 #
-def dial(saddr, op, timeout, attrs, args):
+def dial(timeout, saddr, op, attrs, args):
     """Dial a service.
     """
     attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
     c_attrs = (ctypes.c_char_p*(len(attrs)+1))(*attrs_list)
     c_attrs[len(attrs)] = None
     c_argv = (ctypes.c_char_p*len(args))(*args)
-    return ClientConn(libruss.russ_dialv(saddr, op, timeout, c_attrs, len(args), c_argv))
+    return ClientConn(libruss.russ_dialv(timeout, saddr, op, c_attrs, len(args), c_argv))
 
 def announce(path, mode, uid, gid):
     """Announce a service.
@@ -233,7 +233,7 @@ class Listener:
         self.raw_conn = libruss.russ_free_listener(self.raw_lis)
 
     def answer(self, timeout):
-        return ServerConn(libruss.russ_answer(self.raw_lis, timeout))
+        return ServerConn(libruss.russ_answer(timeout, self.raw_lis))
 
     def close(self):
         libruss.russ_close_listener(self.raw_lis)
