@@ -144,6 +144,8 @@ libruss.russ_loop.restype = None
 def dial(timeout, saddr, op, attrs, args):
     """Dial a service.
     """
+    if attrs == None:
+        attrs = {}
     attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
     c_attrs = (ctypes.c_char_p*(len(attrs)+1))(*attrs_list)
     c_attrs[len(attrs)] = None
