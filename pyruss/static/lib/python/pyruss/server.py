@@ -97,7 +97,8 @@ class ServiceTree:
         for comp in comps[1:-1]:
             next_node = node.children.get(comp)
             if next_node == None:
-                node = node.children[comp] = ServiceNode()
+                next_node = node.children[comp] = ServiceNode()
+            node = next_node
         node.children[comps[-1]] = ServiceNode(ops, handler, typ)
 
     def _find(self, comps):
