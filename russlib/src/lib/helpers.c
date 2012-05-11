@@ -30,8 +30,8 @@
 #include "russ.h"
 
 struct russ_conn *
-russ_execv(russ_timeout timeout, char *saddr, char **attrv, char **argv) {
-	return russ_dialv(timeout, saddr, "execute", attrv, argv);
+russ_execv(russ_timeout timeout, char *addr, char **attrv, char **argv) {
+	return russ_dialv(timeout, addr, "execute", attrv, argv);
 }
 
 char **
@@ -57,7 +57,7 @@ russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 }
 
 struct russ_conn *
-russ_execl(russ_timeout timeout, char *saddr, char **attrv, ...) {
+russ_execl(russ_timeout timeout, char *addr, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	char			**argv;
@@ -67,23 +67,23 @@ russ_execl(russ_timeout timeout, char *saddr, char **attrv, ...) {
 	if ((argv = russ_variadic_to_argv(&argc, ap, ap)) == NULL) {
 		return NULL;
 	}
-	conn = russ_dialv(timeout, saddr, "execute", attrv, argv);
+	conn = russ_dialv(timeout, addr, "execute", attrv, argv);
 	free(argv);
 
 	return conn;
 }
 
 struct russ_conn *
-russ_help(russ_timeout timeout, char *saddr) {
-	return russ_dialv(timeout, saddr, "help", NULL, NULL);
+russ_help(russ_timeout timeout, char *addr) {
+	return russ_dialv(timeout, addr, "help", NULL, NULL);
 }
 
 struct russ_conn *
-russ_info(russ_timeout timeout, char *saddr) {
-	return russ_dialv(timeout, saddr, "info", NULL, NULL);
+russ_info(russ_timeout timeout, char *addr) {
+	return russ_dialv(timeout, addr, "info", NULL, NULL);
 }
 
 struct russ_conn *
-russ_list(russ_timeout timeout, char *saddr) {
-	return russ_dialv(timeout, saddr, "list", NULL, NULL);
+russ_list(russ_timeout timeout, char *addr) {
+	return russ_dialv(timeout, addr, "list", NULL, NULL);
 }
