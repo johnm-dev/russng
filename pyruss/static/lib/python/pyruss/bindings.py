@@ -148,7 +148,7 @@ def dial(timeout, saddr, op, attrs, args):
     attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
     c_attrs = (ctypes.c_char_p*(len(attrs)+1))(*attrs_list)
     c_attrs[len(attrs)] = None
-    c_argv = (ctypes.c_char_p*len(args)+1)(*args)
+    c_argv = (ctypes.c_char_p*(len(args)+1))(*args)
     c_argv[len(args)] = None
     return ClientConn(libruss.russ_dialv(timeout, saddr, op, c_attrs, c_argv))
 
