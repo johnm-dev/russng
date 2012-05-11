@@ -146,7 +146,7 @@ def dial(timeout, saddr, op, attrs, args):
     if attrs == None:
         attrs = {}
     attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
-    c_attrs = (ctypes.c_char_p*(len(attrs)+1))(*attrs_list)
+    c_attrs = (ctypes.c_char_p*(len(attrs_list)+1))(*attrs_list)
     c_attrs[len(attrs)] = None
     c_argv = (ctypes.c_char_p*(len(args)+1))(*args)
     c_argv[len(args)] = None
