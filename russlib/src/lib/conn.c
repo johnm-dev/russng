@@ -98,7 +98,7 @@ __new_conn(void) {
 	conn->cred.pid = -1;
 	conn->cred.uid = -1;
 	conn->cred.gid = -1;
-	if (russ_init_request(conn, NULL, NULL, NULL, NULL, 0, NULL) < 0) {
+	if (russ_init_request(conn, NULL, NULL, NULL, NULL, NULL) < 0) {
 		goto free_conn;
 	}
 	conn->sd = -1;
@@ -210,13 +210,12 @@ close_fds:
 * @param timeout	time allowed to complete operation
 * @param saddr	service address
 * @param op	operation string
-* @param attrv	array of attributes (as name=value strings)
-* @param argc	# of args
-* @param argv	array of args
+* @param attrv	array of attributes (as name=value strings); NULL-terminated list
+* @param argv	array of args; NULL-terminated list
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
-russ_dialv(russ_timeout timeout, char *saddr, char *op, char **attrv, int argc, char **argv) {
+russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
 	char			*path, *spath;
@@ -231,8 +230,8 @@ russ_dialv(russ_timeout timeout, char *saddr, char *op, char **attrv, int argc, 
 	if ((conn = __new_conn()) == NULL) {
 		goto free_path;
 	}
-	if (((conn->sd = __connect(path)) < 0)
-		|| (russ_init_request(conn, RUSS_PROTOCOL_STRING, spath, op, attrv, argc, argv) < 0)
+	if (((conn->sd = __connect(targ->saddr)) < 0)
+		|| (russ_init_request(conn, RUSS_PROTOCOL_STRING, targ->spath, op, attrv, argv) < 0)
 		|| (russ_send_request(timeout, conn) < 0)
 		|| (__recvfds(conn) < 0)) {
 		goto close_conn;
@@ -285,7 +284,7 @@ russ_diall(russ_timeout timeout, char *saddr, char *op, char **attrv, ...) {
 	}
 	va_end(ap);
 
-	conn = russ_dialv(timeout, saddr, op, attrv, argc, argv);
+	conn = russ_dialv(timeout, addr, op, attrv, argv);
 	free(argv);
 
 	return conn;

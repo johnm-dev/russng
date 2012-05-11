@@ -73,7 +73,7 @@ free_dst:
 * Initialize connection request. All provided (non NULL) information is duplicated.
 */
 int
-russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, char *op, char **attrv, int argc, char **argv) {
+russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, char *op, char **attrv, char **argv) {
 	struct russ_request	*req;
 	int			i;
 
@@ -99,7 +99,7 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 		req->attrc--;
 	}
 	if (argv) {
-		if ((req->argv = dup_str_array(argv, &(req->argc), argc+1)) == NULL) {
+		if ((req->argv = dup_str_array(argv, &(req->argc), RUSS_MAX_ARGC)) == NULL) {
 			goto free_req_items;
 		}
 		/* do not count the NULL sentinel */
@@ -129,7 +129,7 @@ russ_free_request_members(struct russ_conn *conn) {
 		free(req->argv[i]);
 	}
 	free(req->argv);
-	russ_init_request(conn, NULL, NULL, NULL, NULL, 0, NULL);
+	russ_init_request(conn, NULL, NULL, NULL, NULL, NULL);
 }
 
 
@@ -153,7 +153,8 @@ russ_send_request(russ_timeout timeout, struct russ_conn *conn) {
 		|| ((bp = russ_enc_string(bp, bend, req->spath)) == NULL)
 		|| ((bp = russ_enc_string(bp, bend, req->op)) == NULL)
 		|| ((bp = russ_enc_s_array0(bp, bend, req->attrv)) == NULL)
-		|| ((bp = russ_enc_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
+		|| ((bp = russ_enc_s_array0(bp, bend, req->argv)) == NULL)) {
+		//|| ((bp = russ_enc_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
 		return -1;
 	}
 
