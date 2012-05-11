@@ -60,7 +60,7 @@ char *russ_enc_s_array0(char *, char *, char **);
 int russ_poll(russ_timeout, struct pollfd *, int);
 
 /* request.c */
-int russ_init_request(struct russ_conn *, char *, char *, char *, char **, int, char **);
+int russ_init_request(struct russ_conn *, char *, char *, char *, char **, char **);
 void russ_free_request_members(struct russ_conn *);
 int russ_send_request(russ_timeout, struct russ_conn *);
 

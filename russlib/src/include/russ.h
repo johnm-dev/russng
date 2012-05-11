@@ -74,9 +74,9 @@ struct russ_request {
 	char	*spath;		/**< service path */
 	char	*op;		/**< operation string */
 	int	attrc;		/**< # of attrs */
-	char	**attrv;	/**< NULL terminated array of attributes (as name=value strings) */
+	char	**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
 	int	argc;		/**< # of args */
-	char	**argv;		/**< array of args */
+	char	**argv;		/**< NULL-terminated array of args */
 };
 
 /**
@@ -112,12 +112,12 @@ typedef int64_t	russ_timeout;
 
 typedef int (*russ_req_handler)(struct russ_conn *);
 
-char *russ_find_service_addr(char *);
+struct russ_target *russ_find_service_target(char *);
 
 /* conn.c */
 void russ_close_fd(struct russ_conn *, int);
 
-struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, int, char **);
+struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
 
 void russ_close_conn(struct russ_conn *);
@@ -130,7 +130,7 @@ void russ_close_listener(struct russ_listener *);
 struct russ_listener *russ_free_listener(struct russ_listener *);
 
 /* helpers.c */
-struct russ_conn *russ_execv(russ_timeout, char *, char **, int, char **);
+struct russ_conn *russ_execv(russ_timeout, char *, char **, char **);
 struct russ_conn *russ_execl(russ_timeout, char *, char **, ...);
 struct russ_conn *russ_help(russ_timeout, char *);
 struct russ_conn *russ_info(russ_timeout, char *);
