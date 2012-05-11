@@ -137,12 +137,12 @@ main(int argc, char **argv) {
 	if ((strcmp(prog_name, "ruexec") == 0)
 		&& (argi+1 <= argc)) {
 		addr = argv[argi++];
-		conn = russ_execv(timeout, addr, attrv, argc-argi, &(argv[argi]));
+		conn = russ_execv(timeout, addr, attrv, &(argv[argi]));
 	} else if ((strcmp(prog_name, "rudial") == 0) 
 		&& (argi+2 <= argc)) {
 		op = argv[argi++];
 		addr = argv[argi++];
-		conn = russ_dialv(timeout, addr, op, attrv, argc-argi, &(argv[argi]));
+		conn = russ_dialv(timeout, addr, op, attrv, &(argv[argi]));
 	} else {
 		fprintf(stderr, "error: bad/missing arguments\n");
 		exit(-1);
