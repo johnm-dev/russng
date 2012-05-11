@@ -74,7 +74,6 @@ libruss.russ_dialv.argtypes = [
     ctypes.c_char_p,
     ctypes.c_char_p,
     ctypes.POINTER(ctypes.c_char_p),
-    ctypes.c_int,
     ctypes.POINTER(ctypes.c_char_p),
 ]
 libruss.russ_dialv.restype = ctypes.c_void_p
@@ -149,8 +148,9 @@ def dial(timeout, saddr, op, attrs, args):
     attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
     c_attrs = (ctypes.c_char_p*(len(attrs)+1))(*attrs_list)
     c_attrs[len(attrs)] = None
-    c_argv = (ctypes.c_char_p*len(args))(*args)
-    return ClientConn(libruss.russ_dialv(timeout, saddr, op, c_attrs, len(args), c_argv))
+    c_argv = (ctypes.c_char_p*len(args)+1)(*args)
+    c_argv[len(args)] = None
+    return ClientConn(libruss.russ_dialv(timeout, saddr, op, c_attrs, c_argv))
 
 def announce(path, mode, uid, gid):
     """Announce a service.
