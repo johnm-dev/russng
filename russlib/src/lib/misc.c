@@ -87,6 +87,66 @@ russ_find_service_addr(char *addr) {
 }
 
 /**
+* Find service target.
+*
+* @param path	full path to service
+* @return	russ_target object
+*/
+struct russ_target *
+russ_find_service_target(char *path) {
+	struct russ_target	*targ;
+	struct stat		st;
+	char			saddr[RUSS_MAX_SPATH_LEN],
+				spath[RUSS_MAX_SPATH_LEN],
+				tmps[RUSS_MAX_SPATH_LEN];
+	char			*bname;
+	int			pos;
+
+	/* TODO:
+		should targ be allocated at end?
+		should targ members be used for work?
+	*/
+	/* allocate and initialize */
+	if ((targ = malloc(sizeof(struct russ_target))) == NULL) {
+		return NULL;
+	}
+	targ->saddr[0] = '\0';
+	targ->spath[0] = '\0';
+
+	/* initialize working var */
+	saddr[sizeof(saddr)] = '\0';
+	if (strncpy(saddr, path, sizeof(saddr)-1) < 0) {
+		goto free_targ;
+	};
+
+	/* resolve addr->target */
+	while (stat(saddr, &st) != 0) {
+		if (S_ISLNK(st.st_mode)) {
+			if ((pos = readlink(saddr, saddr, sizeof(saddr)-1)) < 0) {
+				goto free_targ;
+			}
+			saddr[pos] = '\0';
+		}
+		/* prepend component, update saddr */
+		bname = basename(saddr);
+		if (snprintf(tmps, sizeof(tmps)-1, "/%s%s", bname, spath) < 0) {
+			goto free_targ;
+		}
+		sprintf(spath, "%s", tmps);
+		dirname(saddr);
+	}
+
+	/* copy into target */
+	strcpy(targ->saddr, saddr);
+	strcpy(targ->spath, spath);
+	return targ;
+
+free_targ:
+	free(targ);
+	return NULL;
+}
+
+/**
 * fprintf-like but uses descripto instead of FILE *.
 *
 * @param fd	descriptor

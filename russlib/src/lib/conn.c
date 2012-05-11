@@ -208,7 +208,7 @@ close_fds:
 * Dial service.
 *
 * @param timeout	time allowed to complete operation
-* @param saddr	service address
+* @param addr	full service address
 * @param op	operation string
 * @param attrv	array of attributes (as name=value strings); NULL-terminated list
 * @param argv	array of args; NULL-terminated list
@@ -218,17 +218,16 @@ struct russ_conn *
 russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
+	struct russ_target	*targ;
 	char			*path, *spath;
 
-	/* saddr->path, spath */
-	if ((path = russ_find_service_addr(saddr)) == NULL) {
+	if ((targ = russ_find_service_target(addr)) == NULL) {
 		return NULL;
 	}
-	spath = saddr+strlen(path);
 
 	/* steps to set up conn object */
 	if ((conn = __new_conn()) == NULL) {
-		goto free_path;
+		goto free_targ;
 	}
 	if (((conn->sd = __connect(targ->saddr)) < 0)
 		|| (russ_init_request(conn, RUSS_PROTOCOL_STRING, targ->spath, op, attrv, argv) < 0)
@@ -236,14 +235,15 @@ russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv
 		|| (__recvfds(conn) < 0)) {
 		goto close_conn;
 	}
+	free(targ);
 	__close_fds(1, &conn->sd);	/* sd not needed anymore */
 	return conn;
 
 close_conn:
 	russ_close_conn(conn);
 	free(conn);
-free_path:
-	free(path);
+free_targ:
+	free(targ);
 	return NULL;
 }
 
@@ -251,14 +251,14 @@ free_path:
 * Dial service using variable argument list.
 *
 * @param timeout	time allowed to complete operation
-* @param saddr	service address
+* @param addr	full service address
 * @param op	operation string
 * @param attrv	array of attributes (as name=value strings)
 * @param ...	variable argument list of "char *" with NULL sentinel
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
-russ_diall(russ_timeout timeout, char *saddr, char *op, char **attrv, ...) {
+russ_diall(russ_timeout timeout, char *addr, char *op, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	void			*p;
