@@ -82,9 +82,7 @@ struct russ_request {
 	char	*protocol_string;	/**< identifies russ protocol */
 	char	*spath;		/**< service path */
 	char	*op;		/**< operation string */
-	int	attrc;		/**< # of attrs */
 	char	**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
-	int	argc;		/**< # of args */
 	char	**argv;		/**< NULL-terminated array of args */
 };
 
@@ -159,7 +157,7 @@ int russ_forward_bytes(int, struct russ_forwarding *);
 /* misc.c */
 int russ_count_str_array0(char **, int);
 int russ_dprintf(int, char *, ...);
-char **russ_dup_str_array0(char **, int *, int);
+char **russ_dup_str_array0(char **, int);
 
 /* request.c */
 int russ_await_request(struct russ_conn *);
