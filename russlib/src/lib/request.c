@@ -42,9 +42,7 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 	req->protocol_string = NULL;
 	req->spath = NULL;
 	req->op = NULL;
-	req->attrc = 0;
 	req->attrv = NULL;
-	req->argc = 0;
 	req->argv = NULL;
 
 	if (((protocol_string) && ((req->protocol_string = strdup(protocol_string)) == NULL))
@@ -53,18 +51,14 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 		goto free_req_items;
 	}
 	if (attrv) {
-		if ((req->attrv = russ_dup_str_array0(attrv, &(req->attrc), RUSS_MAX_ATTRC)) == NULL) {
+		if ((req->attrv = russ_dup_str_array0(attrv, RUSS_MAX_ATTRC)) == NULL) {
 			goto free_req_items;
 		}
-		/* do not count the NULL sentinel */
-		req->attrc--;
 	}
 	if (argv) {
-		if ((req->argv = russ_dup_str_array0(argv, &(req->argc), RUSS_MAX_ARGC)) == NULL) {
+		if ((req->argv = russ_dup_str_array0(argv, RUSS_MAX_ARGC)) == NULL) {
 			goto free_req_items;
 		}
-		/* do not count the NULL sentinel */
-		req->argc--;
 	}
 	return 0;
 
@@ -82,14 +76,18 @@ russ_free_request_members(struct russ_conn *conn) {
 	free(req->protocol_string);
 	free(req->spath);
 	free(req->op);
-	for (i = 0; i < req->attrc; i++) {
-		free(req->attrv[i]);
+	if (req->attrv) {
+	    for (i = 0; req->attrv[i] != NULL; i++) {
+		    free(req->attrv[i]);
+	    }
+	    free(req->attrv);
 	}
-	free(req->attrv);
-	for (i = 0; i < req->argc; i++) {
-		free(req->argv[i]);
+	if (req->argv) {
+	    for (i = 0; req->argv[i] != NULL; i++) {
+		    free(req->argv[i]);
+	    }
+	    free(req->argv);
 	}
-	free(req->argv);
 	russ_init_request(conn, NULL, NULL, NULL, NULL, NULL);
 }
 
@@ -134,7 +132,7 @@ int
 russ_await_request(struct russ_conn *conn) {
 	struct russ_request	*req;
 	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
-	int			size;
+	int			alen, size;
 
 	/* get request size, load, and upack */
 	bp = buf;
@@ -149,8 +147,8 @@ russ_await_request(struct russ_conn *conn) {
 		|| (strcmp(RUSS_PROTOCOL_STRING, req->protocol_string) != 0)
 		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
 		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &(req->attrc))) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &(req->argc))) == NULL)) {
+		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &alen)) == NULL)
+		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &alen)) == NULL)) {
 
 		goto free_req_items;
 	}
