@@ -184,29 +184,31 @@ class Conn:
     def get_request_args(self):
         req = self.ptr_conn.contents.req
         args = []
-        i = 0
-        while 1:
-            s = req.argv[i]
-            i += 1
-            if s == None:
-                break
-            args.append(s)
+        if bool(req.argv):
+            i = 0
+            while 1:
+                s = req.argv[i]
+                i += 1
+                if s == None:
+                    break
+                args.append(s)
         return  args
 
     def get_request_attrs(self):
         req = self.ptr_conn.contents.req
         attrs = {}
-        i = 0
-        while 1:
-            s = req.attrv[i]
-            i += 1
-            if s == None:
-                break
-            try:
-                k, v = s.split("=", 1)
-                attrs[k] = v
-            except:
-                pass
+        if bool(req.attrv):
+            i = 0
+            while 1:
+                s = req.attrv[i]
+                i += 1
+                if s == None:
+                    break
+                try:
+                    k, v = s.split("=", 1)
+                    attrs[k] = v
+                except:
+                    pass
         return attrs
 
     def get_sd(self):
