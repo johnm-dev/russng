@@ -147,7 +147,7 @@ req_handler(struct russ_conn *conn) {
 	outfd = conn->fds[1];
 	if (strcmp(conn->req.op, "execute") == 0) {
 		if (strcmp(conn->req.spath, "/wait") == 0) {
-			if (conn->req.argc > 0) {
+			if ((conn->req.argv) && (conn->req.argv[0] != NULL)) {
 				barrier->items[barrier->nitems].tag = strdup(conn->req.argv[0]);
 			} else {
 				/* use pid as tag, if available */

@@ -62,14 +62,13 @@ char	*HELP =
 /**
 * Augment the environemnt.
 *
-* @param attrc	# of values in attrv, not counting NULL sentinel
 * @param attrv	List of "name=value" strings.
 */
 void
-augment_env(int attrc, char **attrv) {
+augment_env(char **attrv) {
 	int	i;
 
-	for (i = 0; i < attrc; i++) {
+	for (i = 0; attrv[i] != NULL; i++) {
 		putenv(attrv[i]);
 	}
 }
@@ -124,7 +123,7 @@ op_execute(struct russ_conn *conn) {
 		;
 	} else if (strcmp(req->spath, "/reload") == 0) {
 		if (fork() == 0) {
-			augment_env(req->attrc, req->attrv);
+			augment_env(req->attrv);
 			close_fds(0, 127);
 			execv(gl_argv[0], gl_argv);
 		}
@@ -151,7 +150,7 @@ op_execute(struct russ_conn *conn) {
 	close_fds(3, 127);
 
 	/* augment and execute */
-	augment_env(req->attrc, req->attrv);
+	augment_env(req->attrv);
 	execvp(req->argv[0], req->argv);
 
 	/* on error */
