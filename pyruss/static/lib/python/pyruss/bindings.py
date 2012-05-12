@@ -49,9 +49,7 @@ class russ_request_Structure(ctypes.Structure):
         ("protocol_string", ctypes.c_char_p),
         ("spath", ctypes.c_char_p),
         ("op", ctypes.c_char_p),
-        ("attrc", ctypes.c_int),
         ("attrv", ctypes.POINTER(ctypes.c_char_p)),
-        ("argc", ctypes.c_int),
         ("argv", ctypes.POINTER(ctypes.c_char_p)),
     ]
 
@@ -185,13 +183,25 @@ class Conn:
 
     def get_request_args(self):
         req = self.ptr_conn.contents.req
-        return [req.argv[i] for i in range(req.argc)]
+        args = []
+        i = 0
+        while 1:
+            s = req.argv[i]
+            i += 1
+            if s == None:
+                break
+            args.append(s)
+        return  args
 
     def get_request_attrs(self):
         req = self.ptr_conn.contents.req
         attrs = {}
-        for i in xrange(req.attrc):
+        i = 0
+        while 1:
             s = req.attrv[i]
+            i += 1
+            if s == None:
+                break
             try:
                 k, v = s.split("=", 1)
                 attrs[k] = v
