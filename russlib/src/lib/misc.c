@@ -42,14 +42,14 @@
 * @return	duplicated array
 */
 char **
-russ_dup_str_array(char **src, int *copy_cnt, int max_cnt) {
+russ_dup_str_array0(char **src, int *copy_cnt, int max_cnt) {
 	char	**dst;
 	int	i, cnt;
 
-	if (src == NULL) {
+	if ((cnt = russ_count_str_array0(src, max_cnt) < 0)
+		|| (cnt == max_cnt)) {
 		return NULL;
 	}
-	for (cnt = 0; (cnt < max_cnt) && (src[cnt] != NULL); cnt++);
 	cnt++;
 
 	if ((dst = malloc(sizeof(char *)*(cnt))) == NULL) {
@@ -70,6 +70,25 @@ free_dst:
 	}
 	*copy_cnt = 0;
 	return NULL;
+}
+
+/**
+* Count number of strings in NULL-terminated array (not including
+* NULL).
+*
+* @param arr		string array
+* @param max_cnt	maximum # of items to look for
+* @return		# of strings upto NULL; -1 if arr == NULL
+*/
+int
+russ_count_str_array0(char **arr, int max_cnt) {
+	int	i;
+
+	if (arr == NULL) {
+		return -1;
+	}
+	for (i = 0; (i < max_cnt) && (arr[i] != NULL); i++);
+	return i;
 }
 
 /**

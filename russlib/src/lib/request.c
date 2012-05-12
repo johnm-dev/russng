@@ -53,14 +53,14 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 		goto free_req_items;
 	}
 	if (attrv) {
-		if ((req->attrv = russ_dup_str_array(attrv, &(req->attrc), RUSS_MAX_ATTRC)) == NULL) {
+		if ((req->attrv = russ_dup_str_array0(attrv, &(req->attrc), RUSS_MAX_ATTRC)) == NULL) {
 			goto free_req_items;
 		}
 		/* do not count the NULL sentinel */
 		req->attrc--;
 	}
 	if (argv) {
-		if ((req->argv = russ_dup_str_array(argv, &(req->argc), RUSS_MAX_ARGC)) == NULL) {
+		if ((req->argv = russ_dup_str_array0(argv, &(req->argc), RUSS_MAX_ARGC)) == NULL) {
 			goto free_req_items;
 		}
 		/* do not count the NULL sentinel */

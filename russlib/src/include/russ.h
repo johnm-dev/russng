@@ -157,7 +157,9 @@ void russ_forwarding_init(struct russ_forwarding *, int, int, int, int, int, int
 int russ_forward_bytes(int, struct russ_forwarding *);
 
 /* misc.c */
+int russ_count_str_array0(char **, int);
 int russ_dprintf(int, char *, ...);
+char **russ_dup_str_array0(char **, int *, int);
 
 /* request.c */
 int russ_await_request(struct russ_conn *);
