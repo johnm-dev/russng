@@ -153,16 +153,22 @@ _request_handler(struct russ_conn *conn) {
 	russ_dprintf(fd, "spath (%s)\n", req->spath);
 	russ_dprintf(fd, "op (%s)\n", req->op);
 
-	/* attr */
-	russ_dprintf(fd, "attrc (%d)\n", req->attrc);
-	for (i = 0; i < req->attrc; i++) {
-		russ_dprintf(fd, "attrv[%d] (%s)\n", i, req->attrv[i]);
+	/* attrv */
+	if (req->attrv == NULL) {
+		russ_dprintf(fd, "attrv (NULL)\n");
+	} else {
+		for (i = 0; req->attrv[i] != NULL; i++) {
+			russ_dprintf(fd, "attrv[%d] (%s)\n", i, req->attrv[i]);
+		}
 	}
 
-	/* args */
-	russ_dprintf(fd, "argc (%d)\n", req->argc);
-	for (i = 0; i < req->argc; i++) {
-		russ_dprintf(fd, "argv[%d] (%s)\n", i, req->argv[i]);
+	/* argv */
+	if (req->argv == NULL) {
+		russ_dprintf(fd, "argv (NULL)\n");
+	} else {
+		for (i = 0; req->argv[i] != NULL; i++) {
+			russ_dprintf(fd, "argv[%d] (%s)\n", i, req->argv[i]);
+		}
 	}
 
 	return 0;
