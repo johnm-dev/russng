@@ -37,12 +37,11 @@
 * Duplicate a string array.
 *
 * @param src	source string array
-* @param copy_cnt	# of elements copied
 * @param max_cnt	max # of elements supported
 * @return	duplicated array
 */
 char **
-russ_dup_str_array0(char **src, int *copy_cnt, int max_cnt) {
+russ_dup_str_array0(char **src, int max_cnt) {
 	char	**dst;
 	int	i, cnt;
 
@@ -62,13 +61,11 @@ russ_dup_str_array0(char **src, int *copy_cnt, int max_cnt) {
 			goto free_dst;
 		}
 	}
-	*copy_cnt = cnt;
 	return dst;
 free_dst:
 	for (; i >= 0; i--) {
 		free(dst[i]);
 	}
-	*copy_cnt = 0;
 	return NULL;
 }
 
