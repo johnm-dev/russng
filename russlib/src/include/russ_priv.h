@@ -59,6 +59,9 @@ char *russ_enc_s_array0(char *, char *, char **);
 /* io.c */
 int russ_poll(russ_timeout, struct pollfd *, int);
 
+/* misc.c*/
+char **russ_dup_str_array(char **, int *, int);
+
 /* request.c */
 int russ_init_request(struct russ_conn *, char *, char *, char *, char **, char **);
 void russ_free_request_members(struct russ_conn *);
