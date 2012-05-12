@@ -31,45 +31,6 @@
 #include "russ_priv.h"
 
 /**
-* Duplicate a string array.
-*
-* @param src	source string array
-* @param copy_cnt	# of elements copied
-* @param max_cnt	max # of elements supported
-* @return	duplicated array
-*/
-char **
-dup_str_array(char **src, int *copy_cnt, int max_cnt) {
-	char	**dst;
-	int	i, cnt;
-
-	if (src == NULL) {
-		return NULL;
-	}
-	for (cnt = 0; (cnt < max_cnt) && (src[cnt] != NULL); cnt++);
-	cnt++;
-
-	if ((dst = malloc(sizeof(char *)*(cnt))) == NULL) {
-		return NULL;
-	}
-	for (i = 0; i < cnt; i++) {
-		if (src[i] == NULL) {
-			dst[i] = NULL;
-		} else if ((dst[i] = strdup(src[i])) == NULL) {
-			goto free_dst;
-		}
-	}
-	*copy_cnt = cnt;
-	return dst;
-free_dst:
-	for (; i >= 0; i--) {
-		free(dst[i]);
-	}
-	*copy_cnt = 0;
-	return NULL;
-}
-
-/**
 * Initialize connection request. All provided (non NULL) information is duplicated.
 */
 int
@@ -92,14 +53,14 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 		goto free_req_items;
 	}
 	if (attrv) {
-		if ((req->attrv = dup_str_array(attrv, &(req->attrc), RUSS_MAX_ATTRC)) == NULL) {
+		if ((req->attrv = russ_dup_str_array(attrv, &(req->attrc), RUSS_MAX_ATTRC)) == NULL) {
 			goto free_req_items;
 		}
 		/* do not count the NULL sentinel */
 		req->attrc--;
 	}
 	if (argv) {
-		if ((req->argv = dup_str_array(argv, &(req->argc), RUSS_MAX_ARGC)) == NULL) {
+		if ((req->argv = russ_dup_str_array(argv, &(req->argc), RUSS_MAX_ARGC)) == NULL) {
 			goto free_req_items;
 		}
 		/* do not count the NULL sentinel */
