@@ -46,7 +46,7 @@ russ_dup_str_array0(char **src, int *copy_cnt, int max_cnt) {
 	char	**dst;
 	int	i, cnt;
 
-	if ((cnt = russ_count_str_array0(src, max_cnt) < 0)
+	if (((cnt = russ_count_str_array0(src, max_cnt)) < 0)
 		|| (cnt == max_cnt)) {
 		return NULL;
 	}
@@ -78,7 +78,7 @@ free_dst:
 *
 * @param arr		string array
 * @param max_cnt	maximum # of items to look for
-* @return		# of strings upto NULL; -1 if arr == NULL
+* @return		# of strings upto NULL; -1 if arr == NULL; max_cnt if reached
 */
 int
 russ_count_str_array0(char **arr, int max_cnt) {
