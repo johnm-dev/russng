@@ -100,7 +100,7 @@ russ_find_service_target(char *path) {
 				spath[RUSS_MAX_SPATH_LEN],
 				tmps[RUSS_MAX_SPATH_LEN];
 	char			*bname;
-	int			pos;
+	int			cnt;
 
 	/* TODO:
 		should targ be allocated at end?
@@ -112,6 +112,7 @@ russ_find_service_target(char *path) {
 	}
 	targ->saddr[0] = '\0';
 	targ->spath[0] = '\0';
+	tmps[RUSS_MAX_SPATH_LEN-1] = '\0';
 
 	/* initialize working var */
 	saddr[sizeof(saddr)] = '\0';
@@ -119,20 +120,27 @@ russ_find_service_target(char *path) {
 		goto free_targ;
 	};
 
-	/* resolve addr->target */
-	while (stat(saddr, &st) != 0) {
-		if (S_ISLNK(st.st_mode)) {
-			if ((pos = readlink(saddr, saddr, sizeof(saddr)-1)) < 0) {
+	/* resolve addr to target */
+	while (1) {
+		if (lstat(saddr, &st) == 0) {
+			if (!S_ISLNK(st.st_mode)) {
+				/* non-symlink object */
+				break;
+			}
+			if ((cnt = readlink(saddr, tmps, sizeof(tmps)-1)) < 0) {
+				/* no space */
 				goto free_targ;
 			}
-			saddr[pos] = '\0';
+			strncpy(saddr, tmps, st.st_size);
+			saddr[cnt] = '\0';
 		}
 		/* prepend component, update saddr */
 		bname = basename(saddr);
-		if (snprintf(tmps, sizeof(tmps)-1, "/%s%s", bname, spath) < 0) {
+		if (((cnt = snprintf(tmps, sizeof(tmps)-1, "/%s%s", bname, spath)) < 0)
+			|| (cnt >= sizeof(tmps)-1)) {
 			goto free_targ;
 		}
-		sprintf(spath, "%s", tmps);
+		strcpy(spath, tmps);
 		dirname(saddr);
 	}
 
