@@ -37,6 +37,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+extern char **environ;
+
 #include "russ.h"
 
 int
@@ -141,6 +143,16 @@ _echo_handler(struct russ_conn *conn) {
 }
 
 int
+_env_handler(struct russ_conn *conn) {
+	int	i;
+
+	for (i = 0; environ[i] != NULL; i++) {
+		russ_write(conn->fds[1], environ[i]);
+	}
+	return 0;
+}
+
+int
 _request_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 	int			fd;
@@ -191,6 +203,8 @@ master_handler(struct russ_conn *conn) {
 			rv = _discard_handler(conn);
 		} else if (strcmp(req->spath, "/echo") == 0) {
 			rv = _echo_handler(conn);
+		} else if (strcmp(req->spath, "/env") == 0) {
+			rv = _env_handler(conn);
 		} else if (strcmp(req->spath, "/request") == 0) {
 			rv = _request_handler(conn);
 		} else {
@@ -200,7 +214,7 @@ master_handler(struct russ_conn *conn) {
 		russ_dprintf(conn->fds[1], "see server usage for details\n");
 		rv = 0;
 	} else if (strcmp(req->op, "list") == 0) {
-		russ_dprintf(conn->fds[1], "/chargen\n/conn\n/daytime\n/discard\n/echo\n/request\n");
+		russ_dprintf(conn->fds[1], "/chargen\n/conn\n/daytime\n/discard\n/echo\n/env\n/request\n");
 		rv = 0;
 	} else {
 		rv = _error_handler(conn, "error: unsupported operation\n");
@@ -227,6 +241,7 @@ print_usage(char **argv) {
 "               stderr, otherwise there is none\n"
 "/echo          simple echo service; receives from stdin and outputs\n"
 "               to stdout\n"
+"/env           print environ entries to stdout\n"
 "/request       display the request information at the server stdout\n"
 );
 }
