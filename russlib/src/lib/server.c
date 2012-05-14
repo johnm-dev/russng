@@ -48,15 +48,15 @@ russ_loop(struct russ_listener *lis, russ_req_handler handler) {
 			continue;
 		}
 		if (fork() == 0) {
-			russ_close_listener(lis);
-			lis = russ_free_listener(lis);
+			russ_listener_close(lis);
+			lis = russ_listener_free(lis);
 			if ((russ_await_request(conn) < 0)
 				|| (russ_accept(conn, NULL, NULL) < 0)) {
 				exit(-1);
 			}
 			exit(handler(conn));
 		}
-		russ_close_conn(conn);
-		conn = russ_free_conn(conn);
+		russ_conn_close(conn);
+		conn = russ_conn_free(conn);
 	}
 }
