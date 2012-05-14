@@ -73,44 +73,6 @@ __close_fds(int count, int *fds) {
 }
 
 /**
-* Close a descriptor of the connection.
-*
-* @param conn	connection object
-* @param index	index of the descriptor
-*/
-void
-russ_close_fd(struct russ_conn *conn, int index) {
-	__close_fds(1, &(conn->fds[index]));
-}
-
-/**
-* Create and initialize a connection object.
-*
-* @return	a new, initialized connection object
-*/
-static struct russ_conn *
-__new_conn(void) {
-	struct russ_conn	*conn;
-
-	if ((conn = malloc(sizeof(struct russ_conn))) == NULL) {
-		return NULL;
-	}
-	conn->cred.pid = -1;
-	conn->cred.uid = -1;
-	conn->cred.gid = -1;
-	if (russ_init_request(conn, NULL, NULL, NULL, NULL, NULL) < 0) {
-		goto free_conn;
-	}
-	conn->sd = -1;
-	__init_fds(3, conn->fds, -1);
-
-	return conn;
-free_conn:
-	free(conn);
-	return NULL;
-}
-
-/**
 * Connect, send args, and receive descriptors.
 *
 * @param path	socket path
@@ -131,48 +93,6 @@ __connect(char *path) {
 		}
 	}
 	return sd;
-}
-
-/**
-* Get fds from connection.
-*
-* @param conn	connection object
-* @return	0 on succes; -1 on error
-*/
-static int
-__recvfds(struct russ_conn *conn) {
-	int	i;
-
-	for (i = 0; i < 3; i++) {
-		if (russ_recvfd(conn->sd, &(conn->fds[i])) < 0) {
-			return -1;
-		}
-	}
-	return 0;
-}
-
-/**
-* Send cfds over connection, close cfds, and save sfds to connection
-* object.
-*
-* @param conn	connection object
-* @param cfds	client-side descriptors
-* @param sfds	server-side descriptors
-* @return	0 on success; -1 on error
-*/
-static int
-__sendfds(struct russ_conn *conn, int *cfds, int *sfds) {
-	int	i;
-
-	for (i = 0; i < 3; i++) {
-		if (russ_sendfd(conn->sd, cfds[i]) < 0) {
-			return -1;
-		}
-		close(cfds[i]);
-		cfds[i] = -1;
-		conn->fds[i] = sfds[i];
-	}
-	return 0;
 }
 
 /**
@@ -202,6 +122,86 @@ close_fds:
 	return -1;
 }
 
+/**
+* Close a descriptor of the connection.
+*
+* @param conn	connection object
+* @param index	index of the descriptor
+*/
+void
+russ_conn_close_fd(struct russ_conn *conn, int index) {
+	__close_fds(1, &(conn->fds[index]));
+}
+
+/**
+* Create and initialize a connection object.
+*
+* @return	a new, initialized connection object
+*/
+static struct russ_conn *
+russ_conn_new(void) {
+	struct russ_conn	*conn;
+
+	if ((conn = malloc(sizeof(struct russ_conn))) == NULL) {
+		return NULL;
+	}
+	conn->cred.pid = -1;
+	conn->cred.uid = -1;
+	conn->cred.gid = -1;
+	if (russ_init_request(conn, NULL, NULL, NULL, NULL, NULL) < 0) {
+		goto free_conn;
+	}
+	conn->sd = -1;
+	__init_fds(3, conn->fds, -1);
+
+	return conn;
+free_conn:
+	free(conn);
+	return NULL;
+}
+
+/**
+* Get fds from connection.
+*
+* @param conn	connection object
+* @return	0 on succes; -1 on error
+*/
+static int
+russ_conn_recvfds(struct russ_conn *conn) {
+	int	i;
+
+	for (i = 0; i < 3; i++) {
+		if (russ_recvfd(conn->sd, &(conn->fds[i])) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+/**
+* Send cfds over connection, close cfds, and save sfds to connection
+* object.
+*
+* @param conn	connection object
+* @param cfds	client-side descriptors
+* @param sfds	server-side descriptors
+* @return	0 on success; -1 on error
+*/
+static int
+russ_conn_sendfds(struct russ_conn *conn, int *cfds, int *sfds) {
+	int	i;
+
+	for (i = 0; i < 3; i++) {
+		if (russ_sendfd(conn->sd, cfds[i]) < 0) {
+			return -1;
+		}
+		close(cfds[i]);
+		cfds[i] = -1;
+		conn->fds[i] = sfds[i];
+	}
+	return 0;
+}
+
 /* ---------------------------------------- */
 
 /**
@@ -226,13 +226,13 @@ russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv
 	}
 
 	/* steps to set up conn object */
-	if ((conn = __new_conn()) == NULL) {
+	if ((conn = russ_conn_new()) == NULL) {
 		goto free_targ;
 	}
 	if (((conn->sd = __connect(targ->saddr)) < 0)
 		|| (russ_init_request(conn, RUSS_PROTOCOL_STRING, targ->spath, op, attrv, argv) < 0)
 		|| (russ_send_request(timeout, conn) < 0)
-		|| (__recvfds(conn) < 0)) {
+		|| (russ_conn_recvfds(conn) < 0)) {
 		goto close_conn;
 	}
 	free(targ);
@@ -240,7 +240,7 @@ russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv
 	return conn;
 
 close_conn:
-	russ_close_conn(conn);
+	russ_conn_close(conn);
 	free(conn);
 free_targ:
 	free(targ);
@@ -296,7 +296,7 @@ russ_diall(russ_timeout timeout, char *addr, char *op, char **attrv, ...) {
 * @param conn	connection object
 */
 void
-russ_close_conn(struct russ_conn *conn) {
+russ_conn_close(struct russ_conn *conn) {
 	__close_fds(3, conn->fds);
 	__close_fds(1, &conn->sd);
 }
@@ -308,7 +308,7 @@ russ_close_conn(struct russ_conn *conn) {
 * @return	NULL value
 */
 struct russ_conn *
-russ_free_conn(struct russ_conn *conn) {
+russ_conn_free(struct russ_conn *conn) {
 	russ_free_request_members(conn);
 	free(conn);
 	return NULL;
@@ -371,7 +371,7 @@ russ_answer(russ_timeout timeout, struct russ_listener *lis) {
 	struct pollfd		poll_fds[1];
 	russ_timeout		deadline;
 
-	if ((conn = __new_conn()) == NULL) {
+	if ((conn = russ_conn_new()) == NULL) {
 		return NULL;
 	}
 
@@ -437,7 +437,7 @@ russ_accept(struct russ_conn *conn, int *cfds, int *sfds) {
 		sfds[0] = tmpfd;
 	}
 
-	if (__sendfds(conn, cfds, sfds) < 0) {
+	if (russ_conn_sendfds(conn, cfds, sfds) < 0) {
 		goto close_fds;
 	}
 	fsync(conn->sd);
@@ -457,7 +457,7 @@ close_fds:
 * @param lis	listener object
 */
 void
-russ_close_listener(struct russ_listener *lis) {
+russ_listener_close(struct russ_listener *lis) {
 	if (lis->sd > -1) {
 		close(lis->sd);
 		lis->sd = -1;
@@ -471,7 +471,7 @@ russ_close_listener(struct russ_listener *lis) {
 * @return	NULL value
 */
 struct russ_listener *
-russ_free_listener(struct russ_listener *lis) {
+russ_listener_free(struct russ_listener *lis) {
 	free(lis);
 	return NULL;
 }

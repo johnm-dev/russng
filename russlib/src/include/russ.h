@@ -123,19 +123,19 @@ typedef int (*russ_req_handler)(struct russ_conn *);
 struct russ_target *russ_find_service_target(char *);
 
 /* conn.c */
-void russ_close_fd(struct russ_conn *, int);
+void russ_conn_close(struct russ_conn *);
+void russ_conn_close_fd(struct russ_conn *, int);
+struct russ_conn *russ_conn_free(struct russ_conn *);
 
+struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
 
-void russ_close_conn(struct russ_conn *);
-struct russ_conn *russ_free_conn(struct russ_conn *);
-
-struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_conn *russ_answer(russ_timeout, struct russ_listener *);
 int russ_accept(struct russ_conn *, int *, int *);
-void russ_close_listener(struct russ_listener *);
-struct russ_listener *russ_free_listener(struct russ_listener *);
+
+void russ_listener_close(struct russ_listener *);
+struct russ_listener *russ_listener_free(struct russ_listener *);
 
 /* helpers.c */
 struct russ_conn *russ_execv(russ_timeout, char *, char **, char **);
