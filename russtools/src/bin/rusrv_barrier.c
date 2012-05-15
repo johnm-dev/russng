@@ -108,8 +108,8 @@ release_barrier(char ch) {
 		conn = barrier->items[i].conn;
 		if ((conn) && (fd = conn->fds[1]) > -1) {
 			write(fd, &ch, 1);
-			russ_close_conn(conn);
-			barrier->items[i].conn = russ_free_conn(conn);
+			russ_conn_close(conn);
+			barrier->items[i].conn = russ_conn_free(conn);
 			free(barrier->items[i].tag);
 		}
 	}
@@ -201,7 +201,7 @@ req_handler(struct russ_conn *conn) {
 	return 0;
 
 close_conn:
-	russ_close_conn(conn);
+	russ_conn_close(conn);
 	return -1;
 }
 
@@ -319,13 +319,13 @@ main(int argc, char **argv) {
 			};
 		} else {
 			if (poll_fds[0].revents && POLLIN) {
-				if ((conn = russ_answer(RUSS_TIMEOUT_NEVER, lis)) == NULL) {
+				if ((conn = russ_listener_answer(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
 					continue;
 				}
-				if ((russ_await_request(conn) < 0)
-					|| (russ_accept(conn, NULL, NULL) < 0)) {
-					russ_close_conn(conn);
-					conn = russ_free_conn(conn);
+				if ((russ_conn_await_request(conn) < 0)
+					|| (russ_conn_accept(conn, NULL, NULL) < 0)) {
+					russ_conn_close(conn);
+					conn = russ_conn_free(conn);
 					continue;
 				}
 				req_handler(conn);

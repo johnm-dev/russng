@@ -162,7 +162,7 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	russ_close_conn(conn);
-	conn = russ_free_conn(conn);
+	russ_conn_close(conn);
+	conn = russ_conn_free(conn);
 	exit(0);
 }
