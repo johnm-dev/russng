@@ -38,40 +38,6 @@
 #include "russ_priv.h"
 
 /**
-* Initialize descriptor array to value.
-*
-* @param count	size of fds array
-* @param fds	descriptor array
-* @param value	initialization value
-*/
-static void
-__init_fds(int count, int *fds, int value) {
-	int	i;
-
-	for (i = 0; i < count; i++) {
-		fds[i] = value;
-	}
-}
-
-/**
-* Close descriptor and set array values to -1.
-*
-* @param count	size of fds array
-* @param fds	descriptor array
-*/
-static void
-__close_fds(int count, int *fds) {
-	int	i;
-
-	for (i = 0; i < count; i++) {
-		if (fds[i] > -1) {
-			close(fds[i]);
-			fds[i] = -1;
-		}
-	}
-}
-
-/**
 * Connect, send args, and receive descriptors.
 *
 * @param path	socket path
@@ -116,8 +82,8 @@ __make_pipes(int count, int *rfds, int *wfds) {
 	return 0;
 
 close_fds:
-	__close_fds(i, rfds);
-	__close_fds(i, wfds);
+	russ_close_fds(i, rfds);
+	russ_close_fds(i, wfds);
 	return -1;
 }
 
@@ -129,7 +95,7 @@ close_fds:
 */
 void
 russ_conn_close_fd(struct russ_conn *conn, int index) {
-	__close_fds(1, &(conn->fds[index]));
+	russ_close_fds(1, &(conn->fds[index]));
 }
 
 /**
@@ -167,7 +133,7 @@ russ_conn_new(void) {
 		goto free_conn;
 	}
 	conn->sd = -1;
-	__init_fds(3, conn->fds, -1);
+	russ_init_fds(3, conn->fds, -1);
 
 	return conn;
 free_conn:
@@ -251,7 +217,7 @@ russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv
 		goto close_conn;
 	}
 	free(targ);
-	__close_fds(1, &conn->sd);	/* sd not needed anymore */
+	russ_close_fds(1, &conn->sd);	/* sd not needed anymore */
 	return conn;
 
 close_conn:
@@ -321,8 +287,8 @@ russ_conn_accept(struct russ_conn *conn, int *cfds, int *sfds) {
 	if ((cfds == NULL) && (sfds == NULL)) {
 		cfds = _cfds;
 		sfds = _sfds;
-		__init_fds(3, cfds, 0);
-		__init_fds(3, sfds, 0);
+		russ_init_fds(3, cfds, 0);
+		russ_init_fds(3, sfds, 0);
 		if (__make_pipes(3, cfds, sfds) < 0) {
 			fprintf(stderr, "error: cannot create pipes\n");
 			return -1;
@@ -337,13 +303,13 @@ russ_conn_accept(struct russ_conn *conn, int *cfds, int *sfds) {
 		goto close_fds;
 	}
 	fsync(conn->sd);
-	__close_fds(1, &conn->sd);
+	russ_close_fds(1, &conn->sd);
 	return 0;
 
 close_fds:
-	__close_fds(3, cfds);
-	__close_fds(3, sfds);
-	__close_fds(1, &conn->sd);
+	russ_close_fds(3, cfds);
+	russ_close_fds(3, sfds);
+	russ_close_fds(1, &conn->sd);
 	return -1;
 }
 
@@ -387,8 +353,8 @@ free_req_items:
 */
 void
 russ_conn_close(struct russ_conn *conn) {
-	__close_fds(3, conn->fds);
-	__close_fds(1, &conn->sd);
+	russ_close_fds(3, conn->fds);
+	russ_close_fds(1, &conn->sd);
 }
 
 /**

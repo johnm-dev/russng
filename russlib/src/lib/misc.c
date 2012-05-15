@@ -34,6 +34,40 @@
 #include "russ_priv.h"
 
 /**
+* Initialize descriptor array to value.
+*
+* @param count	size of fds array
+* @param fds	descriptor array
+* @param value	initialization value
+*/
+void
+russ_init_fds(int count, int *fds, int value) {
+	int	i;
+
+	for (i = 0; i < count; i++) {
+		fds[i] = value;
+	}
+}
+
+/**
+* Close descriptor and set array values to -1.
+*
+* @param count	size of fds array
+* @param fds	descriptor array
+*/
+void
+russ_close_fds(int count, int *fds) {
+	int	i;
+
+	for (i = 0; i < count; i++) {
+		if (fds[i] > -1) {
+			close(fds[i]);
+			fds[i] = -1;
+		}
+	}
+}
+
+/**
 * Duplicate a string array.
 *
 * @param src	source string array

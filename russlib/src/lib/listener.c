@@ -123,7 +123,7 @@ russ_listener_answer(struct russ_listener *lis, russ_timeout timeout) {
 	return conn;
 
 close_sd:
-	__close_fds(1, &conn->sd);
+	russ_close_fds(1, &conn->sd);
 free_conn:
 	free(conn);
 	return NULL;
