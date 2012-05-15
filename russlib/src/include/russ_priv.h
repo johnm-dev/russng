@@ -39,6 +39,12 @@
 #define MAX_REQUEST_BUF_SIZE	262144
 #define FORWARD_BLOCK_SIZE	(1<<16)
 
+/* conn.c */
+int russ_conn_init_request(struct russ_conn *, char *, char *, char *, char **, char **);
+void russ_conn_free_request_members(struct russ_conn *);
+struct russ_conn *russ_conn_new(void);
+int russ_conn_send_request(russ_timeout, struct russ_conn *);
+
 /* encdec.c */
 char *russ_dec_H(char *, uint16_t *);
 char *russ_dec_I(char *, uint32_t *);
@@ -60,9 +66,8 @@ char *russ_enc_s_array0(char *, char *, char **);
 int russ_poll(russ_timeout, struct pollfd *, int);
 
 /* request.c */
-int russ_init_request(struct russ_conn *, char *, char *, char *, char **, char **);
-void russ_free_request_members(struct russ_conn *);
-int russ_send_request(russ_timeout, struct russ_conn *);
+int russ_request_init(struct russ_request *, char *, char *, char *, char **, char **);
+void russ_request_free_members(struct russ_request *);
 
 /* socket.c */
 int russ_get_credentials(int, struct russ_credentials *);
