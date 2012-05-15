@@ -34,11 +34,9 @@
 * Initialize connection request. All provided (non NULL) information is duplicated.
 */
 int
-russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, char *op, char **attrv, char **argv) {
-	struct russ_request	*req;
+russ_request_init(struct russ_request *req, char *protocol_string, char *spath, char *op, char **attrv, char **argv) {
 	int			i;
 
-	req = &(conn->req);
 	req->protocol_string = NULL;
 	req->spath = NULL;
 	req->op = NULL;
@@ -63,16 +61,14 @@ russ_init_request(struct russ_conn *conn, char *protocol_string, char *spath, ch
 	return 0;
 
 free_req_items:
-	russ_free_request_members(conn);
+	russ_request_free_members(req);
 	return -1;
 }
 
 void
-russ_free_request_members(struct russ_conn *conn) {
-	struct russ_request	*req;
+russ_request_free_members(struct russ_request *req) {
 	int			i;
 
-	req = &(conn->req);
 	free(req->protocol_string);
 	free(req->spath);
 	free(req->op);
@@ -88,72 +84,6 @@ russ_free_request_members(struct russ_conn *conn) {
 	    }
 	    free(req->argv);
 	}
-	russ_init_request(conn, NULL, NULL, NULL, NULL, NULL);
+	russ_request_init(req, NULL, NULL, NULL, NULL, NULL);
 }
 
-
-/**
-* Send request over conn.
-*
-* @param timeout	time in which to complete the send
-* @param conn	connection object
-* @return	0 on success, -1 on error
-*/
-int
-russ_send_request(russ_timeout timeout, struct russ_conn *conn) {
-	struct russ_request	*req;
-	char			buf[MAX_REQUEST_BUF_SIZE], *bp, *bend;
-
-	req = &(conn->req);
-	bp = buf;
-	bend = buf+sizeof(buf);
-	if (((bp = russ_enc_i(bp, bend, 0)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->protocol_string)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->spath)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->op)) == NULL)
-		|| ((bp = russ_enc_s_array0(bp, bend, req->attrv)) == NULL)
-		|| ((bp = russ_enc_s_array0(bp, bend, req->argv)) == NULL)) {
-		//|| ((bp = russ_enc_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
-		return -1;
-	}
-
-	/* patch size and send */
-	russ_enc_i(buf, bend, bp-buf-4);
-	if (russ_writen_timeout(timeout, conn->sd, buf, bp-buf) < bp-buf) {
-		return -1;
-	}
-	return 0;
-}
-
-/*
-** wait for the request to come; store in conn
-*/
-int
-russ_await_request(struct russ_conn *conn) {
-	struct russ_request	*req;
-	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
-	int			alen, size;
-
-	/* get request size, load, and upack */
-	bp = buf;
-	if ((russ_readn(conn->sd, bp, 4) < 0)
-		|| ((bp = russ_dec_i(bp, &size)) == NULL)
-		|| (russ_readn(conn->sd, bp, size) < 0)) {
-		return -1;
-	}
-
-	req = &(conn->req);
-	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
-		|| (strcmp(RUSS_PROTOCOL_STRING, req->protocol_string) != 0)
-		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
-		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &alen)) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &alen)) == NULL)) {
-
-		goto free_req_items;
-	}
-	return 0;
-free_req_items:
-	russ_free_request_members(conn);
-	return -1;
-}

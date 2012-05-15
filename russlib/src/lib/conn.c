@@ -26,7 +26,6 @@
 
 #include <errno.h>
 #include <libgen.h>
-#include <poll.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -134,11 +133,27 @@ russ_conn_close_fd(struct russ_conn *conn, int index) {
 }
 
 /**
+* Helper to initialize connection request.
+*/
+int
+russ_conn_init_request(struct russ_conn *conn, char *protocol_string, char *spath, char *op, char **attrv, char **argv) {
+	return russ_request_init(&(conn->req), protocol_string, spath, op, attrv, argv);
+}
+
+/**
+* Helper to free connection request members.
+*/
+void
+russ_conn_free_request_members(struct russ_conn *conn) {
+	russ_request_free_members(&(conn->req));
+}
+
+/**
 * Create and initialize a connection object.
 *
 * @return	a new, initialized connection object
 */
-static struct russ_conn *
+struct russ_conn *
 russ_conn_new(void) {
 	struct russ_conn	*conn;
 
@@ -148,7 +163,7 @@ russ_conn_new(void) {
 	conn->cred.pid = -1;
 	conn->cred.uid = -1;
 	conn->cred.gid = -1;
-	if (russ_init_request(conn, NULL, NULL, NULL, NULL, NULL) < 0) {
+	if (russ_conn_init_request(conn, NULL, NULL, NULL, NULL, NULL) < 0) {
 		goto free_conn;
 	}
 	conn->sd = -1;
@@ -230,8 +245,8 @@ russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv
 		goto free_targ;
 	}
 	if (((conn->sd = __connect(targ->saddr)) < 0)
-		|| (russ_init_request(conn, RUSS_PROTOCOL_STRING, targ->spath, op, attrv, argv) < 0)
-		|| (russ_send_request(timeout, conn) < 0)
+		|| (russ_conn_init_request(conn, RUSS_PROTOCOL_STRING, targ->spath, op, attrv, argv) < 0)
+		|| (russ_conn_send_request(timeout, conn) < 0)
 		|| (russ_conn_recvfds(conn) < 0)) {
 		goto close_conn;
 	}
@@ -291,125 +306,6 @@ russ_diall(russ_timeout timeout, char *addr, char *op, char **attrv, ...) {
 }
 
 /**
-* Close connection.
-*
-* @param conn	connection object
-*/
-void
-russ_conn_close(struct russ_conn *conn) {
-	__close_fds(3, conn->fds);
-	__close_fds(1, &conn->sd);
-}
-
-/**
-* Free connection object.
-*
-* @param conn	connection object
-* @return	NULL value
-*/
-struct russ_conn *
-russ_conn_free(struct russ_conn *conn) {
-	russ_free_request_members(conn);
-	free(conn);
-	return NULL;
-}
-
-/**
-* Announce service as a socket file.
-*
-* @param path	socket path
-* @param mode	file mode of path
-* @param uid	owner of path
-* @param gid	group owner of path
-* @return	listener object
-*/
-struct russ_listener *
-russ_announce(char *path, mode_t mode, uid_t uid, gid_t gid) {
-	struct russ_listener	*lis;
-	struct sockaddr_un	servaddr;
-
-	if ((lis = malloc(sizeof(struct russ_listener))) == NULL) {
-		return NULL;
-	}
-
-	bzero(&servaddr, sizeof(servaddr));
-	servaddr.sun_family = AF_UNIX;
-	strcpy(servaddr.sun_path, path);
-	if ((lis->sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-		goto free_lis;
-	}
-	if (((unlink(path) < 0) && (errno != ENOENT))
-		|| (bind(lis->sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
-		|| (chmod(path, mode) < 0)
-		|| (chown(path, uid, gid) < 0)
-		|| (listen(lis->sd, 5) < 0)) {
-		goto close_sd;
-	}
-
-	return lis;
-
-close_sd:
-	close(lis->sd);
-	lis->sd = -1;
-free_lis:
-	free(lis);
-	return NULL;
-}
-
-/**
-* Answer dial.
-*
-* @param timeout	time allowed to complete operation
-* @param lis	listener object
-* @return	connection object with credentials; not fully established
-*/
-struct russ_conn *
-russ_answer(russ_timeout timeout, struct russ_listener *lis) {
-	struct russ_conn	*conn;
-	struct sockaddr_un	servaddr;
-	int			servaddr_len;
-	struct pollfd		poll_fds[1];
-	russ_timeout		deadline;
-
-	if ((conn = russ_conn_new()) == NULL) {
-		return NULL;
-	}
-
-	poll_fds[0].fd = lis->sd;
-	poll_fds[0].events = POLLIN;
-	if ((timeout == RUSS_TIMEOUT_NEVER) || (timeout == RUSS_TIMEOUT_NOW)) {
-		deadline = timeout;
-	} else {
-		deadline = (time(NULL)*1000)+timeout;
-	}
-
-	servaddr_len = sizeof(struct sockaddr_un);
-	while (1) {
-		if (russ_poll(deadline, poll_fds, 1) < 0) {
-			goto free_conn;
-		}
-		if ((conn->sd = accept(lis->sd, (struct sockaddr *)&servaddr, &servaddr_len)) >= 0) {
-			break;
-		}
-		if (errno != EINTR) {
-			goto free_conn;
-		} else {
-			break;
-		}
-	}
-	if (russ_get_credentials(conn->sd, &(conn->cred)) < 0) {
-		goto close_sd;
-	}
-	return conn;
-
-close_sd:
-	__close_fds(1, &conn->sd);
-free_conn:
-	free(conn);
-	return NULL;
-}
-
-/**
 * Accept request. Socket is closed.
 *
 * @param conn	answered connection object
@@ -418,7 +314,7 @@ free_conn:
 * @return	0 on success; -1 on error
 */
 int
-russ_accept(struct russ_conn *conn, int *cfds, int *sfds) {
+russ_conn_accept(struct russ_conn *conn, int *cfds, int *sfds) {
 	int	_cfds[3], _sfds[3], fds[2], tmpfd;
 	int	i;
 
@@ -451,28 +347,92 @@ close_fds:
 	return -1;
 }
 
-/**
-* Close listener.
-*
-* @param lis	listener object
+/*
+** wait for the request to come; store in conn
 */
-void
-russ_listener_close(struct russ_listener *lis) {
-	if (lis->sd > -1) {
-		close(lis->sd);
-		lis->sd = -1;
+int
+russ_conn_await_request(struct russ_conn *conn) {
+	struct russ_request	*req;
+	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
+	int			alen, size;
+
+	/* get request size, load, and upack */
+	bp = buf;
+	if ((russ_readn(conn->sd, bp, 4) < 0)
+		|| ((bp = russ_dec_i(bp, &size)) == NULL)
+		|| (russ_readn(conn->sd, bp, size) < 0)) {
+		return -1;
 	}
+
+	req = &(conn->req);
+	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
+		|| (strcmp(RUSS_PROTOCOL_STRING, req->protocol_string) != 0)
+		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
+		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
+		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &alen)) == NULL)
+		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &alen)) == NULL)) {
+
+		goto free_req_items;
+	}
+	return 0;
+free_req_items:
+	russ_conn_free_request_members(conn);
+	return -1;
 }
 
 /**
-* Free listener object.
+* Close connection.
 *
-* @param lis	listener object
+* @param conn	connection object
+*/
+void
+russ_conn_close(struct russ_conn *conn) {
+	__close_fds(3, conn->fds);
+	__close_fds(1, &conn->sd);
+}
+
+/**
+* Free connection object.
+*
+* @param conn	connection object
 * @return	NULL value
 */
-struct russ_listener *
-russ_listener_free(struct russ_listener *lis) {
-	free(lis);
+struct russ_conn *
+russ_conn_free(struct russ_conn *conn) {
+	russ_conn_free_request_members(conn);
+	free(conn);
 	return NULL;
 }
 
+/**
+* Send request over conn.
+*
+* @param timeout	time in which to complete the send
+* @param conn	connection object
+* @return	0 on success, -1 on error
+*/
+int
+russ_conn_send_request(russ_timeout timeout, struct russ_conn *conn) {
+	struct russ_request	*req;
+	char			buf[MAX_REQUEST_BUF_SIZE], *bp, *bend;
+
+	req = &(conn->req);
+	bp = buf;
+	bend = buf+sizeof(buf);
+	if (((bp = russ_enc_i(bp, bend, 0)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->protocol_string)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->spath)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->op)) == NULL)
+		|| ((bp = russ_enc_s_array0(bp, bend, req->attrv)) == NULL)
+		|| ((bp = russ_enc_s_array0(bp, bend, req->argv)) == NULL)) {
+		//|| ((bp = russ_enc_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
+		return -1;
+	}
+
+	/* patch size and send */
+	russ_enc_i(buf, bend, bp-buf-4);
+	if (russ_writen_timeout(timeout, conn->sd, buf, bp-buf) < bp-buf) {
+		return -1;
+	}
+	return 0;
+}

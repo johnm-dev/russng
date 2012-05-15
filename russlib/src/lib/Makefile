@@ -5,8 +5,8 @@
 
 include ../../../Makefile.inc
 
-SRCS=addr.c conn.c encdec.c helpers.c io.c misc.c request.c socket.c server.c
-OBJS=addr.o conn.o encdec.o helpers.o io.o misc.o request.o socket.o server.o
+SRCS=addr.c conn.c encdec.c helpers.c io.c listener.c misc.c request.c socket.c server.c
+OBJS=addr.o conn.o encdec.o helpers.o io.o listener.o misc.o request.o socket.o server.o
 
 all: libruss.a libruss.so
 

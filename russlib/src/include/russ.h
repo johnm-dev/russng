@@ -123,19 +123,14 @@ typedef int (*russ_req_handler)(struct russ_conn *);
 struct russ_target *russ_find_service_target(char *);
 
 /* conn.c */
+int russ_conn_accept(struct russ_conn *, int *, int *);
+int russ_conn_await_request(struct russ_conn *);
 void russ_conn_close(struct russ_conn *);
 void russ_conn_close_fd(struct russ_conn *, int);
 struct russ_conn *russ_conn_free(struct russ_conn *);
 
-struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
-
-struct russ_conn *russ_answer(russ_timeout, struct russ_listener *);
-int russ_accept(struct russ_conn *, int *, int *);
-
-void russ_listener_close(struct russ_listener *);
-struct russ_listener *russ_listener_free(struct russ_listener *);
 
 /* helpers.c */
 struct russ_conn *russ_execv(russ_timeout, char *, char **, char **);
@@ -154,13 +149,18 @@ ssize_t russ_writen_timeout(russ_timeout, int, char *, size_t);
 void russ_forwarding_init(struct russ_forwarding *, int, int, int, int, int, int);
 int russ_forward_bytes(int, struct russ_forwarding *);
 
+/* listener.c */
+struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
+struct russ_conn *russ_listener_answer(russ_timeout, struct russ_listener *);
+void russ_listener_close(struct russ_listener *);
+struct russ_listener *russ_listener_free(struct russ_listener *);
+
 /* misc.c */
 int russ_count_str_array0(char **, int);
 int russ_dprintf(int, char *, ...);
 char **russ_dup_str_array0(char **, int);
 
 /* request.c */
-int russ_await_request(struct russ_conn *);
 
 /* server.c */
 void russ_loop(struct russ_listener *, russ_req_handler);
