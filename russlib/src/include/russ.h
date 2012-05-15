@@ -151,7 +151,7 @@ int russ_forward_bytes(int, struct russ_forwarding *);
 
 /* listener.c */
 struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
-struct russ_conn *russ_listener_answer(russ_timeout, struct russ_listener *);
+struct russ_conn *russ_listener_answer(struct russ_listener *, russ_timeout);
 void russ_listener_close(struct russ_listener *);
 struct russ_listener *russ_listener_free(struct russ_listener *);
 

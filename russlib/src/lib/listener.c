@@ -79,12 +79,12 @@ free_lis:
 /**
 * Answer dial.
 *
-* @param timeout	time allowed to complete operation
 * @param lis	listener object
+* @param timeout	time allowed to complete operation
 * @return	connection object with credentials; not fully established
 */
 struct russ_conn *
-russ_listener_answer(russ_timeout timeout, struct russ_listener *lis) {
+russ_listener_answer(struct russ_listener *lis, russ_timeout timeout) {
 	struct russ_conn	*conn;
 	struct sockaddr_un	servaddr;
 	int			servaddr_len;

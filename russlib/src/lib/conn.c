@@ -246,7 +246,7 @@ russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv
 	}
 	if (((conn->sd = __connect(targ->saddr)) < 0)
 		|| (russ_conn_init_request(conn, RUSS_PROTOCOL_STRING, targ->spath, op, attrv, argv) < 0)
-		|| (russ_conn_send_request(timeout, conn) < 0)
+		|| (russ_conn_send_request(conn, timeout) < 0)
 		|| (russ_conn_recvfds(conn) < 0)) {
 		goto close_conn;
 	}
@@ -407,12 +407,12 @@ russ_conn_free(struct russ_conn *conn) {
 /**
 * Send request over conn.
 *
-* @param timeout	time in which to complete the send
 * @param conn	connection object
+* @param timeout	time in which to complete the send
 * @return	0 on success, -1 on error
 */
 int
-russ_conn_send_request(russ_timeout timeout, struct russ_conn *conn) {
+russ_conn_send_request(struct russ_conn *conn, russ_timeout timeout) {
 	struct russ_request	*req;
 	char			buf[MAX_REQUEST_BUF_SIZE], *bp, *bend;
 
