@@ -142,7 +142,7 @@ main(int argc, char **argv) {
 		&& (argi+2 <= argc)) {
 		op = argv[argi++];
 		addr = argv[argi++];
-		conn = russ_dialv(timeout, addr, op, attrv, &(argv[argi]));
+		conn = russ_dialv(timeout, op, addr, attrv, &(argv[argi]));
 	} else {
 		fprintf(stderr, "error: bad/missing arguments\n");
 		exit(-1);

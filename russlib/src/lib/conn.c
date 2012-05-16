@@ -189,14 +189,14 @@ russ_conn_sendfds(struct russ_conn *conn, int *cfds, int *sfds) {
 * Dial service.
 *
 * @param timeout	time allowed to complete operation
-* @param addr	full service address
 * @param op	operation string
+* @param addr	full service address
 * @param attrv	array of attributes (as name=value strings); NULL-terminated list
 * @param argv	array of args; NULL-terminated list
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
-russ_dialv(russ_timeout timeout, char *addr, char *op, char **attrv, char **argv) {
+russ_dialv(russ_timeout timeout, char *op, char *addr, char **attrv, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
 	struct russ_target	*targ;
@@ -232,14 +232,14 @@ free_targ:
 * Dial service using variable argument list.
 *
 * @param timeout	time allowed to complete operation
-* @param addr	full service address
 * @param op	operation string
+* @param addr	full service address
 * @param attrv	array of attributes (as name=value strings)
 * @param ...	variable argument list of "char *" with NULL sentinel
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
-russ_diall(russ_timeout timeout, char *addr, char *op, char **attrv, ...) {
+russ_diall(russ_timeout timeout, char *op, char *addr, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	void			*p;
