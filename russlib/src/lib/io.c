@@ -162,14 +162,14 @@ russ_writen(int fd, char *b, size_t count) {
 /**
 * Guaranteed write. Return on success, timeout, or unrecoverable error.
 *
-* @param timeout	time in which to complete call
 * @param fd		output descriptor
 * @param b		buffer
 * @param count		# of bytes to write
+* @param timeout	time in which to complete call
 * @return		# of bytes written; < count on error
 */
 ssize_t
-russ_writen_timeout(russ_timeout timeout, int fd, char *b, size_t count) {
+russ_writen_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
 	struct pollfd	poll_fds[1];
 	int		rv, due_time;
 	ssize_t		n;

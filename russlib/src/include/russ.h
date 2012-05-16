@@ -148,7 +148,7 @@ ssize_t russ_read(int, char *, size_t);
 ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);
 ssize_t russ_writen(int, char *, size_t);
-ssize_t russ_writen_timeout(russ_timeout, int, char *, size_t);
+ssize_t russ_writen_timeout(int, char *, size_t, russ_timeout);
 
 /* listener.c */
 struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
