@@ -157,9 +157,9 @@ void russ_listener_close(struct russ_listener *);
 struct russ_listener *russ_listener_free(struct russ_listener *);
 
 /* misc.c */
-int russ_count_str_array0(char **, int);
 int russ_dprintf(int, char *, ...);
-char **russ_dup_str_array0(char **, int);
+int russ_sarray0_count(char **, int);
+char **russ_sarray0_dup(char **, int);
 
 /* request.c */
 

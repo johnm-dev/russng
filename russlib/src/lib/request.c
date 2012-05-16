@@ -49,12 +49,12 @@ russ_request_init(struct russ_request *req, char *protocol_string, char *spath, 
 		goto free_req_items;
 	}
 	if (attrv) {
-		if ((req->attrv = russ_dup_str_array0(attrv, RUSS_MAX_ATTRC)) == NULL) {
+		if ((req->attrv = russ_sarray0_dup(attrv, RUSS_MAX_ATTRC)) == NULL) {
 			goto free_req_items;
 		}
 	}
 	if (argv) {
-		if ((req->argv = russ_dup_str_array0(argv, RUSS_MAX_ARGC)) == NULL) {
+		if ((req->argv = russ_sarray0_dup(argv, RUSS_MAX_ARGC)) == NULL) {
 			goto free_req_items;
 		}
 	}

@@ -112,7 +112,7 @@ _discard_handler(struct russ_conn *conn) {
 	if ((buf = malloc(buf_size)) == NULL) {
 		return _error_handler(conn, "error: cannot allocate buffer\n");
 	}
-	if ((russ_count_str_array0(conn->req.argv, 2) >= 1)  && (strcmp(conn->req.argv[0], "--perf") == 0)) {
+	if ((russ_sarray0_count(conn->req.argv, 2) >= 1)  && (strcmp(conn->req.argv[0], "--perf") == 0)) {
 		t0 = gettimeofday_float();
 		last_t1 = t0;
 		total = 0;
