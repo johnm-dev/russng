@@ -136,8 +136,13 @@ russ_find_service_target(char *path) {
 		}
 		/* prepend component, update saddr */
 		bname = basename(saddr);
+		if (strcmp(bname, saddr) == 0) {
+			/* failed */
+			goto free_targ;
+		}
 		if (((cnt = snprintf(tmps, sizeof(tmps)-1, "/%s%s", bname, spath)) < 0)
 			|| (cnt >= sizeof(tmps)-1)) {
+			/* no space */
 			goto free_targ;
 		}
 		strcpy(spath, tmps);
