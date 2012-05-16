@@ -33,7 +33,7 @@
 /**
 * Initialize connection request. All provided (non NULL) information is duplicated.
 *
-* @param req	request object
+* @param self	request object
 * @param protocol_string	russ protocol identification string
 * @param op	operation string
 * @param spath	service path
@@ -42,61 +42,61 @@
 * @return	0 on success; -1 on error
 */
 int
-russ_request_init(struct russ_request *req, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
+russ_request_init(struct russ_request *self, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
 	int			i;
 
-	req->protocol_string = NULL;
-	req->spath = NULL;
-	req->op = NULL;
-	req->attrv = NULL;
-	req->argv = NULL;
+	self->protocol_string = NULL;
+	self->spath = NULL;
+	self->op = NULL;
+	self->attrv = NULL;
+	self->argv = NULL;
 
-	if (((protocol_string) && ((req->protocol_string = strdup(protocol_string)) == NULL))
-		|| ((spath) && ((req->spath = strdup(spath)) == NULL))
-		|| ((op) && ((req->op = strdup(op)) == NULL))) {
+	if (((protocol_string) && ((self->protocol_string = strdup(protocol_string)) == NULL))
+		|| ((op) && ((self->op = strdup(op)) == NULL))
+		|| ((spath) && ((self->spath = strdup(spath)) == NULL))) {
 		goto free_req_items;
 	}
 	if (attrv) {
-		if ((req->attrv = russ_sarray0_dup(attrv, RUSS_MAX_ATTRC)) == NULL) {
+		if ((self->attrv = russ_sarray0_dup(attrv, RUSS_MAX_ATTRC)) == NULL) {
 			goto free_req_items;
 		}
 	}
 	if (argv) {
-		if ((req->argv = russ_sarray0_dup(argv, RUSS_MAX_ARGC)) == NULL) {
+		if ((self->argv = russ_sarray0_dup(argv, RUSS_MAX_ARGC)) == NULL) {
 			goto free_req_items;
 		}
 	}
 	return 0;
 
 free_req_items:
-	russ_request_free_members(req);
+	russ_request_free_members(self);
 	return -1;
 }
 
 /**
 * Free allocated request members.
 *
-* @param req	request object
+* @param self	request object
 */
 void
-russ_request_free_members(struct russ_request *req) {
+russ_request_free_members(struct russ_request *self) {
 	int			i;
 
-	free(req->protocol_string);
-	free(req->spath);
-	free(req->op);
-	if (req->attrv) {
-	    for (i = 0; req->attrv[i] != NULL; i++) {
-		    free(req->attrv[i]);
+	free(self->protocol_string);
+	free(self->op);
+	free(self->spath);
+	if (self->attrv) {
+	    for (i = 0; self->attrv[i] != NULL; i++) {
+		    free(self->attrv[i]);
 	    }
-	    free(req->attrv);
+	    free(self->attrv);
 	}
-	if (req->argv) {
-	    for (i = 0; req->argv[i] != NULL; i++) {
-		    free(req->argv[i]);
+	if (self->argv) {
+	    for (i = 0; self->argv[i] != NULL; i++) {
+		    free(self->argv[i]);
 	    }
-	    free(req->argv);
+	    free(self->argv);
 	}
-	russ_request_init(req, NULL, NULL, NULL, NULL, NULL);
+	russ_request_init(self, NULL, NULL, NULL, NULL, NULL);
 }
 

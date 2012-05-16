@@ -26,6 +26,7 @@
 
 #include <errno.h>
 #include <poll.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -84,7 +85,7 @@ free_lis:
 * @return	connection object with credentials; not fully established
 */
 struct russ_conn *
-russ_listener_answer(struct russ_listener *lis, russ_timeout timeout) {
+russ_listener_answer(struct russ_listener *self, russ_timeout timeout) {
 	struct russ_conn	*conn;
 	struct sockaddr_un	servaddr;
 	int			servaddr_len;
@@ -95,7 +96,7 @@ russ_listener_answer(struct russ_listener *lis, russ_timeout timeout) {
 		return NULL;
 	}
 
-	poll_fds[0].fd = lis->sd;
+	poll_fds[0].fd = self->sd;
 	poll_fds[0].events = POLLIN;
 	if ((timeout == RUSS_TIMEOUT_NEVER) || (timeout == RUSS_TIMEOUT_NOW)) {
 		deadline = timeout;
@@ -108,7 +109,7 @@ russ_listener_answer(struct russ_listener *lis, russ_timeout timeout) {
 		if (russ_poll(poll_fds, 1, deadline) < 0) {
 			goto free_conn;
 		}
-		if ((conn->sd = accept(lis->sd, (struct sockaddr *)&servaddr, &servaddr_len)) >= 0) {
+		if ((conn->sd = accept(self->sd, (struct sockaddr *)&servaddr, &servaddr_len)) >= 0) {
 			break;
 		}
 		if (errno != EINTR) {
@@ -132,24 +133,53 @@ free_conn:
 /**
 * Close listener.
 *
-* @param lis	listener object
+* @param self	listener object
 */
 void
-russ_listener_close(struct russ_listener *lis) {
-	if (lis->sd > -1) {
-		close(lis->sd);
-		lis->sd = -1;
+russ_listener_close(struct russ_listener *self) {
+	if (self->sd > -1) {
+		close(self->sd);
+		self->sd = -1;
 	}
 }
 
 /**
 * Free listener object.
 *
-* @param lis	listener object
+* @param self	listener object
 * @return	NULL value
 */
 struct russ_listener *
-russ_listener_free(struct russ_listener *lis) {
-	free(lis);
+russ_listener_free(struct russ_listener *self) {
+	free(self);
 	return NULL;
+}
+
+/**
+* Loop to listen for and accept incoming connections.
+*
+* @param self	listener object
+* @param handler	handler function to call on connection
+*/
+void
+russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
+	struct russ_conn	*conn;
+
+	while (1) {
+		if ((conn = russ_listener_answer(self, RUSS_TIMEOUT_NEVER)) == NULL) {
+			fprintf(stderr, "error: cannot answer connection\n");
+			continue;
+		}
+		if (fork() == 0) {
+			russ_listener_close(self);
+			self = russ_listener_free(self);
+			if ((russ_conn_await_request(conn) < 0)
+				|| (russ_conn_accept(conn, NULL, NULL) < 0)) {
+				exit(-1);
+			}
+			exit(handler(conn));
+		}
+		russ_conn_close(conn);
+		conn = russ_conn_free(conn);
+	}
 }
