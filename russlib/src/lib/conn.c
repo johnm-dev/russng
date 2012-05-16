@@ -177,8 +177,8 @@ russ_conn_sendfds(struct russ_conn *conn, int *cfds, int *sfds) {
 * @param timeout	time allowed to complete operation
 * @param op	operation string
 * @param addr	full service address
-* @param attrv	array of attributes (as name=value strings); NULL-terminated list
-* @param argv	array of args; NULL-terminated list
+* @param attrv	NULL-terminated array of attributes ("name=value" strings)
+* @param argv	NULL-terminated array of arguments
 * @return	connection object; NULL on failure
 */
 struct russ_conn *
@@ -302,7 +302,10 @@ close_fds:
 }
 
 /*
-** wait for the request to come; store in conn
+** Wait for the request to come; store in conn
+*
+* @param conn	connection object
+* @return	0 on success; -1 on error
 */
 int
 russ_conn_await_request(struct russ_conn *conn) {
@@ -363,7 +366,7 @@ russ_conn_free(struct russ_conn *conn) {
 *
 * @param conn	connection object
 * @param timeout	time in which to complete the send
-* @return	0 on success, -1 on error
+* @return	0 on success; -1 on error
 */
 int
 russ_conn_send_request(struct russ_conn *conn, russ_timeout timeout) {
