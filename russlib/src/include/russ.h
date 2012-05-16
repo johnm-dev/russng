@@ -80,8 +80,8 @@ struct russ_listener {
 */
 struct russ_request {
 	char	*protocol_string;	/**< identifies russ protocol */
-	char	*spath;		/**< service path */
 	char	*op;		/**< operation string */
+	char	*spath;		/**< service path */
 	char	**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
 	char	**argv;		/**< NULL-terminated array of args */
 };

@@ -198,8 +198,8 @@ class Server:
         self.lis = None
 
     def __del__(self):
-        pyruss.close_listener_conn(self.lis)
-        pyruss.free_listener_conn(self.lis)
+        self.lis.close()
+        self.lis.free()
 
     def announce(self, saddr, mode, uid, gid):
         """Announce service on filesystem.
