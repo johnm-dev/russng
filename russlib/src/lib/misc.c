@@ -68,18 +68,37 @@ russ_close_fds(int count, int *fds) {
 }
 
 /**
-* Duplicate a string array.
+* Count elements of NULL-terminated string array (not including
+* NULL).
+*
+* @param arr		string array
+* @param max_cnt	maximum # of items to look for
+* @return		# of strings upto NULL; -1 if arr == NULL; max_cnt if reached
+*/
+int
+russ_sarray0_count(char **arr, int max_cnt) {
+	int	i;
+
+	if (arr == NULL) {
+		return -1;
+	}
+	for (i = 0; (i < max_cnt) && (arr[i] != NULL); i++);
+	return i;
+}
+
+/**
+* Duplicate a NULL-terminated string array.
 *
 * @param src	source string array
 * @param max_cnt	max # of elements supported
 * @return	duplicated array
 */
 char **
-russ_dup_str_array0(char **src, int max_cnt) {
+russ_sarray0_dup(char **src, int max_cnt) {
 	char	**dst;
 	int	i, cnt;
 
-	if (((cnt = russ_count_str_array0(src, max_cnt)) < 0)
+	if (((cnt = russ_sarray0_count(src, max_cnt)) < 0)
 		|| (cnt == max_cnt)) {
 		return NULL;
 	}
@@ -101,25 +120,6 @@ free_dst:
 		free(dst[i]);
 	}
 	return NULL;
-}
-
-/**
-* Count number of strings in NULL-terminated array (not including
-* NULL).
-*
-* @param arr		string array
-* @param max_cnt	maximum # of items to look for
-* @return		# of strings upto NULL; -1 if arr == NULL; max_cnt if reached
-*/
-int
-russ_count_str_array0(char **arr, int max_cnt) {
-	int	i;
-
-	if (arr == NULL) {
-		return -1;
-	}
-	for (i = 0; (i < max_cnt) && (arr[i] != NULL); i++);
-	return i;
 }
 
 /**
