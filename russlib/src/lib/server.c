@@ -38,6 +38,12 @@
 
 #include "russ.h"
 
+/**
+* Loop to listen for and accept incoming connections.
+*
+* @param lis	listener object
+* @param handler	handler function to call on connection
+*/
 void
 russ_loop(struct russ_listener *lis, russ_req_handler handler) {
 	struct russ_conn	*conn;

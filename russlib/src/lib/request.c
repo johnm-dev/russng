@@ -32,6 +32,14 @@
 
 /**
 * Initialize connection request. All provided (non NULL) information is duplicated.
+*
+* @param req	request object
+* @param protocol_string	russ protocol identification string
+* @param op	operation string
+* @param spath	service path
+* @param attrv	NULL-terminated array of attributes ("name=value" strings)
+* @param argv	NULL-terminated array of arguments
+* @return	0 on success; -1 on error
 */
 int
 russ_request_init(struct russ_request *req, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
@@ -65,6 +73,11 @@ free_req_items:
 	return -1;
 }
 
+/**
+* Free allocated request members.
+*
+* @param req	request object
+*/
 void
 russ_request_free_members(struct russ_request *req) {
 	int			i;

@@ -31,12 +31,26 @@
 
 #include "russ_priv.h"
 
+/**
+* Decode LE 16-bit unsigned integer.
+*
+* @param b	buffer
+* @param[out] v	storage area
+* @return	new buffer position; NULL if failure
+*/
 char *
 russ_dec_H(char *b, uint16_t *v) {
 	*v = (uint8_t)(b[0]) | ((uint8_t)(b[1])<<8);
 	return b+2;
 }
 
+/**
+* Decode LE 32-bit unsigned integer.
+*
+* @param b	buffer
+* @param[out] v	storage area
+* @return	new buffer position; NULL if failure
+*/
 char *
 russ_dec_I(char *b, uint32_t *v) {
 	*v = (uint8_t)(b[0]) | ((uint8_t)(b[1])<<8)
@@ -44,6 +58,13 @@ russ_dec_I(char *b, uint32_t *v) {
 	return b+4;
 }
 
+/**
+* Decode LE 32-bit signed integer.
+*
+* @param b	buffer
+* @param[out] v	storage area
+* @return	new buffer position; NULL if failure
+*/
 char *
 russ_dec_i(char *b, int32_t *v) {
 	uint32_t	v2;
@@ -54,6 +75,13 @@ russ_dec_i(char *b, int32_t *v) {
 	return b2;
 }
 
+/**
+* Decode size-encoded byte-array.
+*
+* @param b	buffer
+* @param[out] bp	storage area
+* @return	new buffer position; NULL if failure
+*/
 char *
 russ_dec_b(char *b, char **bp) {
 	int	count;
@@ -66,6 +94,13 @@ russ_dec_b(char *b, char **bp) {
 	return b+count;
 }
 
+/**
+* Decode size-encoded char-array.
+*
+* @param b	buffer
+* @param[out] bp	storage area
+* @return	new buffer position; NULL if failure
+*/
 char *
 russ_dec_s(char *b, char **bp) {
 	return russ_dec_b(b, bp);

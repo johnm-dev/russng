@@ -29,6 +29,11 @@
 
 #include "russ.h"
 
+/**
+* Wrapper for russ_dial with "execute" operation.
+*
+* @see russ_dialv()
+*/
 struct russ_conn *
 russ_execv(russ_timeout timeout, char *addr, char **attrv, char **argv) {
 	return russ_dialv(timeout, addr, "execute", attrv, argv);
@@ -56,6 +61,11 @@ russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 	return argv;
 }
 
+/**
+* Wrapper for russ_dial with "execute" operation.
+*
+* @see russ_diall()
+*/
 struct russ_conn *
 russ_execl(russ_timeout timeout, char *addr, char **attrv, ...) {
 	struct russ_conn	*conn;
@@ -73,16 +83,37 @@ russ_execl(russ_timeout timeout, char *addr, char **attrv, ...) {
 	return conn;
 }
 
+/**
+* Wrapper for russ_dial with "help" operation.
+*
+* @param timeout	time allowed to complete operation
+* @param addr	full service address
+* @return	connection object
+*/
 struct russ_conn *
 russ_help(russ_timeout timeout, char *addr) {
 	return russ_dialv(timeout, addr, "help", NULL, NULL);
 }
 
+/**
+* Wrapper for russ_dial with "info" operation.
+*
+* @param timeout	time allowed to complete operation
+* @param addr	full service address
+* @return	connection object
+*/
 struct russ_conn *
 russ_info(russ_timeout timeout, char *addr) {
 	return russ_dialv(timeout, addr, "info", NULL, NULL);
 }
 
+/**
+* Wrapper for russ_dial with "list" operation.
+*
+* @param timeout	time allowed to complete operation
+* @param addr	full service address
+* @return	connection object
+*/
 struct russ_conn *
 russ_list(russ_timeout timeout, char *addr) {
 	return russ_dialv(timeout, addr, "list", NULL, NULL);
