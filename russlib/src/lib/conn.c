@@ -90,12 +90,12 @@ close_fds:
 /**
 * Close a descriptor of the connection.
 *
-* @param conn	connection object
+* @param self	connection object
 * @param index	index of the descriptor
 */
 void
-russ_conn_close_fd(struct russ_conn *conn, int index) {
-	russ_close_fds(1, &(conn->fds[index]));
+russ_conn_close_fd(struct russ_conn *self, int index) {
+	russ_close_fds(1, &(self->fds[index]));
 }
 
 /**
@@ -130,15 +130,15 @@ free_conn:
 /**
 * Get fds from connection.
 *
-* @param conn	connection object
+* @param self	connection object
 * @return	0 on succes; -1 on error
 */
 static int
-russ_conn_recvfds(struct russ_conn *conn) {
+russ_conn_recvfds(struct russ_conn *self) {
 	int	i;
 
 	for (i = 0; i < 3; i++) {
-		if (russ_recvfd(conn->sd, &(conn->fds[i])) < 0) {
+		if (russ_recvfd(self->sd, &(self->fds[i])) < 0) {
 			return -1;
 		}
 	}
@@ -149,27 +149,160 @@ russ_conn_recvfds(struct russ_conn *conn) {
 * Send cfds over connection, close cfds, and save sfds to connection
 * object.
 *
-* @param conn	connection object
+* @param self	connection object
 * @param cfds	client-side descriptors
 * @param sfds	server-side descriptors
 * @return	0 on success; -1 on error
 */
 static int
-russ_conn_sendfds(struct russ_conn *conn, int *cfds, int *sfds) {
+russ_conn_sendfds(struct russ_conn *self, int *cfds, int *sfds) {
 	int	i;
 
 	for (i = 0; i < 3; i++) {
-		if (russ_sendfd(conn->sd, cfds[i]) < 0) {
+		if (russ_sendfd(self->sd, cfds[i]) < 0) {
 			return -1;
 		}
 		close(cfds[i]);
 		cfds[i] = -1;
-		conn->fds[i] = sfds[i];
+		self->fds[i] = sfds[i];
 	}
 	return 0;
 }
 
-/* ---------------------------------------- */
+/**
+* Accept request. Socket is closed.
+*
+* @param self	answered connection object
+* @param cfds	array of descriptors to send to client
+* @param sfds	array of descriptors for server side
+* @return	0 on success; -1 on error
+*/
+int
+russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
+	int	_cfds[3], _sfds[3], fds[2], tmpfd;
+	int	i;
+
+	if ((cfds == NULL) && (sfds == NULL)) {
+		cfds = _cfds;
+		sfds = _sfds;
+		russ_init_fds(3, cfds, 0);
+		russ_init_fds(3, sfds, 0);
+		if (__make_pipes(3, cfds, sfds) < 0) {
+			fprintf(stderr, "error: cannot create pipes\n");
+			return -1;
+		}
+		/* switch 0 elements */
+		tmpfd = cfds[0];
+		cfds[0] = sfds[0];
+		sfds[0] = tmpfd;
+	}
+
+	if (russ_conn_sendfds(self, cfds, sfds) < 0) {
+		goto close_fds;
+	}
+	fsync(self->sd);
+	russ_close_fds(1, &self->sd);
+	return 0;
+
+close_fds:
+	russ_close_fds(3, cfds);
+	russ_close_fds(3, sfds);
+	russ_close_fds(1, &self->sd);
+	return -1;
+}
+
+/*
+** Wait for the request to come; store in connection object
+*
+* @param self	connection object
+* @return	0 on success; -1 on error
+*/
+int
+russ_conn_await_request(struct russ_conn *self) {
+	struct russ_request	*req;
+	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
+	int			alen, size;
+
+	/* get request size, load, and upack */
+	bp = buf;
+	if ((russ_readn(self->sd, bp, 4) < 0)
+		|| ((bp = russ_dec_i(bp, &size)) == NULL)
+		|| (russ_readn(self->sd, bp, size) < 0)) {
+		return -1;
+	}
+
+	req = &(self->req);
+	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
+		|| (strcmp(RUSS_PROTOCOL_STRING, req->protocol_string) != 0)
+		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
+		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
+		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &alen)) == NULL)
+		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &alen)) == NULL)) {
+
+		goto free_request;
+	}
+	return 0;
+free_request:
+	russ_request_free_members(&(self->req));
+	return -1;
+}
+
+/**
+* Close connection.
+*
+* @param self	connection object
+*/
+void
+russ_conn_close(struct russ_conn *self) {
+	russ_close_fds(3, self->fds);
+	russ_close_fds(1, &self->sd);
+}
+
+/**
+* Free connection object.
+*
+* @param self	connection object
+* @return	NULL value
+*/
+struct russ_conn *
+russ_conn_free(struct russ_conn *self) {
+	russ_request_free_members(&(self->req));
+	free(self);
+	return NULL;
+}
+
+/**
+* Send request over connection.
+*
+* @param self	connection object
+* @param timeout	time in which to complete the send
+* @return	0 on success; -1 on error
+*/
+int
+russ_conn_send_request(struct russ_conn *self, russ_timeout timeout) {
+	struct russ_request	*req;
+	char			buf[MAX_REQUEST_BUF_SIZE], *bp, *bend;
+
+	req = &(self->req);
+	bp = buf;
+	bend = buf+sizeof(buf);
+	if (((bp = russ_enc_i(bp, bend, 0)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->protocol_string)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->spath)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, req->op)) == NULL)
+		|| ((bp = russ_enc_s_array0(bp, bend, req->attrv)) == NULL)
+		|| ((bp = russ_enc_s_array0(bp, bend, req->argv)) == NULL)) {
+		//|| ((bp = russ_enc_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
+		return -1;
+	}
+
+	/* patch size and send */
+	russ_enc_i(buf, bend, bp-buf-4);
+	if (russ_writen_timeout(self->sd, buf, bp-buf, timeout) < bp-buf) {
+		return -1;
+	}
+	return 0;
+}
 
 /**
 * Dial service.
@@ -257,139 +390,4 @@ russ_diall(russ_timeout timeout, char *op, char *addr, char **attrv, ...) {
 	free(argv);
 
 	return conn;
-}
-
-/**
-* Accept request. Socket is closed.
-*
-* @param conn	answered connection object
-* @param cfds	array of descriptors to send to client
-* @param sfds	array of descriptors for server side
-* @return	0 on success; -1 on error
-*/
-int
-russ_conn_accept(struct russ_conn *conn, int *cfds, int *sfds) {
-	int	_cfds[3], _sfds[3], fds[2], tmpfd;
-	int	i;
-
-	if ((cfds == NULL) && (sfds == NULL)) {
-		cfds = _cfds;
-		sfds = _sfds;
-		russ_init_fds(3, cfds, 0);
-		russ_init_fds(3, sfds, 0);
-		if (__make_pipes(3, cfds, sfds) < 0) {
-			fprintf(stderr, "error: cannot create pipes\n");
-			return -1;
-		}
-		/* switch 0 elements */
-		tmpfd = cfds[0];
-		cfds[0] = sfds[0];
-		sfds[0] = tmpfd;
-	}
-
-	if (russ_conn_sendfds(conn, cfds, sfds) < 0) {
-		goto close_fds;
-	}
-	fsync(conn->sd);
-	russ_close_fds(1, &conn->sd);
-	return 0;
-
-close_fds:
-	russ_close_fds(3, cfds);
-	russ_close_fds(3, sfds);
-	russ_close_fds(1, &conn->sd);
-	return -1;
-}
-
-/*
-** Wait for the request to come; store in conn
-*
-* @param conn	connection object
-* @return	0 on success; -1 on error
-*/
-int
-russ_conn_await_request(struct russ_conn *conn) {
-	struct russ_request	*req;
-	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
-	int			alen, size;
-
-	/* get request size, load, and upack */
-	bp = buf;
-	if ((russ_readn(conn->sd, bp, 4) < 0)
-		|| ((bp = russ_dec_i(bp, &size)) == NULL)
-		|| (russ_readn(conn->sd, bp, size) < 0)) {
-		return -1;
-	}
-
-	req = &(conn->req);
-	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
-		|| (strcmp(RUSS_PROTOCOL_STRING, req->protocol_string) != 0)
-		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
-		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &alen)) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &alen)) == NULL)) {
-
-		goto free_request;
-	}
-	return 0;
-free_request:
-	russ_request_free_members(&(conn->req));
-	return -1;
-}
-
-/**
-* Close connection.
-*
-* @param conn	connection object
-*/
-void
-russ_conn_close(struct russ_conn *conn) {
-	russ_close_fds(3, conn->fds);
-	russ_close_fds(1, &conn->sd);
-}
-
-/**
-* Free connection object.
-*
-* @param conn	connection object
-* @return	NULL value
-*/
-struct russ_conn *
-russ_conn_free(struct russ_conn *conn) {
-	russ_request_free_members(&(conn->req));
-	free(conn);
-	return NULL;
-}
-
-/**
-* Send request over conn.
-*
-* @param conn	connection object
-* @param timeout	time in which to complete the send
-* @return	0 on success; -1 on error
-*/
-int
-russ_conn_send_request(struct russ_conn *conn, russ_timeout timeout) {
-	struct russ_request	*req;
-	char			buf[MAX_REQUEST_BUF_SIZE], *bp, *bend;
-
-	req = &(conn->req);
-	bp = buf;
-	bend = buf+sizeof(buf);
-	if (((bp = russ_enc_i(bp, bend, 0)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->protocol_string)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->spath)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->op)) == NULL)
-		|| ((bp = russ_enc_s_array0(bp, bend, req->attrv)) == NULL)
-		|| ((bp = russ_enc_s_array0(bp, bend, req->argv)) == NULL)) {
-		//|| ((bp = russ_enc_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
-		return -1;
-	}
-
-	/* patch size and send */
-	russ_enc_i(buf, bend, bp-buf-4);
-	if (russ_writen_timeout(conn->sd, buf, bp-buf, timeout) < bp-buf) {
-		return -1;
-	}
-	return 0;
 }

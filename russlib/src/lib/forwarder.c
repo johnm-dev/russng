@@ -133,13 +133,13 @@ _forward_bytes(void *_fwd) {
 * @param how	sets the how member
 */
 void
-russ_forwarder_init(struct russ_forwarder *fwd, int to_join, int in_fd, int out_fd, int count, int blocksize, int how) {
-	fwd->to_join = to_join;
-	fwd->in_fd = in_fd;
-	fwd->out_fd = out_fd;
-	fwd->count = count;
-	fwd->blocksize = blocksize;
-	fwd->how = how;
+russ_forwarder_init(struct russ_forwarder *self, int to_join, int in_fd, int out_fd, int count, int blocksize, int how) {
+	self->to_join = to_join;
+	self->in_fd = in_fd;
+	self->out_fd = out_fd;
+	self->count = count;
+	self->blocksize = blocksize;
+	self->how = how;
 }
 
 /**
