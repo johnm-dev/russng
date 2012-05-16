@@ -40,8 +40,6 @@
 #define FORWARD_BLOCK_SIZE	(1<<16)
 
 /* conn.c */
-int russ_conn_init_request(struct russ_conn *, char *, char *, char *, char **, char **);
-void russ_conn_free_request_members(struct russ_conn *);
 struct russ_conn *russ_conn_new(void);
 int russ_conn_send_request(struct russ_conn *, russ_timeout);
 
