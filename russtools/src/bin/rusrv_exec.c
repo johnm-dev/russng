@@ -229,5 +229,5 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	russ_loop(lis, master_handler);
+	russ_listener_loop(lis, master_handler);
 }

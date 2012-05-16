@@ -129,11 +129,11 @@ libruss.russ_listener_free.argtypes = [
 libruss.russ_listener_free.restype = ctypes.c_void_p
 
 # russ_loop
-libruss.russ_loop.argtypes = [
+libruss.russ_listener_loop.argtypes = [
     ctypes.c_void_p,
     ctypes.c_void_p,
 ]
-libruss.russ_loop.restype = None
+libruss.russ_listener_loop.restype = None
 
 #
 # Application-facing classes
@@ -256,4 +256,4 @@ class Listener:
         def raw_handler(raw_conn):
             handler(ServerConn(raw_conn))
             return 0    # TODO: allow a integer return value from handler
-        libruss.russ_loop(self.raw_lis, HANDLERFUNC(raw_handler))
+        libruss.russ_listener_loop(self.raw_lis, HANDLERFUNC(raw_handler))
