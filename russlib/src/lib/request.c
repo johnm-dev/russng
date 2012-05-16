@@ -34,7 +34,7 @@
 * Initialize connection request. All provided (non NULL) information is duplicated.
 */
 int
-russ_request_init(struct russ_request *req, char *protocol_string, char *spath, char *op, char **attrv, char **argv) {
+russ_request_init(struct russ_request *req, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
 	int			i;
 
 	req->protocol_string = NULL;

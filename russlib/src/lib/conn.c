@@ -99,22 +99,6 @@ russ_conn_close_fd(struct russ_conn *conn, int index) {
 }
 
 /**
-* Helper to initialize connection request.
-*/
-int
-russ_conn_init_request(struct russ_conn *conn, char *protocol_string, char *spath, char *op, char **attrv, char **argv) {
-	return russ_request_init(&(conn->req), protocol_string, spath, op, attrv, argv);
-}
-
-/**
-* Helper to free connection request members.
-*/
-void
-russ_conn_free_request_members(struct russ_conn *conn) {
-	russ_request_free_members(&(conn->req));
-}
-
-/**
 * Create and initialize a connection object.
 *
 * @return	a new, initialized connection object
@@ -129,13 +113,15 @@ russ_conn_new(void) {
 	conn->cred.pid = -1;
 	conn->cred.uid = -1;
 	conn->cred.gid = -1;
-	if (russ_conn_init_request(conn, NULL, NULL, NULL, NULL, NULL) < 0) {
-		goto free_conn;
+	if (russ_request_init(&(conn->req), NULL, NULL, NULL, NULL, NULL) < 0) {
+		goto free_request;
 	}
 	conn->sd = -1;
 	russ_init_fds(3, conn->fds, -1);
 
 	return conn;
+free_request:
+	russ_request_free_members(&(conn->req));
 free_conn:
 	free(conn);
 	return NULL;
@@ -211,15 +197,17 @@ russ_dialv(russ_timeout timeout, char *op, char *addr, char **attrv, char **argv
 		goto free_targ;
 	}
 	if (((conn->sd = __connect(targ->saddr)) < 0)
-		|| (russ_conn_init_request(conn, RUSS_PROTOCOL_STRING, targ->spath, op, attrv, argv) < 0)
+		|| (russ_request_init(&(conn->req), RUSS_PROTOCOL_STRING, op, targ->spath, attrv, argv) < 0)
 		|| (russ_conn_send_request(conn, timeout) < 0)
 		|| (russ_conn_recvfds(conn) < 0)) {
-		goto close_conn;
+		goto free_request;
 	}
 	free(targ);
 	russ_close_fds(1, &conn->sd);	/* sd not needed anymore */
 	return conn;
 
+free_request:
+	russ_request_free_members(&(conn->req));
 close_conn:
 	russ_conn_close(conn);
 	free(conn);
@@ -338,11 +326,11 @@ russ_conn_await_request(struct russ_conn *conn) {
 		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &alen)) == NULL)
 		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &alen)) == NULL)) {
 
-		goto free_req_items;
+		goto free_request;
 	}
 	return 0;
-free_req_items:
-	russ_conn_free_request_members(conn);
+free_request:
+	russ_request_free_members(&(conn->req));
 	return -1;
 }
 
@@ -365,7 +353,7 @@ russ_conn_close(struct russ_conn *conn) {
 */
 struct russ_conn *
 russ_conn_free(struct russ_conn *conn) {
-	russ_conn_free_request_members(conn);
+	russ_request_free_members(&(conn->req));
 	free(conn);
 	return NULL;
 }
