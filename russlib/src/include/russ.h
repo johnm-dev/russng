@@ -98,9 +98,9 @@ struct russ_conn {
 };
 
 /**
-* Container for byte forwarding information.
+* Forwarder information.
 */
-struct russ_forwarding {
+struct russ_forwarder {
 	pthread_t	th;		/**< thread doing forwarding */
 	int		to_join;	/**< 1 to join thread */
 	int		in_fd;		/**< input fd */
@@ -132,6 +132,10 @@ struct russ_conn *russ_conn_free(struct russ_conn *);
 struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
 
+/* forwarder */
+void russ_forwarder_init(struct russ_forwarder *, int, int, int, int, int, int);
+int russ_run_forwarders(int, struct russ_forwarder *);
+
 /* helpers.c */
 struct russ_conn *russ_execv(russ_timeout, char *, char **, char **);
 struct russ_conn *russ_execl(russ_timeout, char *, char **, ...);
@@ -145,9 +149,6 @@ ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);
 ssize_t russ_writen(int, char *, size_t);
 ssize_t russ_writen_timeout(russ_timeout, int, char *, size_t);
-
-void russ_forwarding_init(struct russ_forwarding *, int, int, int, int, int, int);
-int russ_forward_bytes(int, struct russ_forwarding *);
 
 /* listener.c */
 struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
