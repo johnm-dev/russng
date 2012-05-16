@@ -77,8 +77,8 @@ libruss.russ_dialv.argtypes = [
 libruss.russ_dialv.restype = ctypes.c_void_p
 
 # russ_conn_close
-libruss.russ_close_conn.argtypes = [ctypes.c_void_p]
-libruss.russ_close_conn.restype = None
+libruss.russ_conn_close.argtypes = [ctypes.c_void_p]
+libruss.russ_conn_close.restype = None
 
 # russ_conn_free
 libruss.russ_conn_free_argtypes = [
