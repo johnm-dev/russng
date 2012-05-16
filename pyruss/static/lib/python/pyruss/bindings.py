@@ -47,8 +47,8 @@ class russ_listener_Structure(ctypes.Structure):
 class russ_request_Structure(ctypes.Structure):
     _fields_ = [
         ("protocol_string", ctypes.c_char_p),
-        ("spath", ctypes.c_char_p),
         ("op", ctypes.c_char_p),
+        ("spath", ctypes.c_char_p),
         ("attrv", ctypes.POINTER(ctypes.c_char_p)),
         ("argv", ctypes.POINTER(ctypes.c_char_p)),
     ]
@@ -76,15 +76,29 @@ libruss.russ_dialv.argtypes = [
 ]
 libruss.russ_dialv.restype = ctypes.c_void_p
 
-# russ_close_conn
+# russ_conn_close
 libruss.russ_close_conn.argtypes = [ctypes.c_void_p]
 libruss.russ_close_conn.restype = None
 
-# russ_free_conn
-libruss.russ_free_conn_argtypes = [
+# russ_conn_free
+libruss.russ_conn_free_argtypes = [
     ctypes.c_void_p,
 ]
-libruss.russ_free_conn.restype = None
+libruss.russ_conn_free.restype = None
+
+# russ_conn_accept
+libruss.russ_conn_accept.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_int*3,
+    ctypes.c_int*3,
+]
+libruss.russ_conn_accept.restype = ctypes.c_int
+
+# russ_conn_await_request
+libruss.russ_conn_await_request.argtypes = [
+    ctypes.c_void_p,
+]
+libruss.russ_conn_await_request.restype = ctypes.c_int
 
 # russ_announce
 libruss.russ_announce.argtypes = [
@@ -95,38 +109,24 @@ libruss.russ_announce.argtypes = [
 ]
 libruss.russ_announce.restype = ctypes.c_void_p
 
-# russ_answer
-libruss.russ_answer.argtypes = [
+# russ_listener_answer
+libruss.russ_listener_answer.argtypes = [
+    ctypes.c_void_p,
     ctypes.c_int64,  # russ_timeout
-    ctypes.c_void_p,
 ]
-libruss.russ_answer.restype = ctypes.c_void_p
+libruss.russ_listener_answer.restype = ctypes.c_void_p
 
-# russ_accept
-libruss.russ_accept.argtypes = [
+# russ_listener_close
+libruss.russ_listener_close.argtypes = [
     ctypes.c_void_p,
-    ctypes.c_int*3,
-    ctypes.c_int*3,
 ]
-libruss.russ_accept.restype = ctypes.c_int
+libruss.russ_listener_close.restype = None
 
-# russ_await_request
-libruss.russ_await_request.argtypes = [
+# russ_listener_free
+libruss.russ_listener_free.argtypes = [
     ctypes.c_void_p,
 ]
-libruss.russ_await_request.restype = ctypes.c_int
-
-# russ_close_listener
-libruss.russ_close_listener.argtypes = [
-    ctypes.c_void_p,
-]
-libruss.russ_close_listener.restype = None
-
-# russ_free_listener
-libruss.russ_free_listener.argtypes = [
-    ctypes.c_void_p,
-]
-libruss.russ_free_listener.restype = ctypes.c_void_p
+libruss.russ_listener_free.restype = ctypes.c_void_p
 
 # russ_loop
 libruss.russ_loop.argtypes = [
@@ -138,7 +138,7 @@ libruss.russ_loop.restype = None
 #
 # Application-facing classes
 #
-def dial(timeout, saddr, op, attrs, args):
+def dial(timeout, op, saddr, attrs, args):
     """Dial a service.
     """
     if attrs == None:
@@ -148,7 +148,7 @@ def dial(timeout, saddr, op, attrs, args):
     c_attrs[len(attrs)] = None
     c_argv = (ctypes.c_char_p*(len(args)+1))(*args)
     c_argv[len(args)] = None
-    return ClientConn(libruss.russ_dialv(timeout, saddr, op, c_attrs, c_argv))
+    return ClientConn(libruss.russ_dialv(timeout, op, saddr, c_attrs, c_argv))
 
 def announce(path, mode, uid, gid):
     """Announce a service.
@@ -164,7 +164,7 @@ class Conn:
         self.ptr_conn = ctypes.cast(raw_conn, ctypes.POINTER(russ_conn_Structure))
 
     def __del__(self):
-        libruss.russ_free_conn(self.raw_conn)
+        libruss.russ_conn_free(self.raw_conn)
         self.raw_conn = None
         self.ptr_conn = None
 
@@ -215,7 +215,7 @@ class Conn:
         return self.ptr_conn.contents.sd
 
     def close(self):
-        libruss.russ_close_conn(self.raw_conn)
+        libruss.russ_conn_close(self.raw_conn)
 
 class ClientConn(Conn):
     """Client connection.
@@ -232,10 +232,10 @@ class ServerConn(Conn):
     """
 
     def accept(self, cfds, sfds):
-        libruss.russ_accept(self.raw_conn, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+        libruss.russ_conn_accept(self.raw_conn, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
 
     def await_request(self):
-        libruss.russ_await_request(self.raw_conn)
+        libruss.russ_conn_await_request(self.raw_conn)
 
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
@@ -244,13 +244,13 @@ class Listener:
         self.raw_lis = raw_lis
 
     def __del__(self):
-        self.raw_conn = libruss.russ_free_listener(self.raw_lis)
+        self.raw_conn = libruss.russ_listener_free(self.raw_lis)
 
     def answer(self, timeout):
-        return ServerConn(libruss.russ_answer(timeout, self.raw_lis))
+        return ServerConn(libruss.russ_listener_answer(timeout, self.raw_lis))
 
     def close(self):
-        libruss.russ_close_listener(self.raw_lis)
+        libruss.russ_listener_close(self.raw_lis)
 
     def loop(self, handler):
         def raw_handler(raw_conn):
