@@ -180,7 +180,7 @@ russ_writen_timeout(russ_timeout timeout, int fd, char *b, size_t count) {
 
 	bend = b+count;
 	while (b < bend) {
-		rv = russ_poll(timeout, poll_fds, 1);
+		rv = russ_poll(poll_fds, 1, timeout);
 		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
 			break;
 		}
@@ -195,13 +195,13 @@ russ_writen_timeout(russ_timeout timeout, int fd, char *b, size_t count) {
 /**
 * Guaranteed modified poll with automatic restart on EINTR.
 *
-* @param timeout	timeout at this time (time, RUSS_TIMEOUT_NEVER, RUSS_TIMEOUT_NOW)
 * @param poll_fds	initialized pollfd structure
 * @param nfds		# of descriptors in poll_fds
+* @param timeout	timeout at this time (time, RUSS_TIMEOUT_NEVER, RUSS_TIMEOUT_NOW)
 * @return		value as returned by system poll
 */
 int
-russ_poll(russ_timeout timeout, struct pollfd *poll_fds, int nfds) {
+russ_poll(struct pollfd *poll_fds, int nfds, russ_timeout timeout) {
 	russ_timeout	deadline;
 	int		poll_timeout;
 	int		rv;

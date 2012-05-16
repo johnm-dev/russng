@@ -63,7 +63,7 @@ char *russ_enc_s_arrayn(char *, char *, char **, int);
 char *russ_enc_s_array0(char *, char *, char **);
 
 /* io.c */
-int russ_poll(russ_timeout, struct pollfd *, int);
+int russ_poll(struct pollfd *, int, russ_timeout);
 
 /* misc.c */
 void russ_init_fds(int, int *, int);

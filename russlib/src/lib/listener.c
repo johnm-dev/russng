@@ -105,7 +105,7 @@ russ_listener_answer(struct russ_listener *lis, russ_timeout timeout) {
 
 	servaddr_len = sizeof(struct sockaddr_un);
 	while (1) {
-		if (russ_poll(deadline, poll_fds, 1) < 0) {
+		if (russ_poll(poll_fds, 1, deadline) < 0) {
 			goto free_conn;
 		}
 		if ((conn->sd = accept(lis->sd, (struct sockaddr *)&servaddr, &servaddr_len)) >= 0) {
