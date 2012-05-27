@@ -123,6 +123,23 @@ free_dst:
 }
 
 /**
+* Free NULL-terminated string array.
+*
+* @param arr		NULL-terminated string array
+*/
+void
+russ_sarray0_free(char **arr) {
+	char	**p;
+
+	if (arr) {
+		for (p = arr; *p != NULL; p++) {
+			free(*p);
+		}
+		free(arr);
+	}
+}
+
+/**
 * fprintf-like but uses descripto instead of FILE *.
 *
 * @param fd	descriptor
