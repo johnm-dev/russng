@@ -21,7 +21,7 @@ endif
 all: $(BINS)
 
 clean:
-	rm -f $(BINS)
+	rm -f $(BINS) *.o
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
@@ -30,34 +30,34 @@ install:
 	(cd $(INSTALL_DIR)/bin; ln -fs ruls ruhelp; ln -fs ruls ruinfo)
 
 rudial:	rudial.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rudial2:	rudial2.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 ruls:	ruls.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_barrier:	rusrv_barrier.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_debug:	rusrv_debug.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_echo:	rusrv_echo.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_exec:	rusrv_exec.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_pexec:	rusrv_pexec.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 configparser.o:	configparser.c
-	$(CC) $(CFLAGS) -fPIC -c $<
+	$(CC) $(CFLAGS) -fPIC -c -I. $<
 
-rusrv_relay:	rusrv_relay.c configparser.o
-	$(CC) $(XCFLAGS) -Bdynamic -o $@ $^ -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread -lssh
+rusrv_relay:	rusrv_relay.c configparser.c
+	$(CC) $(CFLAGS) -Bdynamic -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread -lssh
 
 rusrv_relay_backend: rusrv_relay_backend.c
-	$(CC) $(CFLAGS) -o $@ $< -I$(RUSS_INCLUDE_DIR) -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
+	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
