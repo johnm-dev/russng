@@ -43,6 +43,20 @@
 #include "configparser.h"
 #include "russ_priv.h"
 
+/* use different function names for v0.4 */
+#if LIBSSH_VERSION_MAJOR == 0 && LIBSSH_VERSION_MINOR == 4
+	#define ssh_channel_new(a) channel_new((a))
+	#define ssh_channel_open_session(a) channel_open_session((a))
+	#define ssh_channel_request_exec(a,b) channel_request_exec((a),(b))
+	#define ssh_channel_write(a,b,c) channel_write((a),(b),(c))
+	#define ssh_channel_close(a) channel_close((a))
+	#define ssh_channel_free(a) channel_free((a))
+	#define ssh_channel_is_eof(a) channel_is_eof((a))
+	#define ssh_channel_is_open(a) channel_is_open((a))
+	#define ssh_channel_send_eof(a) channel_send_eof((a))
+	#define ssh_channel_read_nonblocking(a,b,c,d) channel_read_nonblocking((a),(b),(c),(d))
+#endif
+
 /* global */
 struct configparser	*config;
 
