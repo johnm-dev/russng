@@ -57,7 +57,7 @@ configparser.o:	configparser.c
 	$(CC) $(CFLAGS) -fPIC -c -I. $<
 
 rusrv_relay:	rusrv_relay.c configparser.c
-	$(CC) $(CFLAGS) -Bdynamic -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread -lssh
+	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread -lssh
 
 rusrv_relay_backend: rusrv_relay_backend.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
