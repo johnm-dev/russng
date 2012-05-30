@@ -117,7 +117,7 @@ russ_conn_new(void) {
 		goto free_request;
 	}
 	conn->sd = -1;
-	russ_init_fds(3, conn->fds, -1);
+	russ_init_fds(RUSS_CONN_NFDS, conn->fds, -1);
 
 	return conn;
 free_request:
@@ -137,7 +137,7 @@ static int
 russ_conn_recvfds(struct russ_conn *self) {
 	int	i;
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < RUSS_CONN_NFDS; i++) {
 		if (russ_recvfd(self->sd, &(self->fds[i])) < 0) {
 			return -1;
 		}
@@ -158,7 +158,7 @@ static int
 russ_conn_sendfds(struct russ_conn *self, int *cfds, int *sfds) {
 	int	i;
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < RUSS_CONN_NFDS; i++) {
 		if (russ_sendfd(self->sd, cfds[i]) < 0) {
 			return -1;
 		}
@@ -179,15 +179,16 @@ russ_conn_sendfds(struct russ_conn *self, int *cfds, int *sfds) {
 */
 int
 russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
-	int	_cfds[3], _sfds[3], fds[2], tmpfd;
+	int	_cfds[RUSS_CONN_NFDS], _sfds[RUSS_CONN_NFDS];
+	int	fds[2], tmpfd;
 	int	i;
 
 	if ((cfds == NULL) && (sfds == NULL)) {
 		cfds = _cfds;
 		sfds = _sfds;
-		russ_init_fds(3, cfds, 0);
-		russ_init_fds(3, sfds, 0);
-		if (__make_pipes(3, cfds, sfds) < 0) {
+		russ_init_fds(RUSS_CONN_NFDS, cfds, 0);
+		russ_init_fds(RUSS_CONN_NFDS, sfds, 0);
+		if (__make_pipes(RUSS_CONN_NFDS, cfds, sfds) < 0) {
 			fprintf(stderr, "error: cannot create pipes\n");
 			return -1;
 		}
@@ -205,8 +206,8 @@ russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 	return 0;
 
 close_fds:
-	russ_close_fds(3, cfds);
-	russ_close_fds(3, sfds);
+	russ_close_fds(RUSS_CONN_NFDS, cfds);
+	russ_close_fds(RUSS_CONN_NFDS, sfds);
 	russ_close_fds(1, &self->sd);
 	return -1;
 }
@@ -254,7 +255,7 @@ free_request:
 */
 void
 russ_conn_close(struct russ_conn *self) {
-	russ_close_fds(3, self->fds);
+	russ_close_fds(RUSS_CONN_NFDS, self->fds);
 	russ_close_fds(1, &self->sd);
 }
 
