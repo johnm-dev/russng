@@ -26,6 +26,7 @@
 
 #include <errno.h>
 #include <libgen.h>
+#include <poll.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -257,6 +258,92 @@ void
 russ_conn_close(struct russ_conn *self) {
 	russ_close_fds(RUSS_CONN_NFDS, self->fds);
 	russ_close_fds(1, &self->sd);
+}
+
+/**
+* Send exit status over connection (valid for server side only) and
+* close exit fd.
+*
+* @param self	connection object
+* @param exit_status	exit status
+* @param exit_string	optional exit string
+* @return	0 on success; -1 on failure
+*/
+int
+russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
+	char	buf[1024];
+	char	*bp, *bend;
+	int	exit_fd;
+
+	exit_fd = self->fds[3];
+	if (exit_fd < 0) {
+		return -1;
+	}
+	bp = buf;
+	bend = bp+sizeof(buf);
+	if (((bp = russ_enc_I(bp, bend, exit_status)) == NULL)
+		|| ((bp = russ_enc_string(bp, bend, exit_string)) == NULL)) {
+		// error?
+		return -1;
+	}
+	if (russ_write(buf, bp-buf) < bp-buf) {
+		return -1;
+	}
+	close(exit_fd);
+	self->fds[3] = -1;
+	return 0;
+}
+
+/**
+* Wait for exit status on connection (valid for client side only).
+* Closes exit fd if exit status received.
+*
+* @param self	connection object
+* @param exit_status	exit status
+* @param exit_string	exit string
+* @param timeout	timeout/deadline to wait
+* @return		integer exit_status
+*/
+int
+russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, russ_timeout timeout) {
+	struct pollfd	poll_fds[1];
+	char		buf[1024];
+	int		exit_fd;
+	int		poll_timeout;
+	int		rv;
+
+	exit_fd = self->fds[3];
+	if (exit_fd < 0) {
+		return -1;
+	}
+	poll_fds[0].fd = exit_fd;
+	poll_fds[0].events = POLLIN;
+	poll_timeout = (int)timeout;
+	while (1) {
+		rv = poll(poll_fds, 1, poll_timeout);
+		if (rv == 0) {
+			/* timeout */
+			return -1;
+		} else if (rv < 0) {
+			if (errno != EINTR) {
+				return -1;
+			}
+		} else {
+			if (poll_fds[0].revents && POLLIN) {
+				// TODO: should this be a byte or integer?
+				if (russ_read(exit_fd, buf, 4) < 0) {
+					/* serious error; close fd? */
+					return -1;
+				}
+				russ_dec_I(buf, exit_status);
+				*exit_string = NULL;
+				break;
+			}
+		}
+	}
+	close(exit_fd);
+	self->fds[3] = -1;
+	return 0;
 }
 
 /**
