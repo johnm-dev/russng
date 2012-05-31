@@ -160,10 +160,10 @@ enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) 
 	req = &(conn->req);
 	bend = buf+buf_size;
 	bp = buf+4;
-	if (((bp = russ_enc_string(bp, bend, req->op)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, new_spath)) == NULL)
-		|| ((bp = russ_enc_s_array0(bp, bend, req->attrv)) == NULL)
-		|| ((bp = russ_enc_s_array0(bp, bend, req->argv)) == NULL)) {
+	if (((bp = russ_enc_s(bp, bend, req->op)) == NULL)
+		|| ((bp = russ_enc_s(bp, bend, new_spath)) == NULL)
+		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
+		|| ((bp = russ_enc_sarray0(bp, bend, req->argv)) == NULL)) {
 		return -1;
 	}
 	/* patch size */

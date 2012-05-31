@@ -238,8 +238,8 @@ russ_conn_await_request(struct russ_conn *self) {
 		|| (strcmp(RUSS_PROTOCOL_STRING, req->protocol_string) != 0)
 		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
 		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &(req->attrv), &alen)) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &(req->argv), &alen)) == NULL)) {
+		|| ((bp = russ_dec_sarray0(bp, &(req->attrv), &alen)) == NULL)
+		|| ((bp = russ_dec_sarray0(bp, &(req->argv), &alen)) == NULL)) {
 
 		goto free_request;
 	}
@@ -282,7 +282,7 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 	bp = buf;
 	bend = bp+sizeof(buf);
 	if (((bp = russ_enc_I(bp, bend, exit_status)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, exit_string)) == NULL)) {
+		|| ((bp = russ_enc_s(bp, bend, exit_string)) == NULL)) {
 		// error?
 		return -1;
 	}
@@ -375,12 +375,12 @@ russ_conn_send_request(struct russ_conn *self, russ_timeout timeout) {
 	bp = buf;
 	bend = buf+sizeof(buf);
 	if (((bp = russ_enc_i(bp, bend, 0)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->protocol_string)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->spath)) == NULL)
-		|| ((bp = russ_enc_string(bp, bend, req->op)) == NULL)
-		|| ((bp = russ_enc_s_array0(bp, bend, req->attrv)) == NULL)
-		|| ((bp = russ_enc_s_array0(bp, bend, req->argv)) == NULL)) {
-		//|| ((bp = russ_enc_s_arrayn(bp, bend, req->argv, req->argc)) == NULL)) {
+		|| ((bp = russ_enc_s(bp, bend, req->protocol_string)) == NULL)
+		|| ((bp = russ_enc_s(bp, bend, req->spath)) == NULL)
+		|| ((bp = russ_enc_s(bp, bend, req->op)) == NULL)
+		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
+		|| ((bp = russ_enc_sarray0(bp, bend, req->argv)) == NULL)) {
+		//|| ((bp = russ_enc_sarrayn(bp, bend, req->argv, req->argc)) == NULL)) {
 		return -1;
 	}
 
