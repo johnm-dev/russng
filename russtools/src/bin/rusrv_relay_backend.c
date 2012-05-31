@@ -51,8 +51,8 @@ main(int argc, char **argv) {
 	/* op, addr */
 	if (((bp = russ_dec_s(bp, &op)) == NULL)
 		|| ((bp = russ_dec_s(bp, &addr)) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &attrs, &cnt)) == NULL)
-		|| ((bp = russ_dec_s_array0(bp, &args, &cnt)) == NULL)) {
+		|| ((bp = russ_dec_sarray0(bp, &attrs, &cnt)) == NULL)
+		|| ((bp = russ_dec_sarray0(bp, &args, &cnt)) == NULL)) {
 		exit(-1);
 	}
 	if ((conn = russ_dialv(-1, op, addr, attrs, args)) == NULL) {

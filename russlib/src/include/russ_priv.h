@@ -49,16 +49,16 @@ char *russ_dec_I(char *, uint32_t *);
 char *russ_dec_i(char *, int32_t *);
 char *russ_dec_b(char *, char **);
 char *russ_dec_s(char *, char **);
-char *russ_dec_s_array0(char *, char ***, int *);
-char *russ_dec_s_arrayn(char *, char ***, int *);
+char *russ_dec_sarray0(char *, char ***, int *);
+char *russ_dec_sarrayn(char *, char ***, int *);
 
 char *russ_enc_H(char *, char *, uint16_t);
 char *russ_enc_I(char *, char *, uint32_t);
 char *russ_enc_i(char *, char *, int32_t);
-char *russ_enc_bytes(char *, char *, char *, int);
-char *russ_enc_string(char *, char *, char *);
-char *russ_enc_s_arrayn(char *, char *, char **, int);
-char *russ_enc_s_array0(char *, char *, char **);
+char *russ_enc_b(char *, char *, char *, int);
+char *russ_enc_s(char *, char *, char *);
+char *russ_enc_sarrayn(char *, char *, char **, int);
+char *russ_enc_sarray0(char *, char *, char **);
 
 /* io.c */
 int russ_poll(struct pollfd *, int, russ_timeout);
