@@ -273,10 +273,8 @@ int
 russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 	char	buf[1024];
 	char	*bp, *bend;
-	int	exit_fd;
 
-	exit_fd = self->fds[3];
-	if (exit_fd < 0) {
+	if (self->exit_fd < 0) {
 		return -1;
 	}
 	bp = buf;
@@ -289,8 +287,8 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 	if (russ_write(buf, bp-buf) < bp-buf) {
 		return -1;
 	}
-	close(exit_fd);
-	self->fds[3] = -1;
+	close(self->exit_fd);
+	self->exit_fd = -1;
 	return 0;
 }
 
@@ -308,15 +306,13 @@ int
 russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, russ_timeout timeout) {
 	struct pollfd	poll_fds[1];
 	char		buf[1024];
-	int		exit_fd;
 	int		poll_timeout;
 	int		rv;
 
-	exit_fd = self->fds[3];
-	if (exit_fd < 0) {
+	if (self->exit_fd < 0) {
 		return -1;
 	}
-	poll_fds[0].fd = exit_fd;
+	poll_fds[0].fd = self->exit_fd;
 	poll_fds[0].events = POLLIN;
 	poll_timeout = (int)timeout;
 	while (1) {
@@ -331,7 +327,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 		} else {
 			if (poll_fds[0].revents && POLLIN) {
 				// TODO: should this be a byte or integer?
-				if (russ_read(exit_fd, buf, 4) < 0) {
+				if (russ_read(self->exit_fd, buf, 4) < 0) {
 					/* serious error; close fd? */
 					return -1;
 				}
@@ -341,8 +337,8 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 			}
 		}
 	}
-	close(exit_fd);
-	self->fds[3] = -1;
+	close(self->exit_fd);
+	self->exit_fd = -1;
 	return 0;
 }
 

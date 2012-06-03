@@ -42,7 +42,7 @@
 #define dprintf(...)
 #endif
 
-#define RUSS_CONN_NFDS		4
+#define RUSS_CONN_NFDS		3
 #define RUSS_MAX_SPATH_LEN	8192
 #define RUSS_MAX_ATTRC		1024
 #define RUSS_MAX_ARGC		1024
@@ -95,7 +95,9 @@ struct russ_conn {
 	struct russ_credentials	cred;		/**< credentials */
 	struct russ_request	req;		/**< request */
 	int			sd;		/**< socket descriptor */
-	int			fds[RUSS_CONN_NFDS];		/**< std{in,out,err} and exit */
+	int			exit_fd;	/**< special exit fd */
+	int			nfds;		/**< size of fds */
+	int			fds[RUSS_CONN_NFDS];		/**< std{in,out,err} */
 };
 
 /**
@@ -128,7 +130,9 @@ int russ_conn_accept(struct russ_conn *, int *, int *);
 int russ_conn_await_request(struct russ_conn *);
 void russ_conn_close(struct russ_conn *);
 void russ_conn_close_fd(struct russ_conn *, int);
+int russ_conn_exit(struct russ_conn *, int, char *);
 struct russ_conn *russ_conn_free(struct russ_conn *);
+int russ_conn_wait(struct russ_conn *, int *, char **, russ_timeout);
 
 struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
