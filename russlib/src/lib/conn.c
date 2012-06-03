@@ -62,33 +62,6 @@ __connect(char *path) {
 }
 
 /**
-* Make pipes. A failure releases all created pipes.
-*
-* @param count	# of pipes to make; minimum size of rfds and wfds
-* @param rfds	array to store created read fds
-* @param wfds	array to store created write fds 
-* @return	0 on success; -1 on error
-*/
-static int
-__make_pipes(int count, int *rfds, int *wfds) {
-	int	i, pfds[2];
-
-	for (i = 0; i < count; i++) {
-		if (pipe(pfds) < 0) {
-			goto close_fds;
-		}
-		rfds[i] = pfds[0];
-		wfds[i] = pfds[1];
-	}
-	return 0;
-
-close_fds:
-	russ_close_fds(i, rfds);
-	russ_close_fds(i, wfds);
-	return -1;
-}
-
-/**
 * Close a descriptor of the connection.
 *
 * @param self	connection object
@@ -96,7 +69,7 @@ close_fds:
 */
 void
 russ_conn_close_fd(struct russ_conn *self, int index) {
-	russ_close_fds(1, &(self->fds[index]));
+	russ_fds_close(&(self->fds[index]), 1);
 }
 
 /**
@@ -118,7 +91,7 @@ russ_conn_new(void) {
 		goto free_request;
 	}
 	conn->sd = -1;
-	russ_init_fds(RUSS_CONN_NFDS, conn->fds, -1);
+	russ_fds_init(conn->fds, RUSS_CONN_NFDS, -1);
 
 	return conn;
 free_request:
@@ -187,9 +160,7 @@ russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 	if ((cfds == NULL) && (sfds == NULL)) {
 		cfds = _cfds;
 		sfds = _sfds;
-		russ_init_fds(RUSS_CONN_NFDS, cfds, 0);
-		russ_init_fds(RUSS_CONN_NFDS, sfds, 0);
-		if (__make_pipes(RUSS_CONN_NFDS, cfds, sfds) < 0) {
+		if (russ_make_pipes(RUSS_CONN_NFDS, cfds, sfds) < 0) {
 			fprintf(stderr, "error: cannot create pipes\n");
 			return -1;
 		}
@@ -203,13 +174,13 @@ russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 		goto close_fds;
 	}
 	fsync(self->sd);
-	russ_close_fds(1, &self->sd);
+	russ_fds_close(&self->sd, 1);
 	return 0;
 
 close_fds:
-	russ_close_fds(RUSS_CONN_NFDS, cfds);
-	russ_close_fds(RUSS_CONN_NFDS, sfds);
-	russ_close_fds(1, &self->sd);
+	russ_fds_close(cfds, RUSS_CONN_NFDS);
+	russ_fds_close(sfds, RUSS_CONN_NFDS);
+	russ_fds_close(&self->sd, 1);
 	return -1;
 }
 
@@ -256,8 +227,8 @@ free_request:
 */
 void
 russ_conn_close(struct russ_conn *self) {
-	russ_close_fds(RUSS_CONN_NFDS, self->fds);
-	russ_close_fds(1, &self->sd);
+	russ_fds_close(self->fds, RUSS_CONN_NFDS);
+	russ_fds_close(&self->sd, 1);
 }
 
 /**
@@ -274,7 +245,7 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 	char	buf[1024];
 	char	*bp, *bend;
 
-	if (self->exit_fd < 0) {
+	if (self->fds[0] < 0) {
 		return -1;
 	}
 	bp = buf;
@@ -287,8 +258,7 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 	if (russ_write(buf, bp-buf) < bp-buf) {
 		return -1;
 	}
-	close(self->exit_fd);
-	self->exit_fd = -1;
+	russ_fds_close(&(self->fds[0]), 1);
 	return 0;
 }
 
@@ -309,10 +279,10 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 	int		poll_timeout;
 	int		rv, _exit_status;
 
-	if (self->exit_fd < 0) {
+	if (self->fds[0] < 0) {
 		return -1;
 	}
-	poll_fds[0].fd = self->exit_fd;
+	poll_fds[0].fd = self->fds[0];
 	poll_fds[0].events = POLLIN;
 	poll_timeout = (int)timeout;
 	while (1) {
@@ -327,7 +297,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 		} else {
 			if (poll_fds[0].revents && POLLIN) {
 				// TODO: should this be a byte or integer?
-				if (russ_read(self->exit_fd, buf, 4) < 0) {
+				if (russ_read(self->fds[0], buf, 4) < 0) {
 					/* serious error; close fd? */
 					return -1;
 				}
@@ -342,8 +312,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 			}
 		}
 	}
-	close(self->exit_fd);
-	self->exit_fd = -1;
+	russ_fds_close(&(self->fds[0]), 1);
 	return 0;
 }
 
@@ -425,7 +394,7 @@ russ_dialv(russ_timeout timeout, char *op, char *addr, char **attrv, char **argv
 		goto free_request;
 	}
 	free(targ);
-	russ_close_fds(1, &conn->sd);	/* sd not needed anymore */
+	russ_fds_close(&conn->sd, 1);	/* sd not needed anymore */
 	return conn;
 
 free_request:

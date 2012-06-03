@@ -124,7 +124,7 @@ russ_listener_answer(struct russ_listener *self, russ_timeout timeout) {
 	return conn;
 
 close_sd:
-	russ_close_fds(1, &conn->sd);
+	russ_fds_close(&conn->sd, 1);
 free_conn:
 	free(conn);
 	return NULL;
@@ -138,8 +138,7 @@ free_conn:
 void
 russ_listener_close(struct russ_listener *self) {
 	if (self->sd > -1) {
-		close(self->sd);
-		self->sd = -1;
+		russ_fds_close(&self->sd, 1);
 	}
 }
 
