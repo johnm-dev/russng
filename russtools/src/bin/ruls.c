@@ -123,6 +123,10 @@ main(int argc, char **argv) {
 	russ_forwarder_init(&(fwds[0]), STDIN_FILENO, conn->fds[0], -1, 16384, 0);
 	russ_forwarder_init(&(fwds[1]), conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
 	russ_forwarder_init(&(fwds[2]), conn->fds[2], STDERR_FILENO, -1, 16384, 0);
+	if (russ_run_forwarders(RUSS_CONN_NFDS, fwds) < 0) {
+		fprintf(stderr, "error: could not forward bytes\n");
+		exit(-1);
+	}
 	russ_conn_wait(conn, &exit_status, NULL, -1);
 	russ_forwarder_join(&(fwds[1]));
 
