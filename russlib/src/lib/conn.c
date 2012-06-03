@@ -331,7 +331,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 					/* serious error; close fd? */
 					return -1;
 				}
-				russ_dec_I(buf, _exit_status);
+				russ_dec_I(buf, &_exit_status);
 				if (exit_status != NULL) {
 					*exit_status = _exit_status;
 				}
