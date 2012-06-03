@@ -307,7 +307,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 	struct pollfd	poll_fds[1];
 	char		buf[1024];
 	int		poll_timeout;
-	int		rv;
+	int		rv, _exit_status;
 
 	if (self->exit_fd < 0) {
 		return -1;
@@ -331,8 +331,13 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 					/* serious error; close fd? */
 					return -1;
 				}
-				russ_dec_I(buf, exit_status);
-				*exit_string = NULL;
+				russ_dec_I(buf, _exit_status);
+				if (exit_status != NULL) {
+					*exit_status = _exit_status;
+				}
+				if (exit_string != NULL) {
+					*exit_string = NULL;
+				}
 				break;
 			}
 		}
