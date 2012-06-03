@@ -60,12 +60,13 @@ char *russ_enc_s(char *, char *, char *);
 char *russ_enc_sarrayn(char *, char *, char **, int);
 char *russ_enc_sarray0(char *, char *, char **);
 
+/* fd.c */
+void russ_fds_init(int *, int, int);
+void russ_fds_close(int *, int);
+int russ_make_pipes(int, int *, int *);
+
 /* io.c */
 int russ_poll(struct pollfd *, int, russ_timeout);
-
-/* misc.c */
-void russ_init_fds(int, int *, int);
-void russ_close_fds(int, int *);
 
 /* request.c */
 int russ_request_init(struct russ_request *, char *, char *, char *, char **, char **);
