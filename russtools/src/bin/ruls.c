@@ -61,10 +61,11 @@ print_usage(char *prog_name) {
 int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
-	struct russ_forwarder	fwds[RUSS_CONN_NFDS+1];
+	struct russ_forwarder	fwds[RUSS_CONN_NFDS];
 	char			*prog_name;
 	char			*addr;
 	russ_timeout		timeout;
+	int			exit_status;
 
 	prog_name = basename(strdup(argv[0]));
 
@@ -111,13 +112,14 @@ main(int argc, char **argv) {
 	russ_forwarder_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0);
 	russ_forwarder_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
 	russ_forwarder_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 16384, 0);
-	russ_forwarder_init(&(fwds[3]), 1, conn->exit_fd, -1, -1, 16384, 0);
-	if (russ_run_forwarders(3, fwds) < 0) {
+	//russ_forwarder_init(&(fwds[3]), 1, conn->exit_fd, -1, -1, 16384, 0);
+	if (russ_run_forwarders(RUSS_CONN_NFDS, fwds) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
 		exit(-1);
 	}
+	russ_conn_wait(conn, &exit_status, NULL, -1);
 
 	russ_conn_close(conn);
 	conn = russ_conn_free(conn);
-	exit(0);
+	exit(exit_status);
 }
