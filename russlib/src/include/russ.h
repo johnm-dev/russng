@@ -138,7 +138,9 @@ struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
 
 /* forwarder */
-void russ_forwarder_init(struct russ_forwarder *, int, int, int, int, int, int);
+void russ_forwarder_init(struct russ_forwarder *, int, int, int, int, int);
+int russ_forwarder_start(struct russ_forwarder *);
+int russ_forwarder_join(struct russ_forwarder *);
 int russ_run_forwarders(int, struct russ_forwarder *);
 
 /* helpers.c */

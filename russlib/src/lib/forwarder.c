@@ -133,8 +133,7 @@ _forward_bytes(void *_fwd) {
 * @param how	sets the how member
 */
 void
-russ_forwarder_init(struct russ_forwarder *self, int to_join, int in_fd, int out_fd, int count, int blocksize, int how) {
-	self->to_join = to_join;
+russ_forwarder_init(struct russ_forwarder *self, int in_fd, int out_fd, int count, int blocksize, int how) {
 	self->in_fd = in_fd;
 	self->out_fd = out_fd;
 	self->count = count;
@@ -175,4 +174,33 @@ kill_threads:
 		pthread_cancel(fwds[i].th);
 	}
 	return -1;
+}
+
+/**
+* Start forwarder thread.
+*
+* @param self	forwarder object
+* @return	0 on success; -1 on failure
+*/
+int
+russ_forwarder_start(struct russ_forwarder *self) {
+	pthread_attr_t	attr;
+
+	pthread_attr_init(&attr);
+	pthread_attr_setstacksize(&attr, (1<<20)*2);
+	if (pthread_create(&(self->th), &attr, _forward_bytes, (void *)self) < 0) {
+		return -1;
+	}
+	pthread_attr_destory(&attr);
+	return 0;
+}
+
+/**
+* Join forwarder thread.
+*
+* @param self	forwarder object
+*/
+int
+russ_forwarder_join(struct russ_forwarder *self) {
+	pthread_join(self->th, NULL);
 }
