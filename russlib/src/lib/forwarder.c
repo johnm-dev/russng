@@ -191,7 +191,7 @@ russ_forwarder_start(struct russ_forwarder *self) {
 	if (pthread_create(&(self->th), &attr, _forward_bytes, (void *)self) < 0) {
 		return -1;
 	}
-	pthread_attr_destory(&attr);
+	pthread_attr_destroy(&attr);
 	return 0;
 }
 
