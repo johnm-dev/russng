@@ -59,6 +59,8 @@ class russ_conn_Structure(ctypes.Structure):
         ("cred", russ_credentials_Structure),
         ("req", russ_request_Structure),
         ("sd", ctypes.c_int),
+        ("exit_fd", ctypes.c_int),
+        ("nfds", ctypes.c_int),
         ("fds", ctypes.c_int*3),
     ]
 
@@ -89,8 +91,8 @@ libruss.russ_conn_free.restype = None
 # russ_conn_accept
 libruss.russ_conn_accept.argtypes = [
     ctypes.c_void_p,
-    ctypes.c_int*3,
-    ctypes.c_int*3,
+    ctypes.c_int*4,
+    ctypes.c_int*4,
 ]
 libruss.russ_conn_accept.restype = ctypes.c_int
 
