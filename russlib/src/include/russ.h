@@ -105,7 +105,6 @@ struct russ_conn {
 */
 struct russ_forwarder {
 	pthread_t	th;		/**< thread doing forwarding */
-	int		to_join;	/**< 1 to join thread */
 	int		in_fd;		/**< input fd */
 	int		out_fd;		/**< output fd */
 	int		count;		/**< # of bytes to forward */
