@@ -91,7 +91,9 @@ russ_conn_new(void) {
 		goto free_request;
 	}
 	conn->sd = -1;
-	russ_fds_init(conn->fds, RUSS_CONN_NFDS, -1);
+	conn->exit_fd = -1;
+	conn->nfds = RUSS_CONN_NFDS;
+	russ_fds_init(conn->fds, conn->nfds, -1);
 
 	return conn;
 free_request:
@@ -111,7 +113,10 @@ static int
 russ_conn_recvfds(struct russ_conn *self) {
 	int	i;
 
-	for (i = 0; i < RUSS_CONN_NFDS; i++) {
+	if (russ_recvfd(self->sd, &(self->exit_fd)) < 0) {
+		return -1;
+	}
+	for (i = 0; i < self->nfds; i++) {
 		if (russ_recvfd(self->sd, &(self->fds[i])) < 0) {
 			return -1;
 		}
@@ -129,16 +134,21 @@ russ_conn_recvfds(struct russ_conn *self) {
 * @return	0 on success; -1 on error
 */
 static int
-russ_conn_sendfds(struct russ_conn *self, int *cfds, int *sfds) {
+russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	int	i;
 
-	for (i = 0; i < RUSS_CONN_NFDS; i++) {
+	if (russ_sendfd(self->sd, cfds[0]) < 0) {
+		return -1;
+	}
+	self->exit_fd = sfds[0];
+	russ_fds_close(&cfds[0], 1);
+
+	for (i = 1; i < nfds; i++) {
 		if (russ_sendfd(self->sd, cfds[i]) < 0) {
 			return -1;
 		}
-		close(cfds[i]);
-		cfds[i] = -1;
-		self->fds[i] = sfds[i];
+		russ_fds_close(&cfds[i], 1);
+		self->fds[i-1] = sfds[i];
 	}
 	return 0;
 }
@@ -153,7 +163,7 @@ russ_conn_sendfds(struct russ_conn *self, int *cfds, int *sfds) {
 */
 int
 russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
-	int	_cfds[RUSS_CONN_NFDS], _sfds[RUSS_CONN_NFDS];
+	int	_cfds[RUSS_CONN_NFDS+1], _sfds[RUSS_CONN_NFDS+1];
 	int	fds[2], tmpfd;
 	int	i;
 
@@ -164,13 +174,13 @@ russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 			fprintf(stderr, "error: cannot create pipes\n");
 			return -1;
 		}
-		/* switch 0 elements */
-		tmpfd = cfds[0];
-		cfds[0] = sfds[0];
-		sfds[0] = tmpfd;
+		/* swap fds for stdin */
+		tmpfd = cfds[1];
+		cfds[1] = sfds[1];
+		sfds[1] = tmpfd;
 	}
 
-	if (russ_conn_sendfds(self, cfds, sfds) < 0) {
+	if (russ_conn_sendfds(self, RUSS_CONN_NFDS+1, cfds, sfds) < 0) {
 		goto close_fds;
 	}
 	fsync(self->sd);
@@ -178,8 +188,8 @@ russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 	return 0;
 
 close_fds:
-	russ_fds_close(cfds, RUSS_CONN_NFDS);
-	russ_fds_close(sfds, RUSS_CONN_NFDS);
+	russ_fds_close(cfds, RUSS_CONN_NFDS+1);
+	russ_fds_close(sfds, RUSS_CONN_NFDS+1);
 	russ_fds_close(&self->sd, 1);
 	return -1;
 }
@@ -227,7 +237,8 @@ free_request:
 */
 void
 russ_conn_close(struct russ_conn *self) {
-	russ_fds_close(self->fds, RUSS_CONN_NFDS);
+	russ_fds_close(self->fds, self->nfds);
+	russ_fds_close(&self->exit_fd, 1);
 	russ_fds_close(&self->sd, 1);
 }
 
@@ -245,7 +256,7 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 	char	buf[1024];
 	char	*bp, *bend;
 
-	if (self->fds[0] < 0) {
+	if (self->exit_fd < 0) {
 		return -1;
 	}
 	bp = buf;
@@ -255,10 +266,10 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 		// error?
 		return -1;
 	}
-	if (russ_write(buf, bp-buf) < bp-buf) {
+	if (russ_write(self->exit_fd, buf, bp-buf) < bp-buf) {
 		return -1;
 	}
-	russ_fds_close(&(self->fds[0]), 1);
+	russ_fds_close(&self->exit_fd, 1);
 	return 0;
 }
 
@@ -279,10 +290,10 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 	int		poll_timeout;
 	int		rv, _exit_status;
 
-	if (self->fds[0] < 0) {
+	if (self->exit_fd < 0) {
 		return -1;
 	}
-	poll_fds[0].fd = self->fds[0];
+	poll_fds[0].fd = self->exit_fd;
 	poll_fds[0].events = POLLIN;
 	poll_timeout = (int)timeout;
 	while (1) {
@@ -297,7 +308,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 		} else {
 			if (poll_fds[0].revents && POLLIN) {
 				// TODO: should this be a byte or integer?
-				if (russ_read(self->fds[0], buf, 4) < 0) {
+				if (russ_read(self->exit_fd, buf, 4) < 0) {
 					/* serious error; close fd? */
 					return -1;
 				}
@@ -312,7 +323,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 			}
 		}
 	}
-	russ_fds_close(&(self->fds[0]), 1);
+	russ_fds_close(&self->exit_fd, 1);
 	return 0;
 }
 

@@ -42,7 +42,7 @@
 #define dprintf(...)
 #endif
 
-#define RUSS_CONN_NFDS		4
+#define RUSS_CONN_NFDS		3
 #define RUSS_MAX_SPATH_LEN	8192
 #define RUSS_MAX_ATTRC		1024
 #define RUSS_MAX_ARGC		1024
@@ -95,8 +95,9 @@ struct russ_conn {
 	struct russ_credentials	cred;		/**< credentials */
 	struct russ_request	req;		/**< request */
 	int			sd;		/**< socket descriptor */
-	int			nfds;		/**< size of fds */
-	int			fds[RUSS_CONN_NFDS];		/**< exit, std{in,out,err} */
+	int			exit_fd;	/**< for exit status */
+	int			nfds;		/**< # of helper fds */
+	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
 };
 
 /**
