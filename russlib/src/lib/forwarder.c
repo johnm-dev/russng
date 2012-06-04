@@ -125,7 +125,6 @@ _forward_bytes(void *_fwd) {
 * Initializes forwarder struct with values.
 *
 * @param fwd	forwarder object
-* @param to_join	sets to_join member
 * @param in_fd	sets in_fd member
 * @param out_fd	sets out_fd member
 * @param count	sets count member
@@ -161,12 +160,6 @@ russ_run_forwarders(int nfwds, struct russ_forwarder *fwds) {
 			goto kill_threads;
 		}
 		pthread_attr_destroy(&attr);
-	}
-	/* join threads */
-	for (i = 0; i < nfwds; i++) {
-		if (fwds[i].to_join) {
-			pthread_join(fwds[i].th, NULL);
-		}
 	}
 	return 0;
 kill_threads:
