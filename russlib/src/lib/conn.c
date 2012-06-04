@@ -170,7 +170,7 @@ russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 	if ((cfds == NULL) && (sfds == NULL)) {
 		cfds = _cfds;
 		sfds = _sfds;
-		if (russ_make_pipes(RUSS_CONN_NFDS, cfds, sfds) < 0) {
+		if (russ_make_pipes(RUSS_CONN_NFDS+1, cfds, sfds) < 0) {
 			fprintf(stderr, "error: cannot create pipes\n");
 			return -1;
 		}
