@@ -78,7 +78,7 @@ _daytime_handler(struct russ_conn *conn) {
 	now = time(NULL);
 	now_tm = localtime(&now);
 	strftime(buf, sizeof(buf), "%A, %B %d, %Y %T-%Z", now_tm);
-	russ_dprintf(conn->fds[2], "%s\n", buf);
+	russ_dprintf(conn->fds[1], "%s\n", buf);
 	return 0;
 }
 
@@ -120,13 +120,13 @@ _discard_handler(struct russ_conn *conn) {
 			total += n;
 			t1 = gettimeofday_float();
 			if (t1-last_t1 > 2) {
-				print_discard_stats(conn->fds[2], t1-t0, total);
+				print_discard_stats(conn->fds[1], t1-t0, total);
 				last_t1 = t1;
 			}
 		}
-		print_discard_stats(conn->fds[2], gettimeofday_float()-t0, total);
+		print_discard_stats(conn->fds[1], gettimeofday_float()-t0, total);
 	} else {
-		while ((n = russ_read(conn->fds[0], buf, buf_size)) > 0);
+		while ((n = russ_read(conn->fds[1], buf, buf_size)) > 0);
 	}
 	return 0;
 }
