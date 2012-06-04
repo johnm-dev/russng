@@ -166,5 +166,5 @@ main(int argc, char **argv) {
 
 	russ_conn_close(conn);
 	conn = russ_conn_free(conn);
-	exit(0);
+	exit(exit_status);
 }
