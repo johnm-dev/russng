@@ -26,6 +26,9 @@
 """
 
 import ctypes
+import os
+import sys
+from threading import Thread
 
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
@@ -266,14 +269,62 @@ class Listener:
     def close(self):
         libruss.russ_listener_close(self.raw_lis)
 
-    def loop(self, handler):
     def get_sd(self):
         if self.raw_lis:
             return self.ptr_lis.contents.sd
         else:
             return -1
 
+    def _loop(self, handler):
         def raw_handler(raw_conn):
             handler(ServerConn(raw_conn))
             return 0    # TODO: allow a integer return value from handler
         libruss.russ_listener_loop(self.raw_lis, HANDLERFUNC(raw_handler))
+
+    def loop(self, handler):
+        """Fork-based loop.
+        """
+        while self.get_sd() >= 0:
+            try:
+                conn = self.answer(-1)
+                if conn == None:
+                    sys.stderr.write("error: cannot answer connection\n")
+                    continue
+                if os.fork() == 0:
+                    self.close()
+                    if conn.await_request() < 0 \
+                        or conn.accept(None, None) < 0:
+                        os.exit(-1)
+                    handler(conn)
+                    os.exit(0)
+                conn.close()
+                del conn
+            except SystemExit:
+                pass
+            except:
+                #traceback.print_exc()
+                pass
+
+    def loop_thread(self, handler):
+        """Thread-based loop.
+        """
+        def pre_handler_thread(conn, handler):
+            if conn.await_request() < 0 \
+                or conn.accept(None, None) < 0:
+                return
+            handler(conn)
+
+        while True:
+            try:
+                conn = self.answer(-1)
+                if conn == None:
+                    sys.stderr.write("error: cannot answer connection\n")
+                    continue
+                # no limiting of thread count
+                Thread(target=pre_handler_thread, args=(conn, handler)).start()
+            except SystemExit:
+                pass
+            except:
+                #traceback.print_exc()
+                pass
+
