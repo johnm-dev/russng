@@ -234,10 +234,10 @@ class ServerConn(Conn):
     """
 
     def accept(self, cfds, sfds):
-        libruss.russ_conn_accept(self.raw_conn, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+        return libruss.russ_conn_accept(self.raw_conn, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
 
     def await_request(self):
-        libruss.russ_conn_await_request(self.raw_conn)
+        return libruss.russ_conn_await_request(self.raw_conn)
 
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
