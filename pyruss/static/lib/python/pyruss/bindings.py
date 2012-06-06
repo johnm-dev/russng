@@ -244,9 +244,14 @@ HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 class Listener:
     def __init__(self, raw_lis):
         self.raw_lis = raw_lis
+        self.ptr_lis = ctypes.cast(raw_lis, ctypes.POINTER(russ_listener_Structure))
 
     def __del__(self):
-        self.raw_conn = libruss.russ_listener_free(self.raw_lis)
+        if self.raw_lis != None:
+            libruss.russ_listener_close(self.raw_lis)
+            libruss.russ_listener_free(self.raw_lis)
+            self.raw_lis = None
+            self.ptr_lis= None
 
     def answer(self, timeout):
         return ServerConn(libruss.russ_listener_answer(timeout, self.raw_lis))
