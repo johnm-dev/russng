@@ -171,5 +171,6 @@ char **russ_sarray0_dup(char **, int);
 
 /* server.c */
 void russ_loop(struct russ_listener *, russ_req_handler);
+void russ_loop_thread(struct russ_listener *, russ_req_handler);
 
 #endif /* RUSS_H */
