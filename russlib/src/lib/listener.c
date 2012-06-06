@@ -92,7 +92,8 @@ russ_listener_answer(struct russ_listener *self, russ_timeout timeout) {
 	struct pollfd		poll_fds[1];
 	russ_timeout		deadline;
 
-	if ((conn = russ_conn_new()) == NULL) {
+	if ((self->sd < 0)
+		|| ((conn = russ_conn_new()) == NULL)) {
 		return NULL;
 	}
 
