@@ -260,6 +260,12 @@ class Listener:
         libruss.russ_listener_close(self.raw_lis)
 
     def loop(self, handler):
+    def get_sd(self):
+        if self.raw_lis:
+            return self.ptr_lis.contents.sd
+        else:
+            return -1
+
         def raw_handler(raw_conn):
             handler(ServerConn(raw_conn))
             return 0    # TODO: allow a integer return value from handler
