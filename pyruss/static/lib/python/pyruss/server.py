@@ -199,7 +199,6 @@ class Server:
 
     def __del__(self):
         self.lis.close()
-        self.lis.free()
 
     def announce(self, saddr, mode, uid, gid):
         """Announce service on filesystem.
