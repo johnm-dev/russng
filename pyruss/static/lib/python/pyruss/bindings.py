@@ -91,8 +91,11 @@ libruss.russ_conn_free.restype = None
 # russ_conn_accept
 libruss.russ_conn_accept.argtypes = [
     ctypes.c_void_p,
-    ctypes.c_int*4,
-    ctypes.c_int*4,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    # TODO: how to handle passing fds?
+    #ctypes.c_int*4,
+    #ctypes.c_int*4,
 ]
 libruss.russ_conn_accept.restype = ctypes.c_int
 
@@ -234,7 +237,11 @@ class ServerConn(Conn):
     """
 
     def accept(self, cfds, sfds):
-        return libruss.russ_conn_accept(self.raw_conn, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+        if 0:
+            # TODO: how to handle passing fds?
+            return libruss.russ_conn_accept(self.raw_conn, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+        else:
+            return libruss.russ_conn_accept(self.raw_conn, None, None)
 
     def await_request(self):
         return libruss.russ_conn_await_request(self.raw_conn)
