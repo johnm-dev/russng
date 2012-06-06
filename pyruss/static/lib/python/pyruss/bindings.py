@@ -264,7 +264,8 @@ class Listener:
             self.ptr_lis= None
 
     def answer(self, timeout):
-        return ServerConn(libruss.russ_listener_answer(timeout, self.raw_lis))
+        raw_conn = libruss.russ_listener_answer(self.raw_lis, timeout)
+        return raw_conn and ServerConn(raw_conn)
 
     def close(self):
         libruss.russ_listener_close(self.raw_lis)
