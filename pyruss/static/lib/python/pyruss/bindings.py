@@ -271,7 +271,7 @@ class ServerConn(Conn):
         return libruss.russ_conn_await_request(self.raw_conn)
 
     def exit(self, exit_status, exit_string=None):
-        return libruss.russ_conn_exit(exit_status, None)
+        return libruss.russ_conn_exit(self.raw_conn, exit_status, None)
 
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
