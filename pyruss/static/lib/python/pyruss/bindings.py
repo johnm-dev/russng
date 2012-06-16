@@ -119,7 +119,7 @@ libruss.russ_conn_free.restype = None
 # russ_conn_wait
 libruss.russ_conn_wait.argstypes = [
     ctypes.c_void_p,
-    ctypes.c_int_p,
+    ctypes.POINTER(ctypes.c_int),
     ctypes.POINTER(ctypes.c_char_p),
     ctypes.c_int64,  # russ_timeout
 ]
