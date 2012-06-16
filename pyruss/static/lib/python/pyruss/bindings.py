@@ -81,16 +81,6 @@ libruss.russ_dialv.argtypes = [
 ]
 libruss.russ_dialv.restype = ctypes.c_void_p
 
-# russ_conn_close
-libruss.russ_conn_close.argtypes = [ctypes.c_void_p]
-libruss.russ_conn_close.restype = None
-
-# russ_conn_free
-libruss.russ_conn_free_argtypes = [
-    ctypes.c_void_p,
-]
-libruss.russ_conn_free.restype = None
-
 # russ_conn_accept
 libruss.russ_conn_accept.argtypes = [
     ctypes.c_void_p,
@@ -107,6 +97,16 @@ libruss.russ_conn_await_request.argtypes = [
     ctypes.c_void_p,
 ]
 libruss.russ_conn_await_request.restype = ctypes.c_int
+
+# russ_conn_close
+libruss.russ_conn_close.argtypes = [ctypes.c_void_p]
+libruss.russ_conn_close.restype = None
+
+# russ_conn_free
+libruss.russ_conn_free_argtypes = [
+    ctypes.c_void_p,
+]
+libruss.russ_conn_free.restype = None
 
 # russ_announce
 libruss.russ_announce.argtypes = [
