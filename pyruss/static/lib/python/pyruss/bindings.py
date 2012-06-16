@@ -102,11 +102,28 @@ libruss.russ_conn_await_request.restype = ctypes.c_int
 libruss.russ_conn_close.argtypes = [ctypes.c_void_p]
 libruss.russ_conn_close.restype = None
 
+# russ_conn_exit
+libruss.russ_conn_exit.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_char_p,
+]
+libruss.russ_conn_exit.restype = ctypes.c_int
+
 # russ_conn_free
 libruss.russ_conn_free_argtypes = [
     ctypes.c_void_p,
 ]
 libruss.russ_conn_free.restype = None
+
+# russ_conn_wait
+libruss.russ_conn_wait.argstypes = [
+    ctypes.c_void_p,
+    ctypes.c_int_p,
+    ctypes.POINTER(ctypes.c_char_p),
+    ctypes.c_int64,  # russ_timeout
+]
+libruss.russ_conn_wait.restype = ctypes.c_int
 
 # russ_announce
 libruss.russ_announce.argtypes = [
@@ -235,6 +252,10 @@ class ClientConn(Conn):
     def get_sd(self):
         return self.ptr_conn.contents.sd
 
+    def wait(self, timeout):
+        exit_status = libruss.russ_conn_wait(self.raw_conn, None, None, timeout)
+        return exit_status, None
+
 class ServerConn(Conn):
     """Server connection.
     """
@@ -248,6 +269,9 @@ class ServerConn(Conn):
 
     def await_request(self):
         return libruss.russ_conn_await_request(self.raw_conn)
+
+    def exit(self, exit_status, exit_string=None):
+        return libruss.russ_conn_exit(exit_status, None)
 
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
