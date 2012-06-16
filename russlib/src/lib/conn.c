@@ -259,6 +259,9 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 	if (self->exit_fd < 0) {
 		return -1;
 	}
+	if (exit_string == NULL) {
+		exit_string = "";
+	}
 	bp = buf;
 	bend = bp+sizeof(buf);
 	if (((bp = russ_enc_I(bp, bend, exit_status)) == NULL)
