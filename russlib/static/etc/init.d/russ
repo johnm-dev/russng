@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Setup for russ-based services.
+#
+### BEGIN INIT INFO
+# Provides:          russ
+# Required-Start:    $syslog $time
+# Required-Stop:     $syslog $time
+# Default-Start:     S
+# Default-Stop:      
+# Short-Description: Sets up for russ-based services
+# Description:       Sets up for russ-based services
+### END INIT INFO
+
+RUSS_RUN_DIR="/var/run/russ"
+
+start() {
+	mkdir -m 0755 -p "${RUSS_RUN_DIR}"
+	mkdir -m 0755 -p "${RUSS_RUN_DIR}/services"
+}
+
+case "$1" in
+start)
+	echo -n "Setting up for russ services"
+	start
+	echo "."
+	;;
+stop)
+	echo -n "Cleaning up for russ services"
+	stop
+	echo "."
+	;;
+*)
+	echo "Usage: /etc/init.d/russ {start|stop}"
+	exit 2
+	;;
+esac
+exit 0
