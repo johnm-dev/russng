@@ -36,7 +36,8 @@
 #include "russ_priv.h"
 
 /**
-* Resolve addr to be absolute.
+* Resolve addr. Special prefixes /+ and + are resolved as equivalent
+* RUSS_SERVICES_DIR (env or constant).
 *
 * @param addr	service address
 * @return	absolute path address
@@ -44,16 +45,21 @@
 char *
 russ_resolve_addr(char *addr) {
 	char	*addr2;
-	char	*service_dir;
+	char	*services_dir;
 
-	if (strstr(addr, ":") == addr) {
-		if ((service_dir = getenv("RUSS_SERVICE_DIR")) == NULL) {
-			service_dir = RUSS_SERVICE_DIR;
+	if ((strstr(addr, "+") == addr) || (strstr(addr, "/+") == addr)) {
+		if (addr[0] == '+') {
+			addr = addr[1];
+		} else {
+			addr = addr[2];
 		}
-		if ((addr2 = malloc(strlen(service_dir)+1+strlen(addr)+1)) == NULL) {
+		if ((services_dir = getenv("RUSS_SERVICES_DIR")) == NULL) {
+			services_dir = RUSS_SERVICES_DIR;
+		}
+		if ((addr2 = malloc(strlen(services_dir)+1+strlen(addr)+1)) == NULL) {
 			return NULL;
 		}
-		sprintf(addr2, "%s/%s\0", service_dir, addr);
+		sprintf(addr2, "%s/%s\0", services_dir, addr);
 	} else {
 		return strdup(addr);
 	}
