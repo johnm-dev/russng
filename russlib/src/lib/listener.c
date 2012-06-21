@@ -54,8 +54,7 @@ russ_announce(char *path, mode_t mode, uid_t uid, gid_t gid) {
 		return NULL;
 	}
 	if ((lis = malloc(sizeof(struct russ_listener))) == NULL) {
-		free(path);
-		return NULL;
+		goto free_path;
 	}
 
 	bzero(&servaddr, sizeof(servaddr));
@@ -80,6 +79,7 @@ close_sd:
 	lis->sd = -1;
 free_lis:
 	free(lis);
+free_path:
 	free(path);
 	return NULL;
 }
