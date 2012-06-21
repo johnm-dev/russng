@@ -108,13 +108,16 @@ russ_find_service_target(char *path) {
 	char			*bname;
 	int			cnt;
 
+	if ((path = russ_resolve_addr(path)) == NULL) {
+		return NULL;
+	}
 	/* TODO:
 		should targ be allocated at end?
 		should targ members be used for work?
 	*/
 	/* allocate and initialize */
 	if ((targ = malloc(sizeof(struct russ_target))) == NULL) {
-		return NULL;
+		goto free_path;
 	}
 	targ->saddr[0] = '\0';
 	targ->spath[0] = '\0';
@@ -158,9 +161,12 @@ russ_find_service_target(char *path) {
 	/* copy into target */
 	strcpy(targ->saddr, saddr);
 	strcpy(targ->spath, spath);
+	free(path);
 	return targ;
 
 free_targ:
 	free(targ);
+free_path:
+	free(path);
 	return NULL;
 }
