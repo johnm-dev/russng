@@ -49,9 +49,9 @@ russ_resolve_addr(char *addr) {
 
 	if ((strstr(addr, "+") == addr) || (strstr(addr, "/+") == addr)) {
 		if (addr[0] == '+') {
-			addr = addr[1];
+			addr = &addr[1];
 		} else {
-			addr = addr[2];
+			addr = &addr[2];
 		}
 		if ((services_dir = getenv("RUSS_SERVICES_DIR")) == NULL) {
 			services_dir = RUSS_SERVICES_DIR;
