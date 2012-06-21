@@ -49,10 +49,9 @@ __connect(char *path) {
 	struct sockaddr_un	servaddr;
 	int			sd;
 
-	if ((path = russ_resolve_addr(path) == NULL)) {
+	if ((path = russ_resolve_addr(path)) == NULL) {
 		return -1;
 	}
-
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
 		bzero(&servaddr, sizeof(servaddr));
 		servaddr.sun_family = AF_UNIX;
