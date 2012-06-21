@@ -49,23 +49,22 @@ struct russ_listener *
 russ_announce(char *path, mode_t mode, uid_t uid, gid_t gid) {
 	struct russ_listener	*lis;
 	struct sockaddr_un	servaddr;
-	char			*path2;
 
-	if ((path2 = russ_resolve_addr(path)) == NULL) {
+	if ((path = russ_resolve_addr(path)) == NULL) {
 		return NULL;
 	}
 	if ((lis = malloc(sizeof(struct russ_listener))) == NULL) {
-		free(path2);
+		free(path);
 		return NULL;
 	}
 
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sun_family = AF_UNIX;
-	strcpy(servaddr.sun_path, path2);
+	strcpy(servaddr.sun_path, path);
 	if ((lis->sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
 		goto free_lis;
 	}
-	if (((unlink(path2) < 0) && (errno != ENOENT))
+	if (((unlink(path) < 0) && (errno != ENOENT))
 		|| (bind(lis->sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
 		|| (chmod(path, mode) < 0)
 		|| (chown(path, uid, gid) < 0)
@@ -73,7 +72,7 @@ russ_announce(char *path, mode_t mode, uid_t uid, gid_t gid) {
 		goto close_sd;
 	}
 
-	free(path2);
+	free(path);
 	return lis;
 
 close_sd:
@@ -81,7 +80,7 @@ close_sd:
 	lis->sd = -1;
 free_lis:
 	free(lis);
-	free(path2);
+	free(path);
 	return NULL;
 }
 
