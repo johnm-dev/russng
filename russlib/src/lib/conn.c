@@ -41,13 +41,17 @@
 /**
 * Connect, send args, and receive descriptors.
 *
-* @param path	socket path
+* @param path	socket path (russ resolved path)
 * @return	descriptor value; -1 on error
 */
 static int
 __connect(char *path) {
 	struct sockaddr_un	servaddr;
 	int			sd;
+
+	if ((path = russ_resolve_addr(path) == NULL)) {
+		return -1;
+	}
 
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
 		bzero(&servaddr, sizeof(servaddr));
@@ -58,6 +62,7 @@ __connect(char *path) {
 			sd = -1;
 		}
 	}
+	free(path);
 	return sd;
 }
 
