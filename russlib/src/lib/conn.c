@@ -116,11 +116,22 @@ free_conn:
 */
 static int
 russ_conn_recvfds(struct russ_conn *self) {
+	char	buf[32], *bp, *bend;
+	int	timeout = -1; /* TODO: change API to accept timeout */
+	int	nfds;
 	int	i;
 
+	/* recv count of fds */
+	if ((russ_readn(self->sd, buf, 4) < 4)
+		|| (russ_dec_i(buf, &nfds) == NULL)) {
+		return -1;
+	}
+
+	/* recv fds (exit and cfds) */
 	if (russ_recvfd(self->sd, &(self->exit_fd)) < 0) {
 		return -1;
 	}
+	self->nfds = nfds-1;
 	for (i = 0; i < self->nfds; i++) {
 		if (russ_recvfd(self->sd, &(self->fds[i])) < 0) {
 			return -1;
@@ -140,8 +151,17 @@ russ_conn_recvfds(struct russ_conn *self) {
 */
 static int
 russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
+	char	buf[32], *bp, *bend;
+	int	timeout = -1; /* TODO: change API to accept timeout */
 	int	i;
 
+	/* send count of fds */
+	if (((bp = russ_enc_i(buf, buf+sizeof(buf), nfds)) == NULL)
+		|| (russ_writen_timeout(self->sd, buf, bp-buf, timeout) < bp-buf)) {
+		return -1;
+	}
+
+	/* send fds (exit and cfds) */
 	if (russ_sendfd(self->sd, cfds[0]) < 0) {
 		return -1;
 	}
@@ -155,6 +175,7 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 		russ_fds_close(&cfds[i], 1);
 		self->fds[i-1] = sfds[i];
 	}
+	self->nfds = nfds-1;
 	return 0;
 }
 
