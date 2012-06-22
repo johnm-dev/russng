@@ -22,13 +22,18 @@ restart)
 	;;
 status)
 	PID=`cat "${PID_FILENAME}" 2> /dev/null` && `kill -0 ${PID} 2> /dev/null`
-	if [ $? ]; then
+	if [ $? = 0 ]; then
 		echo "running"
 	else
 		echo "not running"
 	fi
 	;;
 start)
+	PID=`cat "${PID_FILENAME}" 2> /dev/null` && `kill -0 ${PID} 2> /dev/null`
+	if [ $? = 0 ]; then
+		echo "already running"
+		exit 1
+	fi
 	rusrv_debug +debug < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
