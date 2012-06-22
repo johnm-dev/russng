@@ -39,17 +39,17 @@
 char	*HELP =
 "Execute a command/program.\n"
 "\n"
-".../job <cgroup> <cmd>\n"
+"/job <cgroup> <cmd>\n"
 "    Execute a shell command string with a configured login shell\n"
 "    within a cgroup.\n"
 "\n"
-".../login <cmd>\n"
+"/login <cmd>\n"
 "    Execute a shell command string with a configured login shell.\n"
 "\n"
-".../shell <cmd>\n"
+"/shell <cmd>\n"
 "    Execute a shell command in an unconfigured (not a login) shell.\n"
 "\n"
-".../simple <path> [<arg> ...]\n"
+"/simple <path> [<arg> ...]\n"
 "    Execute a program with arguments directly (no shell).\n"
 "\n"
 "All services use the given attribute settings to configure the\n"
@@ -208,7 +208,7 @@ print_usage(char **argv) {
 	fprintf(stderr,
 "usage: rusrv_exec <saddr>\n"
 "\n"
-"Russ-based exec server to execute programs. \n"
+"russ-based exec server to execute programs.\n"
 );
 }
 
