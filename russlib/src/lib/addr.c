@@ -88,7 +88,7 @@ russ_resolve_addr(char *addr) {
 			/* resolve _a_ symlink, if referenced */
 			bp = buf;
 			while (bp != NULL) {
-			/* resolve _a_ symlink, if referenced */
+				/* resolve _a_ symlink, if referenced */
 				if ((bp = index(bp+1, '/')) != NULL) {
 					*bp = '\0'; /* delimit path to check */
 				}
@@ -110,7 +110,11 @@ russ_resolve_addr(char *addr) {
 						}
 						changed = 1;
 						break;
-					} else if (!S_ISDIR(st.st_mode)) {
+					}
+					if (bp != NULL) {
+						*bp = '/'; /* restore / */
+					}
+					if (!S_ISDIR(st.st_mode)) {
 						break;
 					}
 				} else {
@@ -118,9 +122,6 @@ russ_resolve_addr(char *addr) {
 						*bp = '/'; /* restore / */
 					}
 					break;
-				}
-				if (bp != NULL) {
-					*bp = '/'; /* restore / */
 				}
 			}
 		}
@@ -185,7 +186,8 @@ russ_find_service_target(char *addr) {
 		}
 		if (lstat(addr, &st) == 0) {
 			if (S_ISSOCK(st.st_mode)) {
-				/* found socket; leave *p as is */
+				/* found socket; bump p to next char */
+				p++;
 				break;
 			} else if (!S_ISDIR(st.st_mode)) {
 				/* non-socket file */
