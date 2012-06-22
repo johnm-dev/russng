@@ -23,4 +23,4 @@ install:
 	:
 	(mkdir -p "${INSTALL_DIR}")
 	(cd src/bin; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	(cd static; tar cf - share) | (cd $(INSTALL_DIR); tar xvf -)
+	(cd static; tar cf - etc share) | (cd $(INSTALL_DIR); tar xvf -)
