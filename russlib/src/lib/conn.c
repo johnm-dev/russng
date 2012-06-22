@@ -49,6 +49,7 @@ __connect(char *path) {
 	struct sockaddr_un	servaddr;
 	int			sd;
 
+	/* returned path must be freed */
 	if ((path = russ_resolve_addr(path)) == NULL) {
 		return -1;
 	}
