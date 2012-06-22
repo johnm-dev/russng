@@ -186,8 +186,12 @@ russ_find_service_target(char *addr) {
 		}
 		if (lstat(addr, &st) == 0) {
 			if (S_ISSOCK(st.st_mode)) {
-				/* found socket; bump p to next char */
-				p++;
+				/* found socket; position p to end or next char */
+				if (p == NULL) {
+					p = "\0";
+				} else {
+					p++;
+				}
 				break;
 			} else if (!S_ISDIR(st.st_mode)) {
 				/* non-socket file */
