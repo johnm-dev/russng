@@ -41,6 +41,35 @@ extern char **environ;
 
 #include "russ.h"
 
+char	*HELP = 
+"Provides services useful for debugging. Unless otherwise stated,\n"
+"stdin, stdout, and stderr all refer to the file descriptor triple\n"
+"that is returned from a russ_dial call.\n"
+"\n"
+"/chargen\n"
+"    Character generator outputting to stdout; follows the RPC 864\n"
+"    the RFC 864 protocol sequence.\n"
+"\n"
+"/conn\n"
+"    Outputs russ connection information.\n"
+"\n"
+"/daytime\n"
+"    Outputs the date and time to the stdout.\n"
+"\n"
+"/discard [--perf]\n"
+"    Discards all data received from stdin; if --perf is specified,\n"
+"    performance feedback is provide to stderr, otherwise there is\n"
+"    none.\n"
+"\n"
+"/echo\n"
+"    Simple echo service; receives from stdin and outputs to stdout.\n"
+"\n"
+"/env\n"
+"    Outputs environ entries to stdout.\n"
+"\n"
+"/request\n"
+"    Outputs the request information at the server stdout.\n";
+
 int
 _error_handler(struct russ_conn *conn, char *msg) {
 	russ_dprintf(conn->fds[2], msg);
@@ -226,24 +255,9 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_debug <saddr> [...]\n"
+"usage: rusrv_debug <saddr>\n"
 "\n"
-"Provides services useful for debugging. Unless otherwise stated,\n"
-"stdin, stdout, and stderr all refer to the file descriptor triple\n"
-"that is returned from a russ_dial call.\n"
-"\n"
-"/chargen       character generator outputting to stdout; follows\n"
-"               the RFC 864 protocol sequence\n"
-"/conn          display russ connection information\n"
-"/daytime       returns the date and time to the stdout\n"
-"/discard [--perf]\n"
-"               discards all data received from stdin; if --perf is\n"
-"               specified, performance feedback is provide to\n"
-"               stderr, otherwise there is none\n"
-"/echo          simple echo service; receives from stdin and outputs\n"
-"               to stdout\n"
-"/env           print environ entries to stdout\n"
-"/request       display the request information at the server stdout\n"
+"russ-based server to aid in debugging russ commands.\n"
 );
 }
 
