@@ -1,0 +1,46 @@
+#! /bin/bash
+#
+# russdebug
+#
+### BEGIN INIT INFO
+# Provides:		russdebug
+# Required-Start:	$local_fs $russ
+# Required-Stop:	$local_fs
+# Default-Start:	S
+# Default-Stop:
+# Short-Description:	RUSS debug service
+### END INIT INFO
+
+PID_FILENAME=/var/run/russ/debug.pid
+
+# ensure dirs
+mkdir -p `dirname "${PID_FILENAME}"`
+
+case $1 in
+restart)
+	$0 stop && sleep 1 && $0 start
+	;;
+status)
+	PID=`cat "${PID_FILENAME}" 2> /dev/null` && `kill -0 ${PID} 2> /dev/null`
+	if [ $? ]; then
+		echo "running"
+	else
+		echo "not running"
+	fi
+	;;
+start)
+	rusrv_debug +debug < /dev/null > /dev/null 2>&1 &
+	echo $! > "${PID_FILENAME}"
+	;;
+stop)
+	PID=`cat "${PID_FILENAME}" 2> /dev/null`
+	if [ $? = 0 ]; then
+		kill ${PID} 2> /dev/null
+		rm -f "${PID_FILENAME}" 2> /dev/null
+	fi
+	;;
+*)
+	echo "usage: /etc/init.d/russdebug {start|stop|restart|status}"
+	exit 1
+	;;
+esac
