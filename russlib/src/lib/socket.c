@@ -38,11 +38,16 @@
 #include "russ_priv.h"
 
 /**
-* Get credentials from socket file. Supports AIX and LINUX.
+* Get credentials from socket file.
 *
-* @param sd	socket descriptor
-* @param cred	credentials object in which to put infomation
-* @return	0 on success, -1 on error
+* Supports:
+* AIX - pid, euid, egid
+* LINUX - pid, uid, gid
+* FREEBSD - uid, gid; pid is unavailable and set to -1
+*
+* @param sd		socket descriptor
+* @param cred		credentials object in which to put infomation
+* @return		0 on success; -1 on error
 */
 int
 russ_get_credentials(int sd, struct russ_credentials *cred) {
@@ -90,11 +95,13 @@ russ_get_credentials(int sd, struct russ_credentials *cred) {
 }
 
 /**
-* Receive descriptor over socket (no message support).
+* Receive descriptor over socket.
 *
-* @param sd	socket descriptor
-* @param fd	integer pointer for received descriptor
-* @return	0 on success, -1 on error
+* Only the descriptor is obtained--no message support.
+*
+* @param sd		socket descriptor
+* @param fd		integer pointer for received descriptor
+* @return		0 on success; -1 on error
 */
 #define CMSG_SIZE	CMSG_SPACE(sizeof(int))
 int
@@ -136,11 +143,13 @@ russ_recvfd(int sd, int *fd) {
 }
 
 /**
-* Send descriptor (no message support) over socket.
+* Send descriptor over socket.
 *
-* @param sd	socket descriptor
-* @param fd	descriptor to send
-* @return	0 on success, -1 on error
+* Send descriptor only--no message support.
+*
+* @param sd		socket descriptor
+* @param fd		descriptor to send
+* @return		0 on success; -1 on error
 */
 int
 russ_sendfd(int sd, int fd) {

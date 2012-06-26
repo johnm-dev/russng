@@ -37,12 +37,12 @@
 /*
 * Forward a block by bunch of bytes or line.
 *
-* @param in_fd	input fd
-* @param out_fd	output fd
-* @param buf	buffer
-* @param bsize	buffer size
-* @param how	0 for bunch, 1 for line
-* @return	# of bytes forwarded, -1 on failure
+* @param in_fd		input fd
+* @param out_fd		output fd
+* @param buf		buffer
+* @param bsize		buffer size
+* @param how		0 for bunch, 1 for line
+* @return		# of bytes forwarded, -1 on failure
 */
 static int
 _forward_block(int in_fd, int out_fd, char *buf, int bsize, int how) {
@@ -69,8 +69,8 @@ _forward_block(int in_fd, int out_fd, char *buf, int bsize, int how) {
 /*
 * The actual byte forwarder code.
 *
-* @param fwd	forwarder object
-* @return	NULL on success, !NULL on failure
+* @param fwd		forwarder object
+* @return		NULL on success; !NULL on failure
 */
 static void *
 _forward_bytes(void *_fwd) {
@@ -120,12 +120,15 @@ _forward_bytes(void *_fwd) {
 /**
 * Initializes forwarder struct with values.
 *
-* @param fwd	forwarder object
-* @param in_fd	sets in_fd member
-* @param out_fd	sets out_fd member
-* @param count	sets count member
-* @param blocksize	sets blocksize member
-* @param how	sets the how member
+* The forwarder struct holds settings used to carry out the
+* forwarding operation.
+*
+* @param fwd		forwarder object
+* @param in_fd		for in_fd member
+* @param out_fd		for out_fd member
+* @param count		for count member
+* @param blocksize	for blocksize member
+* @param how		for the how member
 */
 void
 russ_forwarder_init(struct russ_forwarder *self, int in_fd, int out_fd, int count, int blocksize, int how) {
@@ -137,11 +140,14 @@ russ_forwarder_init(struct russ_forwarder *self, int in_fd, int out_fd, int coun
 }
 
 /**
-* Forward bytes for n pairs of fds.
+* Run forwarders.
 *
-* @param nfwds	# of pairs
-* @param fwds	array of pairs (with other info)
-* @return	0 on success; -1 on failure
+* One or more forwarders are started, each in its own thread, to
+* forward data between fds.
+*
+* @param nfwds		# of forwarders
+* @param fwds		array of (initialized) forwarders
+* @return		0 on success; -1 on failure
 */
 int
 russ_run_forwarders(int nfwds, struct russ_forwarder *fwds) {
@@ -166,10 +172,12 @@ kill_threads:
 }
 
 /**
-* Start forwarder thread.
+* Run a forwarder.
 *
-* @param self	forwarder object
-* @return	0 on success; -1 on failure
+* The forwarder is run in its own thread.
+*
+* @param self		forwarder object
+* @return		0 on success; -1 on failure
 */
 int
 russ_forwarder_start(struct russ_forwarder *self) {
@@ -185,9 +193,11 @@ russ_forwarder_start(struct russ_forwarder *self) {
 }
 
 /**
-* Join forwarder thread.
+* Join forwarder.
 *
-* @param self	forwarder object
+* Waits on the thread running the forwarder.
+*
+* @param self		forwarder object
 */
 int
 russ_forwarder_join(struct russ_forwarder *self) {

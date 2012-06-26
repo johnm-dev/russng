@@ -29,18 +29,16 @@
 
 #include "russ.h"
 
-/**
-* Wrapper for russ_dial with "execute" operation.
+/*
+* Convert variadic argument list of "char *" to argv array.
 *
-* @see russ_dialv()
+* @param[out] argc	size of argv array
+* @param ap		va_list for counting args
+* @param ap2		va_list for creating argv array
+* @return		argv array
 */
-struct russ_conn *
-russ_execv(russ_timeout timeout, char *addr, char **attrv, char **argv) {
-	return russ_dialv(timeout, "execute", addr, attrv, argv);
-}
-
-char **
-russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
+static char **
+__russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 	char	**argv;
 	int	i;
 
@@ -64,6 +62,16 @@ russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 /**
 * Wrapper for russ_dial with "execute" operation.
 *
+* @see russ_dialv()
+*/
+struct russ_conn *
+russ_execv(russ_timeout timeout, char *addr, char **attrv, char **argv) {
+	return russ_dialv(timeout, "execute", addr, attrv, argv);
+}
+
+/**
+* Wrapper for russ_dial with "execute" operation.
+*
 * @see russ_diall()
 */
 struct russ_conn *
@@ -74,7 +82,7 @@ russ_execl(russ_timeout timeout, char *addr, char **attrv, ...) {
 	int			argc;
 
 	va_start(ap, attrv);
-	if ((argv = russ_variadic_to_argv(&argc, ap, ap)) == NULL) {
+	if ((argv = __russ_variadic_to_argv(&argc, ap, ap)) == NULL) {
 		return NULL;
 	}
 	conn = russ_dialv(timeout, "execute", addr, attrv, argv);
@@ -87,8 +95,8 @@ russ_execl(russ_timeout timeout, char *addr, char **attrv, ...) {
 * Wrapper for russ_dial with "help" operation.
 *
 * @param timeout	time allowed to complete operation
-* @param addr	full service address
-* @return	connection object
+* @param addr		full service address
+* @return		connection object
 */
 struct russ_conn *
 russ_help(russ_timeout timeout, char *addr) {
@@ -99,8 +107,8 @@ russ_help(russ_timeout timeout, char *addr) {
 * Wrapper for russ_dial with "info" operation.
 *
 * @param timeout	time allowed to complete operation
-* @param addr	full service address
-* @return	connection object
+* @param addr		full service address
+* @return		connection object
 */
 struct russ_conn *
 russ_info(russ_timeout timeout, char *addr) {
@@ -111,8 +119,8 @@ russ_info(russ_timeout timeout, char *addr) {
 * Wrapper for russ_dial with "list" operation.
 *
 * @param timeout	time allowed to complete operation
-* @param addr	full service address
-* @return	connection object
+* @param addr		full service address
+* @return		connection object
 */
 struct russ_conn *
 russ_list(russ_timeout timeout, char *addr) {

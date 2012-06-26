@@ -55,9 +55,9 @@ russ_sarray0_count(char **arr, int max_cnt) {
 /**
 * Duplicate a NULL-terminated string array.
 *
-* @param src	source string array
+* @param src		source string array
 * @param max_cnt	max # of elements supported
-* @return	duplicated array
+* @return		duplicated array
 */
 char **
 russ_sarray0_dup(char **src, int max_cnt) {
@@ -106,11 +106,12 @@ russ_sarray0_free(char **arr) {
 }
 
 /**
-* fprintf-like but uses descripto instead of FILE *.
+* fprintf-like for descriptor instead of FILE *.
 *
-* @param fd	descriptor
-* @param format	format string
-* @return	# of bytes written
+* @param fd		descriptor
+* @param format		printf-style format string
+* @param ...		variadic list of arguments
+* @return		# of bytes written
 */
 int
 russ_dprintf(int fd, char *format, ...) {
@@ -118,6 +119,7 @@ russ_dprintf(int fd, char *format, ...) {
 	int	n;
 	va_list	ap;
 
+	/* TODO: use realloc to handle any size output */
 	va_start(ap, format);
 	n = vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);

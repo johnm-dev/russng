@@ -34,9 +34,9 @@
 /**
 * Decode LE 16-bit unsigned integer.
 *
-* @param b	buffer
-* @param[out] v	storage area
-* @return	new buffer position; NULL if failure
+* @param b		buffer
+* @param[out] v		storage area
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_dec_H(char *b, uint16_t *v) {
@@ -47,9 +47,9 @@ russ_dec_H(char *b, uint16_t *v) {
 /**
 * Decode LE 32-bit unsigned integer.
 *
-* @param b	buffer
-* @param[out] v	storage area
-* @return	new buffer position; NULL if failure
+* @param b		buffer
+* @param[out] v		storage area
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_dec_I(char *b, uint32_t *v) {
@@ -61,9 +61,9 @@ russ_dec_I(char *b, uint32_t *v) {
 /**
 * Decode LE 32-bit signed integer.
 *
-* @param b	buffer
-* @param[out] v	storage area
-* @return	new buffer position; NULL if failure
+* @param b		buffer
+* @param[out] v		storage area
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_dec_i(char *b, int32_t *v) {
@@ -78,9 +78,9 @@ russ_dec_i(char *b, int32_t *v) {
 /**
 * Decode size-encoded byte-array.
 *
-* @param b	buffer
+* @param b		buffer
 * @param[out] bp	storage area
-* @return	new buffer position; NULL if failure
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_dec_b(char *b, char **bp) {
@@ -97,9 +97,9 @@ russ_dec_b(char *b, char **bp) {
 /**
 * Decode size-encoded char-array.
 *
-* @param b	buffer
+* @param b		buffer
 * @param[out] bp	storage area
-* @return	new buffer position; NULL if failure
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_dec_s(char *b, char **bp) {
@@ -107,7 +107,13 @@ russ_dec_s(char *b, char **bp) {
 }
 
 /**
-* Shared function for decoding string arrays.
+* Shared decoder of NULL-terminated string arrays.
+*
+* @param b		buffer
+* @param[out] v		storage area
+* @param[out] alen	array length
+* @param append_null	flag to append NULL
+* @return		new buffer position; NULL if failure
 */
 static char *
 _dec_sarray0(char *b, char ***v, int *alen, int append_null) {
@@ -150,10 +156,10 @@ free_array:
 /**
 * Decode string array with implicit NULL sentinel.
 *
-* @param b	buffer
+* @param b		buffer
 * @param[out] vpp	string array with NULL sentinel
 * @param[out] alen	length of array (including sentinel)
-* @return	new buffer position; NULL if failure
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_dec_sarray0(char *b, char ***vpp, int *alen) {
@@ -163,10 +169,10 @@ russ_dec_sarray0(char *b, char ***vpp, int *alen) {
 /**
 * Decode string array of fixed # of items.
 *
-* @param b	buffer
+* @param b		buffer
 * @param[out] vpp	string array with NULL sentinel
 * @param[out] alen	length of array (including sentinel)
-* @return	new buffer position; NULL if failure
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_dec_sarrayn(char *b, char ***vpp, int *alen) {
@@ -178,10 +184,10 @@ russ_dec_sarrayn(char *b, char ***vpp, int *alen) {
 /**
 * Encode uint16.
 *
-* @param b	buffer
-* @param bend	end of buffer
-* @param v	uint16 value
-* @return	new buffer position; NULL if failure
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		uint16 value
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_enc_H(char *b, char *bend, uint16_t v) {
@@ -196,10 +202,10 @@ russ_enc_H(char *b, char *bend, uint16_t v) {
 /**
 * Encode uint32.
 *
-* @param b	buffer
-* @param bend	end of buffer
-* @param v	uint32 value
-* @return	new buffer position; NULL if failure
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		uint32 value
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_enc_I(char *b, char *bend, uint32_t v) {
@@ -216,10 +222,10 @@ russ_enc_I(char *b, char *bend, uint32_t v) {
 /**
 * Encode int32.
 *
-* @param b	buffer
-* @param bend	end of buffer
-* @param v	int32 value
-* @return	new buffer position; NULL if failure
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		int32 value
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_enc_i(char *b, char *bend, int32_t v) {
@@ -235,13 +241,14 @@ russ_enc_i(char *b, char *bend, int32_t v) {
 
 /**
 * Encode byte array.
+*
 * Encoding: alen(4) bytes(n)
 *
-* @param b	buffer
-* @param bend	end of buffer
-* @param v	array of bytes
-* @param alen	length of array
-* @return	new buffer position; NULL if failure
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		array of bytes
+* @param alen		length of array
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_enc_bytes(char *b, char *bend, char *v, int alen) {
@@ -255,12 +262,13 @@ russ_enc_bytes(char *b, char *bend, char *v, int alen) {
 
 /**
 * Encode string (including \0).
+*
 * Encoding: alen(4) string(n)
 *
-* @param b	buffer
-* @param bend	end of buffer
-* @param v	string ending in \0
-* @return	new buffer position; NULL if failure
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		string ending in \0
+* @return		new buffer position; NULL if failure
 */
 char *
 russ_enc_s(char *b, char *bend, char *v) {
@@ -269,13 +277,14 @@ russ_enc_s(char *b, char *bend, char *v) {
 
 /**
 * Encode string array of fixed length.
+*
 * Encoding: alen(4b) [string [...]]
 *
-* @param b	buffer
-* @param bend	end of buffer
-* @param v	array of strings (ignored if alen==0)
-* @param alen	# of array items
-* @return	updated buffer position; NULL on failure
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		array of strings (ignored if alen==0)
+* @param alen		# of array items
+* @return		new buffer position; NULL on failure
 */
 char *
 russ_enc_sarrayn(char *b, char *bend, char **v, int alen) {
@@ -293,13 +302,14 @@ russ_enc_sarrayn(char *b, char *bend, char **v, int alen) {
 }
 
 /**
-* Encode string array having NULL sentinel. Calls russ_enc_sarrayn.
-* Sentinel is not encoded.
+* Encode string array having NULL sentinel.
 *
-* @param b	buffer
-* @param bend	end of buffer
-* @param v	array of strings (may also be NULL)
-* @return	updated buffer position; NULL on failure
+* Calls russ_enc_sarrayn(). Sentinel is not encoded.
+*
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		array of strings (may also be NULL)
+* @return		new buffer position; NULL on failure
 */
 char *
 russ_enc_sarray0(char *b, char *bend, char **v) {

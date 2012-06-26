@@ -31,15 +31,18 @@
 #include "russ_priv.h"
 
 /**
-* Initialize connection request. All provided (non NULL) information is duplicated.
+* Initialize connection request.
 *
-* @param self	request object
-* @param protocol_string	russ protocol identification string
-* @param op	operation string
-* @param spath	service path
-* @param attrv	NULL-terminated array of attributes ("name=value" strings)
-* @param argv	NULL-terminated array of arguments
-* @return	0 on success; -1 on error
+* Note: All provided (non NULL) information is duplicated.
+*
+* @param self		request object
+* @param protocol_string
+*			russ protocol identification string
+* @param op		operation string
+* @param spath		service path
+* @param attrv		NULL-terminated array of attributes ("name=value" strings)
+* @param argv		NULL-terminated array of arguments
+* @return		0 on success; -1 on error
 */
 int
 russ_request_init(struct russ_request *self, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
@@ -76,7 +79,12 @@ free_req_items:
 /**
 * Free allocated request members.
 *
-* @param self	request object
+* All allocations done in russ_request_init() are freed and members
+* set to NULL.
+*
+* Note: The request itself is not freed.
+*
+* @param self		request object
 */
 void
 russ_request_free_members(struct russ_request *self) {
@@ -99,4 +107,3 @@ russ_request_free_members(struct russ_request *self) {
 	}
 	russ_request_init(self, NULL, NULL, NULL, NULL, NULL);
 }
-
