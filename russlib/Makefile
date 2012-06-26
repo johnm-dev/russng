@@ -16,10 +16,11 @@ clean:
 	(cd src/usr/lib; $(MAKE) clean)
 
 docs:
-	@if [ `doxygen -h 2> /dev/null` ]; then \
-		(doxygen doxygen.conf); \
-	else \
+	if [ "`which doxygen`" = ""  ]; then \
 		echo "warning: doxygen not available to produce documentation"; \
+		exit 1; \
+	else \
+		(doxygen doxygen.conf); \
 	fi
 
 install:
