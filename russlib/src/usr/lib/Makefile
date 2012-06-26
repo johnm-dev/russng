@@ -3,7 +3,7 @@
 #
 # expect INSTALL_DIR
 
-include ../../../Makefile.inc
+include ../../../../Makefile.inc
 
 SRCS=addr.c conn.c encdec.c fd.c forwarder.c helpers.c io.c listener.c misc.c request.c socket.c
 OBJS=addr.o conn.o encdec.o fd.o forwarder.o helpers.o io.o listener.o misc.o request.o socket.o
@@ -14,8 +14,8 @@ clean:
 	rm -f *.o *.a *.so
 
 install:
-	mkdir -p $(INSTALL_DIR)/lib
-	(cp libruss.a $(INSTALL_DIR)/lib)
+	mkdir -p $(INSTALL_DIR)/usr/lib
+	(cp libruss.a $(INSTALL_DIR)/usr/lib)
 	@if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
 		(cp libruss.so $(INSTALL_DIR)/lib); \
 	fi
