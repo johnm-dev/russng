@@ -9,11 +9,11 @@ HERE_DIR:=$(shell dirname $(HERE_FILE))
 .PHONY:	docs install
 
 all:
-	(cd src/bin; $(MAKE))
+	(cd src/usr/bin; $(MAKE))
 
 clean:
 	(rm -rf docs)
-	(cd src/bin; $(MAKE) clean)
+	(cd src/usr/bin; $(MAKE) clean)
 
 docs:
 	#(doxygen doxygen.conf)
@@ -22,5 +22,5 @@ install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
 	:
 	(mkdir -p "${INSTALL_DIR}")
-	(cd src/bin; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	(cd static; tar cf - etc share) | (cd $(INSTALL_DIR); tar xvf -)
+	(cd src/usr/bin; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
+	(cd static; tar cf - etc usr/share) | (cd $(INSTALL_DIR); tar xvf -)
