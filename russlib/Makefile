@@ -27,7 +27,7 @@ install:
 	:
 	(mkdir -p $(INSTALL_DIR))
 	(cd src/usr/lib; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	(cd src/usr/include; mkdir -p ${INSTALL_DIR}/include; cp russ.h russ_priv.h ${INSTALL_DIR}/include)
+	(cd src/usr; cp -r include ${INSTALL_DIR}/usr)
 	(cd static; tar cf - etc usr/share) | (cd $(INSTALL_DIR); tar xvf -)
 	(mkdir -p $(INSTALL_DIR)/usr/share/docs/russlib)
 	if [ -d docs ]; then \
