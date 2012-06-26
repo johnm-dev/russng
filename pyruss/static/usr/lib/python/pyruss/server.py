@@ -106,6 +106,9 @@ class ServiceTree:
         """
         node = self.root
         for comp in comps:
+            if comp == "":
+                # don't change current node
+                continue
             node = node.children.get(comp)
             if node == None:
                 break
