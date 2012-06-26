@@ -3,7 +3,7 @@
 #
 # expect INSTALL_DIR
 
-include ../../../Makefile.inc
+include ../../../../Makefile.inc
 
 LIBS=
 BINS=rudial ruls rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pexec rusrv_relay rusrv_relay_backend
@@ -24,10 +24,10 @@ clean:
 	rm -f $(BINS) *.o
 
 install:
-	mkdir -p $(INSTALL_DIR)/bin
-	(cp $(BINS) $(INSTALL_DIR)/bin)
-	(cd $(INSTALL_DIR)/bin; ln -fs rudial ruexec)
-	(cd $(INSTALL_DIR)/bin; ln -fs ruls ruhelp; ln -fs ruls ruinfo)
+	mkdir -p $(INSTALL_DIR)/usr/bin
+	(cp $(BINS) $(INSTALL_DIR)/usr/bin)
+	(cd $(INSTALL_DIR)/usr/bin; ln -fs rudial ruexec)
+	(cd $(INSTALL_DIR)/usr/bin; ln -fs ruls ruhelp; ln -fs ruls ruinfo)
 
 rudial:	rudial.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
