@@ -6,7 +6,7 @@
 HERE_FILE:="$(CURDIR)/$(strip $(MAKEFILE_LIST))"
 HERE_DIR:=$(shell dirname $(HERE_FILE))
 
-.PHONY:	docs install
+.PHONY:	doc install
 
 all:
 	(cd russlib; $(MAKE))
@@ -20,11 +20,11 @@ clean:
 	(cd pyruss; $(MAKE) clean)
 	(cd rbruss; $(MAKE) clean)
 
-docs:
-	(cd russlib; $(MAKE) docs)
-	#(cd russtools; $(MAKE) docs)
-	#(cd pyruss; $(MAKE) docs)
-	#(cd rbruss; $(MAKE) docs)
+doc:
+	(cd russlib; $(MAKE) doc)
+	#(cd russtools; $(MAKE) doc)
+	#(cd pyruss; $(MAKE) doc)
+	#(cd rbruss; $(MAKE) doc)
 
 install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi

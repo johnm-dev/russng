@@ -6,7 +6,7 @@
 HERE_FILE:="$(CURDIR)/$(strip $(MAKEFILE_LIST))"
 HERE_DIR:=$(shell dirname $(HERE_FILE))
 
-.PHONY:	docs install
+.PHONY:	doc install
 
 all:
 	:
@@ -14,7 +14,7 @@ all:
 clean:
 	:
 
-docs:
+doc:
 	#(doxygen doxygen.conf)
 
 install:

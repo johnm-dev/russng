@@ -6,16 +6,16 @@
 HERE_FILE:="$(CURDIR)/$(strip $(MAKEFILE_LIST))"
 HERE_DIR:=$(shell dirname $(HERE_FILE))
 
-.PHONY:	docs install
+.PHONY:	doc install
 
-all:	docs
+all:	doc
 	(cd src/usr/lib; $(MAKE))
 
 clean:
-	(rm -rf docs)
+	(rm -rf doc)
 	(cd src/usr/lib; $(MAKE) clean)
 
-docs:
+doc:
 	if [ "`which doxygen`" = ""  ]; then \
 		echo "warning: doxygen not available to produce documentation"; \
 		exit 1; \
@@ -30,7 +30,7 @@ install:
 	(cd src/usr/lib; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd src/usr; cp -r include ${INSTALL_DIR}/usr)
 	(cd static; tar cf - etc usr/share) | (cd $(INSTALL_DIR); tar xvf -)
-	(mkdir -p $(INSTALL_DIR)/usr/share/docs/russlib)
-	if [ -d docs ]; then \
-		(cd docs; tar cf - .) | (cd $(INSTALL_DIR)/usr/share/docs/russlib; tar xvf -) \
+	(mkdir -p $(INSTALL_DIR)/usr/share/doc/russlib)
+	if [ -d doc ]; then \
+		(cd doc; tar cf - .) | (cd $(INSTALL_DIR)/usr/share/doc/russlib; tar xvf -) \
 	fi
