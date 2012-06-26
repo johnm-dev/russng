@@ -29,9 +29,9 @@
 /**
 * Initialize descriptor array to value.
 *
-* @param self	descriptor array
-* @param count	size of fds array
-* @param value	initialization value
+* @param self		descriptor array
+* @param count		size of fds array
+* @param value		initialization value
 */
 void
 russ_fds_init(int *self, int count, int value) {
@@ -43,10 +43,10 @@ russ_fds_init(int *self, int count, int value) {
 }
 
 /**
-* Close descriptor and set array values to -1.
+* Close descriptors in array and set to -1.
 *
-* @param self	descriptor array
-* @param count	size of fds array
+* @param self		descriptor array
+* @param count		size of fds array
 */
 void
 russ_fds_close(int *self, int count) {
@@ -61,12 +61,15 @@ russ_fds_close(int *self, int count) {
 }
 
 /**
-* Make pipes. A failure releases all created pipes.
+* Make pipes and store passed arrays.
 *
-* @param count	# of pipes to make; minimum size of rfds and wfds
-* @param rfds	array to store created read fds
-* @param wfds	array to store created write fds 
-* @return	0 on success; -1 on error
+* Pipes are created with read and write descriptors in stored to
+* separate arrays. A failure releases all created pipes.
+*
+* @param count		# of pipes to make; minimum size of rfds and wfds
+* @param[out] rfds	array for created read fds
+* @param[out] wfds	array for created write fds 
+* @return		0 on success; -1 on error
 */
 int
 russ_make_pipes(int count, int *rfds, int *wfds) {
@@ -89,4 +92,3 @@ close_fds:
 	russ_fds_close(wfds, i);
 	return -1;
 }
-

@@ -40,13 +40,14 @@
 * Resolve addr by replacing prefixes and symlinks.
 *
 * Prefixes of /+ and + are resolved as equivalent to
-* RUSS_SERVICES_DIR (env or constant). Symlinks are resolved without
-* actually following them--this allows one to use symlinks that
-* use the above prefixes and which actually do not exist in the
-* filesystem.
+* RUSS_SERVICES_DIR (from env or C #define). Symlinks are resolved
+* by reading the link rather than following them via the OS. This
+* allows one to use symlinks that use the above prefixes and also
+* which actually do not exist in the filesystem (i.e., for
+* referencing non-local, valid russ addresses).
 *
-* @param addr	service address
-* @return	absolute path (malloc'ed), NULL on failure
+* @param addr		service address
+* @return		absolute path (malloc'ed); NULL on failure
 */
 char *
 russ_resolve_addr(char *addr) {
@@ -66,8 +67,9 @@ russ_resolve_addr(char *addr) {
 	sdlen = strlen(services_dir);
 	bend = buf+sizeof(buf);
 
-	/* TODO: the follow code needs work to simplify and clarify
-	* flow paths and why
+	/*
+	* TODO: the following code could be simplified and
+	* clarified so that flow is obvious.
 	*/
 	changed = 1;
 	while (changed) {
@@ -156,11 +158,15 @@ russ_find_service_addr(char *addr) {
 }
 
 /**
-* Find service target which is the saddr (socket address) and the
-* spath (service path).
+* Find service target (saddr and spath).
 *
-* @param addr	full service address
-* @return	russ_target object
+* A service address is composed of a socket address (saddr) and a
+* service path (spath). The saddr is local, the spath is passed to
+* the service server. Depending on the service server, the spath may
+* also be a service address and need to be resolved and followed.
+*
+* @param addr		full service address
+* @return		russ_target object; NULL on failure
 */
 struct russ_target *
 russ_find_service_target(char *addr) {

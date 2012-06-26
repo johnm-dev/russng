@@ -39,39 +39,39 @@
 /**
 * Announce service as a socket file.
 *
-* @param path	socket path
-* @param mode	file mode of path
-* @param uid	owner of path
-* @param gid	group owner of path
-* @return	listener object
+* @param saddr		socket address
+* @param mode		file mode of path
+* @param uid		owner of path
+* @param gid		group owner of path
+* @return		listener object; NULL on failure
 */
 struct russ_listener *
-russ_announce(char *path, mode_t mode, uid_t uid, gid_t gid) {
+russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	struct russ_listener	*lis;
 	struct sockaddr_un	servaddr;
 
-	if ((path = russ_resolve_addr(path)) == NULL) {
+	if ((saddr = russ_resolve_addr(saddr)) == NULL) {
 		return NULL;
 	}
 	if ((lis = malloc(sizeof(struct russ_listener))) == NULL) {
-		goto free_path;
+		goto free_saddr;
 	}
 
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sun_family = AF_UNIX;
-	strcpy(servaddr.sun_path, path);
+	strcpy(servaddr.sun_path, saddr);
 	if ((lis->sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
 		goto free_lis;
 	}
-	if (((unlink(path) < 0) && (errno != ENOENT))
+	if (((unlink(saddr) < 0) && (errno != ENOENT))
 		|| (bind(lis->sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
-		|| (chmod(path, mode) < 0)
-		|| (chown(path, uid, gid) < 0)
+		|| (chmod(saddr, mode) < 0)
+		|| (chown(saddr, uid, gid) < 0)
 		|| (listen(lis->sd, 5) < 0)) {
 		goto close_sd;
 	}
 
-	free(path);
+	free(saddr);
 	return lis;
 
 close_sd:
@@ -79,17 +79,17 @@ close_sd:
 	lis->sd = -1;
 free_lis:
 	free(lis);
-free_path:
-	free(path);
+free_saddr:
+	free(saddr);
 	return NULL;
 }
 
 /**
 * Answer dial.
 *
-* @param lis	listener object
+* @param lis		listener object
 * @param timeout	time allowed to complete operation
-* @return	connection object with credentials; not fully established
+* @return		connection object with credentials (not fully established); NULL on failure
 */
 struct russ_conn *
 russ_listener_answer(struct russ_listener *self, russ_timeout timeout) {
@@ -141,7 +141,7 @@ free_conn:
 /**
 * Close listener.
 *
-* @param self	listener object
+* @param self		listener object
 */
 void
 russ_listener_close(struct russ_listener *self) {
@@ -153,8 +153,8 @@ russ_listener_close(struct russ_listener *self) {
 /**
 * Free listener object.
 *
-* @param self	listener object
-* @return	NULL value
+* @param self		listener object
+* @return		NULL value
 */
 struct russ_listener *
 russ_listener_free(struct russ_listener *self) {
@@ -163,9 +163,17 @@ russ_listener_free(struct russ_listener *self) {
 }
 
 /**
-* Loop to listen for and accept incoming connections.
+* Loop to accept connections and call a handler in child process.
 *
-* @param self	listener object
+* Listen on the socket and fork a new process for each connection.
+* All connections are answered in the main process, but requests
+* are waited on and accepted in the child process. This prevents
+* a DoS by a partial request from occupying the loop. Each valid
+* request is the passed to the given handler. The handler is
+* responsible for servicing requests, closing descriptors as
+* appropriate and exiting (with russ_conn_exit()).
+*
+* @param self		listener object
 * @param handler	handler function to call on connection
 */
 void
@@ -233,7 +241,7 @@ __pre_handler_thread(void *vp) {
 * Loop to listen for and accept incoming connections spawning a
 * thread for each connection.
 *
-* @param self	listener object
+* @param self		listener object
 * @param handler	handler function to call on connection
 */
 void

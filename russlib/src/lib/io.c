@@ -37,10 +37,10 @@
 /**
 * Read bytes with auto retry on EINTR and EAGAIN.
 *
-* @param fd	input descriptor
-* @param b	buffer
-* @param count	# of bytes
-* @return	# of bytes read or error/EOF
+* @param fd		descriptor
+* @param[out] b		buffer
+* @param count		# of bytes
+* @return		# of bytes read or error/EOF
 */
 ssize_t
 russ_read(int fd, char *b, size_t count) {
@@ -59,10 +59,10 @@ russ_read(int fd, char *b, size_t count) {
 /**
 * Read a line of bytes, return on success or unrecoverable error
 *
-* @param fd	input descriptor
-* @param b	buffer
-* @param count	# of bytes
-* @return	# of bytes read or error/EOF
+* @param fd		descriptor
+* @param[out] b		buffer
+* @param count		# of bytes
+* @return		# of bytes read or error/EOF
 */
 ssize_t
 russ_readline(int fd, char *b, size_t count) {
@@ -94,10 +94,10 @@ russ_readline(int fd, char *b, size_t count) {
 /**
 * Guaranteed read. Return on success or unrecoverable error/EOF.
 *
-* @param fd	input descriptor
-* @param b	buffer
-* @param count	# of bytes to read
-* @return	# of bytes read; < count on error/EOF
+* @param fd		descriptor
+* @param[out] b		buffer
+* @param count		# of bytes to read
+* @return		# of bytes read; < count on error/EOF
 */
 ssize_t
 russ_readn(int fd, char *b, size_t count) {
@@ -115,12 +115,12 @@ russ_readn(int fd, char *b, size_t count) {
 }
 
 /**
-* Write bytes with auto retry on EINTR and EAGAIN.
+* Guaranteed write with auto retry on EINTR and EAGAIN.
 *
-* @param fd	output descriptor
-* @param b	buffer
-* @param count	# of bytes to write
-* @return	# of bytes written; or error/EOF
+* @param fd		descriptor
+* @param b		buffer
+* @param count		# of bytes to write
+* @return		# of bytes written; or error/EOF
 */
 ssize_t
 russ_write(int fd, char *b, size_t count) {
@@ -137,12 +137,14 @@ russ_write(int fd, char *b, size_t count) {
 }
 
 /**
-* Guaranteed write. Return on success or unrecoverable error.
+* Guaranteed write.
 *
-* @param fd	output descriptor
-* @param b	buffer
-* @param count	# of bytes to write
-* @return	# of bytes written; < count on error
+* All bytes are written unless an unrecoverable error happens.
+*
+* @param fd		descriptor
+* @param b		buffer
+* @param count		# of bytes to write
+* @return		# of bytes written; < count on error
 */
 ssize_t
 russ_writen(int fd, char *b, size_t count) {
@@ -160,9 +162,12 @@ russ_writen(int fd, char *b, size_t count) {
 }
 
 /**
-* Guaranteed write. Return on success, timeout, or unrecoverable error.
+* Guaranteed write with timeout.
 *
-* @param fd		output descriptor
+* All bytes are written unless a timeout or unrecoverable error
+* happens.
+*
+* @param fd		descriptor
 * @param b		buffer
 * @param count		# of bytes to write
 * @param timeout	time in which to complete call

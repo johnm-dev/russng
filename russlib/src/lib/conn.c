@@ -39,38 +39,38 @@
 #include "russ_priv.h"
 
 /**
-* Connect, send args, and receive descriptors.
+* Connect to socket.
 *
-* @param path	socket path (russ resolved path)
-* @return	descriptor value; -1 on error
+* @param saddr		"unresolved" socket address
+* @return		descriptor value; -1 on error
 */
 static int
-__connect(char *path) {
+__connect(char *saddr) {
 	struct sockaddr_un	servaddr;
 	int			sd;
 
 	/* returned path must be freed */
-	if ((path = russ_resolve_addr(path)) == NULL) {
+	if ((saddr = russ_resolve_addr(saddr)) == NULL) {
 		return -1;
 	}
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
 		bzero(&servaddr, sizeof(servaddr));
 		servaddr.sun_family = AF_UNIX;
-		strcpy(servaddr.sun_path, path);
+		strcpy(servaddr.sun_path, saddr);
 		if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
 			close(sd);
 			sd = -1;
 		}
 	}
-	free(path);
+	free(saddr);
 	return sd;
 }
 
 /**
 * Close a descriptor of the connection.
 *
-* @param self	connection object
-* @param index	index of the descriptor
+* @param self		connection object
+* @param index		index of the descriptor
 */
 void
 russ_conn_close_fd(struct russ_conn *self, int index) {
@@ -80,7 +80,7 @@ russ_conn_close_fd(struct russ_conn *self, int index) {
 /**
 * Create and initialize a connection object.
 *
-* @return	a new, initialized connection object
+* @return		a new, initialized connection object; NULL on failure
 */
 struct russ_conn *
 russ_conn_new(void) {
@@ -111,8 +111,8 @@ free_conn:
 /**
 * Get fds from connection.
 *
-* @param self	connection object
-* @return	0 on succes; -1 on error
+* @param self		connection object
+* @return		0 on success; -1 on error
 */
 static int
 russ_conn_recvfds(struct russ_conn *self) {
@@ -141,13 +141,16 @@ russ_conn_recvfds(struct russ_conn *self) {
 }
 
 /**
-* Send cfds over connection, close cfds, and save sfds to connection
+* Send fds over connection and cleanup.
+*
+* Each cfd has an sfd counterpart. The cfds are sent over the
+* connection and closed. The sfds are saved to the connection
 * object.
 *
-* @param self	connection object
-* @param cfds	client-side descriptors
-* @param sfds	server-side descriptors
-* @return	0 on success; -1 on error
+* @param self		connection object
+* @param cfds		client-side descriptors
+* @param sfds		server-side descriptors
+* @return		0 on success; -1 on error
 */
 static int
 russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
@@ -180,12 +183,12 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 }
 
 /**
-* Accept request. Socket is closed.
+* Accept request and close socket
 *
-* @param self	answered connection object
-* @param cfds	array of descriptors to send to client
-* @param sfds	array of descriptors for server side
-* @return	0 on success; -1 on error
+* @param self		answered connection object
+* @param cfds		array of descriptors to send to client
+* @param sfds		array of descriptors for server side
+* @return		0 on success; -1 on error
 */
 int
 russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
@@ -220,11 +223,14 @@ close_fds:
 	return -1;
 }
 
-/*
-** Wait for the request to come; store in connection object
+/**
+* Wait for the request.
 *
-* @param self	connection object
-* @return	0 on success; -1 on error
+* The request is waited for, and the connection object is updated
+* with the received information.
+*
+* @param self		connection object
+* @return		0 on success; -1 on error
 */
 int
 russ_conn_await_request(struct russ_conn *self) {
@@ -259,7 +265,9 @@ free_request:
 /**
 * Close connection.
 *
-* @param self	connection object
+* All connection fds are closed and the connection object updated.
+*
+* @param self		connection object
 */
 void
 russ_conn_close(struct russ_conn *self) {
@@ -269,13 +277,18 @@ russ_conn_close(struct russ_conn *self) {
 }
 
 /**
-* Send exit status over connection (valid for server side only) and
-* close exit fd.
+* Send exit information to client.
 *
-* @param self	connection object
+* An exit status (integer) and exit string are sent over exit_fd to
+* the client. The exit_fd is then closed. This operation is valid
+* for the server side only.
+*
+* Note: the other (non-exit_fd) fds are not affected.
+*
+* @param self		connection object
 * @param exit_status	exit status
 * @param exit_string	optional exit string
-* @return	0 on success; -1 on failure
+* @return		0 on success; -1 on failure
 */
 int
 russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
@@ -303,14 +316,21 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 }
 
 /**
-* Wait for exit status on connection (valid for client side only).
-* Closes exit fd if exit status received.
+* Wait for exit information.
 *
-* @param self	connection object
-* @param exit_status	exit status
-* @param exit_string	exit string
+* Wait on the exit_fd for the exit status (integer) and exit string.
+* This operation is valid for the client side only. The exit_fd is
+* closed once the information is received.
+*
+* Note: the other (non-exit_fd) fds are not affected.
+*
+* @param self		connection object
+* @param exit_status[out]
+*			exit status
+* @param exit_string[out]
+*			exit string
 * @param timeout	timeout/deadline to wait
-* @return		integer exit_status
+* @return		integer exit_status; -1 if exit_fd is closed
 */
 int
 russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, russ_timeout timeout) {
@@ -359,8 +379,8 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 /**
 * Free connection object.
 *
-* @param self	connection object
-* @return	NULL value
+* @param self		connection object
+* @return		NULL value
 */
 struct russ_conn *
 russ_conn_free(struct russ_conn *self) {
@@ -370,11 +390,13 @@ russ_conn_free(struct russ_conn *self) {
 }
 
 /**
-* Send request over connection.
+* Send request.
 *
-* @param self	connection object
+* Request information is encoded and sent over the connection.
+*
+* @param self		connection object
 * @param timeout	time in which to complete the send
-* @return	0 on success; -1 on error
+* @return		0 on success; -1 on error
 */
 int
 russ_conn_send_request(struct russ_conn *self, russ_timeout timeout) {
@@ -405,12 +427,15 @@ russ_conn_send_request(struct russ_conn *self, russ_timeout timeout) {
 /**
 * Dial service.
 *
+* Connect to a service, send request information, and get fds.
+* Received fds are saved to the connection object.
+*
 * @param timeout	time allowed to complete operation
-* @param op	operation string
-* @param addr	full service address
-* @param attrv	NULL-terminated array of attributes ("name=value" strings)
-* @param argv	NULL-terminated array of arguments
-* @return	connection object; NULL on failure
+* @param op		operation string
+* @param addr		full service address
+* @param attrv		NULL-terminated array of attributes ("name=value" strings)
+* @param argv		NULL-terminated array of arguments
+* @return		connection object; NULL on failure
 */
 struct russ_conn *
 russ_dialv(russ_timeout timeout, char *op, char *addr, char **attrv, char **argv) {
@@ -450,12 +475,14 @@ free_targ:
 /**
 * Dial service using variable argument list.
 *
+* See dialv() for more.
+*
 * @param timeout	time allowed to complete operation
-* @param op	operation string
-* @param addr	full service address
-* @param attrv	array of attributes (as name=value strings)
-* @param ...	variable argument list of "char *" with NULL sentinel
-* @return	connection object; NULL on failure
+* @param op		operation string
+* @param addr		full service address
+* @param attrv		array of attributes (as name=value strings)
+* @param ...		variable argument list of "char *" with NULL sentinel
+* @return		connection object, NULL on failure
 */
 struct russ_conn *
 russ_diall(russ_timeout timeout, char *op, char *addr, char **attrv, ...) {
