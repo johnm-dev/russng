@@ -21,4 +21,4 @@ install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
 	:
 	(mkdir -p $(INSTALL_DIR))
-	(cd static; tar cf - bin lib) | (cd $(INSTALL_DIR); tar xvf -)
+	(cd static; tar cf - usr/bin usr/lib) | (cd $(INSTALL_DIR); tar xvf -)
