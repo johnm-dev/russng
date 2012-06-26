@@ -17,7 +17,7 @@ install:
 	mkdir -p $(INSTALL_DIR)/usr/lib
 	(cp libruss.a $(INSTALL_DIR)/usr/lib)
 	@if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
-		(cp libruss.so $(INSTALL_DIR)/lib); \
+		(cp libruss.so $(INSTALL_DIR)/usr/lib); \
 	fi
 
 libruss.a: $(SRCS)
