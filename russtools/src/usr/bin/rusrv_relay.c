@@ -279,6 +279,7 @@ _dial_for_ssl_key(struct russ_conn *conn, char *new_spath, char *section_name, c
 int
 svc_debug_handler(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[1], "n/a\n");
+	russ_conn_exit(conn, 0);
 	return 0;
 }
 
@@ -291,6 +292,7 @@ svc_debug_handler(struct russ_conn *conn) {
 int
 svc_error_handler(struct russ_conn *conn, char *msg) {
 	russ_dprintf(conn->fds[2], msg);
+	russ_conn_exit(conn, -1);
 	return 0;
 }
 
@@ -308,7 +310,8 @@ svc_dial_handler(struct russ_conn *conn) {
 	req = &(conn->req);
 	if (strcmp(req->op, "list") == 0) {
 		if ((section_names = configparser_sections(config)) == NULL) {
-			exit(-1);
+			russ_conn_exit(conn, -1);
+			return -1;
 		}
 		for (p = section_names; *p != NULL; p++) {
 			if (strncmp(*p, "cluster.", 8) == 0) {
@@ -317,6 +320,7 @@ svc_dial_handler(struct russ_conn *conn) {
 		}
 		configparser_sarray0_free(section_names);
 	}
+	russ_conn_exit(conn, 0);
 	return 0;
 }
 
@@ -356,12 +360,15 @@ svc_dial_cluster_host_handler(struct russ_conn *conn) {
 	} else if (strcmp(method, "ssl-key") == 0) {
 		exit_status = _dial_for_ssl_key(conn, new_spath, section_name, cluster_name, hostname);
 	}
+	russ_conn_exit(conn, exit_status);
+	return 0;
 
 free_vars:
 	free(method);
 	free(cluster_name);
 	free(hostname);
-	return exit_status;
+	russ_conn_exit(conn, -1);
+	return -1;
 }
 
 /**
@@ -399,7 +406,7 @@ printf("op (%s) spath (%s)\n", req->op, req->spath);
 	} else {
 		rv = svc_error_handler(conn, "error: unsupported operation\n");
 	}
-	return rv;
+	return 0;
 }
 
 void

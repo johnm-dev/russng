@@ -248,7 +248,7 @@ master_handler(struct russ_conn *conn) {
 	} else {
 		rv = _error_handler(conn, "error: unsupported operation\n");
 	}
-	russ_conn_exit(conn, rv, "");
+	russ_conn_exit(conn, rv);
 	return 0;
 }
 
