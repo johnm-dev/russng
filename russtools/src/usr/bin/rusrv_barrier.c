@@ -254,7 +254,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 	barrier = backend_new_barrier(saddr, count, timeout);
 	if ((lis = russ_announce(saddr, mode, uid, gid)) == NULL) {
 		russ_dprintf(ferrfd, "error: cannot announce service\n");
-		russ_conn_exit(fconn, -1, NULL);
+		russ_conn_exit(fconn, -1);
 		return -1;
 	}
 
@@ -391,7 +391,7 @@ svc_new_handler(struct russ_conn *conn) {
 
 error_bad_args:
 	russ_dprintf(errfd, "error: bad/missing arguments\n");
-	russ_conn_exit(conn, -1, NULL);
+	russ_conn_exit(conn, -1);
 	return -1;
 }
 
@@ -423,22 +423,22 @@ svc_req_handler(struct russ_conn *conn) {
 
 			gethostname(hostname, sizeof(hostname));
 			russ_dprintf(outfd, "%s-%012d-%04ld", hostname, 0, get_random() % 10000);
-			russ_conn_exit(conn, 0, NULL);
+			russ_conn_exit(conn, 0);
 		} else if (strcmp(req->spath, "/new") == 0) {
 			svc_new_handler(conn);
 		} else {
 			russ_dprintf(errfd, "error: unknown service\n");
-			russ_conn_exit(conn, -1, NULL);
+			russ_conn_exit(conn, -1);
 		}
 	} else if (strcmp(req->op, "help") == 0) {
 		russ_dprintf(outfd, "%s", FRONTEND_HELP);
-		russ_conn_exit(conn, 0, NULL);
+		russ_conn_exit(conn, 0);
 	} else if (strcmp(req->op, "list") == 0) {
 		russ_dprintf(outfd, "/generate\n/new\n");
-		russ_conn_exit(conn, 0, NULL);
+		russ_conn_exit(conn, 0);
 	} else {
 		russ_dprintf(errfd, "error: unsupported operation\n");
-		russ_conn_exit(conn, -1, NULL);
+		russ_conn_exit(conn, -1);
 	}
 }
 

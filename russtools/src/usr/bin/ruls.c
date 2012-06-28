@@ -115,7 +115,9 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: could not forward bytes\n");
 		exit(-1);
 	}
-	russ_conn_wait(conn, &exit_status, NULL, -1);
+	if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+		exit_status = -127;
+	}
 	russ_forwarder_join(&(fwds[1]));
 
 	russ_conn_close(conn);
