@@ -38,8 +38,8 @@ rudial2:	rudial2.c
 ruls:	ruls.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
-rusrv_barrier:	rusrv_barrier.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+rusrv_barrier:	rusrv_barrier.c configparser.c
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_debug:	rusrv_debug.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
