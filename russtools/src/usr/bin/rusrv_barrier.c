@@ -1,5 +1,9 @@
 /*
-** bin/rusrv_barrier.c
+* bin/rusrv_barrier.c
+*
+* This file contains backend and frontend sections. The frontend
+* handles requests to create a barrier, but the actual barrier
+* service is handled by the backend.
 */
 
 /*
@@ -39,10 +43,12 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#include "configparser.h"
 #include "russ.h"
 
 #define MAX( a,b ) (((a) > (b)) ? (a) : (b))
 
+/* structs */
 struct barrier_item {
 	struct russ_conn	*conn;
 	char			*tag;
@@ -57,7 +63,34 @@ struct barrier {
 	int			nitems;
 };
 
+/* globals */
+struct configparser	*config;
 struct barrier	*barrier;
+
+/*
+* backend
+*/
+
+char *BACKEND_HELP =
+"Barrier service instance.\n"
+"\n"
+"/count\n"
+"    Print number of waiters expected.\n"
+"\n"
+"/kill\n"
+"    Kill barrier and release all waiters.\n"
+"\n"
+"/tags\n"
+"    Print tags of waiters.\n"
+"\n"
+"/ttl\n"
+"    Print time-to-live remaining.\n"
+"\n"
+"/wait [<tag>]\n"
+"    Wait on barrier; register optional tag.\n"
+"\n"
+"/wcount\n"
+"    Print # of waiters currently waiting.\n";
 
 /**
 * Create barrier object.
@@ -68,7 +101,7 @@ struct barrier	*barrier;
 * @return		barrier object or NULL
 */
 struct barrier *
-new_barrier(char *saddr, int count, time_t timeout) {
+backend_new_barrier(char *saddr, int count, time_t timeout) {
 	struct barrier	*barr;
 
 	if ((barr = malloc(sizeof(struct barrier))) == NULL) {
@@ -100,7 +133,7 @@ free_barr:
 * @param conn	connection object
 */
 void
-release_barrier(char ch) {
+backend_release_barrier(char ch) {
 	struct russ_conn	*conn;
 	int			fd, i;
 
@@ -118,52 +151,47 @@ release_barrier(char ch) {
 }
 
 void
-print_service_usage(struct russ_conn *conn) {
-	russ_dprintf(conn->fds[2],
-"Barrier service.\n"
-"\n"
-"/count         print # of waiters expected\n"
-"/kill          kill barrier and release all waiters\n"
-"/tags          print tags of waiters\n"
-"/ttl           print time-to-live remaining\n"
-"/wait [<tag>]  wait on barrier; register optional tag\n"
-"/wcount        print # of waiters currently waiting\n"
-);
+backend_add_waiter(struct russ_conn *conn) {
+	char	buf[2048];
+
+	if ((conn->req.argv) && (conn->req.argv[0] != NULL)) {
+		barrier->items[barrier->nitems].tag = strdup(conn->req.argv[0]);
+	} else {
+		/* use pid as tag, if available */
+		snprintf(buf, sizeof(buf), "%ld", conn->cred.pid);
+		barrier->items[barrier->nitems].tag = strdup(buf);
+	}
+	barrier->items[barrier->nitems++].conn = conn;
 }
 
 /**
-* Request handler.
+* Backend request handler.
+*
+* Handle each service of which the /wait service is unique because
+* it does not release the connection(s), except when the desired
+* number of waiters is reached. An 'r' is sent to outfd on normal
+* release, 'k' on kill, and 't' (in backend_loop()) on timeout.
+* In all cases, the connection exit value is 0.
 *
 * @param conn	connection object
 * @return	0 on success, -1 on error
 */
 int
-req_handler(struct russ_conn *conn) {
-	char	buf[2048];
+backend_svc_req_handler(struct russ_conn *conn) {
 	time_t	due_time;
-	int	outfd;
+	int	errfd, outfd;
 	int	i;
 
+	errfd = conn->fds[2];
 	outfd = conn->fds[1];
 	if (strcmp(conn->req.op, "execute") == 0) {
 		if (strcmp(conn->req.spath, "/wait") == 0) {
-			if ((conn->req.argv) && (conn->req.argv[0] != NULL)) {
-				barrier->items[barrier->nitems].tag = strdup(conn->req.argv[0]);
-			} else {
-				/* use pid as tag, if available */
-				snprintf(buf, sizeof(buf), "%ld", conn->cred.pid);
-				barrier->items[barrier->nitems].tag = strdup(buf);
-			}
-			barrier->items[barrier->nitems++].conn = conn;
-			//close(conn->fds[0]);
-			//conn->fds[0] = -1;
-			close(conn->fds[2]);
-			conn->fds[2] = -1;
-
+			backend_add_waiter(conn);
+			//russ_close_fds(&conn->fds[0], 1);
+			//russ_close_fds(&conn->fds[2], 1);
 			if (barrier->nitems == barrier->count) {
-				release_barrier('r');
-				//cleanup_exit(0);
-				exit(0);
+				backend_release_barrier('r');
+				goto cleanup_and_exit;
 			}
 		} else {
 			if (strcmp(conn->req.spath, "/count") == 0) {
@@ -171,8 +199,8 @@ req_handler(struct russ_conn *conn) {
 			} else if (strcmp(conn->req.spath, "/wcount") == 0) {
 				russ_dprintf(outfd, "%d\n", barrier->nitems);
 			} else if (strcmp(conn->req.spath, "/kill") == 0) {
-				release_barrier('k');
-				exit(0);
+				backend_release_barrier('k');
+				goto cleanup_and_exit;
 			} else if (strcmp(conn->req.spath, "/tags") == 0) {
 				for (i = 0; i < barrier->nitems; i++) {
 					russ_dprintf(outfd, "%s\n", barrier->items[i].tag);
@@ -184,18 +212,18 @@ req_handler(struct russ_conn *conn) {
 					russ_dprintf(outfd, "%d\n", barrier->due_time-time(NULL));
 				}
 			} else {
-				russ_dprintf(conn->fds[2], "error: unknown service\n");
+				russ_dprintf(errfd, "error: unknown service\n");
 			}
 			goto close_conn;
 		}
 	} else if (strcmp(conn->req.op, "help") == 0) {
-		print_service_usage(conn);
+		russ_dprintf(outfd, "%s", BACKEND_HELP);
 		goto close_conn;
 	} else if (strcmp(conn->req.op, "list") == 0) {
-		russ_dprintf(conn->fds[1], "/count\n/kill\n/tags\n/ttl\n/wait\n/wcount\n");
+		russ_dprintf(outfd, "/count\n/kill\n/tags\n/ttl\n/wait\n/wcount\n");
 		goto close_conn;
 	} else {
-		russ_dprintf(conn->fds[2], "error: unknown operation\n");
+		russ_dprintf(errfd, "error: unknown operation\n");
 		goto close_conn;
 	}
 	return 0;
@@ -203,102 +231,35 @@ req_handler(struct russ_conn *conn) {
 close_conn:
 	russ_conn_close(conn);
 	return -1;
-}
 
-void
-print_usage(char **argv) {
-	char	*prog_name;
-
-	prog_name = basename(argv[0]);
-	fprintf(stderr,
-"usage: %s [<options>] <saddr> <count>\n"
-"\n"
-"Russ-based sync worker. Should be started by sync master.\n"
-"\n"
-"Where:\n"
-"<saddr>		service address (file path)\n"
-"<count>		# of waiters to wait for\n"
-"\n"
-"Options:\n"
-"-m <mode>	file mode of service file (octal); default is 0666\n"
-"-g <gid>	group id of service file; default is creator\n"
-"-u <uid>	user id of service file; default is creator\n"
-"-t <timeout>	maximum # of seconds to wait\n"
-"--me		count this connection as a waiter\n",
-		prog_name);
+cleanup_and_exit:
+	//remove(conn->saddr);
+	exit(0);
 }
 
 int
-main(int argc, char **argv) {
+backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t gid, int count, time_t timeout) {
 	struct russ_listener	*lis;
-	struct russ_conn	*conn;
+	struct russ_conn	*bconn;
 	struct russ_request	*req;
 	struct pollfd		poll_fds[1];
-	char			*saddr;
-	mode_t			mode;
-	uid_t			uid;
-	gid_t			gid;
-	int			count;
-	time_t			timeout;
 	int			poll_timeout;
-	char			*arg;
-	int			argi;
-	int			me;
 	int			rv;
+	int			ferrfd, foutfd;
 
-	signal(SIGCHLD, SIG_IGN);
-
-	/* parse command line */
-	me = 0;
-	mode = 0666;
-	uid = getuid();
-	gid = getgid();
-	timeout = -1;
-	argi = 1;
-	while (argi < argc) {
-		arg = argv[argi++];
-		if ((strcmp(arg, "-h") == 0) || (strcmp(arg, "--help") == 0)) {
-			print_usage(argv);
-			exit(0);
-		} else if ((strcmp(arg, "-g") == 0) && (argi < argc)) {
-			arg = argv[argi++];
-			if (sscanf(arg, "%d", (int *)&gid) < 0) {
-				goto error_bad_arg;
-			}
-		} else if ((strcmp(arg, "-m") == 0) && (argi < argc)) {
-			arg = argv[argi++];
-			if (sscanf(arg, "%od", (int *)&gid) < 0) {
-				goto error_bad_arg;
-			}
-		} else if ((strcmp(arg, "-t") == 0) && (argi < argc)) {
-			arg = argv[argi++];
-			if (sscanf(arg, "%d", (int *)&timeout) < 0) {
-				goto error_bad_arg;
-			}
-		} else if ((strcmp(arg, "-u") == 0) && (argi < argc)) {
-			arg = argv[argi++];
-			if (sscanf(arg, "%d", (int *)&uid) < 0) {
-				goto error_bad_arg;
-			}
-		} else if (strcmp(arg, "--me") == 0) {
-			me = 1;
-		} else {
-			argi--;
-			break;
-		}
-	}
-	if ((argc-argi != 2)
-		|| ((saddr = strdup(argv[argi])) == NULL)
-		|| (sscanf(argv[argi+1], "%d", (int *)&count) < 0)) {
-		goto error_bad_arg;
-	}
-
-	/* set up barrier; announce service */
-	barrier = new_barrier(saddr, count, timeout);
+	ferrfd = fconn->fds[2];
+	foutfd = fconn->fds[1];
+	
+	/* set up backend barrier; announce service */
+	barrier = backend_new_barrier(saddr, count, timeout);
 	if ((lis = russ_announce(saddr, mode, uid, gid)) == NULL) {
-		fprintf(stderr, "error: cannot announce service\n");
-		exit(-1);
+		russ_dprintf(ferrfd, "error: cannot announce service\n");
+		russ_conn_exit(fconn, -1, NULL);
+		return -1;
 	}
+
+	/* add initial connection */
+	backend_add_waiter(fconn);
 
 	/* listen for and process requests */
 	poll_fds[0].fd = lis->sd;
@@ -312,31 +273,214 @@ main(int argc, char **argv) {
 		}
 		rv = poll(poll_fds, 1, poll_timeout);
 		if (rv == 0) {
-			break;
+			backend_release_barrier('t');
+			goto cleanup_and_exit;
 		} else if (rv < 0) {
 			if (errno != EINTR) {
-				exit(-1);
+				backend_release_barrier('e');
+				goto cleanup_and_exit;
 			};
 		} else {
 			if (poll_fds[0].revents && POLLIN) {
-				if ((conn = russ_listener_answer(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
+				if ((bconn = russ_listener_answer(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
 					continue;
 				}
-				if ((russ_conn_await_request(conn) < 0)
-					|| (russ_conn_accept(conn, NULL, NULL) < 0)) {
-					russ_conn_close(conn);
-					conn = russ_conn_free(conn);
+				if ((russ_conn_await_request(bconn) < 0)
+					|| (russ_conn_accept(bconn, NULL, NULL) < 0)) {
+					russ_conn_close(bconn);
+					bconn = russ_conn_free(bconn);
 					continue;
 				}
-				req_handler(conn);
+				backend_svc_req_handler(bconn); /* exits if count reached */
 			}
 		}
 	}
-	release_barrier('t');
-	exit(0);
+	backend_release_barrier('r');
 
-error_bad_arg:
-	fprintf(stderr, "error: bad argument(s)\n");
-	exit(-1);
-	
+cleanup_and_exit:
+	remove(saddr);
+	exit(0);
+}
+
+/*
+* frontend
+*/
+
+char *FRONTEND_HELP =
+"Barrier service creator.\n"
+"\n"
+"Once the barrier is actually created, different services are\n"
+"effective.\n"
+"\n"
+"/generate [<name>]\n"
+"    Generate a unique saddr to provide to the barrier service\n"
+"    (see /new). An optional name can be used to generate a\n"
+"    predetermined rendez-vous point (warning: this should be\n"
+"    well chosen to avoid naming conflicts).\n"
+"\n"
+"/new <saddr> <count> [-m <mode>] [-u <uid>] [-g <gid>] [-t <timeout>]\n"
+"    Create a barrier at <saddr> with a liftime of <timeout>.\n"
+"    By default, the barrier is accessible only to the creator.\n"
+"    This can be overridden for the file mode, and with\n"
+"    sufficient privileges, the ownership can also be set.\n";
+
+/**
+* Start new barrier backend instance.
+*
+* @param conn		connection object
+* @return		0 for success; -1 for failure
+*/
+int
+svc_new_handler(struct russ_conn *conn) {
+	char	**argv, *arg;
+	long	mode, uid, gid;
+	long	timeout;
+	char	*saddr;
+	int	count;
+	int	errfd, outfd;
+	int	argi;
+
+	errfd = conn->fds[2];
+	outfd = conn->fds[1];
+
+	mode = 0600;
+	uid = conn->cred.uid;
+	gid = conn->cred.gid;
+	count = 0;
+	timeout = 600;
+
+	/* parse args */
+	argv = conn->req.argv;
+	if ((argv == NULL) || (argv[0] == NULL) || (argv[1] == NULL)) {
+		goto error_bad_args;
+	} else {
+		saddr = argv[0];
+		if (sscanf(argv[1], "%d", &count) < 0) {
+			goto error_bad_args;
+		}
+	}
+
+	for (argi = 2; argv[argi] != NULL; argi++) {
+		arg = argv[argi++];
+
+		if ((strcmp(arg, "-g") == 0)
+			&& (getuid() == 0)
+			&& (argv[argi] != NULL)
+			&& (sscanf(argv[argi], "%ld", &gid) >= 0)) {
+			argi++;
+		} else if ((strcmp(arg, "-m") == 0)
+			&& (argv[argi] != NULL)
+			&& (sscanf(argv[argi], "%ld", &mode) >= 0)) {
+			argi++;
+		} else if ((strcmp(arg, "-t") == 0)
+			&& (argv[argi] != NULL)
+			&& (sscanf(argv[argi], "%ld", &timeout) >= 0)) {
+			argi++;
+		} else if ((strcmp(arg, "-u") == 0)
+			&& (getuid() == 0)
+			&& (argv[argi] != NULL)
+			&& (sscanf(argv[argi], "%ld", &uid) >= 0)) {
+			argi++;
+		} else {
+			goto error_bad_args;
+		}
+	}
+
+	backend_loop(conn, saddr, mode, uid, gid, count, timeout);
+	return 0;
+
+error_bad_args:
+	russ_dprintf(errfd, "error: bad/missing arguments\n");
+	russ_conn_exit(conn, -1, NULL);
+	return -1;
+}
+
+unsigned long
+get_random(void) {
+	int		f;
+	unsigned long	v;
+
+	f = open("/dev/urandom", O_RDONLY);
+	read(f, &v, sizeof(v));
+	close(f);
+	return v;
+}
+/**
+* Request handler.
+*/
+int
+svc_req_handler(struct russ_conn *conn) {
+	struct russ_request	*req;
+	int			errfd, outfd;
+
+	req = &conn->req;
+	errfd = conn->fds[2];
+	outfd = conn->fds[1];
+
+	if (strcmp(req->op, "execute") == 0) {
+		if (strcmp(req->spath, "/generate") == 0) {
+			char	hostname[1024];
+
+			gethostname(hostname, sizeof(hostname));
+			russ_dprintf(outfd, "%s-%012d-%04ld", hostname, 0, get_random() % 10000);
+			russ_conn_exit(conn, 0, NULL);
+		} else if (strcmp(req->spath, "/new") == 0) {
+			svc_new_handler(conn);
+		} else {
+			russ_dprintf(errfd, "error: unknown service\n");
+			russ_conn_exit(conn, -1, NULL);
+		}
+	} else if (strcmp(req->op, "help") == 0) {
+		russ_dprintf(outfd, "%s", FRONTEND_HELP);
+		russ_conn_exit(conn, 0, NULL);
+	} else if (strcmp(req->op, "list") == 0) {
+		russ_dprintf(outfd, "/generate\n/new\n");
+		russ_conn_exit(conn, 0, NULL);
+	} else {
+		russ_dprintf(errfd, "error: unsupported operation\n");
+		russ_conn_exit(conn, -1, NULL);
+	}
+}
+
+void
+print_usage(char **argv) {
+	char	*prog_name;
+
+	prog_name = basename(argv[0]);
+	fprintf(stderr,
+"usage: %s <config_filename>\n"
+"\n"
+"Front-end barrier service. Instantiates backend barrier service.\n",
+		prog_name);
+}
+
+int
+main(int argc, char **argv) {
+	struct russ_listener	*lis;
+	char			*filename, *saddr;
+	int			mode, uid, gid;
+
+	signal(SIGCHLD, SIG_IGN);
+
+	/* parse command line */
+	if (argc != 2) {
+		print_usage(argv);
+		exit(-1);
+	}
+
+	filename = argv[1];
+	if ((config = configparser_read(filename)) == NULL) {
+		fprintf(stderr, "error: could not read config file\n");
+		exit(-1);
+	}
+
+	mode = configparser_getsint(config, "server", "mode", 0600);
+	uid = configparser_getint(config, "server", "uid", getuid());
+	gid = configparser_getint(config, "server", "gid", getgid());
+	saddr = configparser_get(config, "server", "path", NULL);
+	if ((lis = russ_announce(saddr, mode, uid, gid)) == NULL) {
+		fprintf(stderr, "error: cannot announce service\n");
+		exit(-1);
+	}
+	russ_listener_loop(lis, svc_req_handler);
 }
