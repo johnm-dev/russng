@@ -130,9 +130,9 @@ int russ_conn_accept(struct russ_conn *, int *, int *);
 int russ_conn_await_request(struct russ_conn *);
 void russ_conn_close(struct russ_conn *);
 void russ_conn_close_fd(struct russ_conn *, int);
-int russ_conn_exit(struct russ_conn *, int, char *);
+int russ_conn_exit(struct russ_conn *, int);
 struct russ_conn *russ_conn_free(struct russ_conn *);
-int russ_conn_wait(struct russ_conn *, int *, char **, russ_timeout);
+int russ_conn_wait(struct russ_conn *, int *, russ_timeout);
 
 struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);

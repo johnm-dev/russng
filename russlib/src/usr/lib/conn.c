@@ -287,19 +287,16 @@ russ_conn_close(struct russ_conn *self) {
 *
 * @param self		connection object
 * @param exit_status	exit status
-* @param exit_string	optional exit string
 * @return		0 on success; -1 on failure
 */
 int
-russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
+russ_conn_exit(struct russ_conn *self, int exit_status) {
 	char	buf[1024];
+	char	*exit_string = "";
 	char	*bp, *bend;
 
 	if (self->exit_fd < 0) {
 		return -1;
-	}
-	if (exit_string == NULL) {
-		exit_string = "";
 	}
 	bp = buf;
 	bend = bp+sizeof(buf);
@@ -325,23 +322,22 @@ russ_conn_exit(struct russ_conn *self, int exit_status, char *exit_string) {
 * Note: the other (non-exit_fd) fds are not affected.
 *
 * @param self		connection object
-* @param exit_status[out]
-*			exit status
-* @param exit_string[out]
-*			exit string
+* @param[out] exit_status
+			exit status
 * @param timeout	timeout/deadline to wait
-* @return		integer exit_status; -1 if exit_fd is closed
+* @return		0 on success; on -1 general failure; -2 on exit_fd closed; -3 on timeout expired
 */
 int
-russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, russ_timeout timeout) {
+russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
 	struct pollfd	poll_fds[1];
 	char		buf[1024];
 	int		poll_timeout;
 	int		rv, _exit_status;
 
 	if (self->exit_fd < 0) {
-		return -1;
+		return -2;
 	}
+
 	poll_fds[0].fd = self->exit_fd;
 	poll_fds[0].events = POLLIN;
 	poll_timeout = (int)timeout;
@@ -349,7 +345,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 		rv = poll(poll_fds, 1, poll_timeout);
 		if (rv == 0) {
 			/* timeout */
-			return -1;
+			return -3;
 		} else if (rv < 0) {
 			if (errno != EINTR) {
 				return -1;
@@ -365,9 +361,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, char **exit_string, rus
 				if (exit_status != NULL) {
 					*exit_status = _exit_status;
 				}
-				if (exit_string != NULL) {
-					*exit_string = NULL;
-				}
+				/* TODO: exit_string is ignored */
 				break;
 			}
 		}
