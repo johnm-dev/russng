@@ -159,21 +159,25 @@ op_execute(struct russ_conn *conn) {
 
 	/* on error */
 	russ_dprintf(conn->fds[2], "error: could not execute program\n");
+	russ_conn_exit(conn, -1);
 	return -1;
 }
 
 int
 op_help(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[1], "%s", HELP);
+	russ_conn_exit(conn, 0);
 	return 0;
 }
 
 int
 op_list(struct russ_conn *conn) {
-	if (strcmp(conn->req.spath, "") == 0) {
+	if (strcmp(conn->req.spath, "/") == 0) {
 		russ_dprintf(conn->fds[1], "job\nlogin\nshell\nsimple\n");
+		russ_conn_exit(conn, 0);
 	} else {
 		russ_dprintf(conn->fds[2], "error: no service available\n");
+		russ_conn_exit(conn, -1);
 	}
 	return 0;
 }
@@ -199,6 +203,7 @@ master_handler(struct russ_conn *conn) {
 		return op_execute(conn);
 	} else {
 		russ_dprintf(conn->fds[2], "error: no service available\n");
+		russ_conn_exit(conn, -1);
 	}
 	return 0;
 }
