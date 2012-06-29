@@ -220,7 +220,11 @@ backend_svc_req_handler(struct russ_conn *conn) {
 		russ_dprintf(outfd, "%s", BACKEND_HELP);
 		goto close_conn;
 	} else if (strcmp(conn->req.op, "list") == 0) {
-		russ_dprintf(outfd, "/count\n/kill\n/tags\n/ttl\n/wait\n/wcount\n");
+		if (strcmp(conn->req.spath, "/") == 0) {
+			russ_dprintf(outfd, "/count\n/kill\n/tags\n/ttl\n/wait\n/wcount\n");
+		} else {
+			russ_dprintf(errfd, "error: unknown service\n");
+		}
 		goto close_conn;
 	} else {
 		russ_dprintf(errfd, "error: unknown operation\n");
