@@ -173,7 +173,7 @@ op_help(struct russ_conn *conn) {
 int
 op_list(struct russ_conn *conn) {
 	if (strcmp(conn->req.spath, "/") == 0) {
-		russ_dprintf(conn->fds[1], "job\nlogin\nshell\nsimple\n");
+		russ_dprintf(conn->fds[1], "/job\n/login\n/shell\n/simple\n");
 		russ_conn_exit(conn, 0);
 	} else {
 		russ_dprintf(conn->fds[2], "error: no service available\n");
