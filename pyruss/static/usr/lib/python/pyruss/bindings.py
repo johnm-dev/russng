@@ -106,7 +106,6 @@ libruss.russ_conn_close.restype = None
 libruss.russ_conn_exit.argtypes = [
     ctypes.c_void_p,
     ctypes.c_int,
-    ctypes.c_char_p,
 ]
 libruss.russ_conn_exit.restype = ctypes.c_int
 
