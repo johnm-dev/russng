@@ -157,6 +157,9 @@ class ServiceTree:
 
     def handler(self, conn):
         """Select op handler and call.
+        
+        Calling conn.exit() is left to the service handler. All
+        connection fds are closed before returning.
         """
         req = conn.get_request()
         node = self.find(req.spath)
@@ -168,23 +171,25 @@ class ServiceTree:
         del conn
 
     def fallback_handler(self, conn):
+        """Default/fallback handlers.
+        
+        Only op == "list" has an implementation for which exit
+        status is 0, otherwise -1.
+        """
         req = conn.get_request()
         op = req.op
-        if op == "help":
-            os.write(conn.get_fd(2), "error: no service available\n")
-        elif op == "execute":
-            os.write(conn.get_fd(2), "error: no service available\n")
-        elif op == "info":
-            os.write(conn.get_fd(2), "error: no service available\n")
-        elif op == "list":
+        if op == "list":
             node = self.find(req.spath)
             if node:
                 if node.children:
                     os.write(conn.get_fd(1), "%s\n" % "\n".join(node.children))
+                conn.exit(0)
             else:
                 os.write(conn.get_fd(2), "error: no service available\n")
+                conn.exit(-1)
         else:
             os.write(conn.get_fd(2), "error: no service available\n")
+            conn.exit(-1)
 
 class Server:
     """Server to handle requests and service them.
