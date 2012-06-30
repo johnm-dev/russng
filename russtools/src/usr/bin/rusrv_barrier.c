@@ -165,7 +165,7 @@ backend_add_waiter(struct russ_conn *conn) {
 }
 
 /**
-* Backend request handler.
+* Main backend request handler.
 *
 * Handle each service of which the /wait service is unique because
 * it does not release the connection(s), except when the desired
@@ -174,10 +174,9 @@ backend_add_waiter(struct russ_conn *conn) {
 * In all cases, the connection exit value is 0.
 *
 * @param conn	connection object
-* @return	0 on success, -1 on error
 */
-int
-backend_svc_req_handler(struct russ_conn *conn) {
+void
+backend_svc_handler(struct russ_conn *conn) {
 	time_t	due_time;
 	int	errfd, outfd;
 	int	i;
@@ -295,7 +294,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 					bconn = russ_conn_free(bconn);
 					continue;
 				}
-				backend_svc_req_handler(bconn); /* exits if count reached */
+				backend_svc_handler(bconn); /* exits if count reached */
 			}
 		}
 	}
@@ -332,9 +331,8 @@ char *FRONTEND_HELP =
 * Start new barrier backend instance.
 *
 * @param conn		connection object
-* @return		0 for success; -1 for failure
 */
-int
+void
 svc_new_handler(struct russ_conn *conn) {
 	char	**argv, *arg;
 	long	mode, uid, gid;
@@ -410,10 +408,10 @@ get_random(void) {
 	return v;
 }
 /**
-* Request handler.
+* Main request handler.
 */
-int
-svc_req_handler(struct russ_conn *conn) {
+void
+svc_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 	int			errfd, outfd;
 
@@ -486,5 +484,5 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	russ_listener_loop(lis, svc_req_handler);
+	russ_listener_loop(lis, svc_handler);
 }
