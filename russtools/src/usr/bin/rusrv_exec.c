@@ -197,7 +197,7 @@ svc_handler(struct russ_conn *conn) {
 	} else if (strcmp(req->op, "execute") == 0) {
 		op_execute_handler(conn);
 	} else {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_SYS_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_SYS_FAILURE);
 	}
 }
 
