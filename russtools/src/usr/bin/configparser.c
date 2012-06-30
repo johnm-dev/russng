@@ -401,15 +401,19 @@ configparser_remove_section(struct configparser *self, char *section_name) {
 * @param self		configparser object
 * @param section_name	section name
 * @param option		option name
-* @param dvalue		default value
-* @return		copy of item value; copy of dvalue if not found
+* @param dvalue		default value or NULL
+* @return		copy of item value; copy of dvalue if not found or NULL
 */
 char *
 configparser_get(struct configparser *self, char *section_name, char *option, char *dvalue) {
 	struct configparser_item	*item;
 
 	if ((item = __configparser_get_item(self, section_name, option)) == NULL) {
-		return strdup(dvalue);
+		if (dvalue == NULL) {
+			return NULL;
+		} else {
+			return strdup(dvalue);
+		}
 	}
 	return item->value;
 }
