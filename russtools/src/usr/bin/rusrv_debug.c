@@ -71,7 +71,7 @@ char	*HELP =
 "    Outputs the request information at the server stdout.\n";
 
 void
-_chargen_handler(struct russ_conn *conn) {
+svc_chargen_handler(struct russ_conn *conn) {
 	char	buf[] = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
 	char	off;
 
@@ -87,14 +87,14 @@ _chargen_handler(struct russ_conn *conn) {
 }
 
 void
-_conn_handler(struct russ_conn *conn) {
+svc_conn_handler(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[1], "uid (%d)\ngid (%d)\npid (%d)\n",
 		conn->cred.uid, conn->cred.gid, conn->cred.pid);
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
 void
-_daytime_handler(struct russ_conn *conn) {
+svc_daytime_handler(struct russ_conn *conn) {
 	char		buf[1024];
 	time_t		now;
 	struct tm	*now_tm;
@@ -124,7 +124,7 @@ gettimeofday_float(void) {
 }
 
 void
-_discard_handler(struct russ_conn *conn) {
+svc_discard_handler(struct russ_conn *conn) {
 	struct timeval	tv;
 	double		t0, t1, last_t1;
 	char		*buf;
@@ -157,7 +157,7 @@ _discard_handler(struct russ_conn *conn) {
 }
 
 void
-_echo_handler(struct russ_conn *conn) {
+svc_echo_handler(struct russ_conn *conn) {
 	char	buf[1024];
 	ssize_t	n;
 
@@ -167,8 +167,8 @@ _echo_handler(struct russ_conn *conn) {
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
-int
-_env_handler(struct russ_conn *conn) {
+void
+svc_env_handler(struct russ_conn *conn) {
 	int	i;
 
 	for (i = 0; environ[i] != NULL; i++) {
@@ -177,8 +177,8 @@ _env_handler(struct russ_conn *conn) {
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
-int
-_request_handler(struct russ_conn *conn) {
+void
+svc_request_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 	int			fd;
 	int			i;
@@ -211,25 +211,25 @@ _request_handler(struct russ_conn *conn) {
 }
 
 void
-master_handler(struct russ_conn *conn) {
+svc_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 
 	req = &(conn->req);
 	if (strcmp(req->op, "execute") == 0) {
 		if (strcmp(req->spath, "/chargen") == 0) {
-			_chargen_handler(conn);
+			svc_chargen_handler(conn);
 		} else if (strcmp(req->spath, "/conn") == 0) {
-			_conn_handler(conn);
+			svc_conn_handler(conn);
 		} else if (strcmp(req->spath, "/daytime") == 0) {
-			_daytime_handler(conn);
+			svc_daytime_handler(conn);
 		} else if (strcmp(req->spath, "/discard") == 0) {
-			_discard_handler(conn);
+			svc_discard_handler(conn);
 		} else if (strcmp(req->spath, "/echo") == 0) {
-			_echo_handler(conn);
+			svc_echo_handler(conn);
 		} else if (strcmp(req->spath, "/env") == 0) {
-			_env_handler(conn);
+			svc_env_handler(conn);
 		} else if (strcmp(req->spath, "/request") == 0) {
-			_request_handler(conn);
+			svc_request_handler(conn);
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
@@ -274,5 +274,5 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	russ_listener_loop(lis, master_handler);
+	russ_listener_loop(lis, svc_handler);
 }
