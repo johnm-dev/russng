@@ -96,6 +96,8 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 	struct timeval	tv;
 	char		buf[1024];
 	int		nbytes;
+	int		ready_out, ready_err;
+	int		exit_status = RUSS_EXIT_SYS_FAILURE;
 
 	tv.tv_sec = 60;
 	tv.tv_usec = 0;
@@ -103,16 +105,18 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 	in_chans[0] = ssh_chan;
 	in_chans[1] = NULL;
 	maxfds = (conn->fds[0])+1;
+	ready_out = 1;
+	ready_err = 1;
 
-	while (!ssh_channel_is_eof(ssh_chan)) {
+	while (!ssh_channel_is_closed(ssh_chan)) {
 		do {
-			/* register conn stdin fd */
 			maxfds = 0;
+			FD_ZERO(&readfds);
 			if (conn->fds[0] >= 0) {
-				FD_ZERO(&readfds);
 				FD_SET(conn->fds[0], &readfds);
 				maxfds = (conn->fds[0])+1;
 			}
+
 			rv = ssh_select(in_chans, out_chans, maxfds, &readfds, &tv);
 		} while (rv == SSH_EINTR);
 
@@ -136,23 +140,34 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 		/* service ssh_chan */
 		if (out_chans[0]) {
 			/* ssh_chan stdout */
-			nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, sizeof(buf), 0);
-			if (nbytes > 0) {
-				write(conn->fds[1], buf, nbytes);
-			} else if (nbytes < 0) {
-				break;
+			if (ready_out) {
+				nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, sizeof(buf), 0);
+				if (nbytes > 0) {
+					write(conn->fds[1], buf, nbytes);
+				} else if (nbytes < 0) {
+					ready_out = 0;
+					//break;
+				}
 			}
 
 			/* ssh_chan stderr */
-			nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, sizeof(buf), 1);
-			if (nbytes > 0) {
-				write(conn->fds[2], buf, nbytes);
-			} else if (nbytes < 0) {
-				break;
+			if (ready_err) {
+				nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, sizeof(buf), 1);
+				if (nbytes > 0) {
+					write(conn->fds[2], buf, nbytes);
+				} else if (nbytes < 0) {
+					ready_err = 0;
+					//break;
+				}
+			}
+			if (!ready_out && !ready_err) {
+				out_chans[0] = NULL;
 			}
 		}
 	}
-	ssh_channel_close(ssh_chan);
+	//exit_status = ssh_channel_get_exit_status(ssh_chan);
+	//ssh_channel_close(ssh_chan);
+	//return exit_status;
 }
 
 /**
@@ -255,10 +270,11 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 		goto free_vars;
 	}
 
-	exit_status = forward_bytes_over_ssh(conn, ssh_chan);
+	forward_bytes_over_ssh(conn, ssh_chan);
 
 free_vars:
 	ssh_channel_close(ssh_chan);
+	exit_status = ssh_channel_get_exit_status(ssh_chan);
 	ssh_channel_free(ssh_chan);
 	ssh_disconnect(ssh_sess);
 	ssh_free(ssh_sess);

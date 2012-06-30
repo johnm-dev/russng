@@ -72,6 +72,7 @@ main(int argc, char **argv) {
 		exit_status = RUSS_EXIT_SYS_FAILURE;
 	}
 	russ_forwarder_join(&(fwds[1]));
+	russ_forwarder_join(&(fwds[2]));
 
 	russ_conn_close(conn);
 	conn = russ_conn_free(conn);
