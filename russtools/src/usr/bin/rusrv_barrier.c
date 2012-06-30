@@ -423,6 +423,14 @@ master_handler(struct russ_conn *conn) {
 	errfd = conn->fds[2];
 	outfd = conn->fds[1];
 
+	/* switch to user creds */
+
+	if ((chdir("/tmp") < 0)
+		|| (setgid(conn->cred.gid) < 0)
+		|| (setuid(conn->cred.uid) < 0)) {
+		russ_conn_fatal(conn, "error: cannot set credentials", RUSS_EXIT_FAILURE);
+	}
+
 	if (strcmp(req->op, "execute") == 0) {
 		if (strcmp(req->spath, "/generate") == 0) {
 			char	hostname[1024];
