@@ -192,7 +192,9 @@ russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 				|| (russ_conn_accept(conn, NULL, NULL) < 0)) {
 				exit(-1);
 			}
-			exit(handler(conn));
+			handler(conn);
+			russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+			exit(0);
 		}
 		russ_conn_close(conn);
 		conn = russ_conn_free(conn);
