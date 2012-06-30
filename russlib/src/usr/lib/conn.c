@@ -313,6 +313,28 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 }
 
 /**
+* Helper routine to write error message and exit status.
+*
+* An error message is sent to the connection error fd (with a
+* trailing newline) and the exit_status over the exit_fd. If the
+* exit_fd is already closed, then no message is written or exit
+* status sent.
+*
+* @param self		connection object
+* @param msg		message string (no newline)
+* @param exit_status	exit status
+* @return		0 on success; -1 on failure
+*/
+int
+russ_conn_fatal(struct russ_conn *self, char *msg, int exit_status) {
+	if (self->exit_fd) >= 0) {
+		russ_dprintf(conn->fds[2], "%s\n", msg);
+		return russ_conn_exit(exit_status);
+	}
+	return -1;
+}
+
+/**
 * Wait for exit information.
 *
 * Wait on the exit_fd for the exit status (integer) and exit string.
