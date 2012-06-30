@@ -119,7 +119,7 @@ struct pipe_fds {
 
 typedef int64_t	russ_timeout;
 
-typedef int (*russ_req_handler)(struct russ_conn *);
+typedef void (*russ_req_handler)(struct russ_conn *);
 
 /* addr.c */
 struct russ_target *russ_find_service_target(char *);
