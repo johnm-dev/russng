@@ -190,43 +190,51 @@ backend_master_handler(struct russ_conn *conn) {
 			//russ_close_fds(&conn->fds[2], 1);
 			if (barrier->nitems == barrier->count) {
 				backend_release_barrier('r');
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 				goto cleanup_and_exit;
 			}
 		} else {
 			if (strcmp(conn->req.spath, "/count") == 0) {
 				russ_dprintf(outfd, "%d\n", barrier->count);
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			} else if (strcmp(conn->req.spath, "/wcount") == 0) {
 				russ_dprintf(outfd, "%d\n", barrier->nitems);
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			} else if (strcmp(conn->req.spath, "/kill") == 0) {
 				backend_release_barrier('k');
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 				goto cleanup_and_exit;
 			} else if (strcmp(conn->req.spath, "/tags") == 0) {
 				for (i = 0; i < barrier->nitems; i++) {
 					russ_dprintf(outfd, "%s\n", barrier->items[i].tag);
 				}
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			} else if (strcmp(conn->req.spath, "/ttl") == 0) {
 				if (barrier->timeout == -1) {
 					russ_dprintf(outfd, "infinite\n");
 				} else {
 					russ_dprintf(outfd, "%d\n", barrier->due_time-time(NULL));
 				}
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			} else {
-				russ_dprintf(errfd, "error: unknown service\n");
+				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			}
 			goto close_conn;
 		}
 	} else if (strcmp(conn->req.op, "help") == 0) {
 		russ_dprintf(outfd, "%s", BACKEND_HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		goto close_conn;
 	} else if (strcmp(conn->req.op, "list") == 0) {
 		if (strcmp(conn->req.spath, "/") == 0) {
 			russ_dprintf(outfd, "/count\n/kill\n/tags\n/ttl\n/wait\n/wcount\n");
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else {
-			russ_dprintf(errfd, "error: unknown service\n");
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
 		goto close_conn;
 	} else {
-		russ_dprintf(errfd, "error: unknown operation\n");
+		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 		goto close_conn;
 	}
 
@@ -431,8 +439,12 @@ master_handler(struct russ_conn *conn) {
 		russ_dprintf(outfd, "%s", FRONTEND_HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
-		russ_dprintf(outfd, "/generate\n/new\n");
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		if (strcmp(req->spath, "/") == 0) {
+			russ_dprintf(outfd, "/generate\n/new\n");
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		} else {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		}
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
