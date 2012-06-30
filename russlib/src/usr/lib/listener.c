@@ -87,7 +87,7 @@ free_saddr:
 /**
 * Answer dial.
 *
-* @param lis		listener object
+* @param self		listener object
 * @param timeout	time allowed to complete operation
 * @return		connection object with credentials (not fully established); NULL on failure
 */
