@@ -72,7 +72,6 @@ char	*HELP =
 "    Outputs russ connection information.\n"
 "\n"
 "/dial/<cluster>/<hostname>/...\n"
-"\n"
 "    Dial service ... at <hostname> belonging to <cluster>.\n"
 "    Supported cluster names can be determined by 'ruls /dial'.\n"
 "    However, because hostnames belonging to a cluster are often\n"
@@ -398,7 +397,6 @@ master_handler(struct russ_conn *conn) {
 		if (strcmp(req->spath, "/") == 0) {
 			russ_dprintf(conn->fds[1], "/debug\n/dial\n");
 		} else if (strcmp(req->spath, "/dial") == 0) {
-printf("op (%s) spath (%s)\n", req->op, req->spath);
 			svc_dial_handler(conn);
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
