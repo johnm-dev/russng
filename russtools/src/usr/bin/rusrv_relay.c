@@ -60,6 +60,26 @@
 /* global */
 struct configparser	*config;
 
+char	*HELP = 
+"Relays requests between hosts.\n"
+"\n"
+"Hosts are organized under a locally defined cluster name so that\n"
+"dialing a service on another host requires an address like\n"
+"+relay/net/myhost.com/debug (assuming +relay is the local\n"
+"service address for the relay itself.\n
+"\n"
+"/debug\n"
+"    Outputs russ connection information.\n"
+"\n"
+"/dial/<cluster>/<hostname>/...\n"
+"\n"
+"    Dial service ... at <hostname> belonging to <cluster>.\n"
+"    Supported cluster names can be determined by 'ruls /dial'.\n"
+"    However, because hostnames belonging to a cluster are often\n"
+"    matched, there is usually no canonical list of hosts that\n"
+"    comprise a cluster. Nevertheless, doing a\n"
+"    'ruls /dial/<cluster>' may return a list in some cases.\n";
+
 /**
 * Forward bytes between connection and ssh chan.
 *
