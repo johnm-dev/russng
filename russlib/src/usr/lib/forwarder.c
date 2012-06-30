@@ -123,7 +123,7 @@ _forward_bytes(void *_fwd) {
 * The forwarder struct holds settings used to carry out the
 * forwarding operation.
 *
-* @param fwd		forwarder object
+* @param self		forwarder object
 * @param in_fd		for in_fd member
 * @param out_fd		for out_fd member
 * @param count		for count member
