@@ -47,17 +47,17 @@ main(int argc, char **argv) {
 		|| ((bp = russ_dec_I(bp, &size)) == NULL)
 		|| (size > 16384)
 		|| (read(0, bp, size) < 0)) {
-		exit(-127);
+		exit(RUSS_EXIT_SYS_FAILURE);
 	}
 	/* op, addr */
 	if (((bp = russ_dec_s(bp, &op)) == NULL)
 		|| ((bp = russ_dec_s(bp, &addr)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &attrs, &cnt)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &args, &cnt)) == NULL)) {
-		exit(-127);
+		exit(RUSS_EXIT_SYS_FAILURE);
 	}
 	if ((conn = russ_dialv(-1, op, addr, attrs, args)) == NULL) {
-		exit(-127);
+		exit(RUSS_EXIT_SYS_FAILURE);
 	}
 
 	/* start forwarder threads */
@@ -75,10 +75,10 @@ main(int argc, char **argv) {
 	russ_forwarder_init(&(fwds[2]), conn->fds[2], STDERR_FILENO, -1, 16384, 0);
 	if (russ_run_forwarders(RUSS_CONN_NFDS, fwds) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
-		exit(-127);
+		exit(RUSS_EXIT_SYS_FAILURE);
 	}
 	if (russ_conn_wait(conn, &exit_status, -1) != 0) {
-		exit_status = -127;
+		exit_status = RUSS_EXIT_SYS_FAILURE;
 	}
 	russ_forwarder_join(&(fwds[1]));
 
