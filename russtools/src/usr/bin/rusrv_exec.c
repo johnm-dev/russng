@@ -177,7 +177,7 @@ op_list_handler(struct russ_conn *conn) {
 }
 
 void
-svc_handler(struct russ_conn *conn) {
+master_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 
 	/* change uid/gid ASAP */
@@ -226,5 +226,5 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	russ_listener_loop(lis, svc_handler);
+	russ_listener_loop(lis, master_handler);
 }
