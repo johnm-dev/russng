@@ -70,6 +70,7 @@ char	*HELP =
 "/request\n"
 "    Outputs the request information at the server stdout.\n";
 
+void
 _chargen_handler(struct russ_conn *conn) {
 	char	buf[] = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
 	char	off;
@@ -82,17 +83,17 @@ _chargen_handler(struct russ_conn *conn) {
 		}
 		usleep(100000);
 	}
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
-int
+void
 _conn_handler(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[1], "uid (%d)\ngid (%d)\npid (%d)\n",
 		conn->cred.uid, conn->cred.gid, conn->cred.pid);
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
-int
+void
 _daytime_handler(struct russ_conn *conn) {
 	char		buf[1024];
 	time_t		now;
@@ -102,7 +103,7 @@ _daytime_handler(struct russ_conn *conn) {
 	now_tm = localtime(&now);
 	strftime(buf, sizeof(buf), "%A, %B %d, %Y %T-%Z", now_tm);
 	russ_dprintf(conn->fds[1], "%s\n", buf);
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
 static void
@@ -122,7 +123,7 @@ gettimeofday_float(void) {
 	return ((double)tv.tv_sec)+((double)tv.tv_usec)/1000000.0;
 }
 
-int
+void
 _discard_handler(struct russ_conn *conn) {
 	struct timeval	tv;
 	double		t0, t1, last_t1;
@@ -133,7 +134,8 @@ _discard_handler(struct russ_conn *conn) {
 	/* 8MB */
 	buf_size = 1<<23;
 	if ((buf = malloc(buf_size)) == NULL) {
-		return _error_handler(conn, "error: cannot allocate buffer\n");
+		russ_conn_fatal(conn, "error: cannot allocate buffer", RUSS_EXIT_FAILURE);
+		return -1;
 	}
 	if ((russ_sarray0_count(conn->req.argv, 2) >= 1)  && (strcmp(conn->req.argv[0], "--perf") == 0)) {
 		t0 = gettimeofday_float();
@@ -151,10 +153,10 @@ _discard_handler(struct russ_conn *conn) {
 	} else {
 		while ((n = russ_read(conn->fds[1], buf, buf_size)) > 0);
 	}
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
-int
+void
 _echo_handler(struct russ_conn *conn) {
 	char	buf[1024];
 	ssize_t	n;
@@ -162,7 +164,7 @@ _echo_handler(struct russ_conn *conn) {
 	while ((n = russ_read(conn->fds[0], buf, sizeof(buf))) > 0) {
 		russ_writen(conn->fds[1], buf, n);
 	}
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
 int
@@ -172,7 +174,7 @@ _env_handler(struct russ_conn *conn) {
 	for (i = 0; environ[i] != NULL; i++) {
 		russ_write(conn->fds[1], environ[i]);
 	}
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
 int
@@ -205,49 +207,45 @@ _request_handler(struct russ_conn *conn) {
 			russ_dprintf(fd, "argv[%d] (%s)\n", i, req->argv[i]);
 		}
 	}
-
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
-int
+void
 master_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
-	int			rv;
 
 	req = &(conn->req);
 	if (strcmp(req->op, "execute") == 0) {
 		if (strcmp(req->spath, "/chargen") == 0) {
-			rv = _chargen_handler(conn);
+			_chargen_handler(conn);
 		} else if (strcmp(req->spath, "/conn") == 0) {
-			rv = _conn_handler(conn);
+			_conn_handler(conn);
 		} else if (strcmp(req->spath, "/daytime") == 0) {
-			rv = _daytime_handler(conn);
+			_daytime_handler(conn);
 		} else if (strcmp(req->spath, "/discard") == 0) {
-			rv = _discard_handler(conn);
+			_discard_handler(conn);
 		} else if (strcmp(req->spath, "/echo") == 0) {
-			rv = _echo_handler(conn);
+			_echo_handler(conn);
 		} else if (strcmp(req->spath, "/env") == 0) {
-			rv = _env_handler(conn);
+			_env_handler(conn);
 		} else if (strcmp(req->spath, "/request") == 0) {
-			rv = _request_handler(conn);
+			_request_handler(conn);
 		} else {
-			rv = _error_handler(conn, "error: unknown service\n");
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
 	} else if (strcmp(req->op, "help") == 0) {
         	russ_dprintf(conn->fds[1], "%s", HELP);
-	        rv = 0;
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
 		if (strcmp(req->spath, "/") == 0) {
 			russ_dprintf(conn->fds[1], "/chargen\n/conn\n/daytime\n/discard\n/echo\n/env\n/request\n");
-			rv = 0;
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else {
-			rv = _error_handler(conn, "error: unknown service\n");
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
 	} else {
-		rv = _error_handler(conn, "error: unsupported operation\n");
+		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
-	russ_conn_exit(conn, rv);
-	return 0;
 }
 
 void
