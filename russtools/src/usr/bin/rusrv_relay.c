@@ -120,16 +120,6 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 			break;
 		}
 
-#if 0
-		printf("SSH_OK (%d) SSH_ERROR (%d) SSH_EINTR (%d)\n", SSH_OK, SSH_ERROR, SSH_EINTR);
-		printf("rv (%d)\n", rv);
-		printf("maxfds (%d) fds[0] (%d)\n", maxfds, conn->fds[0]);
-		printf("out_chans (%p)\n", out_chans[0]);
-		printf("FD_ISSET (%d)\n", FD_ISSET(conn->fds[0], &readfds));
-		printf("ssh_chan (%p)\n", ssh_chan);
-		printf("is_open (%d) is_eof (%d)\n", ssh_channel_is_open(ssh_chan), ssh_channel_is_eof(ssh_chan));
-#endif
-
 		/* conn stdin */
 		if (FD_ISSET(conn->fds[0], &readfds)) {
 			nbytes = read(conn->fds[0], buf, 8);

@@ -61,15 +61,6 @@ main(int argc, char **argv) {
 	}
 
 	/* start forwarder threads */
-#if 0
-	russ_forwarder_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0);
-	russ_forwarder_init(&(fwds[1]), 1, conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
-	russ_forwarder_init(&(fwds[2]), 1, conn->fds[2], STDERR_FILENO, -1, 16384, 0);
-	if (russ_run_forwarders(3, fwds) < 0) {
-		fprintf(stderr, "error: could not forward bytes\n");
-		exit(-1);
-	}
-#endif
 	russ_forwarder_init(&(fwds[0]), STDIN_FILENO, conn->fds[0], -1, 16384, 0);
 	russ_forwarder_init(&(fwds[1]), conn->fds[1], STDOUT_FILENO, -1, 16384, 0);
 	russ_forwarder_init(&(fwds[2]), conn->fds[2], STDERR_FILENO, -1, 16384, 0);
