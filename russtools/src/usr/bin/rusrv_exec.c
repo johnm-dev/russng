@@ -104,13 +104,13 @@ op_execute_handler(struct russ_conn *conn) {
 	} else {
 		/* argv[] = {shell, "-c", cmd, NULL} */
 		if ((argv = malloc(sizeof(char *)*4)) == NULL) {
-			russ_dprintf(conn->fds[2], "error: could not run\n");
-			return -1;
+			russ_conn_fatal(conn, "error: could not run", RUSS_EXIT_FAILURE);
+			return;
 		}
 
 		if (get_user_info(getuid(), &shell, &lshell, &home) < 0) {
-			russ_dprintf(conn->fds[2], "error: could not get user/shell info\n");
-			return -1;
+			russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
+			return;
 		}
 		cmd = shell;
 		argv[1] = "-c";
@@ -124,15 +124,14 @@ op_execute_handler(struct russ_conn *conn) {
 		} else if (strcmp(req->spath, "/shell") == 0) {
 			argv[0] = shell;
 		} else {
-			russ_dprintf(conn->fds[2], "error: no service available\n");
-			return -1;
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			return;
 		}
 	}
 
 	/* TODO: setup for cgroups */
 	if (strcmp(req->spath, "/job") == 0) {
-		russ_dprintf(conn->fds[2], "error: no service available\n");
-		return -1;
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 
 	/* TODO: set minimal settings:

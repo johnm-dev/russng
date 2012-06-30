@@ -128,16 +128,19 @@ op_execute_handler(struct russ_conn *conn) {
 			execv(gl_argv[0], gl_argv);
 		}
 		kill(getppid(), SIGTERM);
-		return 0;
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		return;
 	} else if (strcmp(req->spath, "/shutdown") == 0) {
 		kill(getppid(), SIGTERM);
-		return 0;
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		return;
 	} else if (strcmp(req->spath, "/status") == 0) {
 		russ_dprintf(conn->fds[1], "ok\n");
-		return 0;
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		return;
 	} else {
-		russ_dprintf(conn->fds[2], "error: no service available\n");
-		return -1;
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		return;
 	}
 	
 	/* move and close fds */
@@ -160,7 +163,7 @@ op_execute_handler(struct russ_conn *conn) {
 void
 op_help_handler(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[1], "%s", HELP);
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
 void
