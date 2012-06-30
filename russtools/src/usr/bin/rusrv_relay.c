@@ -274,35 +274,30 @@ _dial_for_ssl_key(struct russ_conn *conn, char *new_spath, char *section_name, c
 * Service handler for /debug .
 *
 * @param conn		connection object
-* @return		0 for success; -1 for failure
 */
-int
+void
 svc_debug_handler(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[1], "n/a\n");
-	russ_conn_exit(conn, 0);
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
 /**
 * Service handler for all non serviceable spaths.
 *
 * @param conn		connection object
-* @return		0 for success; -1 for failure
 */
-int
+void
 svc_error_handler(struct russ_conn *conn, char *msg) {
 	russ_dprintf(conn->fds[2], msg);
-	russ_conn_exit(conn, -1);
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 }
 
 /**
 * Service handler for /dial .
 *
 * @param conn		connection object
-* @return		0 for success; -1 for failure
 */
-int
+void
 svc_dial_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 	char			**section_names, **p;
@@ -310,8 +305,8 @@ svc_dial_handler(struct russ_conn *conn) {
 	req = &(conn->req);
 	if (strcmp(req->op, "list") == 0) {
 		if ((section_names = configparser_sections(config)) == NULL) {
-			russ_conn_exit(conn, -1);
-			return -1;
+			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+			return;
 		}
 		for (p = section_names; *p != NULL; p++) {
 			if (strncmp(*p, "cluster.", 8) == 0) {
@@ -361,23 +356,20 @@ svc_dial_cluster_host_handler(struct russ_conn *conn) {
 		exit_status = _dial_for_ssl_key(conn, new_spath, section_name, cluster_name, hostname);
 	}
 	russ_conn_exit(conn, exit_status);
-	return 0;
 
 free_vars:
 	free(method);
 	free(cluster_name);
 	free(hostname);
-	russ_conn_exit(conn, -1);
-	return -1;
+	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 }
 
 /**
 * Master handler which selects service handler.
 *
 * @param conn		connection object
-* @return		0 for success; -1 for failure
 */
-int
+void
 master_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 	int			rv;
@@ -385,12 +377,12 @@ master_handler(struct russ_conn *conn) {
 	req = &(conn->req);
 	if (strncmp(req->spath, "/dial/", 6) == 0) {
 		/* service /dial/ for any op */
-		rv = svc_dial_cluster_host_handler(conn);
+		svc_dial_cluster_host_handler(conn);
 	} else if (strcmp(req->op, "execute") == 0) {
 		if (strcmp(req->spath, "/debug") == 0) {
-			rv = svc_debug_handler(conn);
+			svc_debug_handler(conn);
 		} else {
-			rv = svc_error_handler(conn, "error: unknown service\n");
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
 	} else if (strcmp(req->op, "help") == 0) {
 		russ_dprintf(conn->fds[1], "see server usage for details\n");
@@ -400,13 +392,12 @@ master_handler(struct russ_conn *conn) {
 			russ_dprintf(conn->fds[1], "/debug\n/dial\n");
 		} else if (strcmp(req->spath, "/dial") == 0) {
 printf("op (%s) spath (%s)\n", req->op, req->spath);
-			rv = svc_dial_handler(conn);
+			svc_dial_handler(conn);
 		}
 		rv = 0;
 	} else {
-		rv = svc_error_handler(conn, "error: unsupported operation\n");
+		russ_conn_fatal(conn, RUSS_BAD_OP, RUSS_EXIT_FAILURE);
 	}
-	return 0;
 }
 
 void
