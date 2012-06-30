@@ -70,12 +70,6 @@ char	*HELP =
 "/request\n"
 "    Outputs the request information at the server stdout.\n";
 
-int
-_error_handler(struct russ_conn *conn, char *msg) {
-	russ_dprintf(conn->fds[2], msg);
-}
-
-int
 _chargen_handler(struct russ_conn *conn) {
 	char	buf[] = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
 	char	off;
