@@ -110,8 +110,8 @@ close_fds(int low_fd, int hi_fd) {
 	}
 }
 
-int
-op_execute(struct russ_conn *conn) {
+void
+op_execute_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 	char			*shell, *lshell, *home;
 	int			argc, i;
@@ -154,53 +154,47 @@ op_execute(struct russ_conn *conn) {
 	execvp(req->argv[0], req->argv);
 
 	/* on error */
-	russ_dprintf(conn->fds[2], "error: could not execute program\n");
-	russ_conn_exit(conn, -1);
-	return -1;
+	russ_conn_fatal(conn, "error: could not execute program", RUSS_EXIT_FAILURE);
 }
 
-int
-op_help(struct russ_conn *conn) {
+void
+op_help_handler(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[1], "%s", HELP);
 	return 0;
 }
 
-int
-op_list(struct russ_conn *conn) {
+void
+op_list_handler(struct russ_conn *conn) {
 	if (strcmp(conn->req.spath, "/") == 0) {
 		russ_dprintf(conn->fds[1], "exec\nreload\nshutdown\nstatus\n");
-		russ_conn_exit(conn, 0);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else {
-		russ_dprintf(conn->fds[2], "error: no service available\n");
-		russ_conn_exit(conn, -1);
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
-	return 0;
 }
 
-int
-master_handler(struct russ_conn *conn) {
+void
+svc_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
 	if ((setgid(getgid()) < 0)
 		|| (setuid(getuid()) < 0)) {
-		russ_dprintf(conn->fds[2], "error: cannot set up\n");
-		return -1;
+		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
+		return;
 	}
 
 	req = &(conn->req);
 	if (strcmp(req->op, "help") == 0) {
-		return op_help(conn);
+		op_help_handler(conn);
 	} else if (strcmp(req->op, "list") == 0) {
-		return op_list(conn);
+		op_list_handler(conn);
 	} else if (strcmp(req->op, "execute") == 0) {
-		return op_execute(conn);
+		op_execute_handler(conn);
 	} else {
-		russ_dprintf(conn->fds[2], "error: no service available\n");
-		russ_conn_exit(conn, -1);
+		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
-	return 0;
 }
 
 void
@@ -236,5 +230,5 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	russ_listener_loop(lis, master_handler);
+	russ_listener_loop(lis, svc_handler);
 }
