@@ -141,6 +141,7 @@ backend_release_barrier(char ch) {
 		conn = barrier->items[i].conn;
 		if ((conn) && (fd = conn->fds[1]) > -1) {
 			write(fd, &ch, 1);
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			russ_conn_close(conn);
 			barrier->items[i].conn = russ_conn_free(conn);
 			free(barrier->items[i].tag);
