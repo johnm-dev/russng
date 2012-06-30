@@ -66,7 +66,7 @@ char	*HELP =
 "Hosts are organized under a locally defined cluster name so that\n"
 "dialing a service on another host requires an address like\n"
 "+relay/net/myhost.com/debug (assuming +relay is the local\n"
-"service address for the relay itself.\n
+"service address for the relay itself.\n"
 "\n"
 "/debug\n"
 "    Outputs russ connection information.\n"
@@ -83,7 +83,7 @@ char	*HELP =
 /**
 * Forward bytes between connection and ssh chan.
 *
-* @param conn
+* @param conn		connection object
 */
 int
 forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
@@ -297,7 +297,7 @@ _dial_for_ssl_key(struct russ_conn *conn, char *new_spath, char *section_name, c
 */
 void
 svc_debug_handler(struct russ_conn *conn) {
-	russ_dprintf(conn->fds[1], "n/a\n");
+	russ_dprintf(conn->fds[1], "nothing implemented yet\n");
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
@@ -324,23 +324,21 @@ svc_dial_handler(struct russ_conn *conn) {
 		}
 		configparser_sarray0_free(section_names);
 	}
-	russ_conn_exit(conn, 0);
-	return 0;
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
 /**
 * Service handler for /dial/<cluster>/<hostname>/* spaths.
 *
 * @param conn		connection object
-* @return		0 for success; -1 for failure
 */
-int
+void
 svc_dial_cluster_host_handler(struct russ_conn *conn) {
 	struct russ_request	*req = NULL;
 	char			*cluster_name = NULL, *hostname = NULL, *method = NULL;
 	char			*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
 	char			section_name[256];
-	int			exit_status = -1;
+	int			exit_status;
 
 	/* init */
 	req = &(conn->req);
@@ -394,18 +392,19 @@ master_handler(struct russ_conn *conn) {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
 	} else if (strcmp(req->op, "help") == 0) {
-		russ_dprintf(conn->fds[1], "see server usage for details\n");
-		rv = 0;
+		russ_dprintf(conn->fds[1], HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
-		if (strcmp(req->spath, "") == 0) {
+		if (strcmp(req->spath, "/") == 0) {
 			russ_dprintf(conn->fds[1], "/debug\n/dial\n");
 		} else if (strcmp(req->spath, "/dial") == 0) {
 printf("op (%s) spath (%s)\n", req->op, req->spath);
 			svc_dial_handler(conn);
+		} else {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
-		rv = 0;
 	} else {
-		russ_conn_fatal(conn, RUSS_BAD_OP, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
 }
 
