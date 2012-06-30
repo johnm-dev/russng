@@ -53,8 +53,10 @@
 	#define ssh_channel_free(a) channel_free((a))
 	#define ssh_channel_is_eof(a) channel_is_eof((a))
 	#define ssh_channel_is_open(a) channel_is_open((a))
+	#define ssh_channel_is_closed(a) channel_is_closed((a))
 	#define ssh_channel_send_eof(a) channel_send_eof((a))
 	#define ssh_channel_read_nonblocking(a,b,c,d) channel_read_nonblocking((a),(b),(c),(d))
+	#define ssh_channel_get_exit_status(a) channel_get_exit_status((a))
 #endif
 
 /* global */
