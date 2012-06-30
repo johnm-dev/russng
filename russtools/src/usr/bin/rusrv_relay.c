@@ -396,6 +396,7 @@ master_handler(struct russ_conn *conn) {
 	} else if (strcmp(req->op, "list") == 0) {
 		if (strcmp(req->spath, "/") == 0) {
 			russ_dprintf(conn->fds[1], "/debug\n/dial\n");
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else if (strcmp(req->spath, "/dial") == 0) {
 			svc_dial_handler(conn);
 		} else {
