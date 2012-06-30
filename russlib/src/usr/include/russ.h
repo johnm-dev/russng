@@ -52,6 +52,17 @@
 #define RUSS_TIMEOUT_NEVER	-1
 #define RUSS_TIMEOUT_NOW	0
 
+/* common messages */
+#define RUSS_MSG_BAD_OP		"error: unsupported operation"
+#define RUSS_MSG_NO_EXIT	"error: no exit status"
+#define RUSS_MSG_NO_SERVICE	"error: no service"
+
+/* common exit_status values */
+#define RUSS_EXIT_SUCCESS	0
+#define RUSS_EXIT_FAILURE	-1
+#define RUSS_EXIT_CALL_FAILURE	-126
+#define RUSS_EXIT_SYS_FAILURE	-127
+
 /**
 * Target of service.
 */
