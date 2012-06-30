@@ -327,9 +327,9 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 */
 int
 russ_conn_fatal(struct russ_conn *self, char *msg, int exit_status) {
-	if (self->exit_fd) >= 0) {
-		russ_dprintf(conn->fds[2], "%s\n", msg);
-		return russ_conn_exit(exit_status);
+	if (self->exit_fd >= 0) {
+		russ_dprintf(self->fds[2], "%s\n", msg);
+		return russ_conn_exit(self, exit_status);
 	}
 	return -1;
 }
