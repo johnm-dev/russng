@@ -229,11 +229,10 @@ backend_svc_handler(struct russ_conn *conn) {
 		russ_dprintf(errfd, "error: unknown operation\n");
 		goto close_conn;
 	}
-	return 0;
 
 close_conn:
 	russ_conn_close(conn);
-	return -1;
+	return;
 
 cleanup_and_exit:
 	//remove(conn->saddr);
@@ -388,11 +387,10 @@ svc_new_handler(struct russ_conn *conn) {
 	}
 
 	backend_loop(conn, saddr, mode, uid, gid, count, timeout);
-	return 0;
+	return;
 
 error_bad_args:
 	russ_conn_fatal(conn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
-	return -1;
 }
 
 unsigned long

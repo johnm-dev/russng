@@ -135,7 +135,7 @@ svc_discard_handler(struct russ_conn *conn) {
 	buf_size = 1<<23;
 	if ((buf = malloc(buf_size)) == NULL) {
 		russ_conn_fatal(conn, "error: cannot allocate buffer", RUSS_EXIT_FAILURE);
-		return -1;
+		return;
 	}
 	if ((russ_sarray0_count(conn->req.argv, 2) >= 1)  && (strcmp(conn->req.argv[0], "--perf") == 0)) {
 		t0 = gettimeofday_float();
