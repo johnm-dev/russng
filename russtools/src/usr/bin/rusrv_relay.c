@@ -282,17 +282,6 @@ svc_debug_handler(struct russ_conn *conn) {
 }
 
 /**
-* Service handler for all non serviceable spaths.
-*
-* @param conn		connection object
-*/
-void
-svc_error_handler(struct russ_conn *conn, char *msg) {
-	russ_dprintf(conn->fds[2], msg);
-	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
-}
-
-/**
 * Service handler for /dial .
 *
 * @param conn		connection object
