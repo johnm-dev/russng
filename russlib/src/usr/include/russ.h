@@ -64,6 +64,13 @@
 #define RUSS_EXIT_CALL_FAILURE	-126
 #define RUSS_EXIT_SYS_FAILURE	-127
 
+/* forwarder reasons */
+#define RUSS_FWD_REASON_ERROR	-1
+#define RUSS_FWD_REASON_TIMEOUT	-2
+#define RUSS_FWD_REASON_COUNT	-3
+#define RUSS_FWD_REASON_IN_HUP	-4
+#define RUSS_FWD_REASON_OUT_HUP	-5
+
 /**
 * Target of service.
 */
@@ -122,6 +129,7 @@ struct russ_forwarder {
 	int		count;		/**< # of bytes to forward */
 	int		blocksize;	/**< max size of blocks at once */
 	int		how;		/**< 0 for normal read, 1 for readline */
+	int		reason;		/**< reason forwarder returned */
 };
 
 /* TODO: is this necessary */
