@@ -94,12 +94,17 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 	int		maxfds;
 	int		rv;
 	struct timeval	tv;
-	char		buf[1024];
-	int		nbytes;
+	char		*buf;
+	int		nbytes, buf_size;
 	int		ready_out, ready_err;
 	int		exit_status = RUSS_EXIT_SYS_FAILURE;
 
 	tv.tv_sec = 60;
+	buf_size = 16384;
+	if ((buf = malloc(sizeof(char)*buf_size)) == NULL) {
+		return;
+	}
+
 	tv.tv_usec = 0;
 
 	in_chans[0] = ssh_chan;
@@ -141,7 +146,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 		if (out_chans[0]) {
 			/* ssh_chan stdout */
 			if (ready_out) {
-				nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, sizeof(buf), 0);
+				nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, buf_size, 0);
 				if (nbytes > 0) {
 					write(conn->fds[1], buf, nbytes);
 				} else if (nbytes < 0) {
@@ -152,7 +157,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 
 			/* ssh_chan stderr */
 			if (ready_err) {
-				nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, sizeof(buf), 1);
+				nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, buf_size, 1);
 				if (nbytes > 0) {
 					write(conn->fds[2], buf, nbytes);
 				} else if (nbytes < 0) {
@@ -165,6 +170,10 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 			}
 		}
 	}
+
+free_buf:
+	free(buf);
+	return;
 	//exit_status = ssh_channel_get_exit_status(ssh_chan);
 	//ssh_channel_close(ssh_chan);
 	//return exit_status;
