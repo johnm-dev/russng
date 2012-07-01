@@ -99,12 +99,12 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 	int		ready_out, ready_err;
 	int		exit_status = RUSS_EXIT_SYS_FAILURE;
 
-	tv.tv_sec = 60;
 	buf_size = 16384;
 	if ((buf = malloc(sizeof(char)*buf_size)) == NULL) {
 		return;
 	}
 
+	tv.tv_sec = 5;
 	tv.tv_usec = 0;
 
 	in_chans[0] = ssh_chan;
