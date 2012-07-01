@@ -211,7 +211,7 @@ russ_run_forwarders(int nfwds, struct russ_forwarder *fwds) {
 	for (i = 0; i < nfwds; i++) {
 		pthread_attr_init(&attr);
 		pthread_attr_setstacksize(&attr, (1<<20)+(1<<20));
-		if (pthread_create(&(fwds[i].th), &attr, _forward_bytes, (void *)&(fwds[i])) < 0) {
+		if (pthread_create(&(fwds[i].th), &attr, _forward_bytes2, (void *)&(fwds[i])) < 0) {
 			goto kill_threads;
 		}
 		pthread_attr_destroy(&attr);
