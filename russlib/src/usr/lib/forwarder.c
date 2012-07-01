@@ -118,6 +118,59 @@ _forward_bytes(void *_fwd) {
 }
 
 /**
+* Run actual byte forwarder (poll-based).
+*
+* Forward bytes from in_fd to out_fd. poll() is used to sense state
+* of in_fd and out_fd allowing for return on timeout, error, hup on
+* in_fd, hup on out_fd. fwd.reason is set to allow caller to deal
+* with fds appropriately.
+*
+* @param fwd		forwarder object
+* @return		forwarder exit reason
+*/
+static void *
+_forward_bytes2(void *_fwd) {
+	struct russ_forwarder	*fwd;
+	struct pollfd		pollfds[2];
+	char			buf[1<<20], *bp;
+	long			nread, nwrite, count;
+	int			rv;
+
+	fwd = (struct russ_forwarder *)_fwd;
+	fwd->reason = 0;
+
+	pollfds[0].fd = fwd->in_fd;
+	pollfds[0].events = POLLIN;
+	pollfds[1].fd = fwd->out_fd;
+	pollfds[1].events = POLLHUP;
+
+	while (1) {
+		if ((rv = poll(pollfds, 2, -1)) <= 0) {
+			if (rv == 0) {
+				fwd->reason = RUSS_FWD_REASON_TIMEOUT;
+				break;
+			} else {
+				fwd->reason = RUSS_FWD_REASON_ERROR;
+			}
+			break;
+		}
+		if (pollfds[0].revents & POLLIN) {
+			if ((rv = _forward_block(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize, fwd->how)) <= 0) {
+				break;
+			}
+		}
+		if (pollfds[0].revents & POLLHUP) {
+			fwd->reason = RUSS_FWD_REASON_IN_HUP;
+			break;
+		}
+		if (pollfds[1].revents & POLLHUP) {
+			fwd->reason = RUSS_FWD_REASON_OUT_HUP;
+			break;
+		}
+	}
+}
+
+/**
 * Initializes forwarder struct with values.
 *
 * The forwarder struct holds settings used to carry out the
