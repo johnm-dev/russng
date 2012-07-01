@@ -139,6 +139,14 @@ _forward_bytes2(void *_fwd) {
 	fwd = (struct russ_forwarder *)_fwd;
 	fwd->reason = 0;
 
+	if (fwd->blocksize <= 1<<20) {
+		bp = buf;
+	} else {
+		if ((bp = malloc(fwd->blocksize)) == NULL) {
+			return NULL;
+		}
+	}
+
 	pollfds[0].fd = fwd->in_fd;
 	pollfds[0].events = POLLIN;
 	pollfds[1].fd = fwd->out_fd;
