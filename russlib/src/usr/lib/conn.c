@@ -385,6 +385,8 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
 				}
 				/* TODO: exit_string is ignored */
 				break;
+			} else if (poll_fds[0].revents & POLLHUP) {
+				return -2;
 			}
 		}
 	}
