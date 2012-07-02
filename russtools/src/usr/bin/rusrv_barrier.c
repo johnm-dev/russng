@@ -253,14 +253,14 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 	struct russ_listener	*lis;
 	struct russ_conn	*bconn;
 	struct russ_request	*req;
-	struct pollfd		poll_fds[1];
+	struct pollfd		poll_fds[2];
 	int			poll_timeout;
 	int			rv;
 	int			ferrfd, foutfd;
 
 	ferrfd = fconn->fds[2];
 	foutfd = fconn->fds[1];
-	
+
 	/* set up backend barrier; announce service */
 	barrier = backend_new_barrier(saddr, count, timeout);
 	if ((lis = russ_announce(saddr, mode, uid, gid)) == NULL) {
@@ -274,6 +274,9 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 	/* listen for and process requests */
 	poll_fds[0].fd = lis->sd;
 	poll_fds[0].events = POLLIN;
+	poll_fds[1].fd = fconn->fds[1];
+	poll_fds[1].events = POLLHUP;
+
 	while (barrier->nitems < barrier->count) {
 		if (barrier->timeout == -1) {
 			poll_timeout = -1;
@@ -281,7 +284,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 			poll_timeout = (barrier->due_time-time(NULL));
 			poll_timeout = MAX(0, poll_timeout)*1000;
 		}
-		rv = poll(poll_fds, 1, poll_timeout);
+		rv = poll(poll_fds, 2, poll_timeout);
 		if (rv == 0) {
 			backend_release_barrier('t');
 			goto cleanup_and_exit;
@@ -302,6 +305,10 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 					continue;
 				}
 				backend_master_handler(bconn); /* exits if count reached */
+			}
+			if (poll_fds[1].revents & (POLLHUP|POLLNVAL|POLLERR)) {
+				backend_release_barrier('c');
+				goto cleanup_and_exit;
 			}
 		}
 	}
@@ -363,7 +370,7 @@ svc_new_handler(struct russ_conn *conn) {
 	if ((argv == NULL) || (argv[0] == NULL) || (argv[1] == NULL)) {
 		goto error_bad_args;
 	} else {
-		saddr = argv[0];
+		saddr = strdup(argv[0]); /* dup in case conn gets closed/freed */
 		if (sscanf(argv[1], "%d", &count) < 0) {
 			goto error_bad_args;
 		}
@@ -396,6 +403,7 @@ svc_new_handler(struct russ_conn *conn) {
 	}
 
 	backend_loop(conn, saddr, mode, uid, gid, count, timeout);
+	free(saddr);
 	return;
 
 error_bad_args:
@@ -478,6 +486,7 @@ main(int argc, char **argv) {
 	int			mode, uid, gid;
 
 	signal(SIGCHLD, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN); /* no errors on failed writes */
 
 	/* parse command line */
 	if (argc != 2) {
