@@ -134,7 +134,6 @@ _forward_bytes2(void *_fwd) {
 	struct pollfd		pollfds[2];
 	char			buf[1<<20], *bp;
 	long			nread, nwrite, count;
-	int			rv;
 
 	fwd = (struct russ_forwarder *)_fwd;
 	fwd->reason = 0;
@@ -162,7 +161,7 @@ _forward_bytes2(void *_fwd) {
 			break;
 		}
 		if (pollfds[0].revents & POLLIN) {
-			if ((rv = _forward_block(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize, fwd->how)) <= 0) {
+			if (_forward_block(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize, fwd->how) < 0) {
 				fwd->reason = RUSS_FWD_REASON_ERROR;
 				break;
 			}
