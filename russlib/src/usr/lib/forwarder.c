@@ -176,13 +176,22 @@ _forward_bytes2(void *_fwd) {
 			break;
 		}
 	}
+	if ((fwd->close_fds) && (fwd->reason < 0)) {
+		close(fwd->in_fd);
+		close(fwd->out_fd);
+	}
 }
 
 /**
 * Initializes forwarder struct with values.
 *
 * The forwarder struct holds settings used to carry out the
-* forwarding operation.
+* forwarding operation. The when started, the forwarder forwards
+* bytes between in_fd and out_fd with a blocksize up to a total of
+* count bytes (-1 is infinite). how determines if the reading of
+* in_fd is by block or line. If close_fds is 1, the in_fd and out_fd
+* will be closed before returning. This means that no further
+* operations should be done on them.
 *
 * @param self		forwarder object
 * @param in_fd		for in_fd member
@@ -190,14 +199,16 @@ _forward_bytes2(void *_fwd) {
 * @param count		for count member
 * @param blocksize	for blocksize member
 * @param how		for the how member
+* @param close_fds	for close_fds member
 */
 void
-russ_forwarder_init(struct russ_forwarder *self, int in_fd, int out_fd, int count, int blocksize, int how) {
+russ_forwarder_init(struct russ_forwarder *self, int in_fd, int out_fd, int count, int blocksize, int how, int close_fds) {
 	self->in_fd = in_fd;
 	self->out_fd = out_fd;
 	self->count = count;
 	self->blocksize = blocksize;
 	self->how = how;
+	self->close_fds = close_fds;
 }
 
 /**
