@@ -232,7 +232,7 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	}
 
 	/* allocate buffer */
-	buf_size = configparser_get(config, section_name, "buffer_size", 0);
+	buf_size = configparser_getint(config, section_name, "buffer_size", 0);
 	buf_size = (buf_size < 32768) ? 32768: buf_size;
 	if ((buf = malloc(sizeof(char)*buf_size)) == NULL) {
 		goto free_vars;
