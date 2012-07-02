@@ -373,7 +373,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
 				return -1;
 			}
 		} else {
-			if (poll_fds[0].revents && POLLIN) {
+			if (poll_fds[0].revents & POLLIN) {
 				// TODO: should this be a byte or integer?
 				if (russ_read(self->exit_fd, buf, 4) < 0) {
 					/* serious error; close fd? */
