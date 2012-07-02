@@ -151,7 +151,7 @@ svc_discard_handler(struct russ_conn *conn) {
 		}
 		print_discard_stats(conn->fds[1], gettimeofday_float()-t0, total);
 	} else {
-		while ((n = russ_read(conn->fds[1], buf, buf_size)) > 0);
+		while ((n = russ_read(conn->fds[0], buf, buf_size)) > 0);
 	}
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
