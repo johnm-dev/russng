@@ -88,16 +88,15 @@ char	*HELP =
 * @param ssh_chan	established ssh_chan
 * @param buf		working buffer
 * @param buf_size	size of working buffer
+* @return		0 on success; -1 on failure
 */
 int
 forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, int buf_size) {
 	ssh_channel	in_chans[2];
 	ssh_channel	out_chans[2];
 	fd_set		readfds;
-	int		maxfds;
-	int		rv;
 	struct timeval	tv;
-	int		nbytes;
+	int		maxfds, nbytes, rv;
 	int		ready_out, ready_err;
 	int		exit_status = RUSS_EXIT_SYS_FAILURE;
 
@@ -147,7 +146,6 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 					write(conn->fds[1], buf, nbytes);
 				} else if (nbytes < 0) {
 					ready_out = 0;
-					//break;
 				}
 			}
 
@@ -158,7 +156,6 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 					write(conn->fds[2], buf, nbytes);
 				} else if (nbytes < 0) {
 					ready_err = 0;
-					//break;
 				}
 			}
 			if (!ready_out && !ready_err) {
@@ -166,9 +163,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 			}
 		}
 	}
-	//exit_status = ssh_channel_get_exit_status(ssh_chan);
-	//ssh_channel_close(ssh_chan);
-	//return exit_status;
+	return 0;
 }
 
 /**
@@ -177,7 +172,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 * @param conn		connection object
 * @param buf		buffer
 * @param buf_size	size of buffer
-* @return		# of bytes encoded; -1 for failure
+* @return		# of bytes encoded; -1 on failure
 */
 int
 enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) {
@@ -206,7 +201,7 @@ enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) 
 * @param cluster_name	cluster name
 * @param hostname	hostname
 * @param spath		new spath for conn
-* @return		0 for success; -1 for failure
+* @return		0 on success; -1 on failure
 */
 int
 _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char *cluster_name, char *hostname) {
@@ -259,7 +254,6 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	}
 
 	/* authenticate */
-	//if (ssh_userauth_pubkey(ssh_sess, NULL, NULL, NULL) != SSH_OK) {
 	if (ssh_userauth_autopubkey(ssh_sess, NULL) != SSH_OK) {
 		fprintf(stderr, "userauth_publickey failed\n");
 		goto free_vars;
@@ -299,7 +293,7 @@ free_vars:
 * @param cluster_name	cluster name
 * @param hostname	hostname
 * @param spath		new spath for conn
-* @return		0 for success; -1 for failure
+* @return		0 on success; -1 on failure
 */
 int
 _dial_for_ssl_key(struct russ_conn *conn, char *new_spath, char *section_name, char *cluster_name, char *hostname) {
@@ -363,11 +357,9 @@ svc_dial_cluster_host_handler(struct russ_conn *conn) {
 		|| ((p2 = strchr(p1+1, '/')) == NULL)
 		|| ((cluster_name = strndup(p0, p1-p0)) == NULL)
 		|| ((hostname = strndup(p1+1, p2-(p1+1))) == NULL)) {
-//printf("p0 (%p) (%s) p1 (%p) (%s) p2 (%p) (%s)\n", p0, p0, p1, p1, p2, p2);
 		goto free_vars;
 	}
 
-//printf("p0 (%s) cluster_name (%s) hostname (%s) p2 (%s)\n", p0, cluster_name, hostname, p2);
 	new_spath = p2;
 	if ((snprintf(section_name, sizeof(section_name)-1, "cluster.%s", cluster_name) < 0)
 		|| ((method = configparser_get(config, section_name, "method", NULL)) == NULL)) {
@@ -433,35 +425,6 @@ print_usage(char **argv) {
 );
 }
 
-#if 0
-"\n"
-"/debug         output debugging information to stdout\n"
-"/dial/<cluster>/<hostname>\n"
-"               dial host as part of cluster\n"
-#endif
-
-#if 0
-int
-main(int argc, char **argv) {
-	struct russ_listener	*lis;
-	char			*saddr;
-
-	signal(SIGCHLD, SIG_IGN);
-
-	if (argc != 2) {
-		print_usage(argv);
-		exit(-1);
-	}
-	saddr = argv[1];
-
-	if ((lis = russ_announce(saddr, 0666, getuid(), getgid())) == NULL) {
-		fprintf(stderr, "error: cannot announce service\n");
-		exit(-1);
-	}
-	russ_listener_loop(lis, master_handler);
-}
-#endif
-
 int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
@@ -483,12 +446,11 @@ main(int argc, char **argv) {
 	}
 
 	mode = configparser_getsint(config, "server", "mode", 0600);
-printf("mode (%d)\n", mode);
 	uid = configparser_getint(config, "server", "uid", getuid());
 	gid = configparser_getint(config, "server", "gid", getgid());
 	path = configparser_get(config, "server", "path", NULL);
 	if ((lis = russ_announce(path, mode, uid, gid)) == NULL) {
-		fprintf(stderr, "erro: cannot announce service\n");
+		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
 	russ_listener_loop(lis, master_handler);
