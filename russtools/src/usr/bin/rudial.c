@@ -167,7 +167,7 @@ main(int argc, char **argv) {
 	}
 
 	/* wait for exit */
-	if ((rv = russ_conn_wait(conn, &exit_status, -1)) < 0) {
+	if (russ_conn_wait(conn, &exit_status, -1) < 0) {
 		exit_status = -127;
 	}
 
