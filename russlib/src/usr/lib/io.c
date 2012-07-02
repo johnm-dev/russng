@@ -153,8 +153,11 @@ russ_writen(int fd, char *b, size_t count) {
 
 	bend = b+count;
 	while (b < bend) {
-		if ((n = russ_write(fd, b, bend-b)) < 0) {
-			break;
+		if ((n = write(fd, b, bend-b)) < 0) {
+			if ((errno != EAGAIN) && (errno != EINTR)) {
+				/* unrecoverable error */
+				return n;
+			}
 		}
 		b += n;
 	}
