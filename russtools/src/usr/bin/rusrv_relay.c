@@ -99,7 +99,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 	int		ready_out, ready_err;
 	int		exit_status = RUSS_EXIT_SYS_FAILURE;
 
-	buf_size = 16384;
+	buf_size = 65536;
 	if ((buf = malloc(sizeof(char)*buf_size)) == NULL) {
 		return;
 	}
