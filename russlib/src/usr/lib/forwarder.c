@@ -166,8 +166,8 @@ _forward_bytes2(void *_fwd) {
 				fwd->reason = RUSS_FWD_REASON_ERROR;
 				break;
 			}
-		}
-		if (pollfds[0].revents & POLLHUP) {
+			continue;
+		} else if (pollfds[0].revents & POLLHUP) {
 			fwd->reason = RUSS_FWD_REASON_IN_HUP;
 			break;
 		}
