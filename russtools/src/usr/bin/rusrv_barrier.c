@@ -74,11 +74,11 @@ struct barrier	*barrier;
 char *BACKEND_HELP =
 "Barrier service instance.\n"
 "\n"
+"/cancel\n"
+"    Cancel barrier and release all waiters.\n"
+"\n"
 "/count\n"
 "    Print number of waiters expected.\n"
-"\n"
-"/kill\n"
-"    Kill barrier and release all waiters.\n"
 "\n"
 "/tags\n"
 "    Print tags of waiters.\n"
@@ -171,7 +171,7 @@ backend_add_waiter(struct russ_conn *conn) {
 * Handle each service of which the /wait service is unique because
 * it does not release the connection(s), except when the desired
 * number of waiters is reached. An 'r' is sent to outfd on normal
-* release, 'k' on kill, and 't' (in backend_loop()) on timeout.
+* release, 'c' on cancel, and 't' (in backend_loop()) on timeout.
 * In all cases, the connection exit value is 0.
 *
 * @param conn	connection object
@@ -195,16 +195,13 @@ backend_master_handler(struct russ_conn *conn) {
 				goto cleanup_and_exit;
 			}
 		} else {
-			if (strcmp(conn->req.spath, "/count") == 0) {
-				russ_dprintf(outfd, "%d\n", barrier->count);
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			} else if (strcmp(conn->req.spath, "/wcount") == 0) {
-				russ_dprintf(outfd, "%d\n", barrier->nitems);
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			} else if (strcmp(conn->req.spath, "/kill") == 0) {
-				backend_release_barrier('k');
+			if (strcmp(conn->req.spath, "/cancel") == 0) {
+				backend_release_barrier('c');
 				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 				goto cleanup_and_exit;
+			} else if (strcmp(conn->req.spath, "/count") == 0) {
+				russ_dprintf(outfd, "%d\n", barrier->count);
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			} else if (strcmp(conn->req.spath, "/tags") == 0) {
 				for (i = 0; i < barrier->nitems; i++) {
 					russ_dprintf(outfd, "%s\n", barrier->items[i].tag);
@@ -217,6 +214,9 @@ backend_master_handler(struct russ_conn *conn) {
 					russ_dprintf(outfd, "%d\n", barrier->due_time-time(NULL));
 				}
 				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			} else if (strcmp(conn->req.spath, "/wcount") == 0) {
+				russ_dprintf(outfd, "%d\n", barrier->nitems);
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			} else {
 				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			}
@@ -228,7 +228,7 @@ backend_master_handler(struct russ_conn *conn) {
 		goto close_conn;
 	} else if (strcmp(conn->req.op, "list") == 0) {
 		if (strcmp(conn->req.spath, "/") == 0) {
-			russ_dprintf(outfd, "/count\n/kill\n/tags\n/ttl\n/wait\n/wcount\n");
+			russ_dprintf(outfd, "/cancel\n/count\n/tags\n/ttl\n/wait\n/wcount\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
