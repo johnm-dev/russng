@@ -305,7 +305,7 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 		// error?
 		return -1;
 	}
-	if (russ_write(self->exit_fd, buf, bp-buf) < bp-buf) {
+	if (russ_writen(self->exit_fd, buf, bp-buf) < bp-buf) {
 		return -1;
 	}
 	russ_fds_close(&self->exit_fd, 1);

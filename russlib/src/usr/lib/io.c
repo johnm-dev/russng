@@ -192,8 +192,10 @@ russ_writen_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
 		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
 			break;
 		}
-		if ((n = russ_write(fd, b, bend-b)) < 0) {
-			break;
+		if ((n = write(fd, b, bend-b)) < 0) {
+			if ((errno != EAGAIN) && (errno != EINTR)) {
+				return n;
+			}
 		}
 		b += n;
 	}
