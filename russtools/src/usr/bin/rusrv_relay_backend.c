@@ -24,6 +24,7 @@
 # license--end
 */
 
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -40,6 +41,8 @@ main(int argc, char **argv) {
 	char			buf[16384], *bp;
 	FILE			*f;
 	int			exit_status;
+
+	signal(SIGPIPE, SIG_IGN);
 
 	/* msg size */
 	bp = buf;
