@@ -469,6 +469,7 @@ main(int argc, char **argv) {
 	int			mode, uid, gid;
 
 	signal(SIGCHLD, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
 
 	if (argc != 2) {
 		print_usage(argv);

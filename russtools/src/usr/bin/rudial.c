@@ -26,6 +26,7 @@
 
 #include <libgen.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -83,6 +84,8 @@ main(int argc, char **argv) {
 	int			attrc;
 	int			req_opt_mask;
 	int			exit_status;
+
+	signal(SIGPIPE, SIG_IGN);
 
 	prog_name = basename(strdup(argv[0]));
 
