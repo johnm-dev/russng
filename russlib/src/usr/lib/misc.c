@@ -124,7 +124,7 @@ russ_dprintf(int fd, char *format, ...) {
 	n = vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 	if (n >= 0) {
-		n = russ_write(fd, buf, n);
+		n = russ_writen(fd, buf, n);
 	}
 	return n;
 }
