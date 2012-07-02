@@ -184,7 +184,7 @@ svc_env_handler(struct russ_conn *conn) {
 	int	i;
 
 	for (i = 0; environ[i] != NULL; i++) {
-		russ_write(conn->fds[1], environ[i]);
+		russ_dprintf(conn->fds[1], "%s\n", environ[i]);
 	}
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
