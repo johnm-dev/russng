@@ -194,6 +194,7 @@ _forward_bytes2(void *_fwd) {
 * operations should be done on them.
 *
 * @param self		forwarder object
+* @param id		for id member
 * @param in_fd		for in_fd member
 * @param out_fd		for out_fd member
 * @param count		for count member
@@ -202,7 +203,8 @@ _forward_bytes2(void *_fwd) {
 * @param close_fds	for close_fds member
 */
 void
-russ_forwarder_init(struct russ_forwarder *self, int in_fd, int out_fd, int count, int blocksize, int how, int close_fds) {
+russ_forwarder_init(struct russ_forwarder *self, int id, int in_fd, int out_fd, int count, int blocksize, int how, int close_fds) {
+	self->id = id;
 	self->in_fd = in_fd;
 	self->out_fd = out_fd;
 	self->count = count;
