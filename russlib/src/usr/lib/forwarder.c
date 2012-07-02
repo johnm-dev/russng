@@ -156,7 +156,6 @@ _forward_bytes2(void *_fwd) {
 		if ((rv = poll(pollfds, 2, -1)) <= 0) {
 			if (rv == 0) {
 				fwd->reason = RUSS_FWD_REASON_TIMEOUT;
-				break;
 			} else {
 				fwd->reason = RUSS_FWD_REASON_ERROR;
 			}
