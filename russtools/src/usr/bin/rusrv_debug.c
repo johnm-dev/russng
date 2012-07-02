@@ -141,7 +141,12 @@ svc_discard_handler(struct russ_conn *conn) {
 		t0 = gettimeofday_float();
 		last_t1 = t0;
 		total = 0;
-		while ((n = russ_read(conn->fds[0], buf, buf_size)) > 0) {
+		while ((n = russ_read(conn->fds[0], buf, buf_size)) >= 0) {
+			if ((n == 0) && (errno != EAGAIN) && (errno != EINTR)) {
+				/* error */
+				russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+				break;
+			}
 			total += n;
 			t1 = gettimeofday_float();
 			if (t1-last_t1 > 2) {
