@@ -209,6 +209,7 @@ russ_forwarder_init(struct russ_forwarder *self, int in_fd, int out_fd, int coun
 	self->blocksize = blocksize;
 	self->how = how;
 	self->close_fds = close_fds;
+	self->reason = 0;
 }
 
 /**
