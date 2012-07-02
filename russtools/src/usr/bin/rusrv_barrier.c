@@ -291,7 +291,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 				goto cleanup_and_exit;
 			};
 		} else {
-			if (poll_fds[0].revents && POLLIN) {
+			if (poll_fds[0].revents & POLLIN) {
 				if ((bconn = russ_listener_answer(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
 					continue;
 				}
