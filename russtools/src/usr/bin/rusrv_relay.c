@@ -104,16 +104,13 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 		return;
 	}
 
-	tv.tv_sec = 5;
-	tv.tv_usec = 0;
-
 	in_chans[0] = ssh_chan;
 	in_chans[1] = NULL;
 	maxfds = (conn->fds[0])+1;
 	ready_out = 1;
 	ready_err = 1;
 
-	while (!ssh_channel_is_closed(ssh_chan)) {
+	while ((!ssh_channel_is_closed(ssh_chan)) && (!ssh_channel_is_eof(ssh_chan))) {
 		do {
 			maxfds = 0;
 			FD_ZERO(&readfds);
@@ -122,6 +119,8 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 				maxfds = (conn->fds[0])+1;
 			}
 
+			tv.tv_sec = 5;
+			tv.tv_usec = 0;
 			rv = ssh_select(in_chans, out_chans, maxfds, &readfds, &tv);
 		} while (rv == SSH_EINTR);
 
@@ -143,7 +142,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 		}
 
 		/* service ssh_chan */
-		if (out_chans[0]) {
+		if (out_chans[0] != NULL) {
 			/* ssh_chan stdout */
 			if (ready_out) {
 				nbytes = ssh_channel_read_nonblocking(ssh_chan, buf, buf_size, 0);
