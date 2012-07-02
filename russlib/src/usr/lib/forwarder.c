@@ -134,6 +134,7 @@ _forward_bytes2(void *_fwd) {
 	struct pollfd		pollfds[2];
 	char			buf[1<<20], *bp;
 	long			nread, nwrite, count;
+	int			rv;
 
 	fwd = (struct russ_forwarder *)_fwd;
 	fwd->reason = 0;
