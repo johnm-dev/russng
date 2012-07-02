@@ -123,7 +123,7 @@ russ_readn(int fd, char *b, size_t count) {
 * @return		# of bytes written; or error/EOF
 */
 ssize_t
-russ_write(int fd, char *b, size_t count) {
+xxx_russ_write(int fd, char *b, size_t count) {
 	ssize_t	n;
 
 	while ((n = write(fd, b, count)) < 0) {
