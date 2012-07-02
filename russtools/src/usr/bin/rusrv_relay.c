@@ -130,7 +130,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 
 		/* conn stdin */
 		if (FD_ISSET(conn->fds[0], &readfds)) {
-			nbytes = read(conn->fds[0], buf, 8);
+			nbytes = read(conn->fds[0], buf, buf_size);
 			if (nbytes) {
 				ssh_channel_write(ssh_chan, buf, nbytes);
 			} else {
