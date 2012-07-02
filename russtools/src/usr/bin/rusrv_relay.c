@@ -85,24 +85,21 @@ char	*HELP =
 * Forward bytes between connection and ssh chan.
 *
 * @param conn		connection object
+* @param ssh_chan	established ssh_chan
+* @param buf		working buffer
+* @param buf_size	size of working buffer
 */
 int
-forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
+forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, int buf_size) {
 	ssh_channel	in_chans[2];
 	ssh_channel	out_chans[2];
 	fd_set		readfds;
 	int		maxfds;
 	int		rv;
 	struct timeval	tv;
-	char		*buf;
-	int		nbytes, buf_size;
+	int		nbytes;
 	int		ready_out, ready_err;
 	int		exit_status = RUSS_EXIT_SYS_FAILURE;
-
-	buf_size = 65536;
-	if ((buf = malloc(sizeof(char)*buf_size)) == NULL) {
-		return;
-	}
 
 	in_chans[0] = ssh_chan;
 	in_chans[1] = NULL;
@@ -169,10 +166,6 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan) {
 			}
 		}
 	}
-
-free_buf:
-	free(buf);
-	return;
 	//exit_status = ssh_channel_get_exit_status(ssh_chan);
 	//ssh_channel_close(ssh_chan);
 	//return exit_status;
@@ -220,9 +213,9 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	ssh_session	ssh_sess = NULL;
 	ssh_channel	ssh_chan = NULL;
 	int		ssh_state;
-	int		nbytes;
 	char		*subsystem_path = NULL;
-	char		buf[32768];
+	char		*buf;
+	int		buf_size, nbytes;
 	int		exit_status = -1;
 
 	/* prep */
@@ -235,6 +228,13 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	}
 
 	if ((subsystem_path = configparser_get(config, section_name, "subsystem_path", NULL)) == NULL) {
+		goto free_vars;
+	}
+
+	/* allocate buffer */
+	buf_size = configparser_get(config, section_name, "buffer_size", 0);
+	buf_size = (buf_size < 32768) ? 32768: buf_size;
+	if ((buf = malloc(sizeof(char)*buf_size)) == NULL) {
 		goto free_vars;
 	}
 
@@ -273,14 +273,15 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	}
 
 	/* send dial information */
-	if (((nbytes = enc_dial_info(conn, new_spath, buf, sizeof(buf))) < 0)
+	if (((nbytes = enc_dial_info(conn, new_spath, buf, buf_size)) < 0)
 		|| ((nbytes = ssh_channel_write(ssh_chan, buf, nbytes)) < 0)) {
 		goto free_vars;
 	}
 
-	forward_bytes_over_ssh(conn, ssh_chan);
+	forward_bytes_over_ssh(conn, ssh_chan, buf, buf_size);
 
 free_vars:
+	free(buf);
 	ssh_channel_close(ssh_chan);
 	exit_status = ssh_channel_get_exit_status(ssh_chan);
 	ssh_channel_free(ssh_chan);
