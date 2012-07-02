@@ -50,18 +50,18 @@ _forward_block(int in_fd, int out_fd, char *buf, int bsize, int how) {
 
 	if (how == 0) {
 		if ((nread = russ_read(in_fd, buf, bsize)) < 0) {
-			return -1;
+			return nread;
 		}
 	} else {
 		if ((nread = russ_readline(in_fd, buf, bsize)) < 0) {
-			return -1;
+			return nread;
 		}
 	}
 	if (nread == 0) {
 		return 0;
 	}
 	if ((nwrite = russ_writen(out_fd, buf, nread)) != nread) {
-		return -1;
+		return nwrite;
 	}
 	return nwrite;
 }
