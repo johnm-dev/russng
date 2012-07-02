@@ -129,6 +129,7 @@ struct russ_forwarder {
 	int		count;		/**< # of bytes to forward */
 	int		blocksize;	/**< max size of blocks at once */
 	int		how;		/**< 0 for normal read, 1 for readline */
+	int		close_fds;	/**< 1 to close fds before returning */
 	int		reason;		/**< reason forwarder returned */
 };
 
@@ -159,7 +160,7 @@ struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
 
 /* forwarder */
-void russ_forwarder_init(struct russ_forwarder *, int, int, int, int, int);
+void russ_forwarder_init(struct russ_forwarder *, int, int, int, int, int, int);
 int russ_forwarder_start(struct russ_forwarder *);
 int russ_forwarder_join(struct russ_forwarder *);
 int russ_run_forwarders(int, struct russ_forwarder *);
