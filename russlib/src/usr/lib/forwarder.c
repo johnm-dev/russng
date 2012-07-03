@@ -166,8 +166,12 @@ _forward_bytes2(void *_fwd) {
 			break;
 		}
 		if (pollfds[0].revents & POLLIN) {
-			if (_forward_block(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize, fwd->how) < 0) {
+			rv = _forward_block(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize, fwd->how);
+			if (rv < 0) {
 				fwd->reason = RUSS_FWD_REASON_ERROR;
+				break;
+			} else if (rv == 0) {
+				fwd->reason = RUSS_FWD_REASON_EOF;
 				break;
 			}
 			continue;
