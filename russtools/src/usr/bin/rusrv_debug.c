@@ -76,7 +76,7 @@ svc_chargen_handler(struct russ_conn *conn) {
 	char	off;
 
 	off = 0;
-	while (russ_dprintf(conn->fds[1], "%.72s\n", &(buf[off])) >= 0) {
+	while (russ_dprintf(conn->fds[1], "%.72s\n", &(buf[off])) > 0) {
 		off++;
 		if (off > 94) {
 			off = 0;
