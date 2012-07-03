@@ -37,33 +37,37 @@
 /*
 * Forward a block by bunch of bytes or line.
 *
+* Reading is of bytes available (thus russ_read()). However, writing
+* must be of bytes read (thus russ_writen()).
+*
 * @param in_fd		input fd
 * @param out_fd		output fd
 * @param buf		buffer
 * @param bsize		buffer size
 * @param how		0 for bunch, 1 for line
-* @return		# of bytes forwarded, -1 on failure
+* @return		# of bytes forwarded; -1 on failure
 */
 static int
 _forward_block(int in_fd, int out_fd, char *buf, int bsize, int how) {
-	long	nread, nwrite;
+	long	nread;
 
 	if (how == 0) {
-		if ((nread = russ_read(in_fd, buf, bsize)) < 0) {
-			return nread;
-		}
+		nread = russ_read(in_fd, buf, bsize);
 	} else {
-		if ((nread = russ_readline(in_fd, buf, bsize)) < 0) {
-			return nread;
+		nread = russ_readline(in_fd, buf, bsize);
+	}
+	if (nread < 0) {
+		return -1;
+	} else if (nread == 0) {
+		/* EOF */
+		return 0;
+	} else {
+		if (russ_writen(out_fd, buf, nread) != nread) {
+			/* short write */
+			return -1;
 		}
 	}
-	if (nread == 0) {
-		return 0;
-	}
-	if ((nwrite = russ_writen(out_fd, buf, nread)) != nread) {
-		return nwrite;
-	}
-	return nwrite;
+	return nread;
 }
 
 /*
