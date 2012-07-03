@@ -130,6 +130,7 @@ svc_discard_handler(struct russ_conn *conn) {
 	char		*buf;
 	int		buf_size;
 	long		n, total;
+	int		perf = 0;
 
 	/* 8MB */
 	buf_size = 1<<23;
@@ -137,33 +138,37 @@ svc_discard_handler(struct russ_conn *conn) {
 		russ_conn_fatal(conn, "error: cannot allocate buffer", RUSS_EXIT_FAILURE);
 		return;
 	}
-	if ((russ_sarray0_count(conn->req.argv, 2) >= 1)  && (strcmp(conn->req.argv[0], "--perf") == 0)) {
-		t0 = gettimeofday_float();
-		last_t1 = t0;
-		total = 0;
-		while (1) {
-			n = russ_read(conn->fds[0], buf, buf_size);
-			if (n > 0) {
+	if ((russ_sarray0_count(conn->req.argv, 2) >= 1)
+		&& (strcmp(conn->req.argv[0], "--perf") == 0)) {
+		perf = 1;
+	}
+	t0 = gettimeofday_float();
+	last_t1 = t0;
+	total = 0;
+	while (1) {
+		n = russ_read(conn->fds[0], buf, buf_size);
+		if (n > 0) {
+			if (perf) {
 				total += n;
 				t1 = gettimeofday_float();
 				if (t1-last_t1 > 2) {
 					print_discard_stats(conn->fds[1], t1-t0, total);
 					last_t1 = t1;
 				}
-			} else if (n < 0) {
-				if ((errno != EAGAIN) && (errno != EINTR)) {
-					/* error */
-					russ_conn_exit(conn, RUSS_EXIT_FAILURE);
-					break;
-				}
-			} else {
-				/* done */
+			}
+		} else if (n < 0) {
+			if ((errno != EAGAIN) && (errno != EINTR)) {
+				/* error */
+				russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 				break;
 			}
+		} else {
+			/* done */
+			break;
 		}
+	}
+	if (perf) {
 		print_discard_stats(conn->fds[1], gettimeofday_float()-t0, total);
-	} else {
-		while ((n = russ_read(conn->fds[0], buf, buf_size)) > 0);
 	}
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
