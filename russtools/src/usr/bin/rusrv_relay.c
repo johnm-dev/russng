@@ -96,32 +96,52 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 	ssh_channel	out_chans[2];
 	fd_set		readfds;
 	struct timeval	tv;
-	int		maxfds, rv;
+	int		maxfd, rv;
 	int		nread, nwrite;
 	int		ready_out, ready_err;
 	int		exit_status = RUSS_EXIT_SYS_FAILURE;
 
 	in_chans[0] = ssh_chan;
 	in_chans[1] = NULL;
-	maxfds = (conn->fds[0])+1;
+	maxfd = 0;
 	ready_out = 1;
 	ready_err = 1;
 
-	while ((!ssh_channel_is_closed(ssh_chan)) && (!ssh_channel_is_eof(ssh_chan))) {
+	while (1) {
+		if (ssh_channel_is_closed(ssh_chan)) {
+			/* from other size */
+			break;
+		}
+#if 0
+		if (ssh_channel_is_eof(ssh_chan)) {
+			/* from other side */
+			ssh_channel_close(ssh_chan);
+			break;
+		}
+#endif
+		if ((in_chans[0] == NULL) && (conn->fds[0] < 0)) {
+			/* no more inputs, either way */
+			ssh_channel_close(ssh_chan);
+			break;
+		}
+
+		/* watch for inputs */
 		do {
-			maxfds = 0;
+			maxfd = 0;
 			FD_ZERO(&readfds);
 			if (conn->fds[0] >= 0) {
 				FD_SET(conn->fds[0], &readfds);
-				maxfds = (conn->fds[0])+1;
+				maxfd = (conn->fds[0])+1;
 			}
 
 			tv.tv_sec = 5;
 			tv.tv_usec = 0;
-			rv = ssh_select(in_chans, out_chans, maxfds, &readfds, &tv);
+			rv = ssh_select(in_chans, out_chans, maxfd, &readfds, &tv);
+fprintf(stderr, "rv (%d) in_chans[0] (%d) out_chans[0] (%d) conn->fds[0] (%d) ready_out (%d) ready_err (%d)\n", rv, in_chans[0], out_chans[0], conn->fds[0], ready_out, ready_err);
 		} while (rv == SSH_EINTR);
 
 		if (rv == SSH_ERROR) {
+			ssh_channel_close(ssh_chan);
 			break;
 		}
 
@@ -130,7 +150,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 			nread = russ_read(conn->fds[0], buf, buf_size);
 			if (((nread > 0) && (ssh_channel_write(ssh_chan, buf, nread) != nread))
 				|| (nread <= 0)) {
-				/* short write or error/eof read */
+				/* short write or error/eof read; no more stdin */
 				close(conn->fds[0]);
 				conn->fds[0] = -1;
 				ssh_channel_send_eof(ssh_chan);
@@ -144,6 +164,11 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 				nread = ssh_channel_read_nonblocking(ssh_chan, buf, buf_size, 0);
 				if (((nread > 0) && (russ_writen(conn->fds[1], buf, nread) != nread))
 					|| (nread < 0)) {
+					/* error read or short write; no more stdout */
+					if (conn->fds[1] >= 0) {
+						close(conn->fds[1]);
+						conn->fds[1] = -1;
+					}
 					ready_out = 0;
 				}
 			}
@@ -151,16 +176,35 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 			/* ssh_chan stderr */
 			if (ready_err) {
 				nread = ssh_channel_read_nonblocking(ssh_chan, buf, buf_size, 1);
-				if (((nread > 0) && (russ_writen(conn->fds[1], buf, nread) != nread))
+				if (((nread > 0) && (russ_writen(conn->fds[2], buf, nread) != nread))
 					|| (nread < 0)) {
+					/* error read or short write; no more stderr */
+					if (conn->fds[2] >= 0) {
+						close(conn->fds[2]);
+						conn->fds[2] = -1;
+					}
 					ready_err = 0;
 				}
 			}
-			if (!ready_out && !ready_err) {
-				out_chans[0] = NULL;
+			/*
+			* if local stdout is closed/unavailable,
+			* the we must close the channel or else
+			* data will continue to be sent and buffered
+			* (along the way, e.g., in a pipe). There is
+			* no way to communicate that one of stdout
+			* or stderr are closed and that the other
+			* end should stop using it. This prevents
+			* libssh from being used as a general
+			* purpose i/o transfer service for an
+			* arbitrary number of fds
+			*/
+			if (!ready_out) {
+				in_chans[0] = NULL;
+				ssh_channel_close(ssh_chan);
 			}
 		}
 	}
+//fprintf(stderr, "relay forward EXITING rv (%d) is_closed (%d) is_eof (%d) exit_status (%d) ready_out (%d) ready_err (%d)\n", rv, ssh_channel_is_closed(ssh_chan), ssh_channel_is_eof(ssh_chan), ssh_channel_get_exit_status(ssh_chan), ready_out, ready_err);
 	return 0;
 }
 
@@ -274,8 +318,9 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 
 free_vars:
 	free(buf);
-	ssh_channel_close(ssh_chan);
 	exit_status = ssh_channel_get_exit_status(ssh_chan);
+	ssh_channel_send_eof(ssh_chan);
+	ssh_channel_close(ssh_chan);
 	ssh_channel_free(ssh_chan);
 	ssh_disconnect(ssh_sess);
 	ssh_free(ssh_sess);
