@@ -111,7 +111,7 @@ russ_sarray0_free(char **arr) {
 * @param fd		descriptor
 * @param format		printf-style format string
 * @param ...		variadic list of arguments
-* @return		# of bytes written
+* @return		# of bytes written; -1 on error
 */
 int
 russ_dprintf(int fd, char *format, ...) {
@@ -124,7 +124,9 @@ russ_dprintf(int fd, char *format, ...) {
 	n = vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 	if (n >= 0) {
-		n = russ_writen(fd, buf, n);
+		if (russ_writen(fd, buf, n) < n) {
+			return -1;
+		}
 	}
 	return n;
 }
