@@ -65,6 +65,7 @@
 #define RUSS_EXIT_SYS_FAILURE	-127
 
 /* forwarder reasons */
+#define RUSS_FWD_REASON_EOF	0
 #define RUSS_FWD_REASON_ERROR	-1
 #define RUSS_FWD_REASON_TIMEOUT	-2
 #define RUSS_FWD_REASON_COUNT	-3
