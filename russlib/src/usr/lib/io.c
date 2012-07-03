@@ -115,15 +115,15 @@ russ_readn(int fd, char *b, size_t count) {
 }
 
 /**
-* Guaranteed write with auto retry on EINTR and EAGAIN.
+* Write bytes with auto retry on EINTR and EAGAIN.
 *
 * @param fd		descriptor
 * @param b		buffer
 * @param count		# of bytes to write
-* @return		# of bytes written; or error/EOF
+* @return		# of bytes written; -1 on error
 */
 ssize_t
-xxx_russ_write(int fd, char *b, size_t count) {
+russ_write(int fd, char *b, size_t count) {
 	ssize_t	n;
 
 	while ((n = write(fd, b, count)) < 0) {
@@ -153,11 +153,8 @@ russ_writen(int fd, char *b, size_t count) {
 
 	bend = b+count;
 	while (b < bend) {
-		if ((n = write(fd, b, bend-b)) < 0) {
-			if ((errno != EAGAIN) && (errno != EINTR)) {
-				/* unrecoverable error */
-				return n;
-			}
+		if ((n = russ_write(fd, b, bend-b)) < 0) {
+			break;
 		}
 		b += n;
 	}
@@ -193,9 +190,7 @@ russ_writen_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
 			break;
 		}
 		if ((n = write(fd, b, bend-b)) < 0) {
-			if ((errno != EAGAIN) && (errno != EINTR)) {
-				return n;
-			}
+			break;
 		}
 		b += n;
 	}
