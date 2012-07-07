@@ -103,6 +103,13 @@ libruss.russ_conn_await_request.restype = ctypes.c_int
 libruss.russ_conn_close.argtypes = [ctypes.c_void_p]
 libruss.russ_conn_close.restype = None
 
+# russ_conn_close_fd
+libruss.russ_conn_close_fd.argtypes = [
+    ctypes.POINTER(russ_conn_Structure),
+    ctypes.c_int,
+]
+libruss.russ_conn_close_fd.restype = ctypes.c_int
+
 # russ_conn_exit
 libruss.russ_conn_exit.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
@@ -191,7 +198,7 @@ class Conn:
         self.conn_ptr = None
 
     def close_fd(self, i):
-        return libruss.russ_close_fds(i, self.conn_ptr.contents.fds)
+        return libruss.russ_close_fd(self.conn_ptr, i)
 
     def get_cred(self):
         cred = self.conn_ptr.contents.cred
