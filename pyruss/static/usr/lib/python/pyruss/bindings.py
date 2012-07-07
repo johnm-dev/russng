@@ -29,6 +29,7 @@ import ctypes
 import os
 import sys
 from threading import Thread
+import traceback
 
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
@@ -79,11 +80,11 @@ libruss.russ_dialv.argtypes = [
     ctypes.POINTER(ctypes.c_char_p),
     ctypes.POINTER(ctypes.c_char_p),
 ]
-libruss.russ_dialv.restype = ctypes.c_void_p
+libruss.russ_dialv.restype = ctypes.POINTER(russ_conn_Structure)
 
 # russ_conn_accept
 libruss.russ_conn_accept.argtypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_conn_Structure),
     ctypes.c_void_p,
     ctypes.c_void_p,
     # TODO: how to handle passing fds?
@@ -94,7 +95,7 @@ libruss.russ_conn_accept.restype = ctypes.c_int
 
 # russ_conn_await_request
 libruss.russ_conn_await_request.argtypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_conn_Structure),
 ]
 libruss.russ_conn_await_request.restype = ctypes.c_int
 
@@ -104,22 +105,21 @@ libruss.russ_conn_close.restype = None
 
 # russ_conn_exit
 libruss.russ_conn_exit.argtypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_conn_Structure),
     ctypes.c_int,
 ]
 libruss.russ_conn_exit.restype = ctypes.c_int
 
 # russ_conn_free
 libruss.russ_conn_free_argtypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_conn_Structure),
 ]
-libruss.russ_conn_free.restype = None
+libruss.russ_conn_free.restype = ctypes.POINTER(russ_conn_Structure)
 
 # russ_conn_wait
 libruss.russ_conn_wait.argstypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_conn_Structure),
     ctypes.POINTER(ctypes.c_int),
-    ctypes.POINTER(ctypes.c_char_p),
     ctypes.c_int64,  # russ_timeout
 ]
 libruss.russ_conn_wait.restype = ctypes.c_int
@@ -131,30 +131,30 @@ libruss.russ_announce.argtypes = [
     ctypes.c_uint,
     ctypes.c_uint,
 ]
-libruss.russ_announce.restype = ctypes.c_void_p
+libruss.russ_announce.restype = ctypes.POINTER(russ_listener_Structure)
 
 # russ_listener_answer
 libruss.russ_listener_answer.argtypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_listener_Structure),
     ctypes.c_int64,  # russ_timeout
 ]
-libruss.russ_listener_answer.restype = ctypes.c_void_p
+libruss.russ_listener_answer.restype = ctypes.POINTER(russ_conn_Structure)
 
 # russ_listener_close
 libruss.russ_listener_close.argtypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_listener_Structure),
 ]
 libruss.russ_listener_close.restype = None
 
 # russ_listener_free
 libruss.russ_listener_free.argtypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_listener_Structure),
 ]
-libruss.russ_listener_free.restype = ctypes.c_void_p
+libruss.russ_listener_free.restype = ctypes.POINTER(russ_listener_Structure)
 
 # russ_loop
 libruss.russ_listener_loop.argtypes = [
-    ctypes.c_void_p,
+    ctypes.POINTER(russ_listener_Structure),
     ctypes.c_void_p,
 ]
 libruss.russ_listener_loop.restype = None
@@ -183,30 +183,28 @@ class Conn:
     """Common (client, server) connection.
     """
 
-    def __init__(self, raw_conn):
-        self.raw_conn = raw_conn
-        self.ptr_conn = ctypes.cast(raw_conn, ctypes.POINTER(russ_conn_Structure))
+    def __init__(self, conn_ptr):
+        self.conn_ptr = conn_ptr
 
     def __del__(self):
-        libruss.russ_conn_free(self.raw_conn)
-        self.raw_conn = None
-        self.ptr_conn = None
+        libruss.russ_conn_free(self.conn_ptr)
+        self.conn_ptr = None
 
     def close_fd(self, i):
-        return libruss.russ_close_fds(i, self.raw_conn.fds)
+        return libruss.russ_close_fds(i, self.conn_ptr.contents.fds)
 
     def get_cred(self):
-        cred = self.ptr_conn.contents.cred
+        cred = self.conn_ptr.contents.cred
         return (cred.pid, cred.uid, cred.gid)
 
     def get_fd(self, i):
-        return self.ptr_conn.contents.fds[i]
+        return self.conn_ptr.contents.fds[i]
 
     def get_request(self):
-        return self.ptr_conn.contents.req
+        return self.conn_ptr.contents.req
 
     def get_request_args(self):
-        req = self.ptr_conn.contents.req
+        req = self.conn_ptr.contents.req
         args = []
         if bool(req.argv):
             i = 0
@@ -219,7 +217,7 @@ class Conn:
         return  args
 
     def get_request_attrs(self):
-        req = self.ptr_conn.contents.req
+        req = self.conn_ptr.contents.req
         attrs = {}
         if bool(req.attrv):
             i = 0
@@ -236,24 +234,24 @@ class Conn:
         return attrs
 
     def get_sd(self):
-        return self.ptr_conn.contents.sd
+        return self.conn_ptr.contents.sd
 
     def close(self):
-        libruss.russ_conn_close(self.raw_conn)
+        libruss.russ_conn_close(self.conn_ptr)
 
 class ClientConn(Conn):
     """Client connection.
     """
 
     def get_fd(self, i):
-        return self.ptr_conn.contents.fds[i]
+        return self.conn_ptr.contents.fds[i]
 
     def get_sd(self):
-        return self.ptr_conn.contents.sd
+        return self.conn_ptr.contents.sd
 
     def wait(self, timeout):
         exit_status = c_int()
-        return libruss.russ_conn_wait(self.raw_conn, ctypes.byref(exit_status), timeout), exit_status
+        return libruss.russ_conn_wait(self.conn_ptr, ctypes.byref(exit_status), timeout), exit_status
 
 class ServerConn(Conn):
     """Server connection.
@@ -262,48 +260,48 @@ class ServerConn(Conn):
     def accept(self, cfds, sfds):
         if 0:
             # TODO: how to handle passing fds?
-            return libruss.russ_conn_accept(self.raw_conn, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+            return libruss.russ_conn_accept(self.conn_ptr, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
         else:
-            return libruss.russ_conn_accept(self.raw_conn, None, None)
+            return libruss.russ_conn_accept(self.conn_ptr, None, None)
 
     def await_request(self):
-        return libruss.russ_conn_await_request(self.raw_conn)
+        return libruss.russ_conn_await_request(self.conn_ptr)
 
     def exit(self, exit_status):
-        return libruss.russ_conn_exit(self.raw_conn, exit_status)
+        return libruss.russ_conn_exit(self.conn_ptr, exit_status)
 
 HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
 class Listener:
-    def __init__(self, raw_lis):
-        self.raw_lis = raw_lis
-        self.ptr_lis = ctypes.cast(raw_lis, ctypes.POINTER(russ_listener_Structure))
+    def __init__(self, lis_ptr):
+        self.lis_ptr = lis_ptr
 
     def __del__(self):
-        if self.raw_lis != None:
-            libruss.russ_listener_close(self.raw_lis)
-            libruss.russ_listener_free(self.raw_lis)
-            self.raw_lis = None
-            self.ptr_lis= None
+        libruss.russ_listener_close(self.lis_ptr)
+        libruss.russ_listener_free(self.lis_ptr)
+        self.lis_ptr = None
 
     def answer(self, timeout):
-        raw_conn = libruss.russ_listener_answer(self.raw_lis, timeout)
-        return raw_conn and ServerConn(raw_conn)
+        try:
+            conn_ptr = libruss.russ_listener_answer(self.lis_ptr, timeout)
+        except:
+            traceback.print_exc()
+        return conn_ptr and ServerConn(conn_ptr)
 
     def close(self):
-        libruss.russ_listener_close(self.raw_lis)
+        libruss.russ_listener_close(self.lis_ptr)
 
     def get_sd(self):
-        if self.raw_lis:
-            return self.ptr_lis.contents.sd
+        if self.lis_ptr:
+            return self.lis_ptr.contents.sd
         else:
             return -1
 
     def _loop(self, handler):
-        def raw_handler(raw_conn):
-            handler(ServerConn(raw_conn))
+        def raw_handler(conn_ptr):
+            handler(ServerConn(conn_ptr))
             return 0    # TODO: allow a integer return value from handler
-        libruss.russ_listener_loop(self.raw_lis, HANDLERFUNC(raw_handler))
+        libruss.russ_listener_loop(self.lis_ptr, HANDLERFUNC(raw_handler))
 
     def loop(self, handler):
         """Fork-based loop.
@@ -351,4 +349,3 @@ class Listener:
             except:
                 #traceback.print_exc()
                 pass
-
