@@ -31,7 +31,7 @@ configparser.o:	configparser.c
 	$(CC) $(CFLAGS) -fPIC -c -I. $<
 
 disp.o:	disp.c
-	$(CC) $(CFLAGS) -fPIC -c -I. $<
+	$(CC) $(CFLAGS) -fPIC -c -I. -I$(RUSS_INCLUDE_DIR) $<
 
 rusrv_barrier:	rusrv_barrier.c configparser.o
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
