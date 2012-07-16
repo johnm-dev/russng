@@ -10,12 +10,14 @@ HERE_DIR:=$(shell dirname $(HERE_FILE))
 
 all:
 	(cd russlib; $(MAKE))
+	(cd russservers; $(MAKE))
 	(cd russtools; $(MAKE))
 	(cd pyruss; $(MAKE))
 	(cd rbruss; $(MAKE))
 
 clean:
 	(cd russlib; $(MAKE) clean)
+	(cd russservers; $(MAKE) clean)
 	(cd russtools; $(MAKE) clean)
 	(cd pyruss; $(MAKE) clean)
 	(cd rbruss; $(MAKE) clean)
@@ -31,6 +33,7 @@ install:
 	(mkdir -p ${INSTALL_DIR})
 	:
 	(cd russlib; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
+	(cd russservers; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd russtools; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd pyruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd rbruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
