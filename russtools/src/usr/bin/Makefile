@@ -6,7 +6,7 @@
 include ../../../../Makefile.inc
 
 LIBS=
-BINS=rudial ruls rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pexec rusrv_relay rusrv_relay_backend
+BINS=rudial ruls
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
@@ -37,34 +37,3 @@ rudial2:	rudial2.c
 
 ruls:	ruls.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
-
-rusrv_barrier:	rusrv_barrier.c configparser.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
-
-rusrv_debug:	rusrv_debug.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
-
-rusrv_echo:	rusrv_echo.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
-
-rusrv_exec:	rusrv_exec.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
-
-rusrv_pexec:	rusrv_pexec.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
-
-configparser.o:	configparser.c
-	$(CC) $(CFLAGS) -fPIC -c -I. $<
-
-rusrv_relay:	rusrv_relay.c configparser.c
-	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread -lssh
-
-rusrv_relay_backend: rusrv_relay_backend.c
-	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
-
-rusrv_srelay:	rusrv_srelay.c configparser.c disp.c
-	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
-
-rusrv_srelay_backend: rusrv_srelay_backend.c disp.c
-	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
-
