@@ -30,7 +30,7 @@ install:
 	(cd src/usr/lib; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd src/usr; cp -r include ${INSTALL_DIR}/usr)
 	(cd static; tar cf - etc usr/share) | (cd $(INSTALL_DIR); tar xvf -)
-	(mkdir -p $(INSTALL_DIR)/usr/share/doc/russlib)
+	(mkdir -p $(INSTALL_DIR)/usr/share/doc/russ)
 	if [ -d doc ]; then \
-		(cd doc; tar cf - .) | (cd $(INSTALL_DIR)/usr/share/doc/russlib; tar xvf -) \
+		(cd doc; tar cf - .) | (cd $(INSTALL_DIR)/usr/share/doc/russ; tar xvf -) \
 	fi
