@@ -65,7 +65,7 @@ struct barrier {
 
 /* globals */
 struct configparser	*config;
-struct barrier	*barrier;
+struct barrier		*barrier;
 
 /*
 * backend
