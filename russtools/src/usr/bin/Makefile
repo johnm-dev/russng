@@ -61,3 +61,10 @@ rusrv_relay:	rusrv_relay.c configparser.c
 
 rusrv_relay_backend: rusrv_relay_backend.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
+
+rusrv_srelay:	rusrv_srelay.c configparser.c disp.c
+	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
+
+rusrv_srelay_backend: rusrv_srelay_backend.c disp.c
+	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
+
