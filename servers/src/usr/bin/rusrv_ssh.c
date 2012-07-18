@@ -344,7 +344,7 @@ load_hostsfile(char *filename) {
 		hostslist.hosts[i] = line;
 	}
 	hostslist.nhosts = i;
-	hostslist.next = i-1;
+	hostslist.next = -1;
 	return 0;
 }
 
@@ -357,9 +357,7 @@ alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
-		if (hostslist.nhosts > 0) {
-			hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
-		}
+		hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
 		if (fork() == 0) {
 			russ_listener_close(self);
 			self = russ_listener_free(self);
