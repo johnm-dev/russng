@@ -57,6 +57,7 @@
 #define RUSS_MSG_BAD_OP		"error: unsupported operation"
 #define RUSS_MSG_NO_EXIT	"error: no exit status"
 #define RUSS_MSG_NO_SERVICE	"error: no service"
+#define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
 
 /* common exit_status values */
 #define RUSS_EXIT_SUCCESS	0
