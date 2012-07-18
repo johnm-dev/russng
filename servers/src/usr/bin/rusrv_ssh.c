@@ -237,7 +237,7 @@ svc_random_handler(struct russ_conn *conn) {
 	int	hid;
 
 	hid = (random()/(double)RAND_MAX)*hostslist.nhosts;
-	sprintf(new_spath, "/hid/%d/%s", hid, &conn->req.spath[6]);
+	sprintf(new_spath, "/hid/%d/%s", hid, &conn->req.spath[8]);
 	free(conn->req.spath);
 	conn->req.spath = strdup(new_spath);
 	svc_hid_handler(conn);
