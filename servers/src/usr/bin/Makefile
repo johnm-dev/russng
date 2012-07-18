@@ -6,7 +6,7 @@
 include ../../../../Makefile.inc
 
 LIBS=
-BINS=rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pexec rusrv_relay rusrv_relay_backend rusrv_srelay rusrv_srelay_backend
+BINS=rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pexec rusrv_relay rusrv_relay_backend rusrv_srelay rusrv_srelay_backend rusrv_ssh
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
