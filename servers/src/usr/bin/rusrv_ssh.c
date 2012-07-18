@@ -359,7 +359,10 @@ alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
+
 		hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
+		random(); /* tickle */
+
 		if (fork() == 0) {
 			russ_listener_close(self);
 			self = russ_listener_free(self);
