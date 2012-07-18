@@ -270,7 +270,7 @@ master_handler(struct russ_conn *conn) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
 		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(conn->fds[1], "hid\nhost\nnet\n");
+			russ_dprintf(conn->fds[1], "hid\nhost\nnet\nnext\nrandom\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else if (strcmp(req->spath, "/hid") == 0) {
 			if (hostslist.nhosts == 0) {
@@ -290,7 +290,9 @@ master_handler(struct russ_conn *conn) {
 				}
 				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			}
-		} else if (strcmp(req->spath, "/net") == 0) {
+		} else if ((strcmp(req->spath, "/net") == 0)
+			|| (strcmp(req->spath, "/next") == 0)
+			|| (strcmp(req->spath, "/random") == 0)) {
 			//russ_conn_fatal(conn, RUSS_MSG_UNK_SERVICE, RUSS_EXIT_SUCCESS);
 			russ_conn_fatal(conn, "error: unknown service", RUSS_EXIT_SUCCESS);
 		} else {
