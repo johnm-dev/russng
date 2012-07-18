@@ -33,6 +33,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 #include "russ.h"
 
@@ -92,7 +93,8 @@ op_execute_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 	char			*cmd, **argv;
 	char			*shell, *lshell, *home;
-	int			argc, i;
+	pid_t			pid;
+	int			argc, i, status;
 
 	req = &(conn->req);
 
@@ -142,22 +144,30 @@ op_execute_handler(struct russ_conn *conn) {
 	chdir(home);
 	umask(0);
 
-	/* move and close fds */
-	dup2(conn->fds[0], 0);
-	dup2(conn->fds[1], 1);
-	dup2(conn->fds[2], 2);
+	/* execute */
+	signal(SIGCHLD, SIG_DFL);
+	if ((pid = fork()) == 0) {
+		dup2(conn->fds[0], 0);
+		dup2(conn->fds[1], 1);
+		dup2(conn->fds[2], 2);
+		close(conn->fds[3]);
+		//for (i = 3; i < 128; i++) {
+			//close(i);
+		//}
+		execve(cmd, argv, req->attrv);
+
+		/* should not get here! */
+		russ_dprintf(conn->fds[2], "error: could not execute\n");
+		exit(-1);
+	}
 	close(conn->fds[0]);
 	close(conn->fds[1]);
 	close(conn->fds[2]);
-	for (i = 3; i < 128; i++) {
-		close(i);
-	}
+	waitpid(pid, &status, 0);
 
-	/* execute */
-	execve(cmd, argv, req->attrv);
-
-	/* on error */
-	russ_conn_fatal(conn, "error: could not execute program", RUSS_EXIT_FAILURE);
+	russ_conn_exit(conn, WEXITSTATUS(status));
+	russ_conn_close(conn);
+	exit(0);
 }
 
 void
@@ -215,6 +225,7 @@ main(int argc, char **argv) {
 	char			*saddr;
 
 	signal(SIGCHLD, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
 
 	if (argc != 2) {
 		print_usage(argv);
