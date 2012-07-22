@@ -33,11 +33,13 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#include "russ_conf.h"
 #include "russ.h"
 
 /* globals */
-int	gl_argc;
-char	**gl_argv;
+int			gl_argc;
+char			**gl_argv;
+struct russ_conf	*conf = NULL;
 
 char	*HELP =
 "Personal execution server to quickly run a command/program in a\n"
@@ -203,7 +205,7 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_pexec [--ttl <timeout>] <saddr>\n"
+"usage: rusrv_pexec [<conf options>] [-- -ttl <timeout>]\n"
 "\n"
 "Russ-based personal exec server to execute programs.\n"
 );
@@ -212,15 +214,9 @@ print_usage(char **argv) {
 int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
-	char			*saddr;
 
 	signal(SIGCHLD, SIG_IGN);
-
-	if (argc != 2) {
-		print_usage(argv);
-		exit(-1);
-	}
-	saddr = argv[1];
+	signal(SIGPIPE, SIG_IGN);
 
 	/* dup argc and argv to globals for possible later reference */
 	if (dup_argc_argv_to_global(argc, argv) < 0) {
@@ -228,10 +224,19 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	/* announce and run serve loop */
-	if ((lis = russ_announce(saddr, 0600, getuid(), getgid())) == NULL) {
+	if ((argc < 2) || ((conf = russ_conf_init(&argc, argv, print_usage)) == NULL)) {
+		fprintf(stderr, "error: cannot configure\n");
+		exit(-1);
+	}
+
+	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+		russ_conf_getsint(conf, "server", "mode", 0600),
+		russ_conf_getint(conf, "server", "uid", getuid()),
+		russ_conf_getint(conf, "server", "gid", getgid()));
+	if (lis == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
 	russ_listener_loop(lis, master_handler);
+	exit(0);
 }

@@ -307,20 +307,15 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_ssh <conf>\n"
-"                 [options]\n"
+"usage: rusrv_ssh [<conf options>] [-- <hostsfile>]\n"
 "\n"
 "russ-based server for ssh-based remote connections. Configuration\n"
 "can be obtained from the conf file if no options are used, otherwise\n"
 "all configuration is taken from the given options.\n"
 "\n"
-"Options:"
-"-c <conf>\n"
-"    Use conf file for server configuration.\n"
+"Where:"
 "-h <hostsfile>\n"
 "    Set up /hosts/* and /hid/* services.\n"
-"-p <path>\n"
-"    Use path for service address.\n"
 );
 }
 
@@ -382,10 +377,6 @@ alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
-	char			*filename, *path;
-	int			mode, uid, gid;
-	char			*arg;
-	int			i;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
@@ -393,52 +384,27 @@ main(int argc, char **argv) {
 	srandom(time(NULL));
 	hostslist.nhosts = 0;
 
-	if (argc < 2) {
-		print_usage(argv);
+	if ((argc < 2) || ((conf = russ_conf_init(&argc, argv, print_usage)) == NULL)) {
+		fprintf(stderr, "error: cannot configure\n");
 		exit(-1);
 	}
-	if (argv[1][0] == '-') {
-		/* options */
-		mode = 0666;
-		uid = getuid();
-		gid = getgid();
-		path = NULL;
 
-		i = 1;
-		while (i < argc) {
-			arg = argv[i++];
-
-			if ((strcmp(arg, "-h") == 0) && (i < argc)) {
-				hostsfilename = argv[i++];
-			} else if ((strcmp(arg, "-p") == 0) && (i < argc)) {
-				path = argv[i++];
-			} else {
-				fprintf(stderr, "error: bad/missing arguments");
-				exit(-1);
-			}
-		}
-	} else if (argc == 2) {
-		/* configuration file */
-		filename = argv[1];
-		if ((conf = russ_conf_read(filename)) == NULL) {
-			fprintf(stderr, "error: could not read conf file\n");
-			exit(-1);
-		}
-
-		mode = russ_conf_getsint(conf, "server", "mode", 0600);
-		uid = russ_conf_getint(conf, "server", "uid", getuid());
-		gid = russ_conf_getint(conf, "server", "gid", getgid());
-		path = russ_conf_get(conf, "server", "path", NULL);
+	if (argc > 1) {
+		hostsfilename = argv[1];
 	}
-
 	if ((hostsfilename != NULL) && (load_hostsfile(hostsfilename) < 0)) {
 		fprintf(stderr, "error: could not load hosts file\n");
 		exit(-1);
 	}
 
-	if ((lis = russ_announce(path, mode, uid, gid)) == NULL) {
+	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+		russ_conf_getsint(conf, "server", "mode", 0600),
+		russ_conf_getint(conf, "server", "uid", getuid()),
+		russ_conf_getint(conf, "server", "gid", getgid()));
+	if (lis == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
 	alt_russ_listener_loop(lis, master_handler);
+	exit(0);
 }
