@@ -1,0 +1,51 @@
+#! /bin/bash
+#
+# russsrelay
+#
+### BEGIN INIT INFO
+# Provides:		russrelay
+# Required-Start:	$local_fs $russ
+# Required-Stop:	$local_fs
+# Default-Start:	2 3 4 5
+# Default-Stop:
+# Short-Description:	RUSS srelay service
+### END INIT INFO
+
+PID_FILENAME=/var/run/russ/srelay.pid
+
+# ensure dirs
+mkdir -p `dirname "${PID_FILENAME}"`
+
+case $1 in
+restart)
+	$0 stop && sleep 1 && $0 start
+	;;
+status)
+	PID=`cat "${PID_FILENAME}" 2> /dev/null` && `kill -0 ${PID} 2> /dev/null`
+	if [ $? = 0 ]; then
+		echo "running"
+	else
+		echo "not running"
+	fi
+	;;
+start)
+	PID=`cat "${PID_FILENAME}" 2> /dev/null` && `kill -0 ${PID} 2> /dev/null`
+	if [ $? = 0 ]; then
+		echo "already running"
+		exit 1
+	fi
+	rusrv_srelay /etc/russ/conf/srelay.conf < /dev/null > /dev/null 2>&1 &
+	echo $! > "${PID_FILENAME}"
+	;;
+stop)
+	PID=`cat "${PID_FILENAME}" 2> /dev/null`
+	if [ $? = 0 ]; then
+		kill ${PID} 2> /dev/null
+		rm -f "${PID_FILENAME}" 2> /dev/null
+	fi
+	;;
+*)
+	echo "usage: /etc/init.d/russsrelay {start|stop|restart|status}"
+	exit 1
+	;;
+esac
