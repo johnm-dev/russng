@@ -226,6 +226,78 @@ russ_conf_free(struct russ_conf *self) {
 }
 
 /**
+* Load conf object based on command line arguments.
+*
+* To help provide a standard command-line usage for russ servers,
+* the command line args (argc, argv) are passed to this function
+* which looks for:
+* -f <filename>
+* -c <section>:<option>=<value>
+* -- terminates the processing
+*
+* The argc and argv are updated at return time; unused args are
+* left in argv.
+*
+* @param argc		pointer to argc
+* @param argv		NULL-terminated string argument list
+* @param print_usage	function to print usage if '-h' is found
+* @return		russ_conf object; NULL on failure
+*/
+struct russ_conf *
+russ_conf_init(int *argc, char **argv, void (*print_usage)(char **)) {
+	struct russ_conf	*self;
+	int			i, j;
+	char			*colonp, *equalp;
+
+	if ((self = russ_conf_new()) == NULL) {
+		return NULL;
+	}
+
+	for (i = 1; i < *argc; i++) {
+		if ((strcmp(argv[i], "-c") == 0) && (i+1 < *argc)) {
+			i++;
+			if (((colonp = strchr(argv[i], ':')) == NULL)
+				|| ((equalp = strchr(colonp, '=')) == NULL)) {
+				goto bad_args;
+			}
+			*colonp = '\0';
+			*equalp = '\0';
+			if (russ_conf_set2(self, argv[i], colonp+1, equalp+1) < 0) {
+				*colonp = ':';
+				*equalp = '=';
+				goto bad_args;
+			}
+		} else if ((strcmp(argv[i], "-f") == 0) && (i+1 < *argc)) {
+			if (russ_conf_read(self, argv[i++]) < 0) {
+				goto bad_args;
+			}
+		} else if (strcmp(argv[i], "-h") == 0) {
+			print_usage(argv);
+			goto free_conf;
+		} else if (strcmp(argv[i], "--") == 0) {
+			i++;
+			break;
+		} else {
+			goto bad_args;
+		}
+	}
+
+	for (j = 1; i < *argc; i++, j++) {
+		argv[j] = argv[i];
+	}
+	argv[j] = NULL;
+	*argc = j-1;
+
+	return self;
+
+bad_args:
+	fprintf(stderr, "error: bad/missing arguments\n");
+free_conf:
+	russ_conf_free(self);
+	return NULL;
+}
+
+/**
 * Find section index in russ_conf sections array.
 *
 * @param self		russ_conf object
