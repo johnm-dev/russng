@@ -35,7 +35,7 @@ long russ_confparser_getint(struct russ_confparser *, char *, char *, long);
 double russ_confparser_getfloat(struct russ_confparser *, char *, char *, double);
 long russ_confparser_getsint(struct russ_confparser *, char *, char *, long);
 char **russ_confparser_options(struct russ_confparser *, char *);
-struct russ_confparser *russ_confparser_read(char *);
+int russ_confparser_read(struct russ_confparser *, char *);
 int russ_confparser_remove_option(struct russ_confparser *, char *, char *);
 int russ_confparser_remove_section(struct russ_confparser *, char *);
 int russ_confparser_set(struct russ_confparser *, char *, char *, char *);

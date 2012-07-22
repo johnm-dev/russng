@@ -529,24 +529,22 @@ free_all:
 * not saved.
 *
 * @param filename		file name
-* @return			russ_confparser object; NULL on failure
+* @return			0 on success; -1 on failure
 */
 struct russ_confparser *
-russ_confparser_read(char *filename) {
-	struct russ_confparser		*cp;
+russ_confparser_read(struct russ_confparser *self, char *filename) {
 	struct russ_confparser_section	*section;
 	FILE				*fp;
 	char				*section_name;
 	char				buf[4096], *p0, *p1;
 
-	if (((fp = fopen(filename, "r")) == NULL)
-		|| ((cp = russ_confparser_new()) == NULL)) {
-		return NULL;
+	if ((fp = fopen(filename, "r")) == NULL) {
+		return -1;
 	}
-	if ((russ_confparser_add_section(cp, "DEFAULT")) < 0) {
+	if ((russ_confparser_add_section(self, "DEFAULT")) < 0) {
 		goto free_all;
 	}
-	section = __russ_confparser_find_section(cp, "DEFAULT");
+	section = __russ_confparser_find_section(self, "DEFAULT");
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
 		/* skip whitespace */
@@ -575,11 +573,11 @@ russ_confparser_read(char *filename) {
 					break;
 				}
 			}
-			if ((section = __russ_confparser_find_section(cp, p0)) == NULL) {
-				 if (russ_confparser_add_section(cp, p0) < 0) {
+			if ((section = __russ_confparser_find_section(self, p0)) == NULL) {
+				 if (russ_confparser_add_section(self, p0) < 0) {
 				 	goto free_all;
 				}
-				section = __russ_confparser_find_section(cp, p0);
+				section = __russ_confparser_find_section(self, p0);
 			}
 		} else {
 			/* option=value or option:value */
@@ -600,11 +598,10 @@ russ_confparser_read(char *filename) {
 		}
 	}
 	fclose(fp);
-	return cp;
+	return 0;
 free_all:
 	fclose(fp);
-	russ_confparser_free(cp);
-	return NULL;
+	return -1;
 }
 
 /**
