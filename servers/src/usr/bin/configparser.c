@@ -672,6 +672,30 @@ configparser_set(struct configparser *self, char *section_name, char *option, ch
 }
 
 /**
+* Set option (name and value) for a new or existing section.
+*
+* @param self		configparser object
+* @param section_name	section name
+* @param option		option name
+* @param value		option value
+* @return		0 on success; -1 on failure
+*/
+int
+configparser_set2(struct configparser *self, char *section_name, char *option, char *value) {
+	struct configparser_section	*section;
+
+	if ((!configparser_has_section(self, section_name))
+		&& (configparser_add_section(self, section_name) < 0)) {
+		return -1;
+	}
+	if (((section = __configparser_find_section(self, section_name)) == NULL)
+		|| (__configparser_section_set(section, option, value) == NULL)) {
+		return -1;
+	}
+	return 0;
+}
+
+/**
 * Write configparser contents to file. Can be read in using
 * configparser_read().
 *

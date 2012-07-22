@@ -39,6 +39,7 @@ struct configparser *configparser_read(char *);
 int configparser_remove_option(struct configparser *, char *, char *);
 int configparser_remove_section(struct configparser *, char *);
 int configparser_set(struct configparser *, char *, char *, char *);
+int configparser_set2(struct configparser *, char *, char *, char *);
 void configparser_sarray0_free(char **);
 char **configparser_sections(struct configparser *);
 int configparser_write(struct configparser *, FILE *);
