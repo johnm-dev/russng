@@ -35,7 +35,7 @@
 
 extern char **environ;
 
-#include "configparser.h"
+#include "russ_configparser.h"
 #include "russ.h"
 
 #define MAX_HOSTS	(1024)
@@ -47,7 +47,7 @@ struct hostslist {
 };
 
 /* global */
-struct configparser	*config = NULL;
+struct russ_configparser	*config = NULL;
 char			*hostsfilename = NULL;
 struct hostslist	hostslist;
 
@@ -420,15 +420,15 @@ main(int argc, char **argv) {
 	} else if (argc == 2) {
 		/* configuration file */
 		filename = argv[1];
-		if ((config = configparser_read(filename)) == NULL) {
+		if ((config = russ_configparser_read(filename)) == NULL) {
 			fprintf(stderr, "error: could not read config file\n");
 			exit(-1);
 		}
 
-		mode = configparser_getsint(config, "server", "mode", 0600);
-		uid = configparser_getint(config, "server", "uid", getuid());
-		gid = configparser_getint(config, "server", "gid", getgid());
-		path = configparser_get(config, "server", "path", NULL);
+		mode = russ_configparser_getsint(config, "server", "mode", 0600);
+		uid = russ_configparser_getint(config, "server", "uid", getuid());
+		gid = russ_configparser_getint(config, "server", "gid", getgid());
+		path = russ_configparser_get(config, "server", "path", NULL);
 	}
 
 	if ((hostsfilename != NULL) && (load_hostsfile(hostsfilename) < 0)) {

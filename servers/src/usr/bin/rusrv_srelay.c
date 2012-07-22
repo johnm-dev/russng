@@ -40,11 +40,11 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "configparser.h"
+#include "russ_configparser.h"
 #include "russ_priv.h"
 #include "disp.h"
 
-struct configparser	*config;
+struct russ_configparser	*config;
 
 char	*HELP =
 "Relay service (forwards bytes between local and remote).\n"
@@ -88,7 +88,7 @@ svc_dial_handler(struct russ_conn *conn) {
 
 	req = &(conn->req);
 	if (strcmp(req->op, "list") == 0) {
-		if ((section_names = configparser_sections(config)) == NULL) {
+		if ((section_names = russ_configparser_sections(config)) == NULL) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 			return;
 		}
@@ -97,7 +97,7 @@ svc_dial_handler(struct russ_conn *conn) {
 				russ_dprintf(conn->fds[1], "%s\n", (*p)+8);
 			}
 		}
-		configparser_sarray0_free(section_names);
+		russ_configparser_sarray0_free(section_names);
 	}
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
@@ -222,12 +222,12 @@ __dial_remote(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	}
 
 	/* allocate buffer */
-	buf_size = configparser_getint(config, section_name, "buffer_size", 0);
+	buf_size = russ_configparser_getint(config, section_name, "buffer_size", 0);
 	buf_size = (buf_size < 32768) ? 32768: buf_size;
 	if ((buf = malloc(sizeof(char)*buf_size)) == NULL) {
 		goto free_vars;
 	}
-	if ((port = configparser_getint(config, section_name, "port", -1)) < 0) {
+	if ((port = russ_configparser_getint(config, section_name, "port", -1)) < 0) {
 		goto free_vars;
 	}
 
@@ -279,7 +279,7 @@ svc_dial_cluster_host_handler(struct russ_conn *conn) {
 
 	new_spath = p2;
 	if ((snprintf(section_name, sizeof(section_name)-1, "cluster.%s", cluster_name) < 0)
-		|| ((method = configparser_get(config, section_name, "method", NULL)) == NULL)) {
+		|| ((method = russ_configparser_get(config, section_name, "method", NULL)) == NULL)) {
 		goto free_vars;
 	}
 	exit_status = __dial_remote(conn, new_spath, section_name, cluster_name, hostname);
@@ -353,15 +353,15 @@ main(int argc, char **argv) {
 	}
 
 	filename = argv[1];
-	if ((config = configparser_read(filename)) == NULL) {
+	if ((config = russ_configparser_read(filename)) == NULL) {
 		fprintf(stderr, "error: could not read config file\n");
 		exit(-1);
 	}
 
-	mode = configparser_getsint(config, "server", "mode", 0600);
-	uid = configparser_getint(config, "server", "uid", getuid());
-	gid = configparser_getint(config, "server", "gid", getgid());
-	path = configparser_get(config, "server", "path", NULL);
+	mode = russ_configparser_getsint(config, "server", "mode", 0600);
+	uid = russ_configparser_getint(config, "server", "uid", getuid());
+	gid = russ_configparser_getint(config, "server", "gid", getgid());
+	path = russ_configparser_get(config, "server", "path", NULL);
 	if ((lis = russ_announce(path, mode, uid, gid)) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
