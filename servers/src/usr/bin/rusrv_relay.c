@@ -40,7 +40,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "configparser.h"
+#include "russ_conf.h"
 #include "russ_priv.h"
 
 /* use different function names for v0.4 */
@@ -60,7 +60,7 @@
 #endif
 
 /* global */
-struct configparser	*config;
+struct russ_conf	*conf;
 
 char	*HELP = 
 "Relays requests between hosts.\n"
@@ -239,7 +239,7 @@ enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) 
 * Dial relays using ssh method.
 *
 * @param conn		connection object
-* @param section_name	config section name
+* @param section_name	conf section name
 * @param cluster_name	cluster name
 * @param hostname	hostname
 * @param spath		new spath for conn
@@ -264,12 +264,12 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 		return -1;
 	}
 
-	if ((subsystem_path = configparser_get(config, section_name, "subsystem_path", NULL)) == NULL) {
+	if ((subsystem_path = russ_conf_get(conf, section_name, "subsystem_path", NULL)) == NULL) {
 		goto free_vars;
 	}
 
 	/* allocate buffer */
-	buf_size = configparser_getint(config, section_name, "buffer_size", 0);
+	buf_size = russ_conf_getint(conf, section_name, "buffer_size", 0);
 	buf_size = (buf_size < 32768) ? 32768: buf_size;
 	if ((buf = malloc(sizeof(char)*buf_size)) == NULL) {
 		goto free_vars;
@@ -332,7 +332,7 @@ free_vars:
 * Dial relays service using ssl-key method.
 *
 * @param conn		connection object
-* @param section_name	config section name
+* @param section_name	conf section name
 * @param cluster_name	cluster name
 * @param hostname	hostname
 * @param spath		new spath for conn
@@ -366,7 +366,7 @@ svc_dial_handler(struct russ_conn *conn) {
 
 	req = &(conn->req);
 	if (strcmp(req->op, "list") == 0) {
-		if ((section_names = configparser_sections(config)) == NULL) {
+		if ((section_names = russ_conf_sections(conf)) == NULL) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 			return;
 		}
@@ -375,7 +375,7 @@ svc_dial_handler(struct russ_conn *conn) {
 				russ_dprintf(conn->fds[1], "%s\n", (*p)+8);
 			}
 		}
-		configparser_sarray0_free(section_names);
+		russ_conf_sarray0_free(section_names);
 	}
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
@@ -405,7 +405,7 @@ svc_dial_cluster_host_handler(struct russ_conn *conn) {
 
 	new_spath = p2;
 	if ((snprintf(section_name, sizeof(section_name)-1, "cluster.%s", cluster_name) < 0)
-		|| ((method = configparser_get(config, section_name, "method", NULL)) == NULL)) {
+		|| ((method = russ_conf_get(conf, section_name, "method", NULL)) == NULL)) {
 		goto free_vars;
 	}
 	if (strcmp(method, "ssh") == 0) {
@@ -462,7 +462,7 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_relay <config_filename>\n"
+"usage: rusrv_relay <conf>\n"
 "\n"
 "Relay client service. Connects local and remote hosts.\n"
 );
@@ -483,15 +483,15 @@ main(int argc, char **argv) {
 	}
 
 	filename = argv[1];
-	if ((config = configparser_read(filename)) == NULL) {
-		fprintf(stderr, "error: could not read config file\n");
+	if ((conf = russ_conf_read(filename)) == NULL) {
+		fprintf(stderr, "error: could not read conf file\n");
 		exit(-1);
 	}
 
-	mode = configparser_getsint(config, "server", "mode", 0600);
-	uid = configparser_getint(config, "server", "uid", getuid());
-	gid = configparser_getint(config, "server", "gid", getgid());
-	path = configparser_get(config, "server", "path", NULL);
+	mode = russ_conf_getsint(conf, "server", "mode", 0600);
+	uid = russ_conf_getint(conf, "server", "uid", getuid());
+	gid = russ_conf_getint(conf, "server", "gid", getgid());
+	path = russ_conf_get(conf, "server", "path", NULL);
 	if ((lis = russ_announce(path, mode, uid, gid)) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);

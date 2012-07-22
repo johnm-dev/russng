@@ -43,7 +43,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#include "russ_confparser.h"
+#include "russ_conf.h"
 #include "russ.h"
 
 #define MAX( a,b ) (((a) > (b)) ? (a) : (b))
@@ -64,7 +64,7 @@ struct barrier {
 };
 
 /* globals */
-struct russ_confparser	*conf;
+struct russ_conf	*conf;
 struct barrier		*barrier;
 
 /*
@@ -495,15 +495,15 @@ main(int argc, char **argv) {
 	}
 
 	filename = argv[1];
-	if ((conf = russ_confparser_read(filename)) == NULL) {
+	if ((conf = russ_conf_read(filename)) == NULL) {
 		fprintf(stderr, "error: could not read conf file\n");
 		exit(-1);
 	}
 
-	mode = russ_confparser_getsint(conf, "server", "mode", 0600);
-	uid = russ_confparser_getint(conf, "server", "uid", getuid());
-	gid = russ_confparser_getint(conf, "server", "gid", getgid());
-	saddr = russ_confparser_get(conf, "server", "path", NULL);
+	mode = russ_conf_getsint(conf, "server", "mode", 0600);
+	uid = russ_conf_getint(conf, "server", "uid", getuid());
+	gid = russ_conf_getint(conf, "server", "gid", getgid());
+	saddr = russ_conf_get(conf, "server", "path", NULL);
 	if ((lis = russ_announce(saddr, mode, uid, gid)) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
