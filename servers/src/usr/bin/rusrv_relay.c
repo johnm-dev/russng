@@ -60,7 +60,7 @@
 #endif
 
 /* global */
-struct russ_conf	*conf;
+struct russ_conf	*conf = NULL;
 
 char	*HELP = 
 "Relays requests between hosts.\n"

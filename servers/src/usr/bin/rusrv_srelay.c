@@ -44,7 +44,7 @@
 #include "russ_priv.h"
 #include "disp.h"
 
-struct russ_conf	*conf;
+struct russ_conf	*conf = NULL;
 
 char	*HELP =
 "Relay service (forwards bytes between local and remote).\n"

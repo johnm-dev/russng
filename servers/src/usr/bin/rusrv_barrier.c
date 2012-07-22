@@ -64,8 +64,8 @@ struct barrier {
 };
 
 /* globals */
-struct russ_conf	*conf;
-struct barrier		*barrier;
+struct russ_conf	*conf = NULL;
+struct barrier		*barrier = NULL;
 
 /*
 * backend
