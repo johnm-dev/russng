@@ -20,7 +20,7 @@ struct russ_conf_section {
 	int			len, cap;
 };
 
-struct russ_conf 
+struct russ_conf {
 	struct russ_conf_section	**sections;
 	int				len, cap;
 };
