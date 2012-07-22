@@ -44,19 +44,19 @@ char	*HELP =
 "preloaded login environment. Preloading the environment eliminates\n"
 "the environment configuration delay.\n"
 "\n"
-"/exec <arg> [...]\n"
+"exec <arg> [...]\n"
 "    Execute command in a login configured environment. Attributes\n"
 "    are used to augment the environment prior to execution.\n"
 "\n"
-"/reload\n"
+"reload\n"
 "    Reload login environment. Attributes are used to augment the\n"
 "    environment after the reload. Useful for when the settings for\n"
 "    a login environment have changed.\n"
 "\n"
-"/shutdown\n"
+"shutdown\n"
 "    Shut down server.\n"
 "\n"
-"/status\n"
+"status\n"
 "    Return the status of the server.\n";
 
 /**

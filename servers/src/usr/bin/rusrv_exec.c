@@ -40,17 +40,17 @@
 char	*HELP =
 "Execute a command/program.\n"
 "\n"
-"/job <cgroup> <cmd>\n"
+"job <cgroup> <cmd>\n"
 "    Execute a shell command string with a configured login shell\n"
 "    within a cgroup.\n"
 "\n"
-"/login <cmd>\n"
+"login <cmd>\n"
 "    Execute a shell command string with a configured login shell.\n"
 "\n"
-"/shell <cmd>\n"
+"shell <cmd>\n"
 "    Execute a shell command in an unconfigured (not a login) shell.\n"
 "\n"
-"/simple <path> [<arg> ...]\n"
+"simple <path> [<arg> ...]\n"
 "    Execute a program with arguments directly (no shell).\n"
 "\n"
 "All services use the given attribute settings to configure the\n"
@@ -179,7 +179,7 @@ op_help_handler(struct russ_conn *conn) {
 void
 op_list_handler(struct russ_conn *conn) {
 	if (strcmp(conn->req.spath, "/") == 0) {
-		russ_dprintf(conn->fds[1], "/job\n/login\n/shell\n/simple\n");
+		russ_dprintf(conn->fds[1], "job\nlogin\nshell\nsimple\n");
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);

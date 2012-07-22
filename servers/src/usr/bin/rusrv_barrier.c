@@ -74,22 +74,22 @@ struct barrier		*barrier;
 char *BACKEND_HELP =
 "Barrier service instance.\n"
 "\n"
-"/cancel\n"
+"cancel\n"
 "    Cancel barrier and release all waiters.\n"
 "\n"
-"/count\n"
+"count\n"
 "    Print number of waiters expected.\n"
 "\n"
-"/tags\n"
+"tags\n"
 "    Print tags of waiters.\n"
 "\n"
-"/ttl\n"
+"ttl\n"
 "    Print time-to-live remaining.\n"
 "\n"
-"/wait [<tag>]\n"
+"wait [<tag>]\n"
 "    Wait on barrier; register optional tag.\n"
 "\n"
-"/wcount\n"
+"wcount\n"
 "    Print # of waiters currently waiting.\n";
 
 /**
@@ -228,7 +228,7 @@ backend_master_handler(struct russ_conn *conn) {
 		goto close_conn;
 	} else if (strcmp(conn->req.op, "list") == 0) {
 		if (strcmp(conn->req.spath, "/") == 0) {
-			russ_dprintf(outfd, "/cancel\n/count\n/tags\n/ttl\n/wait\n/wcount\n");
+			russ_dprintf(outfd, "cancel\ncount\ntags\nttl\nwait\nwcount\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
@@ -329,13 +329,13 @@ char *FRONTEND_HELP =
 "Once the barrier is actually created, different services are\n"
 "effective.\n"
 "\n"
-"/generate [<name>]\n"
+"generate [<name>]\n"
 "    Generate a unique saddr to provide to the barrier service\n"
 "    (see /new). An optional name can be used to generate a\n"
 "    predetermined rendez-vous point (warning: this should be\n"
 "    well chosen to avoid naming conflicts).\n"
 "\n"
-"/new <saddr> <count> [-m <mode>] [-u <uid>] [-g <gid>] [-t <timeout>]\n"
+"new <saddr> <count> [-m <mode>] [-u <uid>] [-g <gid>] [-t <timeout>]\n"
 "    Create a barrier at <saddr> with a liftime of <timeout>.\n"
 "    By default, the barrier is accessible only to the creator.\n"
 "    This can be overridden for the file mode, and with\n"
@@ -457,7 +457,7 @@ master_handler(struct russ_conn *conn) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
 		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(outfd, "/generate\n/new\n");
+			russ_dprintf(outfd, "generate\nnew\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
