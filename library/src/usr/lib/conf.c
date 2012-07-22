@@ -531,7 +531,7 @@ free_all:
 * @param filename		file name
 * @return			0 on success; -1 on failure
 */
-struct russ_conf *
+int
 russ_conf_read(struct russ_conf *self, char *filename) {
 	struct russ_conf_section	*section;
 	FILE				*fp;
