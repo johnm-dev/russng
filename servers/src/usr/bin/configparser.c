@@ -149,7 +149,7 @@ __configparser_section_find_item(struct configparser_section *self, char *option
 * @retrun		item object
 */
 static struct configparser_item *
-configparser_section_set(struct configparser_section *self, char *option, char *value) {
+__configparser_section_set(struct configparser_section *self, char *option, char *value) {
 	struct configparser_item	**items, *item;
 	int				item_pos;
 
@@ -594,7 +594,7 @@ configparser_read(char *filename) {
 				}
 			}
 			for (p1++; isspace(*p1); p1++);
-			if (configparser_section_set(section, p0, p1) == NULL) {
+			if (__configparser_section_set(section, p0, p1) == NULL) {
 				goto free_all;
 			}
 		}
@@ -665,7 +665,7 @@ configparser_set(struct configparser *self, char *section_name, char *option, ch
 	struct configparser_section	*section;
 
 	if (((section = __configparser_find_section(self, section_name)) == NULL)
-		|| (configparser_section_set(section, option, value) == NULL)) {
+		|| (__configparser_section_set(section, option, value) == NULL)) {
 		return -1;
 	}
 	return 0;
