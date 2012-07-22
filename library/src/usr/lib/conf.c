@@ -272,7 +272,11 @@ russ_conf_init(int *argc, char **argv, void (*print_usage)(char **)) {
 				goto bad_args;
 			}
 		} else if (strcmp(argv[i], "-h") == 0) {
-			print_usage(argv);
+			if (print_usage) {
+				print_usage(argv);
+			} else {
+				fprintf(stderr, "warning: usage is not available\n");
+			}
 			goto free_conf;
 		} else if (strcmp(argv[i], "--") == 0) {
 			i++;
