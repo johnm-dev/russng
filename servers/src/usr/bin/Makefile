@@ -27,13 +27,10 @@ install:
 	mkdir -p $(INSTALL_DIR)/usr/bin
 	(cp $(BINS) $(INSTALL_DIR)/usr/bin)
 
-configparser.o:	configparser.c
-	$(CC) $(CFLAGS) -fPIC -c -I. $<
-
 disp.o:	disp.c
 	$(CC) $(CFLAGS) -fPIC -c -I. -I$(RUSS_INCLUDE_DIR) $<
 
-rusrv_barrier:	rusrv_barrier.c configparser.o
+rusrv_barrier:	rusrv_barrier.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 rusrv_debug:	rusrv_debug.c
@@ -48,17 +45,17 @@ rusrv_exec:	rusrv_exec.c
 rusrv_pexec:	rusrv_pexec.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
-rusrv_relay:	rusrv_relay.c configparser.c
+rusrv_relay:	rusrv_relay.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread -lssh
 
 rusrv_relay_backend: rusrv_relay_backend.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
 
-rusrv_srelay:	rusrv_srelay.c configparser.o disp.o
+rusrv_srelay:	rusrv_srelay.c disp.o
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
 
 rusrv_srelay_backend: rusrv_srelay_backend.c disp.o
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
 
-rusrv_ssh:	rusrv_ssh.c configparser.c
+rusrv_ssh:	rusrv_ssh.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) -lruss -lpthread
