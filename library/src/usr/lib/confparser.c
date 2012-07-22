@@ -1,5 +1,5 @@
 /*
-* configparser.c
+* confparser.c
 *
 * The following are closely modelled after the Python ConfigParser
 * including much of the terminology.
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "russ_configparser.h"
+#include "russ_confparser.h"
 
 /*
 ** item
@@ -25,7 +25,7 @@
 * @param self		item object
 */
 static void
-__russ_configparser_item_free(struct russ_configparser_item *self) {
+__russ_confparser_item_free(struct russ_confparser_item *self) {
 	free(self->option);
 	free(self->value);
 	free(self);
@@ -38,11 +38,11 @@ __russ_configparser_item_free(struct russ_configparser_item *self) {
 * @param value		value
 * @return		item object; NULL on failure
 */
-static struct russ_configparser_item *
-__russ_configparser_item_new(char *option, char *value) {
-	struct russ_configparser_item	*self;
+static struct russ_confparser_item *
+__russ_confparser_item_new(char *option, char *value) {
+	struct russ_confparser_item	*self;
 
-	if ((self = malloc(sizeof(struct russ_configparser_item))) == NULL) {
+	if ((self = malloc(sizeof(struct russ_confparser_item))) == NULL) {
 		return NULL;
 	}
 	self->option = NULL;
@@ -53,7 +53,7 @@ __russ_configparser_item_new(char *option, char *value) {
 	}
 	return self;
 free_all:
-	__russ_configparser_item_free(self);
+	__russ_confparser_item_free(self);
 	return NULL;
 }
 
@@ -67,11 +67,11 @@ free_all:
 * @param section_name	section name
 * @return		section object; NULL on failure
 */
-static struct russ_configparser_section *
-__russ_configparser_section_new(char *section_name) {
-	struct russ_configparser_section	*self;
+static struct russ_confparser_section *
+__russ_confparser_section_new(char *section_name) {
+	struct russ_confparser_section	*self;
 
-	if ((self = malloc(sizeof(struct russ_configparser_section))) == NULL) {
+	if ((self = malloc(sizeof(struct russ_confparser_section))) == NULL) {
 		return NULL;
 	}
 	self->name = NULL;
@@ -79,7 +79,7 @@ __russ_configparser_section_new(char *section_name) {
 	self->len = 0;
 	self->cap = 10;
 	if (((self->name = strdup(section_name)) == NULL)
-		|| ((self->items = malloc(sizeof(struct russ_configparser_item *)*self->cap)) == NULL)) {
+		|| ((self->items = malloc(sizeof(struct russ_confparser_item *)*self->cap)) == NULL)) {
 		goto free_all;
 	}
 	return self;
@@ -95,11 +95,11 @@ free_all:
 * @param self		section object
 */
 static void
-__russ_configparser_section_free(struct russ_configparser_section *self) {
+__russ_confparser_section_free(struct russ_confparser_section *self) {
 	int	i;
 
 	for (i = 0; i < self->len; i++) {
-		__russ_configparser_item_free(self->items[i]);
+		__russ_confparser_item_free(self->items[i]);
 	}
 	free(self->name);
 	free(self->items);
@@ -114,7 +114,7 @@ __russ_configparser_section_free(struct russ_configparser_section *self) {
 * @return		index into items array; -1 if not found
 */
 static int
-__russ_configparser_section_find_item_pos(struct russ_configparser_section *self, char *option) {
+__russ_confparser_section_find_item_pos(struct russ_confparser_section *self, char *option) {
 	int	i;
 	for (i = 0; i < self->len; i++) {
 		if (strcmp(self->items[i]->option, option) == 0) {
@@ -131,10 +131,10 @@ __russ_configparser_section_find_item_pos(struct russ_configparser_section *self
 * @param option		option name
 * @return		item object; NULL if not found
 */
-static struct russ_configparser_item *
-__russ_configparser_section_find_item(struct russ_configparser_section *self, char *option) {
+static struct russ_confparser_item *
+__russ_confparser_section_find_item(struct russ_confparser_section *self, char *option) {
 	int	i;
-	if ((i = __russ_configparser_section_find_item_pos(self, option)) < 0) {
+	if ((i = __russ_confparser_section_find_item_pos(self, option)) < 0) {
 		return NULL;
 	}
 	return self->items[i];
@@ -148,21 +148,21 @@ __russ_configparser_section_find_item(struct russ_configparser_section *self, ch
 * @param value		option value
 * @retrun		item object
 */
-static struct russ_configparser_item *
-__russ_configparser_section_set(struct russ_configparser_section *self, char *option, char *value) {
-	struct russ_configparser_item	**items, *item;
+static struct russ_confparser_item *
+__russ_confparser_section_set(struct russ_confparser_section *self, char *option, char *value) {
+	struct russ_confparser_item	**items, *item;
 	int				item_pos;
 
-	if ((item = __russ_configparser_item_new(option, value)) == NULL) {
+	if ((item = __russ_confparser_item_new(option, value)) == NULL) {
 		return NULL;
 	}
 
-	item_pos = __russ_configparser_section_find_item_pos(self, option);
+	item_pos = __russ_confparser_section_find_item_pos(self, option);
 	if (item_pos < 0) {
 		/* add */
 		if (self->len == self->cap) {
 			/* resize */
-			if ((items = realloc(self->items, sizeof(struct russ_configparser_item *)*(self->cap+10))) == NULL) {
+			if ((items = realloc(self->items, sizeof(struct russ_confparser_item *)*(self->cap+10))) == NULL) {
 				goto free_item;
 			}
 			self->items = items;
@@ -172,35 +172,35 @@ __russ_configparser_section_set(struct russ_configparser_section *self, char *op
 		self->len++;
 	} else {
 		/* replace */
-		__russ_configparser_item_free(self->items[item_pos]);
+		__russ_confparser_item_free(self->items[item_pos]);
 		self->items[item_pos] = item;
 	}
 	return item;
 free_item:
-	__russ_configparser_item_free(item);
+	__russ_confparser_item_free(item);
 	return NULL;
 }
 
 /*
-** russ_configparser
+** russ_confparser
 */
 
 /**
-* Create russ_configparser object. Modelled after the Python
+* Create russ_confparser object. Modelled after the Python
 * ConfigParser class.
 *
-* @return		russ_configparser object; NULL on failure
+* @return		russ_confparser object; NULL on failure
 */
-struct russ_configparser *
-russ_configparser_new(void) {
-	struct russ_configparser	*self;
+struct russ_confparser *
+russ_confparser_new(void) {
+	struct russ_confparser	*self;
 
-	if ((self = malloc(sizeof(struct russ_configparser))) == NULL) {
+	if ((self = malloc(sizeof(struct russ_confparser))) == NULL) {
 		return NULL;
 	}
 	self->len = 0;
 	self->cap = 10;
-	if ((self->sections = malloc(sizeof(struct russ_configparser_section *)*self->cap)) == NULL) {
+	if ((self->sections = malloc(sizeof(struct russ_confparser_section *)*self->cap)) == NULL) {
 		goto free_all;
 	}
 	return self;
@@ -210,30 +210,30 @@ free_all:
 }
 
 /**
-* Free russ_configparser object (and all contents).
+* Free russ_confparser object (and all contents).
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 */
 void
-russ_configparser_free(struct russ_configparser *self) {
+russ_confparser_free(struct russ_confparser *self) {
 	int	i;
 
 	for (i = 0; i < self->len; i++) {
-		__russ_configparser_section_free(self->sections[i]);
+		__russ_confparser_section_free(self->sections[i]);
 	}
 	free(self->sections);
 	free(self);
 }
 
 /**
-* Find section index in russ_configparser sections array.
+* Find section index in russ_confparser sections array.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @return		index into sections array; -1 if not found
 */
 static int
-__russ_configparser_find_section_pos(struct russ_configparser *self, char *section_name) {
+__russ_confparser_find_section_pos(struct russ_confparser *self, char *section_name) {
 	int	i;
 
 	for (i = 0; i < self->len; i++) {
@@ -245,17 +245,17 @@ __russ_configparser_find_section_pos(struct russ_configparser *self, char *secti
 }
 
 /**
-* Find section object in russ_configparser sections array.
+* Find section object in russ_confparser sections array.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @return		section object
 */
-static struct russ_configparser_section *
-__russ_configparser_find_section(struct russ_configparser *self, char *section_name) {
+static struct russ_confparser_section *
+__russ_confparser_find_section(struct russ_confparser *self, char *section_name) {
 	int	pos;
 
-	if ((pos = __russ_configparser_find_section_pos(self, section_name)) < 0) {
+	if ((pos = __russ_confparser_find_section_pos(self, section_name)) < 0) {
 		return NULL;
 	}
 	return self->sections[pos];
@@ -264,18 +264,18 @@ __russ_configparser_find_section(struct russ_configparser *self, char *section_n
 /**
 * Get item object by section and option name.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @param option		option name
 * @return		item object
 */
-static struct russ_configparser_item *
-__russ_configparser_get_item(struct russ_configparser *self, char *section_name, char *option) {
-	struct russ_configparser_section	*section;
-	struct russ_configparser_item	*item;
+static struct russ_confparser_item *
+__russ_confparser_get_item(struct russ_confparser *self, char *section_name, char *option) {
+	struct russ_confparser_section	*section;
+	struct russ_confparser_item	*item;
 
-	if (((section = __russ_configparser_find_section(self, section_name)) == NULL)
-		|| ((item = __russ_configparser_section_find_item(section, option)) == NULL)) {
+	if (((section = __russ_confparser_find_section(self, section_name)) == NULL)
+		|| ((item = __russ_confparser_section_find_item(section, option)) == NULL)) {
 		return NULL;
 	}
 	return item;
@@ -284,26 +284,26 @@ __russ_configparser_get_item(struct russ_configparser *self, char *section_name,
 /**
 * Add section to sections array.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @return		index into sections array; -1 on failure
 */
 int
-russ_configparser_add_section(struct russ_configparser *self, char *section_name) {
-	struct russ_configparser_section	*section, **sections;
+russ_confparser_add_section(struct russ_confparser *self, char *section_name) {
+	struct russ_confparser_section	*section, **sections;
 
-	if ((section = __russ_configparser_find_section(self, section_name)) != NULL) {
+	if ((section = __russ_confparser_find_section(self, section_name)) != NULL) {
 		/* exists */
 		return -1;
 	}
 	if (self->len == self->cap) {
-		if ((sections = realloc(self->sections, sizeof(struct russ_configparser_section *)*(self->cap+10))) == NULL) {
+		if ((sections = realloc(self->sections, sizeof(struct russ_confparser_section *)*(self->cap+10))) == NULL) {
 			return -1;
 		}
 		self->sections = sections;
 		self->cap += 10;
 	}
-	if ((section = __russ_configparser_section_new(section_name)) == NULL) {
+	if ((section = __russ_confparser_section_new(section_name)) == NULL) {
 		return -1;
 	}
 	self->sections[self->len] = section;
@@ -314,13 +314,13 @@ russ_configparser_add_section(struct russ_configparser *self, char *section_name
 /**
 * Test that section exists.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @return		0 if not found; 1 if found
 */
 int
-russ_configparser_has_section(struct russ_configparser *self, char *section_name) {
-	if (__russ_configparser_find_section_pos(self, section_name) < 0) {
+russ_confparser_has_section(struct russ_confparser *self, char *section_name) {
+	if (__russ_confparser_find_section_pos(self, section_name) < 0) {
 		return 0;
 	}
 	return 1;
@@ -329,13 +329,13 @@ russ_configparser_has_section(struct russ_configparser *self, char *section_name
 /**
 * Test that option exists.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @return		0 if not found; 1 if found
 */
 int
-russ_configparser_has_option(struct russ_configparser *self, char *section_name, char *option) {
-	if (__russ_configparser_get_item(self, section_name, option) == NULL) {
+russ_confparser_has_option(struct russ_confparser *self, char *section_name, char *option) {
+	if (__russ_confparser_get_item(self, section_name, option) == NULL) {
 		return 0;
 	}
 	return 1;
@@ -344,23 +344,23 @@ russ_configparser_has_option(struct russ_configparser *self, char *section_name,
 /**
 * Remove option.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @param option		option name
 * @return		0 on success; -1 on failure
 */
 int
-russ_configparser_remove_option(struct russ_configparser *self, char *section_name, char *option) {
-	struct russ_configparser_section	*section;
+russ_confparser_remove_option(struct russ_confparser *self, char *section_name, char *option) {
+	struct russ_confparser_section	*section;
 	int				pos;
 
-	if ((section = __russ_configparser_find_section(self, section_name)) == NULL) {
+	if ((section = __russ_confparser_find_section(self, section_name)) == NULL) {
 		return -1;
 	}
-	if ((pos = __russ_configparser_section_find_item_pos(section, option)) < 0) {
+	if ((pos = __russ_confparser_section_find_item_pos(section, option)) < 0) {
 		return -1;
 	}
-	__russ_configparser_item_free(section->items[pos]);
+	__russ_confparser_item_free(section->items[pos]);
 	section->items[pos] = NULL;
 	if (section->len > 1) {
 		section->items[pos] = section->items[(section->len-1)];
@@ -372,19 +372,19 @@ russ_configparser_remove_option(struct russ_configparser *self, char *section_na
 /**
 * Remove section.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @return		0 on success; -1 on failure
 */
 int
-russ_configparser_remove_section(struct russ_configparser *self, char *section_name) {
-	struct russ_configparser_section	*section;
+russ_confparser_remove_section(struct russ_confparser *self, char *section_name) {
+	struct russ_confparser_section	*section;
 	int				pos;
 
-	if ((pos = __russ_configparser_find_section_pos(self, section_name)) < 0) {
+	if ((pos = __russ_confparser_find_section_pos(self, section_name)) < 0) {
 		return -1;
 	}
-	__russ_configparser_section_free(self->sections[pos]);
+	__russ_confparser_section_free(self->sections[pos]);
 	self->sections[pos] = NULL;
 	if (self->len > 1) {
 		self->sections[pos] = self->sections[(self->len-1)];
@@ -398,17 +398,17 @@ russ_configparser_remove_section(struct russ_configparser *self, char *section_n
 * copy of default value if not found. Return string must be freed
 * with free().
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @param option		option name
 * @param dvalue		default value or NULL
 * @return		copy of item value; copy of dvalue if not found or NULL
 */
 char *
-russ_configparser_get(struct russ_configparser *self, char *section_name, char *option, char *dvalue) {
-	struct russ_configparser_item	*item;
+russ_confparser_get(struct russ_confparser *self, char *section_name, char *option, char *dvalue) {
+	struct russ_confparser_item	*item;
 
-	if ((item = __russ_configparser_get_item(self, section_name, option)) == NULL) {
+	if ((item = __russ_confparser_get_item(self, section_name, option)) == NULL) {
 		if (dvalue == NULL) {
 			return NULL;
 		} else {
@@ -422,18 +422,18 @@ russ_configparser_get(struct russ_configparser *self, char *section_name, char *
 * Get item value as long-size integer for section name and option or
 * default value if not found.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @param option		option name
 * @param dvalue		default value
 * @return		item value; dvalue if not found
 */
 long
-russ_configparser_getint(struct russ_configparser *self, char *section_name, char *option, long dvalue) {
-	struct russ_configparser_item	*item;
+russ_confparser_getint(struct russ_confparser *self, char *section_name, char *option, long dvalue) {
+	struct russ_confparser_item	*item;
 	long				value;
 
-	if (((item = __russ_configparser_get_item(self, section_name, option)) == NULL)
+	if (((item = __russ_confparser_get_item(self, section_name, option)) == NULL)
 		|| (sscanf(item->value, "%ld", &value) == 0)) {
 		return dvalue;
 	}
@@ -444,18 +444,18 @@ russ_configparser_getint(struct russ_configparser *self, char *section_name, cha
 * Get item value as double-size float for section name and option or
 * default value if not found.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @param option		option name
 * @param dvalue		default value
 * @return		item value; dvalue if not found
 */
 double
-russ_configparser_getfloat(struct russ_configparser *self, char *section_name, char *option, double dvalue) {
-	struct russ_configparser_item	*item;
+russ_confparser_getfloat(struct russ_confparser *self, char *section_name, char *option, double dvalue) {
+	struct russ_confparser_item	*item;
 	double				value;
 
-	if (((item = __russ_configparser_get_item(self, section_name, option)) == NULL)
+	if (((item = __russ_confparser_get_item(self, section_name, option)) == NULL)
 		|| (sscanf(item->value, "%lf", &value) == 0)) {
 		return dvalue;
 	}
@@ -467,19 +467,19 @@ russ_configparser_getfloat(struct russ_configparser *self, char *section_name, c
 * default value if not found. Option value determines integer type:
 * 0-prefix is octal, 0x-prefix is hex, otherwise integer.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @param option		option name
 * @param dvalue		default value
 * @return		item value; dvalue if not found
 */
 long
-russ_configparser_getsint(struct russ_configparser *self, char *section_name, char *option, long dvalue) {
-	struct russ_configparser_item	*item;
+russ_confparser_getsint(struct russ_confparser *self, char *section_name, char *option, long dvalue) {
+	struct russ_confparser_item	*item;
 	char				*fmt;
 	long				value;
 
-	if ((item = __russ_configparser_get_item(self, section_name, option)) == NULL) {
+	if ((item = __russ_confparser_get_item(self, section_name, option)) == NULL) {
 		return dvalue;
 	}
 	if (strncmp(item->value, "0x", 2) == 0) {
@@ -497,18 +497,18 @@ russ_configparser_getsint(struct russ_configparser *self, char *section_name, ch
 
 /**
 * Get a NULL-terminated string array of options for a section. The
-* results must be freed (see russ_configparser_sarray0_free()).
+* results must be freed (see russ_confparser_sarray0_free()).
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @return		NULL-terminated array of strings; NULL on failure
 */
 char **
-russ_configparser_options(struct russ_configparser *self, char *section_name) {
-	struct russ_configparser_section	*section;
+russ_confparser_options(struct russ_confparser *self, char *section_name) {
+	struct russ_confparser_section	*section;
 	char				**sarray0;
 	int				i;
 
-	if (((section = __russ_configparser_find_section(self, section_name)) == NULL) 
+	if (((section = __russ_confparser_find_section(self, section_name)) == NULL) 
 		|| ((sarray0 = malloc(sizeof(char *)*(section->len+1))) == NULL)) {
 		return NULL;
 	}
@@ -520,7 +520,7 @@ russ_configparser_options(struct russ_configparser *self, char *section_name) {
 	}
 	return sarray0;
 free_all:
-	russ_configparser_sarray0_free(sarray0);
+	russ_confparser_sarray0_free(sarray0);
 	return NULL;
 }
 
@@ -529,24 +529,24 @@ free_all:
 * not saved.
 *
 * @param filename		file name
-* @return			russ_configparser object; NULL on failure
+* @return			russ_confparser object; NULL on failure
 */
-struct russ_configparser *
-russ_configparser_read(char *filename) {
-	struct russ_configparser		*cp;
-	struct russ_configparser_section	*section;
+struct russ_confparser *
+russ_confparser_read(char *filename) {
+	struct russ_confparser		*cp;
+	struct russ_confparser_section	*section;
 	FILE				*fp;
 	char				*section_name;
 	char				buf[4096], *p0, *p1;
 
 	if (((fp = fopen(filename, "r")) == NULL)
-		|| ((cp = russ_configparser_new()) == NULL)) {
+		|| ((cp = russ_confparser_new()) == NULL)) {
 		return NULL;
 	}
-	if ((russ_configparser_add_section(cp, "DEFAULT")) < 0) {
+	if ((russ_confparser_add_section(cp, "DEFAULT")) < 0) {
 		goto free_all;
 	}
-	section = __russ_configparser_find_section(cp, "DEFAULT");
+	section = __russ_confparser_find_section(cp, "DEFAULT");
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
 		/* skip whitespace */
@@ -575,11 +575,11 @@ russ_configparser_read(char *filename) {
 					break;
 				}
 			}
-			if ((section = __russ_configparser_find_section(cp, p0)) == NULL) {
-				 if (russ_configparser_add_section(cp, p0) < 0) {
+			if ((section = __russ_confparser_find_section(cp, p0)) == NULL) {
+				 if (russ_confparser_add_section(cp, p0) < 0) {
 				 	goto free_all;
 				}
-				section = __russ_configparser_find_section(cp, p0);
+				section = __russ_confparser_find_section(cp, p0);
 			}
 		} else {
 			/* option=value or option:value */
@@ -594,7 +594,7 @@ russ_configparser_read(char *filename) {
 				}
 			}
 			for (p1++; isspace(*p1); p1++);
-			if (__russ_configparser_section_set(section, p0, p1) == NULL) {
+			if (__russ_confparser_section_set(section, p0, p1) == NULL) {
 				goto free_all;
 			}
 		}
@@ -603,7 +603,7 @@ russ_configparser_read(char *filename) {
 	return cp;
 free_all:
 	fclose(fp);
-	russ_configparser_free(cp);
+	russ_confparser_free(cp);
 	return NULL;
 }
 
@@ -613,7 +613,7 @@ free_all:
 * @param sarray0	NULL-terminated string array
 */
 void
-russ_configparser_sarray0_free(char **sarray0) {
+russ_confparser_sarray0_free(char **sarray0) {
 	char	**p;
 
 	if (sarray0) {
@@ -626,13 +626,13 @@ russ_configparser_sarray0_free(char **sarray0) {
 
 /**
 * Get NULL-terminated string array of section names. The results
-* must be freed (see russ_configparser_sarray0_free()).
+* must be freed (see russ_confparser_sarray0_free()).
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @return		NULL-terminated array of strings; NULL on failure
 */
 char **
-russ_configparser_sections(struct russ_configparser *self) {
+russ_confparser_sections(struct russ_confparser *self) {
 	char	**sarray0;
 	int	i;
 
@@ -647,25 +647,25 @@ russ_configparser_sections(struct russ_configparser *self) {
 	}
 	return sarray0;
 free_all:
-	russ_configparser_sarray0_free(sarray0);
+	russ_confparser_sarray0_free(sarray0);
 	return NULL;
 }
 
 /**
 * Set option (name and value) for existing section.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @param option		option name
 * @param value		option value
 * @return		0 on success; -1 on failure
 */
 int
-russ_configparser_set(struct russ_configparser *self, char *section_name, char *option, char *value) {
-	struct russ_configparser_section	*section;
+russ_confparser_set(struct russ_confparser *self, char *section_name, char *option, char *value) {
+	struct russ_confparser_section	*section;
 
-	if (((section = __russ_configparser_find_section(self, section_name)) == NULL)
-		|| (__russ_configparser_section_set(section, option, value) == NULL)) {
+	if (((section = __russ_confparser_find_section(self, section_name)) == NULL)
+		|| (__russ_confparser_section_set(section, option, value) == NULL)) {
 		return -1;
 	}
 	return 0;
@@ -674,40 +674,40 @@ russ_configparser_set(struct russ_configparser *self, char *section_name, char *
 /**
 * Set option (name and value) for a new or existing section.
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param section_name	section name
 * @param option		option name
 * @param value		option value
 * @return		0 on success; -1 on failure
 */
 int
-russ_configparser_set2(struct russ_configparser *self, char *section_name, char *option, char *value) {
-	struct russ_configparser_section	*section;
+russ_confparser_set2(struct russ_confparser *self, char *section_name, char *option, char *value) {
+	struct russ_confparser_section	*section;
 
-	if ((!russ_configparser_has_section(self, section_name))
-		&& (russ_configparser_add_section(self, section_name) < 0)) {
+	if ((!russ_confparser_has_section(self, section_name))
+		&& (russ_confparser_add_section(self, section_name) < 0)) {
 		return -1;
 	}
-	if (((section = __russ_configparser_find_section(self, section_name)) == NULL)
-		|| (__russ_configparser_section_set(section, option, value) == NULL)) {
+	if (((section = __russ_confparser_find_section(self, section_name)) == NULL)
+		|| (__russ_confparser_section_set(section, option, value) == NULL)) {
 		return -1;
 	}
 	return 0;
 }
 
 /**
-* Write russ_configparser contents to file. Can be read in using
-* russ_configparser_read().
+* Write russ_confparser contents to file. Can be read in using
+* russ_confparser_read().
 *
-* @param self		russ_configparser object
+* @param self		russ_confparser object
 * @param fp		FILE * object
 * @return		0 on success; -1 on failure
 */
 int
-russ_configparser_write(struct russ_configparser *self, FILE *fp) {
-	struct russ_configparser_section	**sections, *section;
-	struct russ_configparser_item		**items, *item;
-	int					i, j;
+russ_confparser_write(struct russ_confparser *self, FILE *fp) {
+	struct russ_confparser_section	**sections, *section;
+	struct russ_confparser_item	**items, *item;
+	int				i, j;
 
 	for (i = 0; i < self->len; i++) {
 		section = self->sections[i];
