@@ -39,8 +39,10 @@
 
 extern char **environ;
 
+#include "russ_conf.h"
 #include "russ.h"
 
+struct russ_conf	*conf = NULL;
 char	*HELP = 
 "Provides services useful for debugging. Unless otherwise stated,\n"
 "stdin, stdout, and stderr all refer to the file descriptor triple\n"
@@ -268,7 +270,7 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_debug <saddr>\n"
+"usage: rusrv_debug [<conf options>]\n"
 "\n"
 "russ-based server to aid in debugging russ commands.\n"
 );
@@ -277,20 +279,23 @@ print_usage(char **argv) {
 int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
-	char			*saddr;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 
-	if (argc != 2) {
-		print_usage(argv);
+	if ((argc < 2) || ((conf = russ_conf_init(&argc, argv, print_usage)) == NULL)) {
+		fprintf(stderr, "error: cannot configure\n");
 		exit(-1);
 	}
-	saddr = argv[1];
 
-	if ((lis = russ_announce(saddr, 0666, getuid(), getgid())) == NULL) {
+	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+		russ_conf_getsint(conf, "server", "mode", 0666),
+		russ_conf_getint(conf, "server", "uid", getuid()),
+		russ_conf_getint(conf, "server", "gid", getgid()));
+	if (lis == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
 	russ_listener_loop(lis, master_handler);
+	exit(0);
 }

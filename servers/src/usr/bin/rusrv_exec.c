@@ -35,8 +35,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "russ_conf.h"
 #include "russ.h"
 
+struct russ_conf	*conf = NULL;
 char	*HELP =
 "Execute a command/program.\n"
 "\n"
@@ -213,7 +215,7 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_exec <saddr>\n"
+"usage: rusrv_exec [<conf options>]\n"
 "\n"
 "russ-based exec server to execute programs.\n"
 );
@@ -222,18 +224,20 @@ print_usage(char **argv) {
 int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
-	char			*saddr;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 
-	if (argc != 2) {
-		print_usage(argv);
+	if ((argc < 2) || ((conf = russ_conf_init(&argc, argv, print_usage)) == NULL)) {
+		fprintf(stderr, "error: cannot configure\n");
 		exit(-1);
 	}
-	saddr = argv[1];
 
-	if ((lis = russ_announce(saddr, 0666, getuid(), getgid())) == NULL) {
+	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+		russ_conf_getsint(conf, "server", "mode", 0600),
+		russ_conf_getint(conf, "server", "uid", getuid()),
+		russ_conf_getint(conf, "server", "gid", getgid()));
+	if (lis == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}

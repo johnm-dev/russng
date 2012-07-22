@@ -462,7 +462,7 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_relay <conf>\n"
+"usage: rusrv_relay [<conf options>]\n"
 "\n"
 "Relay client service. Connects local and remote hosts.\n"
 );
@@ -471,28 +471,20 @@ print_usage(char **argv) {
 int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
-	char			*filename, *path;
-	int			mode, uid, gid;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 
-	if (argc != 2) {
-		print_usage(argv);
+	if ((argc < 2) || ((conf = russ_conf_init(&argc, argv, print_usage)) == NULL)) {
+		fprintf(stderr, "error: cannot configure\n");
 		exit(-1);
 	}
 
-	filename = argv[1];
-	if ((conf = russ_conf_read(filename)) == NULL) {
-		fprintf(stderr, "error: could not read conf file\n");
-		exit(-1);
-	}
-
-	mode = russ_conf_getsint(conf, "server", "mode", 0600);
-	uid = russ_conf_getint(conf, "server", "uid", getuid());
-	gid = russ_conf_getint(conf, "server", "gid", getgid());
-	path = russ_conf_get(conf, "server", "path", NULL);
-	if ((lis = russ_announce(path, mode, uid, gid)) == NULL) {
+	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+		russ_conf_getsint(conf, "server", "mode", 0600),
+		russ_conf_getint(conf, "server", "uid", getuid()),
+		russ_conf_getint(conf, "server", "gid", getgid()));
+	if (lis == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}

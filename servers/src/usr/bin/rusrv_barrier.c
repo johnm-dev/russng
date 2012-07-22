@@ -473,7 +473,7 @@ print_usage(char **argv) {
 
 	prog_name = basename(argv[0]);
 	fprintf(stderr,
-"usage: %s <conf_filename>\n"
+"usage: rusrv_%s [<conf options>]\n"
 "\n"
 "Front-end barrier service. Instantiates backend barrier service.\n",
 		prog_name);
@@ -482,31 +482,23 @@ print_usage(char **argv) {
 int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
-	char			*filename, *saddr;
-	int			mode, uid, gid;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN); /* no errors on failed writes */
 
-	/* parse command line */
-	if (argc != 2) {
-		print_usage(argv);
+	if ((argc < 2) || ((conf = russ_conf_init(&argc, argv, print_usage)) == NULL)) {
+		fprintf(stderr, "error: cannot configure\n");
 		exit(-1);
 	}
 
-	filename = argv[1];
-	if ((conf = russ_conf_read(filename)) == NULL) {
-		fprintf(stderr, "error: could not read conf file\n");
-		exit(-1);
-	}
-
-	mode = russ_conf_getsint(conf, "server", "mode", 0600);
-	uid = russ_conf_getint(conf, "server", "uid", getuid());
-	gid = russ_conf_getint(conf, "server", "gid", getgid());
-	saddr = russ_conf_get(conf, "server", "path", NULL);
-	if ((lis = russ_announce(saddr, mode, uid, gid)) == NULL) {
+	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+		russ_conf_getsint(conf, "server", "mode", 0600),
+		russ_conf_getint(conf, "server", "uid", getuid()),
+		russ_conf_getint(conf, "server", "gid", getgid()));
+	if (lis == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
 	russ_listener_loop(lis, master_handler);
+	exit(0);
 }
