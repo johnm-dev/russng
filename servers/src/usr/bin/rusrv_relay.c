@@ -70,10 +70,10 @@ char	*HELP =
 "+relay/net/myhost.com/debug (assuming +relay is the local\n"
 "service address for the relay itself.\n"
 "\n"
-"/debug\n"
+"debug\n"
 "    Outputs russ connection information.\n"
 "\n"
-"/dial/<cluster>/<hostname>/...\n"
+"dial/<cluster>/<hostname>/...\n"
 "    Dial service ... at <hostname> belonging to <cluster>.\n"
 "    Supported cluster names can be determined by 'ruls /dial'.\n"
 "    However, because hostnames belonging to a cluster are often\n"
@@ -447,7 +447,7 @@ master_handler(struct russ_conn *conn) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
 		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(conn->fds[1], "/debug\n/dial\n");
+			russ_dprintf(conn->fds[1], "debug\ndial\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else if (strcmp(req->spath, "/dial") == 0) {
 			svc_dial_handler(conn);
@@ -462,7 +462,7 @@ master_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_relayc <config_filename>\n"
+"usage: rusrv_relay <config_filename>\n"
 "\n"
 "Relay client service. Connects local and remote hosts.\n"
 );

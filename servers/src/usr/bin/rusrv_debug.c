@@ -46,28 +46,28 @@ char	*HELP =
 "stdin, stdout, and stderr all refer to the file descriptor triple\n"
 "that is returned from a russ_dial call.\n"
 "\n"
-"/chargen\n"
+"chargen\n"
 "    Character generator outputting to stdout; follows the RPC 864\n"
 "    the RFC 864 protocol sequence.\n"
 "\n"
-"/conn\n"
+"conn\n"
 "    Outputs russ connection information.\n"
 "\n"
-"/daytime\n"
+"daytime\n"
 "    Outputs the date and time to the stdout.\n"
 "\n"
-"/discard [--perf]\n"
+"discard [--perf]\n"
 "    Discards all data received from stdin; if --perf is specified,\n"
 "    performance feedback is provide to stderr, otherwise there is\n"
 "    none.\n"
 "\n"
-"/echo\n"
+"echo\n"
 "    Simple echo service; receives from stdin and outputs to stdout.\n"
 "\n"
-"/env\n"
+"env\n"
 "    Outputs environ entries to stdout.\n"
 "\n"
-"/request\n"
+"request\n"
 "    Outputs the request information at the server stdout.\n";
 
 void
@@ -255,7 +255,7 @@ master_handler(struct russ_conn *conn) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
 		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(conn->fds[1], "/chargen\n/conn\n/daytime\n/discard\n/echo\n/env\n/request\n");
+			russ_dprintf(conn->fds[1], "chargen\nconn\ndaytime\ndiscard\necho\nenv\nrequest\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
