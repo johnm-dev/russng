@@ -32,6 +32,7 @@ except:
     from configparser import ConfigParser
 import os
 import sys
+import traceback
 
 class Conf(ConfigParser):
     """New ConfigParser which support an optional default value
@@ -41,7 +42,7 @@ class Conf(ConfigParser):
     def __init__(self, argv, print_usage):
         ConfigParser.__init__(self)
         args = argv[1:]
-        while 1:
+        while args:
             arg = args.pop(0)
             if arg == "-c" and args:
                 try:
@@ -52,7 +53,7 @@ class Conf(ConfigParser):
                     raise Exception()
             elif arg == "-f" and args:
                 try:
-                    self.read(args.pop(1))
+                    self.read(args.pop(0))
                 except:
                     raise Exception()
             elif arg == "-h":
