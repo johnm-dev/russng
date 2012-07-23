@@ -267,7 +267,8 @@ russ_conf_init(int *argc, char **argv) {
 				goto bad_args;
 			}
 		} else if ((strcmp(argv[i], "-f") == 0) && (i+1 < *argc)) {
-			if (russ_conf_read(self, argv[i++]) < 0) {
+			i++;
+			if (russ_conf_read(self, argv[i]) < 0) {
 				goto bad_args;
 			}
 		} else if (strcmp(argv[i], "--") == 0) {
