@@ -27,7 +27,7 @@ struct russ_conf {
 
 struct russ_conf *russ_conf_new(void);
 void russ_conf_free(struct russ_conf *);
-struct russ_conf *russ_conf_init(int *, char **, void (*)(char **));
+struct russ_conf *russ_conf_init(int *, char **);
 
 int russ_conf_add_section(struct russ_conf *, char *);
 int russ_conf_has_section(struct russ_conf *, char *);
