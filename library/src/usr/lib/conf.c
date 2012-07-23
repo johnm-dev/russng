@@ -240,11 +240,10 @@ russ_conf_free(struct russ_conf *self) {
 *
 * @param argc		pointer to argc
 * @param argv		NULL-terminated string argument list
-* @param print_usage	function to print usage if '-h' is found
 * @return		russ_conf object; NULL on failure
 */
 struct russ_conf *
-russ_conf_init(int *argc, char **argv, void (*print_usage)(char **)) {
+russ_conf_init(int *argc, char **argv) {
 	struct russ_conf	*self;
 	int			i, j;
 	char			*colonp, *equalp;
@@ -271,13 +270,6 @@ russ_conf_init(int *argc, char **argv, void (*print_usage)(char **)) {
 			if (russ_conf_read(self, argv[i++]) < 0) {
 				goto bad_args;
 			}
-		} else if (strcmp(argv[i], "-h") == 0) {
-			if (print_usage) {
-				print_usage(argv);
-			} else {
-				fprintf(stderr, "warning: usage is not available\n");
-			}
-			exit(0);
 		} else if (strcmp(argv[i], "--") == 0) {
 			i++;
 			break;

@@ -39,9 +39,13 @@ class Conf(ConfigParser):
     parameter like dict.get().
     """
 
-    def __init__(self, argv, print_usage):
-        ConfigParser.__init__(self)
-        args = argv[1:]
+    def init(self, args):
+        """Given a list of conf option flags and values, update
+        the Conf object and return a new list of args pruned of
+        those used. "--" stops processing (and is not returned in
+        args list).
+        """
+        args = args[:]
         while args:
             arg = args.pop(0)
             if arg == "-c" and args:
@@ -56,13 +60,9 @@ class Conf(ConfigParser):
                     self.read(args.pop(0))
                 except:
                     raise Exception()
-            elif arg == "-h":
-                print_usage()
-                os.exit(0)
             elif arg == "--":
                 break
-        del argv[1:]
-        argv.extend(args)
+        return args
 
     def get(self, section, option, default=None):
         try:
