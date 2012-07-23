@@ -27,19 +27,19 @@
 
 # system imports
 try:
-    from ConfigParser import ConfigParser as _ConfigParser
+    from ConfigParser import ConfigParser
 except:
-    from configparser import ConfigParser as _ConfigParser
+    from configparser import ConfigParser
 import os
 import sys
 
-class ConfigParser(_ConfigParser):
+class Conf(ConfigParser):
     """New ConfigParser which support an optional default value
     parameter like dict.get().
     """
 
     def __init__(self, argv, print_usage):
-        _ConfigParser.__init__(self)
+        Conf.__init__(self)
         args = argv[1:]
         while 1:
             arg = args.pop(0)
@@ -65,25 +65,25 @@ class ConfigParser(_ConfigParser):
 
     def get(self, section, option, default=None):
         try:
-            return _ConfigParser.get(self, section, option)
+            return ConfigParser.get(self, section, option)
         except:
             return default
 
     def getboolean(self, section, option, default=None):
         try:
-            return _ConfigParser.getboolean(self, section, option)
+            return ConfigParser.getboolean(self, section, option)
         except:
             return default
 
     def getint(self, section, option, default=None):
         try:
-            return _ConfigParser.getint(self, section, option)
+            return ConfigParser.getint(self, section, option)
         except:
             return default
 
     def getfloat(self, section, option, default=None):
         try:
-            return _ConfigParser.getfloat(self, section, option)
+            return ConfigParser.getfloat(self, section, option)
         except:
             return default
 
