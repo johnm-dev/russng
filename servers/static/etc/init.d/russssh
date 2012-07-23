@@ -34,7 +34,7 @@ start)
 		echo "already running"
 		exit 1
 	fi
-	rusrv_ssh /etc/russ/conf/ssh.conf < /dev/null > /dev/null 2>&1 &
+	rusrv_ssh -f /etc/russ/conf/ssh.conf < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
 stop)

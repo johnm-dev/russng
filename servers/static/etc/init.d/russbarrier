@@ -35,7 +35,7 @@ start)
 		exit 1
 	fi
 	#rusrv_barrier +barrier < /dev/null > /dev/null 2>&1 &
-	rusrv_barrier /etc/russ/conf/barrier.conf < /dev/null > /dev/null 2>&1 &
+	rusrv_barrier -f /etc/russ/conf/barrier.conf < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
 stop)
