@@ -39,7 +39,7 @@ class Conf(ConfigParser):
     """
 
     def __init__(self, argv, print_usage):
-        Conf.__init__(self)
+        ConfigParser.__init__(self)
         args = argv[1:]
         while 1:
             arg = args.pop(0)
