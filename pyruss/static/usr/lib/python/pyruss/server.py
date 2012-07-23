@@ -64,6 +64,11 @@ class ConfigParser(_ConfigParser):
         except:
             return default
 
+    def set2(self, section, option, value):
+        if not self.has_section(section):
+            self.add_section(section)
+        self.set(section, option, value)
+
 class ServiceNode:
     """Used by ServiceTree in support of a hierarchy organized by
     path components. Each node contains ops, handler, type
