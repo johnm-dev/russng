@@ -34,7 +34,7 @@ start)
 		echo "already running"
 		exit 1
 	fi
-	rusrv_relay /etc/russ/conf/relay.conf < /dev/null > /dev/null 2>&1 &
+	rusrv_relay -f /etc/russ/conf/relay.conf < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
 stop)
