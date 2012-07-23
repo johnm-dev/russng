@@ -36,65 +36,6 @@ import sys
 #
 import pyruss
 
-class ConfigParser(_ConfigParser):
-    """New ConfigParser which support an optional default value
-    parameter like dict.get().
-    """
-
-    def __init__(self, argv, print_usage):
-        _ConfigParser.__init__(self)
-        args = argv[1:]
-        while 1:
-            arg = args.pop(0)
-            if arg == "-c" and args:
-                try:
-                    section, rest = args.pop(0).split(":", 1)
-                    option, value = rest.split("=", 1)
-                    self.set2(section, option, value)
-                except:
-                    raise Exception()
-            elif arg == "-f" and args:
-                try:
-                    self.read(args.pop(1))
-                except:
-                    raise Exception()
-            elif arg == "-h":
-                print_usage()
-                os.exit(0)
-            elif arg == "--":
-                break
-        del argv[1:]
-        argv.extend(args)
-
-    def get(self, section, option, default=None):
-        try:
-            return _ConfigParser.get(self, section, option)
-        except:
-            return default
-
-    def getboolean(self, section, option, default=None):
-        try:
-            return _ConfigParser.getboolean(self, section, option)
-        except:
-            return default
-
-    def getint(self, section, option, default=None):
-        try:
-            return _ConfigParser.getint(self, section, option)
-        except:
-            return default
-
-    def getfloat(self, section, option, default=None):
-        try:
-            return _ConfigParser.getfloat(self, section, option)
-        except:
-            return default
-
-    def set2(self, section, option, value):
-        if not self.has_section(section):
-            self.add_section(section)
-        self.set(section, option, value)
-
 class ServiceNode:
     """Used by ServiceTree in support of a hierarchy organized by
     path components. Each node contains ops, handler, type
