@@ -6,8 +6,8 @@
 # Provides:          russ
 # Required-Start:    $syslog $time
 # Required-Stop:     $syslog $time
-# Default-Start:     S
-# Default-Stop:      
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
 # Short-Description: Sets up for russ-based services
 # Description:       Sets up for russ-based services
 ### END INIT INFO
