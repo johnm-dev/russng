@@ -152,7 +152,7 @@ russ_conn_recvfds(struct russ_conn *self) {
 * @param sfds		server-side descriptors
 * @return		0 on success; -1 on error
 */
-static int
+int
 russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	char	buf[32], *bp, *bend;
 	int	timeout = -1; /* TODO: change API to accept timeout */
@@ -164,11 +164,15 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 		return -1;
 	}
 
+	/* TODO: reorganize to more clearly separate handling of cfds and sfds */
+
 	/* send fds (exit and cfds) */
 	if (russ_sendfd(self->sd, cfds[0]) < 0) {
 		return -1;
 	}
-	self->exit_fd = sfds[0];
+	if (sfds) {
+		self->exit_fd = sfds[0];
+	}
 	russ_fds_close(&cfds[0], 1);
 
 	for (i = 1; i < nfds; i++) {
@@ -176,7 +180,9 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 			return -1;
 		}
 		russ_fds_close(&cfds[i], 1);
-		self->fds[i-1] = sfds[i];
+		if (sfds) {
+			self->fds[i-1] = sfds[i];
+		}
 	}
 	self->nfds = nfds-1;
 	return 0;
