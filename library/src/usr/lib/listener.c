@@ -95,7 +95,7 @@ struct russ_conn *
 russ_listener_answer(struct russ_listener *self, russ_timeout timeout) {
 	struct russ_conn	*conn;
 	struct sockaddr_un	servaddr;
-	int			servaddr_len;
+	socklen_t		servaddr_len;
 	struct pollfd		poll_fds[1];
 	russ_timeout		deadline;
 
