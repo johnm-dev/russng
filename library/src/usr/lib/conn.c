@@ -230,6 +230,39 @@ close_fds:
 }
 
 /**
+* Pass fds from a server to a client.
+*
+* This function facilitates splicing a server connection and a
+* client connection by passing fds from one to the other,
+* respectively. It is typically used for alternate accept handlers
+* by servers which connect client and server then get out of the
+* way and exit (e.g., redirect).
+*
+* @param self		connection object
+* @param dconn		dialed connection object
+*/
+int
+russ_conn_splice(struct russ_conn *self, struct russ_conn *dconn) {
+	int	*cfds;
+	int	i, ev;
+
+	if ((cfds = malloc(sizeof(int)*(dconn->nfds+1))) == NULL) {
+		return -1;
+	}
+	cfds[0] = dconn->exit_fd;
+	for (i = 0; i < dconn->nfds; i++) {
+		cfds[i+1] = dconn->fds[i];
+	}
+	ev = russ_conn_sendfds(self, dconn->nfds+1, cfds, NULL);
+
+	russ_fds_close(&self->sd, 1);
+	russ_fds_close(&dconn->sd, 1);
+	free(cfds);
+
+	return ev;
+}
+
+/**
 * Wait for the request.
 *
 * The request is waited for, and the connection object is updated

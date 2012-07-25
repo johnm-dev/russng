@@ -158,6 +158,7 @@ int russ_conn_exit(struct russ_conn *, int);
 int russ_conn_fatal(struct russ_conn *, char *, int);
 struct russ_conn *russ_conn_free(struct russ_conn *);
 int russ_conn_sendfds(struct russ_conn *, int, int *, int *);
+int russ_conn_splice(struct russ_conn *, struct russ_conn *);
 int russ_conn_wait(struct russ_conn *, int *, russ_timeout);
 
 struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
