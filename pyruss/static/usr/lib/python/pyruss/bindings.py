@@ -118,7 +118,7 @@ libruss.russ_conn_exit.argtypes = [
 libruss.russ_conn_exit.restype = ctypes.c_int
 
 # russ_conn_fatal
-libruss.rus_conn_fatal.argtypes = [
+libruss.russ_conn_fatal.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_char_p,
     ctypes.c_int,
