@@ -285,8 +285,8 @@ master_handler(struct russ_conn *conn) {
 		} else if ((strcmp(req->spath, "/net") == 0)
 			|| (strcmp(req->spath, "/next") == 0)
 			|| (strcmp(req->spath, "/random") == 0)) {
-			//russ_conn_fatal(conn, RUSS_MSG_UNK_SERVICE, RUSS_EXIT_SUCCESS);
-			russ_conn_fatal(conn, "error: unknown service", RUSS_EXIT_SUCCESS);
+			//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
+			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
