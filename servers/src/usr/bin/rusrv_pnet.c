@@ -218,7 +218,7 @@ alt_russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 	struct russ_request	*req;
 	int			i;
 
-	req = &(conn->req);
+	req = &(self->req);
 	if (strncmp(req->spath, "/hid/", 5) == 0) {
 		_hid_patch(conn);
 	} else if (strncmp(req->spath, "/host/", 6) == 0) {
