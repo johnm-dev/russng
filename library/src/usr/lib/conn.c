@@ -218,7 +218,6 @@ russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 	if (russ_conn_sendfds(self, RUSS_CONN_NFDS+1, cfds, sfds) < 0) {
 		goto close_fds;
 	}
-	fsync(self->sd);
 	russ_fds_close(&self->sd, 1);
 	return 0;
 
