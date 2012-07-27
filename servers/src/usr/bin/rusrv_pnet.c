@@ -110,7 +110,7 @@ _hid_patch(struct russ_conn *conn) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	spath_tail = strdup(p);
+	spath_tail = strdup(p+1);
 	p[0] = '\0'; /* terminate userhost */
 	if (sscanf(hids, "%d", &hid) < 0) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
@@ -126,7 +126,7 @@ _hid_patch(struct russ_conn *conn) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	free(p);
+	free(conn->req.spath);
 	conn->req.spath = strdup(tmp);
 	return 0;
 }
@@ -148,7 +148,7 @@ _host_patch(struct russ_conn *conn) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	spath_tail = strdup(p);
+	spath_tail = strdup(p+1);
 	p[0] = '\0'; /* terminate userhost */
 
 	for (i = 0; i < hostslist.nhosts; i++) {
@@ -165,7 +165,7 @@ _host_patch(struct russ_conn *conn) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	free(p);
+	free(conn->req.spath);
 	conn->req.spath = strdup(tmp);
 	return 0;
 }
@@ -220,13 +220,13 @@ alt_russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 
 	req = &(self->req);
 	if (strncmp(req->spath, "/hid/", 5) == 0) {
-		_hid_patch(conn);
+		_hid_patch(self);
 	} else if (strncmp(req->spath, "/host/", 6) == 0) {
-		_host_patch(conn);
+		_host_patch(self);
 	} else if (strncmp(req->spath, "/next/", 6) == 0) {
-		_next_patch(conn);
+		_next_patch(self);
 	} else if (strncmp(req->spath, "/random/", 8) == 0) {
-		_random_patch(conn);
+		_random_patch(self);
 	} else {
 		return russ_conn_accept(self, cfds, sfds);
 	}
