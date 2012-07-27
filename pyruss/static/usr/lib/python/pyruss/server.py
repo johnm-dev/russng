@@ -154,7 +154,7 @@ class ServiceTree:
             node = self.find(req.spath)
             if node:
                 if node.children:
-                    os.write(conn.get_fd(1), "%s\n" % "\n".join(node.children))
+                    os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
                 conn.exit(0)
             else:
                 os.write(conn.get_fd(2), "error: no service available\n")
