@@ -379,10 +379,12 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	if (argc > 1) {
-		hostsfilename = argv[1];
+	if (argc < 2) {
+		fprintf(stderr, "error: missing hosts file\n");
+		exit(-1);
 	}
-	if ((hostsfilename != NULL) && (load_hostsfile(hostsfilename) < 0)) {
+	hostsfilename = argv[1];
+	if (load_hostsfile(hostsfilename) < 0) {
 		fprintf(stderr, "error: could not load hosts file\n");
 		exit(-1);
 	}
