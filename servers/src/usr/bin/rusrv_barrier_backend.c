@@ -122,12 +122,12 @@ print_service_usage(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[2],
 "Barrier service.\n"
 "\n"
-"/count         print # of waiters expected\n"
-"/kill          kill barrier and release all waiters\n"
-"/tags          print tags of waiters\n"
-"/ttl           print time-to-live remaining\n"
-"/wait [<tag>]  wait on barrier; register optional tag\n"
-"/wcount        print # of waiters currently waiting\n"
+"count         print # of waiters expected\n"
+"kill          kill barrier and release all waiters\n"
+"tags          print tags of waiters\n"
+"ttl           print time-to-live remaining\n"
+"wait [<tag>]  wait on barrier; register optional tag\n"
+"wcount        print # of waiters currently waiting\n"
 );
 }
 
@@ -192,7 +192,7 @@ req_handler(struct russ_conn *conn) {
 		print_service_usage(conn);
 		goto close_conn;
 	} else if (strcmp(conn->req.op, "list") == 0) {
-		russ_dprintf(conn->fds[1], "/count\n/kill\n/tags\n/ttl\n/wait\n/wcount\n");
+		russ_dprintf(conn->fds[1], "count\nkill\ntags\nttl\nwait\nwcount\n");
 		goto close_conn;
 	} else {
 		russ_dprintf(conn->fds[2], "error: unknown operation\n");
