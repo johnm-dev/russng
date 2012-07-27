@@ -435,9 +435,9 @@ master_handler(struct russ_conn *conn) {
 	/* switch to user creds */
 
 	if ((chdir("/tmp") < 0)
-		|| (setgid(conn->cred.gid) < 0)
-		|| (setuid(conn->cred.uid) < 0)) {
-		russ_conn_fatal(conn, "error: cannot set credentials", RUSS_EXIT_FAILURE);
+		|| (russ_switch_user(conn->cred.uid, conn->cred.gid, 0, NULL) < 0)) {
+		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
+		exit(0);
 	}
 
 	if (strcmp(req->op, "execute") == 0) {

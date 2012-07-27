@@ -194,9 +194,8 @@ master_handler(struct russ_conn *conn) {
 
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
-	if ((setgid(getgid()) < 0)
-		|| (setuid(getuid()) < 0)) {
-		russ_conn_fatal(conn, "error cannot set up", RUSS_EXIT_FAILURE);
+	if (russ_switch_user(conn->cred.uid, conn->cred.gid, 0, NULL) < 0) {
+		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
 		return;
 	}
 

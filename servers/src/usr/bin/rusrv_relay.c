@@ -258,9 +258,7 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	/* prep */
 	if ((conn->cred.gid == 0)
 		|| (conn->cred.uid == 0)
-		|| (setgid(conn->cred.gid) < 0)
-		|| (setuid(conn->cred.uid) < 0)) {
-		fprintf(stderr, "failed to setgid (%ld) setuid (%ld)\n", conn->cred.gid, conn->cred.uid);
+		|| (russ_switch_user(conn->cred.uid, conn->cred.gid, 0, NULL) < 0)) {
 		return -1;
 	}
 
