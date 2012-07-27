@@ -110,8 +110,6 @@ print_usage(char **argv) {
 void
 alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 	struct russ_conn	*conn;
-	int			*cfds;
-	int			nfds;
 
 	while (1) {
 		if ((conn = russ_listener_answer(self, RUSS_TIMEOUT_NEVER)) == NULL) {
