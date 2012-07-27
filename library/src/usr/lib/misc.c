@@ -24,6 +24,7 @@
 # license--end
 */
 
+#include <grp.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -129,4 +130,37 @@ russ_dprintf(int fd, char *format, ...) {
 		}
 	}
 	return n;
+}
+
+/**
+* Switch to user (uid, gid, and supplemental groups).
+*/
+int
+russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
+	gid_t	_gid, *_gids;
+	int	_ngids;
+
+	/* save settings */
+	_gid = getgid();
+	_ngids = 0;
+	_gids = NULL;
+	if (((_ngids = getgroups(0, NULL)) < 0)
+		|| ((_gids = malloc(sizeof(gid_t)*_ngids)) == NULL)) {
+		return -1;
+	}
+
+	if ((setgroups(ngids, gids) < 0)
+		|| (setgid(gid) < 0)
+		|| (setuid(gid) < 0)) {
+		goto restore;
+	}
+	free(_gids);
+	return 0;
+restore:
+	/* restore setting */
+	setgroups(_ngids, _gids);
+	free(_gids);
+	setgid(_gid);
+	/* no need to restore uid */
+	return -1;
 }

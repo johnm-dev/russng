@@ -19,6 +19,10 @@ start() {
 	mkdir -m 0755 -p "${RUSS_RUN_DIR}/services"
 }
 
+stop() {
+	:
+}
+
 case "$1" in
 start)
 	echo -n "Setting up for russ services"

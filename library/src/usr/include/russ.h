@@ -194,6 +194,7 @@ struct russ_listener *russ_listener_free(struct russ_listener *);
 int russ_dprintf(int, char *, ...);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
+int russ_switch_user(uid_t, gid_t, int, gid_t *);
 
 /* request.c */
 
