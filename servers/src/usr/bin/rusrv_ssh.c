@@ -38,42 +38,13 @@ extern char **environ;
 #include "russ_conf.h"
 #include "russ.h"
 
-#define MAX_HOSTS	(1024)
-
-struct hostslist {
-	char	*hosts[MAX_HOSTS];
-	int	nhosts;
-	int	next;
-};
-
 /* global */
 struct russ_conf	*conf = NULL;
-char			*hostsfilename = NULL;
-struct hostslist	hostslist;
 
 char	*HELP = 
-"Provides access to remote user@host using ssh.\n"
-"\n"
-"hid/<hid>/... <args>\n"
-"    Connect to service ... at user@host identified by a lookup\n"
-"    into the hostsfile list where <hid> is the index. Only\n"
-"    available if a hostsfile was given at startup.\n"
-"\n"
-"host/<user@host>/... <args>\n"
-"    Connect to service ... at user@host verified by a lookup into\n"
-"    the hostsfile list. Only available if a hostsfile was given\n"
-"    at startup.\n"
-"\n"
-"net/user@host/... <args>\n"
-"    Connect to service ... at user@host using ssh.\n"
-"\n"
-"next/... <args>\n"
-"    Connect to the 'next' host selected from the hostsfile list.\n"
-"    Each call bumps to 'next' and wraps to 0 as needed.\n"
-"\n"
-"random/... <args>\n"
-"    Connect to a randomly select host selected from the hostsfile\n"
-"    list.\n";
+"Provides access to remote host using ssh.\n"
+"[<user>@]<host>[:<port>]/... <args>\n"
+"    Connect to service ... at <user>@<host>:<port> using ssh.\n";
 
 #define SSH_EXEC	"/usr/bin/ssh"
 #define RUDIAL_EXEC	"/usr/bin/rudial"
@@ -150,58 +121,7 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	exit(0);
 }
 
-void
-svc_hid_handler(struct russ_conn *conn) {
-	char	*p, *new_spath, *hids, *userhost;
-	int	i, hid;
-
-	/* extract and validate user@host and new_spath */
-	hids = &conn->req.spath[5];
-	if ((p = index(hids, '/')) == NULL) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	new_spath = strdup(p);
-	p[0] = '\0'; /* terminate userhost */
-	if (sscanf(hids, "%d", &hid) < 0) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	if ((hid < 0) || (hid >= hostslist.nhosts)) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	userhost = hostslist.hosts[hid];
-
-	execute(conn, userhost, new_spath);
-}
-
-void
-svc_host_handler(struct russ_conn *conn) {
-	char	*p, *new_spath, *userhost;
-	int	i;
-
-	/* extract and validate user@host and new_spath */
-	userhost = &conn->req.spath[6];
-	if ((p = index(userhost, '/')) == NULL) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	for (i = 0; i < hostslist.nhosts; i++) {
-		if (strcmp(userhost, hostslist.hosts[i]) == 0) {
-			break;
-		}
-	}
-	new_spath = strdup(p);
-	p[0] = '\0'; /* terminate userhost */
-	if (i == hostslist.nhosts) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-
-	execute(conn, userhost, new_spath);
-}
-
+#if 0
 void
 svc_net_handler(struct russ_conn *conn) {
 	char	*p, *new_spath, *userhost;
@@ -218,86 +138,52 @@ svc_net_handler(struct russ_conn *conn) {
 
 	execute(conn, userhost, new_spath);
 }
+#endif
 
 void
-svc_next_handler(struct russ_conn *conn) {
-	char	new_spath[16384];
-	int	hid;
+svc_x_handler(struct russ_conn *conn) {
+	char	*p, *new_spath, *userhost;
+	int	i;
 
-	hid = hostslist.next;
-	sprintf(new_spath, "/hid/%d/%s", hid, &conn->req.spath[6]);
-	free(conn->req.spath);
-	conn->req.spath = strdup(new_spath);
-	svc_hid_handler(conn);
-}
+	/* extract and validate user@host and new_spath */
+	userhost = &conn->req.spath[1];
+	if ((p = index(userhost, '/')) == NULL) {
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	new_spath = strdup(p);
+	p[0] = '\0'; /* terminate userhost */
 
-void
-svc_random_handler(struct russ_conn *conn) {
-	char	new_spath[16384];
-	int	hid;
-
-	hid = (random()/(double)RAND_MAX)*hostslist.nhosts;
-	sprintf(new_spath, "/hid/%d/%s", hid, &conn->req.spath[8]);
-	free(conn->req.spath);
-	conn->req.spath = strdup(new_spath);
-	svc_hid_handler(conn);
+	execute(conn, userhost, new_spath);
 }
 
 /*
-* All ops are passed to handlers for /hid/*, /host/*, /net/*,
-* /next/*, and /random/* spaths.
 */
 void
 master_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
+	int			outfd;
 	int			i;
 
+	outfd = conn->fds[1];
 	req = &(conn->req);
-	if (strncmp(req->spath, "/hid/", 5) == 0) {
-		svc_hid_handler(conn);
-	} else if (strncmp(req->spath, "/host/", 6) == 0) {
-		svc_host_handler(conn);
-	} else if (strncmp(req->spath, "/next/", 6) == 0) {
-		svc_next_handler(conn);
-	} else if (strncmp(req->spath, "/net/", 5) == 0) {
-		svc_net_handler(conn);
-	} else if (strncmp(req->spath, "/random/", 8) == 0) {
-		svc_random_handler(conn);
+	if (index(&req->spath[1], '/') > 0) {
+		/* /.../ */
+		svc_x_handler(conn);
 	} else if (strcmp(req->op, "execute") == 0) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	} else if (strcmp(req->op, "help") == 0) {
-        	russ_dprintf(conn->fds[1], "%s", HELP);
+        	russ_dprintf(outfd, "%s", HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
+#if 0
 		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(conn->fds[1], "hid\nhost\nnet\nnext\nrandom\n");
+			russ_dprintf(conn->fds[1], "dial\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		} else if (strcmp(req->spath, "/hid") == 0) {
-			if (hostslist.nhosts == 0) {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			} else {
-				for (i = 0; i < hostslist.nhosts; i++) {
-					russ_dprintf(conn->fds[1], "%d\n", i);
-				}
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			}
-		} else if (strcmp(req->spath, "/host") == 0) {
-			if (hostslist.nhosts == 0) {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			} else {
-				for (i = 0; i < hostslist.nhosts; i++) {
-					russ_dprintf(conn->fds[1], "%s\n", hostslist.hosts[i]);
-				}
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			}
-		} else if ((strcmp(req->spath, "/net") == 0)
-			|| (strcmp(req->spath, "/next") == 0)
-			|| (strcmp(req->spath, "/random") == 0)) {
-			//russ_conn_fatal(conn, RUSS_MSG_UNK_SERVICE, RUSS_EXIT_SUCCESS);
-			russ_conn_fatal(conn, "error: unknown service", RUSS_EXIT_SUCCESS);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
+#endif
+		//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
+		russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
@@ -320,83 +206,17 @@ print_usage(char **argv) {
 }
 
 int
-load_hostsfile(char *filename) {
-	char	*line;
-	int	i;
-	size_t	line_size;
-	ssize_t	nbytes;
-	FILE	*f;
-
-	if ((f = fopen(filename, "r")) == NULL) {
-		return -1;
-	}
-	for (i = 0; i < MAX_HOSTS; i++) {
-		line = NULL;
-		if ((nbytes = getline(&line, &line_size, f)) < 0) {
-			break;
-		}
-		if (line[nbytes-1] == '\n') {
-			line[nbytes-1] = '\0';
-		}
-		hostslist.hosts[i] = line;
-	}
-	hostslist.nhosts = i;
-	hostslist.next = -1;
-	return 0;
-}
-
-void
-alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
-	struct russ_conn	*conn;
-
-	while (1) {
-		if ((conn = russ_listener_answer(self, RUSS_TIMEOUT_NEVER)) == NULL) {
-			fprintf(stderr, "error: cannot answer connection\n");
-			continue;
-		}
-
-		hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
-		random(); /* tickle */
-
-		if (fork() == 0) {
-			russ_listener_close(self);
-			self = russ_listener_free(self);
-			if ((russ_conn_await_request(conn) < 0)
-				|| (russ_conn_accept(conn, NULL, NULL) < 0)) {
-				exit(-1);
-			}
-			handler(conn);
-			russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
-			exit(0);
-		}
-		russ_conn_close(conn);
-		conn = russ_conn_free(conn);
-	}
-}
-
-int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 
-	srandom(time(NULL));
-	hostslist.nhosts = 0;
-
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
 		exit(0);
 	} else if ((argc < 2) || ((conf = russ_conf_init(&argc, argv)) == NULL)) {
 		fprintf(stderr, "error: cannot configure\n");
-		exit(-1);
-	}
-
-	if (argc > 1) {
-		hostsfilename = argv[1];
-	}
-	if ((hostsfilename != NULL) && (load_hostsfile(hostsfilename) < 0)) {
-		fprintf(stderr, "error: could not load hosts file\n");
 		exit(-1);
 	}
 
@@ -408,6 +228,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	alt_russ_listener_loop(lis, master_handler);
+	russ_listener_loop(lis, master_handler);
 	exit(0);
 }
