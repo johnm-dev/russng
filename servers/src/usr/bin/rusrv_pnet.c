@@ -86,7 +86,7 @@ switch_user(struct russ_conn *conn) {
 	}
 
 	/* switch user */
-	if ((setgid(gid) < 0) || (setuid(uid) < 0)) {
+	if (russ_switch_user(uid, gid, 0, NULL) < 0) {
 		russ_conn_fatal(conn, "error: cannot switch user", -1);
 		exit(0);
 	}
