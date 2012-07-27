@@ -283,10 +283,9 @@ russ_conf_init(int *argc, char **argv) {
 		argv[j] = argv[i];
 	}
 	argv[j] = NULL;
-	*argc = j-1;
+	*argc = j;
 
 	return self;
-
 bad_args:
 	fprintf(stderr, "error: bad/missing arguments\n");
 free_conf:
