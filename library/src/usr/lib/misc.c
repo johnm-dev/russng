@@ -145,7 +145,8 @@ russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
 	_ngids = 0;
 	_gids = NULL;
 	if (((_ngids = getgroups(0, NULL)) < 0)
-		|| ((_gids = malloc(sizeof(gid_t)*_ngids)) == NULL)) {
+		|| ((_gids = malloc(sizeof(gid_t)*_ngids)) == NULL)
+		|| (getgroups(&_ngids, _gids) < 0)) {
 		return -1;
 	}
 
