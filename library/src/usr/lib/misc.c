@@ -151,7 +151,7 @@ russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
 
 	if ((setgroups(ngids, gids) < 0)
 		|| (setgid(gid) < 0)
-		|| (setuid(gid) < 0)) {
+		|| (setuid(uid) < 0)) {
 		goto restore;
 	}
 	free(_gids);
