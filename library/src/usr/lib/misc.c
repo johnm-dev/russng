@@ -133,7 +133,21 @@ russ_dprintf(int fd, char *format, ...) {
 }
 
 /**
-* Switch to user (uid, gid, and supplemental groups).
+* Switch user (uid, gid, supplemental groups).
+*
+* This will succeed for non-root trying to setuid/setgid to own
+* credentials (a noop and gids is ignored). As root, this should
+* always succeed.
+*
+* Supplemental groups require attention so that root supplemental
+* group entry of 0 does not get carried over. No supplemental
+* group information is set up (only erased).
+*
+* @param uid		user id
+* @param gid		group id
+* @param ngids		number of supplemental groups in list
+* @param gids		list of supplemental gids
+* @return		0 on success; -1 on failure
 */
 int
 russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
