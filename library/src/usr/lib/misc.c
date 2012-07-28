@@ -140,6 +140,10 @@ russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
 	gid_t	_gid, *_gids;
 	int	_ngids;
 
+	if ((uid == getuid()) && (gid == getgid())) {
+	    return 0;
+	}
+
 	/* save settings */
 	_gid = getgid();
 	_ngids = 0;
