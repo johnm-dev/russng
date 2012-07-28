@@ -81,7 +81,6 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	/* build args array */
 	nargs = 0;
 	args[nargs++] = SSH_EXEC;
-	args[nargs++] = userhost;
 	args[nargs++] = "-o";
 	args[nargs++] = "StrictHostKeyChecking";
 	args[nargs++] = "no";
@@ -91,6 +90,7 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	args[nargs++] = "-o";
 	args[nargs++] = "LogLevel";
 	args[nargs++] = "QUIET";
+	args[nargs++] = userhost;
 	args[nargs++] = RUDIAL_EXEC;
 	if ((conn->req.attrv != NULL) && (conn->req.attrv[0] != NULL)) {
 		for (i = 0; conn->req.attrv[i] != NULL; i++) {
