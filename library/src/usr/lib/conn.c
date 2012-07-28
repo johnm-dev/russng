@@ -254,14 +254,13 @@ russ_conn_splice(struct russ_conn *self, struct russ_conn *dconn) {
 	}
 	ev = russ_conn_sendfds(self, dconn->nfds+1, cfds, NULL);
 
+	/* dconn fds and exit_fd are closed by russ_conn_sendfds */
+	russ_fds_close(&dconn->sd, 1);
+
 	/* close sd, fds, and exit_fd */
 	russ_fds_close(self->fds, self->nfds);
 	russ_fds_close(&self->exit_fd, 1);
 	russ_fds_close(&self->sd, 1);
-
-	russ_fds_close(dconn->fds, dconn->nfds);
-	russ_fds_close(&dconn->exit_fd, 1);
-	russ_fds_close(&dconn->sd, 1);
 
 	free(cfds);
 
