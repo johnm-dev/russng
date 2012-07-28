@@ -82,14 +82,11 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	nargs = 0;
 	args[nargs++] = SSH_EXEC;
 	args[nargs++] = "-o";
-	args[nargs++] = "StrictHostKeyChecking";
-	args[nargs++] = "no";
+	args[nargs++] = "StrictHostKeyChecking=no";
 	args[nargs++] = "-o";
-	args[nargs++] = "BatchMode";
-	args[nargs++] = "yes";
+	args[nargs++] = "BatchMode=yes";
 	args[nargs++] = "-o";
-	args[nargs++] = "LogLevel";
-	args[nargs++] = "QUIET";
+	args[nargs++] = "LogLevel=QUIET";
 	args[nargs++] = userhost;
 	args[nargs++] = RUDIAL_EXEC;
 	if ((conn->req.attrv != NULL) && (conn->req.attrv[0] != NULL)) {
