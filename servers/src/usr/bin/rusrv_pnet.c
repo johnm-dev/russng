@@ -80,10 +80,12 @@ switch_user(struct russ_conn *conn) {
 	uid = conn->cred.uid;
 	gid = conn->cred.gid;
 
+#if 0
 	if (uid == 0) {
 		russ_conn_fatal(conn, "error: cannot run for root (uid of 0)", -1);
 		exit(0);
 	}
+#endif
 
 	/* switch user */
 	if (russ_switch_user(uid, gid, 0, NULL) < 0) {
