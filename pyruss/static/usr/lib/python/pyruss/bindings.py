@@ -265,8 +265,8 @@ class ClientConn(Conn):
         return self.conn_ptr.contents.sd
 
     def wait(self, timeout):
-        exit_status = c_int()
-        return libruss.russ_conn_wait(self.conn_ptr, ctypes.byref(exit_status), timeout), exit_status
+        exit_status = ctypes.c_int()
+        return libruss.russ_conn_wait(self.conn_ptr, ctypes.byref(exit_status), timeout), int(exit_status)
 
 class ServerConn(Conn):
     """Server connection.
