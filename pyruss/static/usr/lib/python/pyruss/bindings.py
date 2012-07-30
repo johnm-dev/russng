@@ -189,6 +189,11 @@ def dial(timeout, op, saddr, attrs, args):
     c_argv[len(args)] = None
     return ClientConn(libruss.russ_dialv(timeout, op, saddr, c_attrs, c_argv))
 
+def exec(timeout, saddr, attrs, args):
+    """ruexec a service.
+    """
+    return dial(timeout, "execute", saddr, attrs, args)
+
 def announce(path, mode, uid, gid):
     """Announce a service.
     """
