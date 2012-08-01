@@ -177,7 +177,7 @@ libruss.russ_listener_loop.restype = None
 #
 # Application-facing classes
 #
-def dial(timeout, op, saddr, attrs, args):
+def dialv(timeout, op, saddr, attrs, args):
     """Dial a service.
     """
     if attrs == None:
@@ -189,10 +189,12 @@ def dial(timeout, op, saddr, attrs, args):
     c_argv[len(args)] = None
     return ClientConn(libruss.russ_dialv(timeout, op, saddr, c_attrs, c_argv))
 
-def exec(timeout, saddr, attrs, args):
+dial = dialv
+
+def execv(timeout, saddr, attrs, args):
     """ruexec a service.
     """
-    return dial(timeout, "execute", saddr, attrs, args)
+    return dialv(timeout, "execute", saddr, attrs, args)
 
 def announce(path, mode, uid, gid):
     """Announce a service.
