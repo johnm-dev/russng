@@ -175,6 +175,21 @@ libruss.russ_listener_loop.argtypes = [
 libruss.russ_listener_loop.restype = None
 
 #
+# helpers
+#
+def list_of_strings_to_c_string_array(l):
+    """Create "char **" from list of strings. All None elements are
+    converted to NULL.
+    """
+    c_strings = (ctypes.c_char_p*(len(l)))()
+    for i, s in enumerate(l):
+        if s == None:
+            c_strings[i] = None
+        else:
+            c_strings[i] = ctypes.create_string_buffer(s).value
+    return c_strings
+        
+#
 # Application-facing classes
 #
 def dialv(timeout, op, saddr, attrs, args):
@@ -183,10 +198,10 @@ def dialv(timeout, op, saddr, attrs, args):
     if attrs == None:
         attrs = {}
     attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
-    c_attrs = (ctypes.c_char_p*(len(attrs_list)+1))(*attrs_list)
-    c_attrs[len(attrs)] = None
-    c_argv = (ctypes.c_char_p*(len(args)+1))(*args)
-    c_argv[len(args)] = None
+
+    c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
+    c_argv = list_of_strings_to_c_string_array(list(args)+[None])
+
     return ClientConn(libruss.russ_dialv(timeout, op, saddr, c_attrs, c_argv))
 
 dial = dialv
