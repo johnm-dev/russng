@@ -140,7 +140,7 @@ op_execute_handler(struct russ_conn *conn) {
 			&& (req->argv[0] != NULL)
 			&& (req->argv[1] != NULL)) {
 			argv[0] = lshell;
-			argv[2] = squote_string(req->argv[1]);
+			argv[2] = req->argv[1];
 
 			/* setup for cgroups */
 			if ((snprintf(cgpath, sizeof(cgpath), "%s/tasks", req->argv[0]) < 0)
@@ -155,11 +155,11 @@ op_execute_handler(struct russ_conn *conn) {
 		} else if ((strcmp(req->spath, "/login") == 0)
 			&& (req->argv[0] != NULL)) {
 			argv[0] = lshell;
-			argv[2] = squote_string(req->argv[0]);
+			argv[2] = req->argv[0];
 		} else if ((strcmp(req->spath, "/shell") == 0)
 			&& (req->argv[0] != NULL)) {
 			argv[0] = shell;
-			argv[2] = squote_string(req->argv[0]);
+			argv[2] = req->argv[0];
 		} else {
 			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
 			russ_conn_close(conn);
