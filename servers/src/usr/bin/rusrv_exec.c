@@ -93,8 +93,10 @@ free_strings:
 void
 op_execute_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
+	FILE			*f;
 	char			*cmd, **argv;
 	char			*shell, *lshell, *home;
+	char			cgpath[1024];
 	pid_t			pid;
 	int			argc, i, status;
 
@@ -105,7 +107,9 @@ op_execute_handler(struct russ_conn *conn) {
 		cmd = req->argv[0];
 		argv = req->argv;
 		home = "/";
-	} else {
+	} else if ((strcmp(req->spath, "/job") == 0)
+		|| (strcmp(req->spath, "/login") == 0)
+		|| (strcmp(req->spath, "/shell") == 0)) {
 		/* argv[] = {shell, "-c", cmd, NULL} */
 		if ((argv = malloc(sizeof(char *)*4)) == NULL) {
 			russ_conn_fatal(conn, "error: could not run", RUSS_EXIT_FAILURE);
@@ -118,24 +122,42 @@ op_execute_handler(struct russ_conn *conn) {
 		}
 		cmd = shell;
 		argv[1] = "-c";
-		argv[2] = req->argv[0];
+		/* argv[2] is set below */
 		argv[3] = NULL;
 
-		if (strcmp(req->spath, "/job") == 0) {
+		if ((strcmp(req->spath, "/job") == 0)
+			&& (req->argv[0] != NULL)
+			&& (req->argv[1] != NULL)) {
 			argv[0] = lshell;
-		} else if (strcmp(req->spath, "/login") == 0) {
-			argv[0] = lshell;
-		} else if (strcmp(req->spath, "/shell") == 0) {
-			argv[0] = shell;
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			return;
-		}
-	}
+			argv[2] = req->argv[1];
 
-	/* TODO: setup for cgroups */
-	if (strcmp(req->spath, "/job") == 0) {
+			/* setup for cgroups */
+			if ((snprintf(cgpath, sizeof(cgpath), "%s/tasks", req->argv[0]) < 0)
+				|| ((f = fopen(cgpath, "w")) ==  NULL)
+				|| (fprintf(f, "%d", getpid()) < 0)) {
+				fclose(f);
+				russ_conn_fatal(conn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
+				russ_conn_close(conn);
+				exit(0);
+			}
+			fclose(f);
+		} else if ((strcmp(req->spath, "/login") == 0)
+			&& (req->argv[0] != NULL)) {
+			argv[0] = lshell;
+			argv[2] = req->argv[0];
+		} else if ((strcmp(req->spath, "/shell") == 0)
+			&& (req->argv[0] != NULL)) {
+			argv[0] = shell;
+			argv[2] = req->argv[0];
+		} else {
+			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
+			russ_conn_close(conn);
+			exit(0);
+		}
+	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_conn_close(conn);
+		exit(0);
 	}
 
 	/* TODO: set minimal settings:
