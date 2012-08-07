@@ -64,6 +64,13 @@ switch_user(struct russ_conn *conn) {
 	}
 #endif
 
+	/* set up env */
+	if ((chdir("/") < 0)
+		|| (clearenv() < 0)) {
+		russ_conn_fatal(conn, "error: cannot set environment", RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+
 	/* switch user */
 	if (russ_switch_user(uid, gid, 0, NULL) < 0) {
 		russ_conn_fatal(conn, "error: cannot switch user", -1);
