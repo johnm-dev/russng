@@ -80,15 +80,21 @@ switch_user(struct russ_conn *conn) {
 }
 
 char *
-escape_spaces(char *s) {
+escape_special(char *s) {
 	char	*s2;
 	char	*a, *b;
 
-	if ((s2 = malloc(strlen(s)+1)) == NULL) {
+	if ((s2 = malloc(2*(strlen(s))+1)) == NULL) {
 		return NULL;
 	}
 	for (a = s, b = s2; *a != '\0'; a++, b++) {
-		if (*a == ' ') {
+		switch (*a) {
+		case ' ':
+		case '\'':
+		case '$':
+		case '`':
+		case '"':
+		default:
 			*b = '\\';
 			b++;
 		}
@@ -120,7 +126,7 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	if ((conn->req.attrv != NULL) && (conn->req.attrv[0] != NULL)) {
 		for (i = 0; conn->req.attrv[i] != NULL; i++) {
 			args[nargs++] = "-a";
-			if ((args[nargs++] = escape_spaces(conn->req.attrv[i])) == NULL) {
+			if ((args[nargs++] = escape_special(conn->req.attrv[i])) == NULL) {
 				russ_conn_fatal(conn, "error: out of memory", RUSS_EXIT_FAILURE);
 				russ_conn_close(conn);
 				exit(0);
@@ -131,7 +137,7 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	args[nargs++] = new_spath;
 	if ((conn->req.argv != NULL) && (conn->req.argv[0] != NULL)) {
 		for (i = 0; conn->req.argv[i] != NULL; i++) {
-			if ((args[nargs++] = escape_spaces(conn->req.argv[i])) == NULL) {
+			if ((args[nargs++] = escape_special(conn->req.argv[i])) == NULL) {
 				russ_conn_fatal(conn, "error: out of memory", RUSS_EXIT_FAILURE);
 				russ_conn_close(conn);
 				exit(0);
