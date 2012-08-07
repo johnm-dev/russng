@@ -90,6 +90,17 @@ free_strings:
 	return -1;
 }
 
+char *
+squote_string(char *s) {
+	char	*s2;
+
+	if (((s2 = malloc(strlen(s)+1+2)) == NULL)
+		|| (sprintf(s2, "'%s'", s) < 0)) {
+		return NULL;
+	}
+	return s2;
+}
+
 void
 op_execute_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
@@ -129,7 +140,7 @@ op_execute_handler(struct russ_conn *conn) {
 			&& (req->argv[0] != NULL)
 			&& (req->argv[1] != NULL)) {
 			argv[0] = lshell;
-			argv[2] = req->argv[1];
+			argv[2] = squote_string(req->argv[1]);
 
 			/* setup for cgroups */
 			if ((snprintf(cgpath, sizeof(cgpath), "%s/tasks", req->argv[0]) < 0)
@@ -144,12 +155,17 @@ op_execute_handler(struct russ_conn *conn) {
 		} else if ((strcmp(req->spath, "/login") == 0)
 			&& (req->argv[0] != NULL)) {
 			argv[0] = lshell;
-			argv[2] = req->argv[0];
+			argv[2] = squote_string(req->argv[0]);
 		} else if ((strcmp(req->spath, "/shell") == 0)
 			&& (req->argv[0] != NULL)) {
 			argv[0] = shell;
-			argv[2] = req->argv[0];
+			argv[2] = squote_string(req->argv[0]);
 		} else {
+			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
+			russ_conn_close(conn);
+			exit(0);
+		}
+		if (argv[2] == NULL) {
 			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
 			russ_conn_close(conn);
 			exit(0);
