@@ -74,12 +74,12 @@ russ_resolve_addr(char *addr) {
 	changed = 1;
 	while (changed) {
 		changed = 0;
-		if ((strstr(buf, "+") == buf) || (strstr(buf, "/+") == buf)) {
+		if ((strstr(buf, "+/") == buf) || (strstr(buf, "/+/") == buf)) {
 			/* resolve prefixes */
 			if (buf[0] == '+') {
-				bp = &buf[1];
-			} else {
 				bp = &buf[2];
+			} else {
+				bp = &buf[3];
 			}
 			if ((snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", services_dir, bp) < 0)
 				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
