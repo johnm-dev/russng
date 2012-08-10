@@ -26,8 +26,8 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)/usr/bin
 	(cp $(BINS) $(INSTALL_DIR)/usr/bin)
-	(cd $(INSTALL_DIR)/usr/bin; ln -fs rudial ruexec)
-	(cd $(INSTALL_DIR)/usr/bin; ln -fs ruls ruhelp; ln -fs ruls ruinfo)
+	(cd $(INSTALL_DIR)/usr/bin; ln -fs rudial ruexec; ln -fs rudial ruhelp; ln -fs rudial ruinfo)
+	(cd $(INSTALL_DIR)/usr/bin; ln -fs rudial ruexec; ln -fs rudial ruhelp; ln -fs rudial ruinfo)
 
 rudial:	rudial.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)

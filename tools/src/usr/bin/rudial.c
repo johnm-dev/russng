@@ -56,6 +56,18 @@ print_usage(char *prog_name) {
 "\n"
 "Execute service at <addr>.\n"
 );
+	} else if (strcmp(prog_name, "ruhelp") == 0) {
+		printf(
+"usage: ruhelp [-t|--timeout <seconds>] <addr>\n"
+"\n"
+"Get help for service at <addr>.\n"
+);
+	} else if (strcmp(prog_name, "ruinfo") == 0) {
+		printf(
+"usage: ruinfo [-t|--timeout <seconds>] <addr>\n"
+"\n"
+"Get information about service at <addr>\n"
+);
 	} else {
 		return;
 	}
@@ -138,17 +150,26 @@ main(int argc, char **argv) {
 	}
 
 	/* [op], addr and args */
-	if ((strcmp(prog_name, "ruexec") == 0)
-		&& (argi+1 <= argc)) {
-		addr = argv[argi++];
-		conn = russ_execv(timeout, addr, attrv, &(argv[argi]));
-	} else if ((strcmp(prog_name, "rudial") == 0) 
-		&& (argi+2 <= argc)) {
-		op = argv[argi++];
-		addr = argv[argi++];
-		conn = russ_dialv(timeout, op, addr, attrv, &(argv[argi]));
+	if ((strcmp(prog_name, "rudial") == 0) || (strcmp(prog_name, "ruexec") == 0)) {
+		if ((strcmp(prog_name, "rudial") == 0) 
+			&& (argi+2 <= argc)) {
+			op = argv[argi++];
+			addr = argv[argi++];
+			conn = russ_dialv(timeout, op, addr, attrv, &(argv[argi]));
+		} else if ((strcmp(prog_name, "ruexec") == 0)
+			&& (argi+1 <= argc)) {
+			addr = argv[argi++];
+			conn = russ_execv(timeout, addr, attrv, &(argv[argi]));
+		} else {
+			fprintf(stderr, "error: bad/missing arguments\n");
+			exit(-1);
+		}
+	} else if (strcmp(prog_name, "ruhelp") == 0) {
+		conn = russ_help(timeout, addr);
+	} else if (strcmp(prog_name, "ruinfo") == 0) {
+		conn = russ_info(timeout, addr);
 	} else {
-		fprintf(stderr, "error: bad/missing arguments\n");
+		fprintf(stderr, "error: unknown program name\n");
 		exit(-1);
 	}
 

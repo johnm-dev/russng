@@ -35,27 +35,11 @@
 
 void
 print_usage(char *prog_name) {
-	if (strcmp(prog_name, "ruhelp") == 0) {
-		printf(
-"usage: ruhelp [-t|--timeout <seconds>] <addr>\n"
-"\n"
-"Get help for service at <addr>.\n"
-);
-	} else if (strcmp(prog_name, "ruinfo") == 0) {
-		printf(
-"usage: ruinfo [-t|--timeout <seconds>] <addr>\n"
-"\n"
-"Get information about service at <addr>\n"
-);
-	} else if (strcmp(prog_name, "ruls") == 0) {
-		printf(
+	printf(
 "usage: ruls [-t|--timeout <seconds>] <addr>\n"
 "\n"
 "List service(s) at <addr>.\n"
 );
-	} else {
-		fprintf(stderr, "error: unknown program name\n");
-	}
 }
 
 int
@@ -93,16 +77,7 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	if (strcmp(prog_name, "ruhelp") == 0) {
-		conn = russ_help(timeout, addr);
-	} else if (strcmp(prog_name, "ruinfo") == 0) {
-		conn = russ_info(timeout, addr);
-	} else if (strcmp(prog_name, "ruls") == 0) {
-		conn = russ_list(timeout, addr);
-	} else {
-		fprintf(stderr, "error: unknown program name\n");
-		exit(-1);
-	}
+	conn = russ_list(timeout, addr);
 	if (conn == NULL) {
 		fprintf(stderr, "error: cannot dial service\n");
 		exit(-1);
