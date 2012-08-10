@@ -24,6 +24,7 @@
 # license--end
 */
 
+#include <dirent.h>
 #include <libgen.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -36,9 +37,13 @@
 void
 print_usage(char *prog_name) {
 	printf(
-"usage: ruls [-t|--timeout <seconds>] <addr>\n"
+"usage: ruls [-t|--timeout <seconds>] <addr>|<path>\n"
+"       ruls [-h|--help]\n"
 "\n"
-"List service(s) at <addr>.\n"
+"List service(s) at <addr> or a directory entries at <path>.\n"
+"Directory listings show service files and directories only.\n"
+"Directories are indicated by a trailing / and the ./ entry is\n"
+"always listed for a valid directory.\n"
 );
 }
 
@@ -46,6 +51,7 @@ int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_forwarder	fwds[RUSS_CONN_NFDS];
+	struct stat		st;
 	char			*prog_name;
 	char			*addr;
 	russ_timeout		timeout;
@@ -73,35 +79,73 @@ main(int argc, char **argv) {
 		}
 		addr = argv[3];
 	} else {
-		fprintf(stderr, "error: bad/missing arguments\n");
-		exit(-1);
+		addr = ".";
 	}
 
-	conn = russ_list(timeout, addr);
-	if (conn == NULL) {
-		fprintf(stderr, "error: cannot dial service\n");
-		exit(-1);
+	/* resolve before calling russ_list() */
+	addr = russ_resolve_addr(addr);
+
+	/* TODO: clean up exit_status usage */
+
+	/* call russ_list() only if a socket file; otherwise list dir */
+	exit_status = 0;
+	if ((stat(addr, &st) < 0) || S_ISSOCK(st.st_mode)) {
+		conn = russ_list(timeout, addr);
+
+		if (conn == NULL) {
+			fprintf(stderr, "error: cannot dial service\n");
+			exit(-1);
+		}
+
+		/* initialize forwarders (handing off fds) and start threads */
+		russ_forwarder_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0, 1);
+		russ_forwarder_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 16384, 0, 1);
+		russ_forwarder_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 16384, 0, 1);
+		conn->fds[0] = -1;
+		conn->fds[1] = -1;
+		conn->fds[2] = -1;
+		if (russ_run_forwarders(conn->nfds, fwds) < 0) {
+			fprintf(stderr, "error: could not forward bytes\n");
+			exit(-1);
+		}
+
+		/* wait for exit */
+		if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+			exit_status = -127;
+		}
+		russ_forwarder_join(&(fwds[1]));
+
+		russ_conn_close(conn);
+		conn = russ_conn_free(conn);
+	} else if (S_ISDIR(st.st_mode)) {
+		DIR		*dir;
+		struct dirent	*dent;
+		char		path[2048];
+
+		if ((dir = opendir(addr)) == NULL) {
+			exit_status = -1;
+		} else {
+			while ((dent = readdir(dir)) != NULL) {
+				if (strcmp(dent->d_name, "..") == 0) {
+					continue;
+				}
+				if ((snprintf(path, sizeof(path), "%s/%s", addr, dent->d_name) < 0)
+					|| (stat(path, &st) < 0)) {
+					/* problem */
+					continue;
+				}
+				if (S_ISDIR(st.st_mode)) {
+					printf("%s/\n", dent->d_name);
+				} else if (S_ISSOCK(st.st_mode)) {
+					printf("%s\n", dent->d_name);
+				}
+			}
+			closedir(dir);
+		}
+	} else {
+		fprintf(stderr, "not a service or directory\n");
+		exit_status = -1;
 	}
 
-	/* initialize forwarders (handing off fds) and start threads */
-	russ_forwarder_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0, 1);
-	russ_forwarder_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 16384, 0, 1);
-	russ_forwarder_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 16384, 0, 1);
-	conn->fds[0] = -1;
-	conn->fds[1] = -1;
-	conn->fds[2] = -1;
-	if (russ_run_forwarders(conn->nfds, fwds) < 0) {
-		fprintf(stderr, "error: could not forward bytes\n");
-		exit(-1);
-	}
-
-	/* wait for exit */
-	if (russ_conn_wait(conn, &exit_status, -1) < 0) {
-		exit_status = -127;
-	}
-	russ_forwarder_join(&(fwds[1]));
-
-	russ_conn_close(conn);
-	conn = russ_conn_free(conn);
 	exit(exit_status);
 }
