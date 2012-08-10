@@ -165,8 +165,10 @@ main(int argc, char **argv) {
 			exit(-1);
 		}
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
+		addr = argv[argi++];
 		conn = russ_help(timeout, addr);
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
+		addr = argv[argi++];
 		conn = russ_info(timeout, addr);
 	} else {
 		fprintf(stderr, "error: unknown program name\n");
