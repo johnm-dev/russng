@@ -67,6 +67,11 @@ russ_resolve_addr(char *addr) {
 	sdlen = strlen(services_dir);
 	bend = buf+sizeof(buf);
 
+	/* special case */
+	if (strcmp(buf, "+") == 0) {
+		strcpy(buf, "+/");
+	}
+
 	/*
 	* TODO: the following code could be simplified and
 	* clarified so that flow is obvious.
