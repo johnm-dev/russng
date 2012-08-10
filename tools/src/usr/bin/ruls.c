@@ -61,7 +61,7 @@ main(int argc, char **argv) {
 		}
 		timeout = RUSS_TIMEOUT_NEVER;
 		addr = argv[1];
-	} else if (argc == 5) {
+	} else if (argc == 4) {
 		if ((strcmp(argv[1], "-t") == 0) || (strcmp(argv[1], "--timeout") == 0)) {
 			if (sscanf(argv[2], "%d", (int *)&timeout) < 0) {
 				fprintf(stderr, "error: bad timeout value\n");
