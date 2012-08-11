@@ -116,7 +116,7 @@ _first_patch(struct russ_conn *conn) {
 int
 _host_patch(struct russ_conn *conn) {
 	char	*p, *spath_tail, *userhost;
-	char	tmp[16384];
+	char	new_spath[RUSS_MAX_SPATH_LEN];
 	int	i;
 
 	/* extract and validate user@host and new_spath */
@@ -138,12 +138,12 @@ _host_patch(struct russ_conn *conn) {
 		exit(0);
 	}
 
-	if (snprintf(tmp, sizeof(tmp), "/%s/%s/%s", "+ssh", userhost, spath_tail) < 0) {
+	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", "+ssh", userhost, spath_tail) < 0) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	free(conn->req.spath);
-	conn->req.spath = strdup(tmp);
+	conn->req.spath = strdup(new_spath);
 	return 0;
 }
 
@@ -155,7 +155,7 @@ _host_patch(struct russ_conn *conn) {
 int
 _id_patch(struct russ_conn *conn) {
 	char	*p, *spath_tail, *s, *userhost;
-	char	tmp[16384];
+	char	new_spath[RUSS_MAX_SPATH_LEN];
 	int	i, idx, wrap = 0;
 
 	/* extract and validate user@host and new_spath */
@@ -184,12 +184,12 @@ _id_patch(struct russ_conn *conn) {
 	}
 	userhost = hostslist.hosts[idx];
 
-	if (snprintf(tmp, sizeof(tmp), "/%s/%s/%s", "+ssh", userhost, spath_tail) < 0) {
+	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", "+ssh", userhost, spath_tail) < 0) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	free(conn->req.spath);
-	conn->req.spath = strdup(tmp);
+	conn->req.spath = strdup(new_spath);
 	return 0;
 }
 
@@ -203,7 +203,7 @@ _net_patch(struct russ_conn *conn) {
 
 int
 _next_patch(struct russ_conn *conn) {
-	char	new_spath[16384];
+	char	new_spath[RUSS_MAX_SPATH_LEN];
 	int	idx;
 
 	idx = hostslist.next;
@@ -218,7 +218,7 @@ _next_patch(struct russ_conn *conn) {
 
 int
 _random_patch(struct russ_conn *conn) {
-	char	new_spath[16384];
+	char	new_spath[RUSS_MAX_SPATH_LEN];
 	int	idx;
 
 	idx = (random()/(double)RAND_MAX)*hostslist.nhosts;
