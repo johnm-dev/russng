@@ -151,7 +151,7 @@ _host_patch(struct russ_conn *conn) {
 	}
 
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
+	if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
@@ -202,7 +202,7 @@ _id_patch(struct russ_conn *conn) {
 	userhost = hostslist.hosts[idx];
 
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
+	if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
@@ -235,7 +235,7 @@ _net_patch(struct russ_conn *conn) {
 	p[0] = '\0'; /* terminate userhost */
 
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
+	if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
