@@ -191,10 +191,18 @@ _id_patch(struct russ_conn *conn) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	if ((wrap)
-		|| ((idx < 0) && (-idx >= hostslist.nhosts))) {
+
+	/* wrap if requested */
+	if (wrap) {
 		idx = idx % hostslist.nhosts;
 	}
+
+	/* negative indexes */
+	if ((idx < 0) && (-idx <= hostslist.nhosts)) {
+		idx = hostslist.nhosts+idx;
+	}
+
+	/* validate */
 	if ((idx < 0) || (idx >= hostslist.nhosts)) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
