@@ -197,10 +197,34 @@ _id_patch(struct russ_conn *conn) {
 }
 
 /**
+* Patch conn->spath to use provided userhost.
 *
+* This simply rewrites the spath to use the configured relay.
+*
+* @param conn		connection object
+* @return		0 on success; -1 on failure
 */
 int
 _net_patch(struct russ_conn *conn) {
+	char	*p, *spath_tail, *userhost, *relay_addr;
+	char	new_spath[RUSS_MAX_SPATH_LEN];
+
+	/* extract and validate user@host and new_spath */
+	userhost = &conn->req.spath[5];
+	if ((p = index(userhost, '/')) == NULL) {
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	spath_tail = strdup(p+1);
+	p[0] = '\0'; /* terminate userhost */
+
+	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
+	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
+		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	free(conn->req.spath);
+	conn->req.spath = strdup(new_spath);
 	return -1;
 }
 
