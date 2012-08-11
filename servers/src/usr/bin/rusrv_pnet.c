@@ -102,7 +102,14 @@ switch_user(struct russ_conn *conn) {
 }
 
 /**
+* Patch conn->spath based on a target which answer.
 *
+* Convert:
+*	first/... -> <relay_addr>/<userhost>/...
+* where <userhost> is select because it answers.
+*
+* @param conn		connection object
+* @return		0 on success; -1 on failure
 */
 int
 _first_patch(struct russ_conn *conn) {
@@ -112,7 +119,11 @@ _first_patch(struct russ_conn *conn) {
 /**
 * Patch conn->spath based on original "host" spath.
 *
-* host/<userhost>/... -> <relay_method>/<userhost>/...
+* Convert:
+*	host/<userhost>/... -> <relay_addr>/<userhost>/...
+*
+* @param conn		connection object
+* @return		0 on success; -1 on failure
 */
 int
 _host_patch(struct russ_conn *conn) {
@@ -152,7 +163,11 @@ _host_patch(struct russ_conn *conn) {
 /**
 * Patch conn->spath based on original "id" spath.
 *
-* id/<index>/... -> <relay_method>/<userhost>/...
+* Convert:
+*	id/<index>/... -> <relay_addr>/<userhost>/...
+*
+* @param conn		connection object
+* @return		0 on success; -1 on failure
 */
 int
 _id_patch(struct russ_conn *conn) {
@@ -199,7 +214,8 @@ _id_patch(struct russ_conn *conn) {
 /**
 * Patch conn->spath to use provided userhost.
 *
-* This simply rewrites the spath to use the configured relay.
+* Convert:
+*	net/<userhost>/... -> <relay_addr>/<userhost>/...
 *
 * @param conn		connection object
 * @return		0 on success; -1 on failure
@@ -228,6 +244,16 @@ _net_patch(struct russ_conn *conn) {
 	return -1;
 }
 
+/**
+* Patch conn->spath to use the 'next' id value.
+*
+* Convert:
+*	next/... -> <relay_addr>/<userhost>/...
+* where userhost is selected using a 'next' counter.
+*
+* @param conn		connection object
+* @return		0 on success; -1 on failure
+*/
 int
 _next_patch(struct russ_conn *conn) {
 	char	new_spath[RUSS_MAX_SPATH_LEN];
@@ -243,6 +269,16 @@ _next_patch(struct russ_conn *conn) {
 	return _id_patch(conn);
 }
 
+/**
+* Patch conn->spath to use a random id value.
+*
+* Convert:
+*	random/... -> <relay_addr>/<userhost>/...
+* where userhost is selected at random from the list of targets.
+*
+* @param conn		connection object
+* @return		0 on success; -1 on failure
+*/
 int
 _random_patch(struct russ_conn *conn) {
 	char	new_spath[RUSS_MAX_SPATH_LEN];
