@@ -365,7 +365,7 @@ master_handler(struct russ_conn *conn) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
 		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(outfd, "first\nhost\ni\nnet\nnext\nrandom\n");
+			russ_dprintf(outfd, "first\nhost\nid\nnet\nnext\nrandom\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else if (strcmp(req->spath, "/host") == 0) {
 			if (hostslist.nhosts == 0) {
