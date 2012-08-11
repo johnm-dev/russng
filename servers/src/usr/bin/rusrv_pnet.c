@@ -38,7 +38,8 @@ extern char **environ;
 #include "russ_conf.h"
 #include "russ.h"
 
-#define MAX_HOSTS	(1024)
+#define DEFAULT_RELAY_ADDR	"+/ssh"
+#define MAX_HOSTS		(1024)
 
 struct hostslist {
 	char	*hosts[MAX_HOSTS];
@@ -115,7 +116,7 @@ _first_patch(struct russ_conn *conn) {
 */
 int
 _host_patch(struct russ_conn *conn) {
-	char	*p, *spath_tail, *userhost;
+	char	*p, *spath_tail, *userhost, *relay_addr;
 	char	new_spath[RUSS_MAX_SPATH_LEN];
 	int	i;
 
@@ -138,7 +139,8 @@ _host_patch(struct russ_conn *conn) {
 		exit(0);
 	}
 
-	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", "+ssh", userhost, spath_tail) < 0) {
+	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
+	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
@@ -154,7 +156,7 @@ _host_patch(struct russ_conn *conn) {
 */
 int
 _id_patch(struct russ_conn *conn) {
-	char	*p, *spath_tail, *s, *userhost;
+	char	*p, *spath_tail, *s, *userhost, *relay_addr;
 	char	new_spath[RUSS_MAX_SPATH_LEN];
 	int	i, idx, wrap = 0;
 
@@ -184,7 +186,8 @@ _id_patch(struct russ_conn *conn) {
 	}
 	userhost = hostslist.hosts[idx];
 
-	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", "+ssh", userhost, spath_tail) < 0) {
+	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
+	if (snprintf(new_spath, sizeof(new_spath), "/%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
 		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
