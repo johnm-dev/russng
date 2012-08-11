@@ -176,7 +176,7 @@ _id_patch(struct russ_conn *conn) {
 	int	i, idx, wrap = 0;
 
 	/* extract and validate user@host and new_spath */
-	s = &conn->req.spath[3];
+	s = &conn->req.spath[4];
 	if ((p = index(s, '/')) == NULL) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
