@@ -398,16 +398,6 @@ master_handler(struct russ_conn *conn) {
 }
 
 void
-print_usage(char **argv) {
-	fprintf(stderr,
-"usage: rusrv_pnet [<conf options>] -- <hostsfile>\n"
-"\n"
-"Routes connections over the network to a fixed set of targets\n"
-"identified by index or hostname.\n"
-);
-}
-
-void
 alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 	struct russ_conn	*conn;
 
@@ -460,6 +450,16 @@ load_hostsfile(char *filename) {
 	hostslist.nhosts = i;
 	hostslist.next = -1;
 	return 0;
+}
+
+void
+print_usage(char **argv) {
+	fprintf(stderr,
+"usage: rusrv_pnet [<conf options>] -- <hostsfile>\n"
+"\n"
+"Routes connections over the network to a fixed set of targets\n"
+"identified by index or hostname.\n"
+);
 }
 
 int
