@@ -54,15 +54,20 @@ struct hostslist	hostslist;
 char	*HELP = 
 "Provides access to remote user@host using ssh.\n"
 "\n"
-"hid/<hid>/... <args>\n"
-"    Connect to service ... at user@host identified by a lookup\n"
-"    into the hostsfile list where <hid> is the index. Only\n"
-"    available if a hostsfile was given at startup.\n"
+"first/... <args>\n"
 "\n"
 "host/<user@host>/... <args>\n"
 "    Connect to service ... at user@host verified by a lookup into\n"
 "    the hostsfile list. Only available if a hostsfile was given\n"
 "    at startup.\n"
+"\n"
+"id/<index>/... <args>\n"
+"    Connect to service ... at user@host identified by a lookup\n"
+"    into the hostsfile list at <index>. A negative index starts\n"
+"    at the last entry (-1 is the last entry). An index starting\n"
+"    with : loops around to continue the lookup.\n"
+"\n"
+"net/... <args>\n"
 "\n"
 "next/... <args>\n"
 "    Connect to the 'next' host selected from the hostsfile list.\n"
@@ -96,47 +101,17 @@ switch_user(struct russ_conn *conn) {
 }
 
 /**
-* Patch conn->spath based on original "hid" spath.
 *
-* .../hid/<index>/... -> .../<relay_method>/<userhost>/...
 */
 int
-_hid_patch(struct russ_conn *conn) {
-	char	*p, *spath_tail, *hids, *userhost;
-	char	tmp[16384];
-	int	i, hid;
-
-	/* extract and validate user@host and new_spath */
-	hids = &conn->req.spath[5];
-	if ((p = index(hids, '/')) == NULL) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	spath_tail = strdup(p+1);
-	p[0] = '\0'; /* terminate userhost */
-	if (sscanf(hids, "%d", &hid) < 0) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	if ((hid < 0) || (hid >= hostslist.nhosts)) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	userhost = hostslist.hosts[hid];
-
-	if (snprintf(tmp, sizeof(tmp), "/%s/%s/%s", "+ssh", userhost, spath_tail) < 0) {
-		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	free(conn->req.spath);
-	conn->req.spath = strdup(tmp);
-	return 0;
+_first_patch(struct russ_conn *conn) {
+	return -1;
 }
 
 /**
 * Patch conn->spath based on original "host" spath.
 *
-* .../host/<index>/... -> .../<relay_method>/<userhost>/...
+* host/<userhost>/... -> <relay_method>/<userhost>/...
 */
 int
 _host_patch(struct russ_conn *conn) {
@@ -172,41 +147,97 @@ _host_patch(struct russ_conn *conn) {
 	return 0;
 }
 
+/**
+* Patch conn->spath based on original "id" spath.
+*
+* id/<index>/... -> <relay_method>/<userhost>/...
+*/
+int
+_id_patch(struct russ_conn *conn) {
+	char	*p, *spath_tail, *s, *userhost;
+	char	tmp[16384];
+	int	i, idx, wrap = 0;
+
+	/* extract and validate user@host and new_spath */
+	s = &conn->req.spath[3];
+	if ((p = index(s, '/')) == NULL) {
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	spath_tail = strdup(p+1);
+	p[0] = '\0'; /* terminate userhost */
+	if (s[0] == ':') {
+		s = &s[1];
+		wrap = 1;
+	}
+	if (sscanf(s, "%d", &idx) < 0) {
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	if ((wrap)
+		|| ((idx < 0) && (-idx >= hostslist.nhosts))) {
+		idx = idx % hostslist.nhosts;
+	}
+	if ((idx < 0) || (idx >= hostslist.nhosts)) {
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	userhost = hostslist.hosts[idx];
+
+	if (snprintf(tmp, sizeof(tmp), "/%s/%s/%s", "+ssh", userhost, spath_tail) < 0) {
+		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	free(conn->req.spath);
+	conn->req.spath = strdup(tmp);
+	return 0;
+}
+
+/**
+*
+*/
+int
+_net_patch(struct russ_conn *conn) {
+	return -1;
+}
+
 int
 _next_patch(struct russ_conn *conn) {
 	char	new_spath[16384];
-	int	hid;
+	int	idx;
 
-	hid = hostslist.next;
-	if (snprintf(new_spath, sizeof(new_spath), "/hid/%d/%s", hid, &conn->req.spath[6]) < 0) {
+	idx = hostslist.next;
+	if (snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &conn->req.spath[6]) < 0) {
 		russ_conn_fatal(conn, "error: spath is too large", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	free(conn->req.spath);
 	conn->req.spath = strdup(new_spath);
-	return _hid_patch(conn);
+	return _id_patch(conn);
 }
 
 int
 _random_patch(struct russ_conn *conn) {
 	char	new_spath[16384];
-	int	hid;
+	int	idx;
 
-	hid = (random()/(double)RAND_MAX)*hostslist.nhosts;
-	if (snprintf(new_spath, sizeof(new_spath), "/hid/%d/%s", hid, &conn->req.spath[8]) < 0) {
+	idx = (random()/(double)RAND_MAX)*hostslist.nhosts;
+	if (snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &conn->req.spath[8]) < 0) {
 		russ_conn_fatal(conn, "error: spath is too large", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	free(conn->req.spath);
 	conn->req.spath = strdup(new_spath);
-	return _hid_patch(conn);
+	return _id_patch(conn);
 }
 
 /*
-* Alternate accept handler for /hid/, /host/, /next/, and /random/ .
-*
-* If none of the special spaths are found, the default accept
-* function russ_conn_accept() is called (for further processing).
+* Alternate accept handler for certain spaths.
+
+* The spaths: /id/, /host/, /first/, /next/, /net/, and /random/ are
+* treated specially before an accept is done. If none of the special
+* spaths are found, the default accept function russ_conn_accept()
+* is called (for further processing).
 *
 * @param self		connection object
 * @param cfds		satisfies call requirement; ignored
@@ -220,11 +251,16 @@ alt_russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 	struct russ_request	*req;
 	int			i;
 
+	/* ordered by expected use */
 	req = &(self->req);
-	if (strncmp(req->spath, "/hid/", 5) == 0) {
-		_hid_patch(self);
+	if (strncmp(req->spath, "/id/", 4) == 0) {
+		_id_patch(self);
 	} else if (strncmp(req->spath, "/host/", 6) == 0) {
 		_host_patch(self);
+	} else if (strncmp(req->spath, "/first/", 7) == 0) {
+		_first_patch(self);
+	} else if (strncmp(req->spath, "/net/", 5) == 0) {
+		_net_patch(self);
 	} else if (strncmp(req->spath, "/next/", 6) == 0) {
 		_next_patch(self);
 	} else if (strncmp(req->spath, "/random/", 8) == 0) {
@@ -252,8 +288,10 @@ master_handler(struct russ_conn *conn) {
 
 	outfd = conn->fds[1];
 	req = &(conn->req);
-	if ((strcmp(req->spath, "/hid/") == 0)
+	if ((strcmp(req->spath, "/first/") == 0)
 		|| (strcmp(req->spath, "/host/") == 0)
+		|| (strcmp(req->spath, "/id/") == 0)
+		|| (strcmp(req->spath, "/net/") == 0)
 		|| (strcmp(req->spath, "/next/") == 0)
 		|| (strcmp(req->spath, "/random/") == 0)) {
 		/* nothing */
@@ -264,17 +302,8 @@ master_handler(struct russ_conn *conn) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else if (strcmp(req->op, "list") == 0) {
 		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(outfd, "hid\nhost\nnext\nrandom\n");
+			russ_dprintf(outfd, "first\nhost\ni\nnet\nnext\nrandom\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		} else if (strcmp(req->spath, "/hid") == 0) {
-			if (hostslist.nhosts == 0) {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			} else {
-				for (i = 0; i < hostslist.nhosts; i++) {
-					russ_dprintf(outfd, "%d\n", i);
-				}
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			}
 		} else if (strcmp(req->spath, "/host") == 0) {
 			if (hostslist.nhosts == 0) {
 				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
@@ -284,9 +313,16 @@ master_handler(struct russ_conn *conn) {
 				}
 				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			}
-		} else if ((strcmp(req->spath, "/net") == 0)
-			|| (strcmp(req->spath, "/next") == 0)
-			|| (strcmp(req->spath, "/random") == 0)) {
+		} else if (strcmp(req->spath, "/id") == 0) {
+			if (hostslist.nhosts == 0) {
+				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			} else {
+				for (i = 0; i < hostslist.nhosts; i++) {
+					russ_dprintf(outfd, "%d\n", i);
+				}
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			}
+		} else if ((strcmp(req->spath, "/net") == 0)) {
 			//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
 			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
 		} else {
