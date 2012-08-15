@@ -17,22 +17,34 @@ RUSS_RUN_DIR="/var/run/russ"
 start() {
 	mkdir -m 0755 -p "${RUSS_RUN_DIR}"
 	mkdir -m 0755 -p "${RUSS_RUN_DIR}/services"
+
+	# start servers
+	filenames=`(cd /etc/russ/init; ls * | grep -v README)`
+	for filename in ${filenames}; do
+		echo -n "Starting server (${filename}) ... "
+		/etc/russ/init/${filename} start
+		[ $? -eq 0 ] && echo "OK" || echo "FAILED"
+	done
 }
 
 stop() {
-	:
+	# stop servers
+	filenames=`(cd /etc/russ/init; ls * | grep -v README)`
+	for filename in ${filenames}; do
+		echo -n "Stopping server (${filename}) ... "
+		/etc/russ/init/${filename} stop
+		[ $? -eq 0 ] && echo "OK" || echo "FAILED"
+	done
 }
 
 case "$1" in
 start)
-	echo -n "Setting up for russ services"
+	echo "Starting russ services"
 	start
-	echo "."
 	;;
 stop)
-	echo -n "Cleaning up for russ services"
+	echo "Stopping russ services"
 	stop
-	echo "."
 	;;
 *)
 	echo "Usage: /etc/init.d/russ {start|stop}"
