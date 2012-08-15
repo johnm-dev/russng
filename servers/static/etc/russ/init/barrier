@@ -1,20 +1,8 @@
 #! /bin/bash
 #
-# russrelay
-#
-### BEGIN INIT INFO
-# Provides:		russrelay
-# Required-Start:	$local_fs $russ
-# Required-Stop:	$local_fs
-# Default-Start:	2 3 4 5
-# Default-Stop:		0 1 6
-# Short-Description:	RUSS relay service
-### END INIT INFO
+# barrier
 
-PID_FILENAME=/var/run/russ/relay.pid
-
-# ensure dirs
-mkdir -p `dirname "${PID_FILENAME}"`
+PID_FILENAME=/var/run/russ/barrier.pid
 
 case $1 in
 restart)
@@ -34,7 +22,8 @@ start)
 		echo "already running"
 		exit 1
 	fi
-	rusrv_relay -f /etc/russ/conf/relay.conf < /dev/null > /dev/null 2>&1 &
+	#rusrv_barrier +barrier < /dev/null > /dev/null 2>&1 &
+	rusrv_barrier -f /etc/russ/conf/barrier.conf < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
 stop)
@@ -45,7 +34,7 @@ stop)
 	fi
 	;;
 *)
-	echo "usage: /etc/init.d/russrelay {start|stop|restart|status}"
+	echo "usage: barrier {start|stop|restart|status}"
 	exit 1
 	;;
 esac

@@ -1,20 +1,8 @@
 #! /bin/bash
 #
-# russbarrier
-#
-### BEGIN INIT INFO
-# Provides:		russbarrier
-# Required-Start:	$local_fs $russ
-# Required-Stop:	$local_fs
-# Default-Start:	2 3 4 5
-# Default-Stop:		0 1 6
-# Short-Description:	RUSS barrier service
-### END INIT INFO
+# debug
 
-PID_FILENAME=/var/run/russ/barrier.pid
-
-# ensure dirs
-mkdir -p `dirname "${PID_FILENAME}"`
+PID_FILENAME=/var/run/russ/debug.pid
 
 case $1 in
 restart)
@@ -34,8 +22,7 @@ start)
 		echo "already running"
 		exit 1
 	fi
-	#rusrv_barrier +barrier < /dev/null > /dev/null 2>&1 &
-	rusrv_barrier -f /etc/russ/conf/barrier.conf < /dev/null > /dev/null 2>&1 &
+	rusrv_debug -f /etc/russ/conf/debug.conf < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
 stop)
@@ -46,7 +33,7 @@ stop)
 	fi
 	;;
 *)
-	echo "usage: /etc/init.d/russbarrier {start|stop|restart|status}"
+	echo "usage: debug {start|stop|restart|status}"
 	exit 1
 	;;
 esac
