@@ -1,20 +1,8 @@
 #! /bin/bash
 #
-# russssh
-#
-### BEGIN INIT INFO
-# Provides:		russssh
-# Required-Start:	$local_fs $russ
-# Required-Stop:	$local_fs
-# Default-Start:	2 3 4 5
-# Default-Stop:		0 1 6
-# Short-Description:	RUSS ssh service
-### END INIT INFO
+# exec
 
-PID_FILENAME=/var/run/russ/ssh.pid
-
-# ensure dirs
-mkdir -p `dirname "${PID_FILENAME}"`
+PID_FILENAME=/var/run/russ/exec.pid
 
 case $1 in
 restart)
@@ -34,7 +22,7 @@ start)
 		echo "already running"
 		exit 1
 	fi
-	rusrv_ssh -f /etc/russ/conf/ssh.conf < /dev/null > /dev/null 2>&1 &
+	rusrv_exec -f /etc/russ/conf/exec.conf < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
 stop)
@@ -45,7 +33,7 @@ stop)
 	fi
 	;;
 *)
-	echo "usage: /etc/init.d/russssh {start|stop|restart|status}"
+	echo "usage: exec {start|stop|restart|status}"
 	exit 1
 	;;
 esac
