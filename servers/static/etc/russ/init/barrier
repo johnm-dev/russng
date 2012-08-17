@@ -2,9 +2,13 @@
 #
 # barrier
 
+CONF_FILENAME=/etc/russ/conf/barrier.conf
 PID_FILENAME=/var/run/russ/barrier.pid
 
 case $1 in
+check)
+	[ -f ${CONF_FILENAME} ] && exit $?
+	;;
 restart)
 	$0 stop && sleep 1 && $0 start
 	;;
@@ -22,8 +26,7 @@ start)
 		echo "already running"
 		exit 1
 	fi
-	#rusrv_barrier +barrier < /dev/null > /dev/null 2>&1 &
-	rusrv_barrier -f /etc/russ/conf/barrier.conf < /dev/null > /dev/null 2>&1 &
+	rusrv_barrier -f ${CONF_FILENAME} < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
 stop)
