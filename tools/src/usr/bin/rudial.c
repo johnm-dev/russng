@@ -144,7 +144,7 @@ main(int argc, char **argv) {
 			}
 			timeout *= 1000;
 		} else {
-			fprintf(stderr, "error: bad option and/or missing arguments\n");
+			fprintf(stderr, RUSS_MSG_BAD_ARGS);
 			exit(-1);
 		}
 	}
@@ -161,7 +161,7 @@ main(int argc, char **argv) {
 			addr = argv[argi++];
 			conn = russ_execv(timeout, addr, attrv, &(argv[argi]));
 		} else {
-			fprintf(stderr, "error: bad/missing arguments\n");
+			fprintf(stderr, RUSS_MSG_BAD_ARGS);
 			exit(-1);
 		}
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
@@ -169,7 +169,7 @@ main(int argc, char **argv) {
 			addr = argv[argi];
 			conn = russ_help(timeout, addr);
 		} else {
-			fprintf(stderr, "error: bad/missing arguments\n");
+			fprintf(stderr, RUSS_MSG_BAD_ARGS);
 			exit(-1);
 		}
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
@@ -177,7 +177,7 @@ main(int argc, char **argv) {
 			addr = argv[argi];
 			conn = russ_info(timeout, addr);
 		} else {
-			fprintf(stderr, "error: bad/missing arguments\n");
+			fprintf(stderr, RUSS_MSG_BAD_ARGS);
 			exit(-1);
 		}
 	} else {
@@ -186,7 +186,7 @@ main(int argc, char **argv) {
 	}
 
 	if (conn == NULL) {
-		fprintf(stderr, "error: cannot dial service\n");
+		fprintf(stderr, RUSS_MSG_NO_DIAL);
 		exit(-1);
 	}
 
@@ -204,6 +204,7 @@ main(int argc, char **argv) {
 
 	/* wait for exit */
 	if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+		fprintf(stderr, "error: unexpected connection event\n");
 		exit_status = -127;
 	}
 

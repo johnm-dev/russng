@@ -75,7 +75,7 @@ main(int argc, char **argv) {
 			}
 			timeout *= 1000;
 		} else {
-			fprintf(stderr, "error: bad/missing arguments\n");
+			fprintf(stderr, RUSS_MSG_BAD_ARGS);
 		}
 		addr = argv[3];
 	} else {
@@ -93,7 +93,7 @@ main(int argc, char **argv) {
 		conn = russ_list(timeout, addr);
 
 		if (conn == NULL) {
-			fprintf(stderr, "error: cannot dial service\n");
+			fprintf(stderr, RUSS_MSG_NO_DIAL);
 			exit(-1);
 		}
 
@@ -111,6 +111,7 @@ main(int argc, char **argv) {
 
 		/* wait for exit */
 		if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+			fprintf(stderr, "error: unexpected connection event\n");
 			exit_status = -127;
 		}
 		russ_forwarder_join(&(fwds[1]));
@@ -123,6 +124,7 @@ main(int argc, char **argv) {
 		char		path[2048];
 
 		if ((dir = opendir(addr)) == NULL) {
+			fprintf(stderr, "error: cannot open directory\n");
 			exit_status = -1;
 		} else {
 			while ((dent = readdir(dir)) != NULL) {
@@ -143,7 +145,7 @@ main(int argc, char **argv) {
 			closedir(dir);
 		}
 	} else {
-		fprintf(stderr, "not a service or directory\n");
+		fprintf(stderr, "error: not a service or directory\n");
 		exit_status = -1;
 	}
 
