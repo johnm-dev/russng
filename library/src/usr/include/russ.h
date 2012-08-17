@@ -144,6 +144,7 @@ struct pipe_fds {
 typedef int64_t	russ_timeout;
 
 typedef void (*russ_req_handler)(struct russ_conn *);
+typedef void (*russ_accept_handler)(struct russ_conn *, int, int *, int *);
 
 /* addr.c */
 struct russ_target *russ_find_service_target(char *);
@@ -189,6 +190,7 @@ struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_conn *russ_listener_answer(struct russ_listener *, russ_timeout);
 void russ_listener_close(struct russ_listener *);
 struct russ_listener *russ_listener_free(struct russ_listener *);
+void russ_listener_loop(struct russ_listener *, russ_accept_handler, russ_req_handler);
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);

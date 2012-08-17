@@ -109,7 +109,7 @@ print_usage(char **argv) {
 }
 
 void
-alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
+alt_russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_handler, russ_req_handler handler) {
 	struct russ_conn	*conn;
 
 	while (1) {
@@ -157,6 +157,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	alt_russ_listener_loop(lis, master_handler);
+	alt_russ_listener_loop(lis, NULL, master_handler);
 	exit(0);
 }

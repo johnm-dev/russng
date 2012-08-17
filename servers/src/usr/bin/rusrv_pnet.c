@@ -407,7 +407,7 @@ master_handler(struct russ_conn *conn) {
 }
 
 void
-alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
+alt_russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_handler, russ_req_handler req_handler) {
 	struct russ_conn	*conn;
 
 	while (1) {
@@ -426,7 +426,7 @@ alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 				|| (alt_russ_conn_accept(conn, 0, NULL, NULL) < 0)) {
 				exit(-1);
 			}
-			handler(conn);
+			req_handler(conn);
 			russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
 			exit(0);
 		}
@@ -507,6 +507,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	alt_russ_listener_loop(lis, master_handler);
+	alt_russ_listener_loop(lis, NULL, master_handler);
 	exit(0);
 }
