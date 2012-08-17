@@ -200,8 +200,4 @@ int russ_switch_user(uid_t, gid_t, int, gid_t *);
 
 /* request.c */
 
-/* server.c */
-void russ_loop(struct russ_listener *, russ_req_handler);
-void russ_loop_thread(struct russ_listener *, russ_req_handler);
-
 #endif /* RUSS_H */
