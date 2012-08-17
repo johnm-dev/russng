@@ -192,22 +192,32 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 * Accept request and close socket
 *
 * @param self		answered connection object
+* @param nfds		number of elements in cfds (and sfds) array
 * @param cfds		array of descriptors to send to client
 * @param sfds		array of descriptors for server side
 * @return		0 on success; -1 on error
 */
 int
-russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
-	int	_cfds[RUSS_CONN_NFDS+1], _sfds[RUSS_CONN_NFDS+1];
+russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	int	fds[2], tmpfd;
+	int	allocated_fds = 0;
 	int	i;
 
+	if (nfds < 0) {
+		return -1;
+	} else if (nfds == 0) {
+		nfds = RUSS_CONN_NFDS+1;
+	}
+
 	if ((cfds == NULL) && (sfds == NULL)) {
-		cfds = _cfds;
-		sfds = _sfds;
-		if (russ_make_pipes(RUSS_CONN_NFDS+1, cfds, sfds) < 0) {
+		allocated_fds = 1;
+		if (((cfds = malloc(sizeof(int)*nfds)) == NULL)
+			|| ((sfds = malloc(sizeof(int)*nfds)) == NULL)) {
+			goto free_fds;
+		}
+		if (russ_make_pipes(nfds, cfds, sfds) < 0) {
 			fprintf(stderr, "error: cannot create pipes\n");
-			return -1;
+			goto free_fds;
 		}
 		/* swap fds for stdin */
 		tmpfd = cfds[1];
@@ -215,16 +225,23 @@ russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 		sfds[1] = tmpfd;
 	}
 
-	if (russ_conn_sendfds(self, RUSS_CONN_NFDS+1, cfds, sfds) < 0) {
+	if (russ_conn_sendfds(self, nfds, cfds, sfds) < 0) {
 		goto close_fds;
 	}
 	russ_fds_close(&self->sd, 1);
 	return 0;
 
 close_fds:
-	russ_fds_close(cfds, RUSS_CONN_NFDS+1);
-	russ_fds_close(sfds, RUSS_CONN_NFDS+1);
+	russ_fds_close(cfds, nfds);
+	russ_fds_close(sfds, nfds);
 	russ_fds_close(&self->sd, 1);
+
+free_fds:
+	if (allocated_fds) {
+		free(cfds);
+		free(sfds);
+	}
+
 	return -1;
 }
 

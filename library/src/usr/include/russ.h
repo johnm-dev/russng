@@ -150,7 +150,7 @@ struct russ_target *russ_find_service_target(char *);
 char *russ_resolve_addr(char *);
 
 /* conn.c */
-int russ_conn_accept(struct russ_conn *, int *, int *);
+int russ_conn_accept(struct russ_conn *, int, int *, int *);
 int russ_conn_await_request(struct russ_conn *);
 void russ_conn_close(struct russ_conn *);
 void russ_conn_close_fd(struct russ_conn *, int);

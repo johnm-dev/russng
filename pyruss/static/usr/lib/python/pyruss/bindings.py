@@ -85,6 +85,7 @@ libruss.russ_dialv.restype = ctypes.POINTER(russ_conn_Structure)
 # russ_conn_accept
 libruss.russ_conn_accept.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
+    ctypes.c_int,
     ctypes.c_void_p,
     ctypes.c_void_p,
     # TODO: how to handle passing fds?
@@ -294,12 +295,12 @@ class ServerConn(Conn):
     """Server connection.
     """
 
-    def accept(self, cfds, sfds):
+    def accept(self, nfds, cfds, sfds):
         if 0:
             # TODO: how to handle passing fds?
-            return libruss.russ_conn_accept(self.conn_ptr, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+            return libruss.russ_conn_accept(self.conn_ptr, nfds, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
         else:
-            return libruss.russ_conn_accept(self.conn_ptr, None, None)
+            return libruss.russ_conn_accept(self.conn_ptr, 0, None, None)
 
     def await_request(self):
         return libruss.russ_conn_await_request(self.conn_ptr)

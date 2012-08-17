@@ -311,13 +311,14 @@ _random_patch(struct russ_conn *conn) {
 * is called (for further processing).
 *
 * @param self		connection object
+* @param nfds		number of fds in cfds array
 * @param cfds		satisfies call requirement; ignored
 * @param sfds		satisfies call requirement; ignored
 * @return		0 on success; -1 on failure
 */
 
 int
-alt_russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
+alt_russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
 	int			i;
@@ -337,7 +338,7 @@ alt_russ_conn_accept(struct russ_conn *self, int *cfds, int *sfds) {
 	} else if (strncmp(req->spath, "/random/", 8) == 0) {
 		_random_patch(self);
 	} else {
-		return russ_conn_accept(self, cfds, sfds);
+		return russ_conn_accept(self, nfds, cfds, sfds);
 	}
 
 	/* dial next service and splice */
@@ -422,7 +423,7 @@ alt_russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 			russ_listener_close(self);
 			self = russ_listener_free(self);
 			if ((russ_conn_await_request(conn) < 0)
-				|| (alt_russ_conn_accept(conn, NULL, NULL) < 0)) {
+				|| (alt_russ_conn_accept(conn, 0, NULL, NULL) < 0)) {
 				exit(-1);
 			}
 			handler(conn);
