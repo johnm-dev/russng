@@ -177,7 +177,7 @@ russ_listener_free(struct russ_listener *self) {
 * @param handler	handler function to call on connection
 */
 void
-russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
+russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_handler, russ_req_handler req_handler) {
 	struct russ_conn	*conn;
 
 	while (1) {
@@ -192,7 +192,7 @@ russ_listener_loop(struct russ_listener *self, russ_req_handler handler) {
 				|| (russ_conn_accept(conn, 0, NULL, NULL) < 0)) {
 				exit(-1);
 			}
-			handler(conn);
+			req_handler(conn);
 			russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
 			exit(0);
 		}

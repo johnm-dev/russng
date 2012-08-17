@@ -338,15 +338,19 @@ class Listener:
         else:
             return -1
 
-    def _loop(self, handler):
+    def _loop(self, accept_handler, req_handler):
+        # TODO: support accept_handler
         def raw_handler(conn_ptr):
-            handler(ServerConn(conn_ptr))
+            req_handler(ServerConn(conn_ptr))
             return 0    # TODO: allow a integer return value from handler
-        libruss.russ_listener_loop(self.lis_ptr, HANDLERFUNC(raw_handler))
+        libruss.russ_listener_loop(self.lis_ptr, None, HANDLERFUNC(raw_handler))
 
-    def loop(self, handler):
+    def loop(self, accept_handler, req_handler):
         """Fork-based loop.
         """
+        if accept_handler:
+            raise Exception("error: accept_handler not supported")
+
         while self.get_sd() >= 0:
             try:
                 conn = self.answer(-1)
@@ -358,7 +362,7 @@ class Listener:
                     if conn.await_request() < 0 \
                         or conn.accept(None, None) < 0:
                         os.exit(-1)
-                    handler(conn)
+                    req_handler(conn)
                     os.exit(0)
                 conn.close()
                 del conn
@@ -368,14 +372,17 @@ class Listener:
                 #traceback.print_exc()
                 pass
 
-    def loop_thread(self, handler):
+    def loop_thread(self, accept_handler, req_handler):
         """Thread-based loop.
         """
-        def pre_handler_thread(conn, handler):
+        def pre_handler_thread(conn, req_handler):
             if conn.await_request() < 0 \
                 or conn.accept(None, None) < 0:
                 return
-            handler(conn)
+            req_handler(conn)
+
+        if accept_handler:
+            raise Exception("error: accept_handler not supported")
 
         while True:
             try:
@@ -384,7 +391,7 @@ class Listener:
                     sys.stderr.write("error: cannot answer connection\n")
                     continue
                 # no limiting of thread count
-                Thread(target=pre_handler_thread, args=(conn, handler)).start()
+                Thread(target=pre_handler_thread, args=(conn, req_handler)).start()
             except SystemExit:
                 pass
             except:
