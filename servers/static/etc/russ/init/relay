@@ -2,9 +2,13 @@
 #
 # relay
 
+CONF_FILENAME=/etc/russ/conf/relay.conf
 PID_FILENAME=/var/run/russ/relay.pid
 
 case $1 in
+check)
+	[ -f ${CONF_FILENAME} ] && exit $?
+	;;
 restart)
 	$0 stop && sleep 1 && $0 start
 	;;
@@ -22,7 +26,7 @@ start)
 		echo "already running"
 		exit 1
 	fi
-	rusrv_relay -f /etc/russ/conf/relay.conf < /dev/null > /dev/null 2>&1 &
+	rusrv_relay -f ${CONF_FILENAME} < /dev/null > /dev/null 2>&1 &
 	echo $! > "${PID_FILENAME}"
 	;;
 stop)

@@ -21,9 +21,11 @@ start() {
 	# start servers
 	filenames=`(cd /etc/russ/init; ls * | grep -v README)`
 	for filename in ${filenames}; do
-		echo -n "Starting server (${filename}) ... "
-		/etc/russ/init/${filename} start
-		[ $? -eq 0 ] && echo "OK" || echo "FAILED"
+		if ( /etc/russ/init/${filename} check ); then
+			echo -n "Starting server (${filename}) ... "
+			/etc/russ/init/${filename} start
+			[ $? -eq 0 ] && echo "OK" || echo "FAILED"
+		fi
 	done
 }
 
@@ -31,9 +33,11 @@ stop() {
 	# stop servers
 	filenames=`(cd /etc/russ/init; ls * | grep -v README)`
 	for filename in ${filenames}; do
-		echo -n "Stopping server (${filename}) ... "
-		/etc/russ/init/${filename} stop
-		[ $? -eq 0 ] && echo "OK" || echo "FAILED"
+		if ( /etc/russ/init/${filename} check ); then
+			echo -n "Stopping server (${filename}) ... "
+			/etc/russ/init/${filename} stop
+			[ $? -eq 0 ] && echo "OK" || echo "FAILED"
+		fi
 	done
 }
 
