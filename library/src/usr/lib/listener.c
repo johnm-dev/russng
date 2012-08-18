@@ -39,6 +39,14 @@
 /**
 * Announce service as a socket file.
 *
+* If the address already exists (EADDRINUSE), then we check to see
+* if anything is actually using it. If not, we remove it and try to
+* set it up. If the address cannot be "bind"ed, then we exit with
+* NULL.
+*
+* The only way to claim an address that is in use it to forcibly
+* remove it from the filesystem first (unlink), then call here.
+*
 * @param saddr		socket address
 * @param mode		file mode of path
 * @param uid		owner of path
@@ -49,36 +57,45 @@ struct russ_listener *
 russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	struct russ_listener	*lis;
 	struct sockaddr_un	servaddr;
+	int			sd;
 
 	if ((saddr = russ_resolve_addr(saddr)) == NULL) {
 		return NULL;
-	}
-	if ((lis = malloc(sizeof(struct russ_listener))) == NULL) {
-		goto free_saddr;
 	}
 
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sun_family = AF_UNIX;
 	strcpy(servaddr.sun_path, saddr);
-	if ((lis->sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-		goto free_lis;
+	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		goto free_saddr;
 	}
-	if (((unlink(saddr) < 0) && (errno != ENOENT))
-		|| (bind(lis->sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
-		|| (chmod(saddr, mode) < 0)
+	if (bind(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+		if ((errno == EADDRINUSE)
+			&& (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
+			/* is something listening? */
+			if (errno == ECONNREFUSED) {
+				goto close_sd;
+			} else if ((unlink(saddr) < 0)
+				|| (bind(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
+				goto close_sd;
+			}
+		} else {
+			goto close_sd;
+		}
+	}
+	if ((chmod(saddr, mode) < 0)
 		|| (chown(saddr, uid, gid) < 0)
-		|| (listen(lis->sd, 5) < 0)) {
+		|| (listen(sd, 5) < 0)
+		|| ((lis = malloc(sizeof(struct russ_listener))) == NULL)) {
 		goto close_sd;
 	}
 
+	lis->sd = sd;
 	free(saddr);
 	return lis;
 
 close_sd:
-	close(lis->sd);
-	lis->sd = -1;
-free_lis:
-	free(lis);
+	close(sd);
 free_saddr:
 	free(saddr);
 	return NULL;
