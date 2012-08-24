@@ -144,7 +144,7 @@ main(int argc, char **argv) {
 			}
 			timeout *= 1000;
 		} else {
-			fprintf(stderr, RUSS_MSG_BAD_ARGS);
+			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(-1);
 		}
 	}
@@ -161,7 +161,7 @@ main(int argc, char **argv) {
 			addr = argv[argi++];
 			conn = russ_execv(timeout, addr, attrv, &(argv[argi]));
 		} else {
-			fprintf(stderr, RUSS_MSG_BAD_ARGS);
+			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(-1);
 		}
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
@@ -169,7 +169,7 @@ main(int argc, char **argv) {
 			addr = argv[argi];
 			conn = russ_help(timeout, addr);
 		} else {
-			fprintf(stderr, RUSS_MSG_BAD_ARGS);
+			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(-1);
 		}
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
@@ -177,7 +177,7 @@ main(int argc, char **argv) {
 			addr = argv[argi];
 			conn = russ_info(timeout, addr);
 		} else {
-			fprintf(stderr, RUSS_MSG_BAD_ARGS);
+			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(-1);
 		}
 	} else {
@@ -186,7 +186,7 @@ main(int argc, char **argv) {
 	}
 
 	if (conn == NULL) {
-		fprintf(stderr, RUSS_MSG_NO_DIAL);
+		fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
 		exit(-1);
 	}
 
