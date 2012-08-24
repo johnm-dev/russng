@@ -75,7 +75,7 @@ main(int argc, char **argv) {
 			}
 			timeout *= 1000;
 		} else {
-			fprintf(stderr, RUSS_MSG_BAD_ARGS);
+			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 		}
 		addr = argv[3];
 	} else {
@@ -93,7 +93,7 @@ main(int argc, char **argv) {
 		conn = russ_list(timeout, addr);
 
 		if (conn == NULL) {
-			fprintf(stderr, RUSS_MSG_NO_DIAL);
+			fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
 			exit(-1);
 		}
 
