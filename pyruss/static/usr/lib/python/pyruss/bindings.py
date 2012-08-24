@@ -199,6 +199,11 @@ def list_of_strings_to_c_string_array(l):
 #
 # Application-facing classes
 #
+def announce(path, mode, uid, gid):
+    """Announce a service.
+    """
+    return Listener(libruss.russ_announce(path, mode, uid, gid))
+
 def dialv(timeout, op, saddr, attrs, args):
     """Dial a service.
     """
@@ -217,11 +222,6 @@ def execv(timeout, saddr, attrs, args):
     """ruexec a service.
     """
     return dialv(timeout, "execute", saddr, attrs, args)
-
-def announce(path, mode, uid, gid):
-    """Announce a service.
-    """
-    return Listener(libruss.russ_announce(path, mode, uid, gid))
 
 def unlink(path):
     """Unlink service path.
