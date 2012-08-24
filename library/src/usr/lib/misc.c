@@ -183,3 +183,24 @@ restore:
 	/* no need to restore uid */
 	return -1;
 }
+
+/**
+* Unlink/remove an existing socket file.
+*
+* Resolves the address and unlinks the file.
+*
+* @param saddr		socket address
+* @return		0 on success; -1 on failure
+*/
+int
+russ_unlink(char *saddr) {
+	if ((saddr = russ_resolve_addr(saddr)) == NULL) {
+		return -1;
+	}
+	if (unlink(saddr) < 0) {
+		free(saddr);
+		return -1;
+	}
+	free(saddr);
+	return 0;
+}

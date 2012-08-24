@@ -149,6 +149,12 @@ libruss.russ_announce.argtypes = [
 ]
 libruss.russ_announce.restype = ctypes.POINTER(russ_listener_Structure)
 
+# russ_unlink
+libruss.russ_unlink.argtypes = [
+    ctypes.c_char_p,
+]
+libruss.russ_unlink.restype = ctypes.c_int
+
 # russ_listener_answer
 libruss.russ_listener_answer.argtypes = [
     ctypes.POINTER(russ_listener_Structure),
@@ -216,6 +222,11 @@ def announce(path, mode, uid, gid):
     """Announce a service.
     """
     return Listener(libruss.russ_announce(path, mode, uid, gid))
+
+def unlink(path):
+    """Unlink service path.
+    """
+    return libruss.russ_unlink(path)
 
 class Conn:
     """Common (client, server) connection.
