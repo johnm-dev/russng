@@ -73,7 +73,7 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 		if ((errno == EADDRINUSE)
 			&& (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
 			/* is something listening? */
-			if (errno == ECONNREFUSED) {
+			if (errno != ECONNREFUSED) {
 				goto close_sd;
 			} else if ((unlink(saddr) < 0)
 				|| (bind(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
