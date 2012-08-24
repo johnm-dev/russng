@@ -202,7 +202,8 @@ def list_of_strings_to_c_string_array(l):
 def announce(path, mode, uid, gid):
     """Announce a service.
     """
-    return Listener(libruss.russ_announce(path, mode, uid, gid))
+    lis_ptr = libruss.russ_announce(path, mode, uid, gid)
+    return lis_ptr and Listener(lis_ptr)
 
 def dialv(timeout, op, saddr, attrs, args):
     """Dial a service.
