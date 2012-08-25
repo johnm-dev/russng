@@ -373,7 +373,7 @@ class Listener:
                 if os.fork() == 0:
                     self.close()
                     if conn.await_request() < 0 \
-                        or conn.accept(None, None) < 0:
+                        or conn.accept(0, None, None) < 0:
                         os.exit(-1)
                     req_handler(conn)
                     os.exit(0)
@@ -390,7 +390,7 @@ class Listener:
         """
         def pre_handler_thread(conn, req_handler):
             if conn.await_request() < 0 \
-                or conn.accept(None, None) < 0:
+                or conn.accept(0, None, None) < 0:
                 return
             req_handler(conn)
 
