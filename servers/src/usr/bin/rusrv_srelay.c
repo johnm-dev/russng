@@ -122,7 +122,7 @@ forward_bytes(struct russ_conn *conn, int sd) {
 	if ((dispatcher_add_rw(disp, rw_new(DISPATCHER_READER, conn->fds[0])) < 0)
 		|| (dispatcher_add_rw(disp, rw_new(DISPATCHER_WRITER, conn->fds[1])) < 0)
 		|| (dispatcher_add_rw(disp, rw_new(DISPATCHER_WRITER, conn->fds[2])) < 0)
-		|| (dispatcher_add_rw(disp, rw_new(DISPATCHER_WRITER, conn->exit_fd)) < 0)) {
+		|| (dispatcher_add_rw(disp, rw_new(DISPATCHER_WRITER, conn->fds[3])) < 0)) {
 		ev = -1;
 		goto cleanup;
 	}

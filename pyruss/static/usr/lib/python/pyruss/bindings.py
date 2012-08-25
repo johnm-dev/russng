@@ -33,6 +33,8 @@ import traceback
 
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
+RUSS_CONN_NFDS = 4
+
 #
 # data type descriptions
 #
@@ -63,9 +65,8 @@ class russ_conn_Structure(ctypes.Structure):
         ("cred", russ_credentials_Structure),
         ("req", russ_request_Structure),
         ("sd", ctypes.c_int),
-        ("exit_fd", ctypes.c_int),
         ("nfds", ctypes.c_int),
-        ("fds", ctypes.c_int*3),
+        ("fds", ctypes.c_int*RUSS_CONN_NFDS),
     ]
 
 #

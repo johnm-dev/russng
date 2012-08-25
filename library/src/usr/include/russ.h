@@ -42,11 +42,11 @@
 #define dprintf(...)
 #endif
 
-#define RUSS_CONN_NFDS		3
+#define RUSS_CONN_NFDS		4
 #define RUSS_MAX_SPATH_LEN	8192
 #define RUSS_MAX_ATTRC		1024
 #define RUSS_MAX_ARGC		1024
-#define RUSS_PROTOCOL_STRING	"0006"
+#define RUSS_PROTOCOL_STRING	"0007"
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
 #define RUSS_TIMEOUT_NEVER	-1
@@ -117,7 +117,6 @@ struct russ_conn {
 	struct russ_credentials	cred;		/**< credentials */
 	struct russ_request	req;		/**< request */
 	int			sd;		/**< socket descriptor */
-	int			exit_fd;	/**< for exit status */
 	int			nfds;		/**< # of helper fds */
 	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
 };
