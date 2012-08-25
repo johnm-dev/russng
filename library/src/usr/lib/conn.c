@@ -96,7 +96,6 @@ russ_conn_new(void) {
 		goto free_request;
 	}
 	conn->sd = -1;
-	conn->exit_fd = -1;
 	conn->nfds = RUSS_CONN_NFDS;
 	russ_fds_init(conn->fds, conn->nfds, -1);
 
@@ -127,16 +126,13 @@ russ_conn_recvfds(struct russ_conn *self) {
 		return -1;
 	}
 
-	/* recv fds (exit and cfds) */
-	if (russ_recvfd(self->sd, &(self->exit_fd)) < 0) {
-		return -1;
-	}
-	self->nfds = nfds-1;
-	for (i = 0; i < self->nfds; i++) {
+	/* recv fds */
+	for (i = 0; i < nfds; i++) {
 		if (russ_recvfd(self->sd, &(self->fds[i])) < 0) {
 			return -1;
 		}
 	}
+	self->nfds = nfds;
 	return 0;
 }
 
@@ -164,27 +160,17 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 		return -1;
 	}
 
-	/* TODO: reorganize to more clearly separate handling of cfds and sfds */
-
-	/* send fds (exit and cfds) */
-	if (russ_sendfd(self->sd, cfds[0]) < 0) {
-		return -1;
-	}
-	if (sfds) {
-		self->exit_fd = sfds[0];
-	}
-	russ_fds_close(&cfds[0], 1);
-
-	for (i = 1; i < nfds; i++) {
+	/* send fds */
+	for (i = 0; i < nfds; i++) {
 		if (russ_sendfd(self->sd, cfds[i]) < 0) {
 			return -1;
 		}
 		russ_fds_close(&cfds[i], 1);
 		if (sfds) {
-			self->fds[i-1] = sfds[i];
+			self->fds[i] = sfds[i];
 		}
 	}
-	self->nfds = nfds-1;
+	self->nfds = nfds;
 	return 0;
 }
 
@@ -206,7 +192,7 @@ russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	if (nfds < 0) {
 		return -1;
 	} else if (nfds == 0) {
-		nfds = RUSS_CONN_NFDS+1;
+		nfds = RUSS_CONN_NFDS;
 	}
 
 	if ((cfds == NULL) && (sfds == NULL)) {
@@ -220,9 +206,9 @@ russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 			goto free_fds;
 		}
 		/* swap fds for stdin */
-		tmpfd = cfds[1];
-		cfds[1] = sfds[1];
-		sfds[1] = tmpfd;
+		tmpfd = cfds[0];
+		cfds[0] = sfds[0];
+		sfds[0] = tmpfd;
 	}
 
 	if (russ_conn_sendfds(self, nfds, cfds, sfds) < 0) {
@@ -262,21 +248,19 @@ russ_conn_splice(struct russ_conn *self, struct russ_conn *dconn) {
 	int	*cfds;
 	int	i, ev;
 
-	if ((cfds = malloc(sizeof(int)*(dconn->nfds+1))) == NULL) {
+	if ((cfds = malloc(sizeof(int)*(dconn->nfds))) == NULL) {
 		return -1;
 	}
-	cfds[0] = dconn->exit_fd;
 	for (i = 0; i < dconn->nfds; i++) {
-		cfds[i+1] = dconn->fds[i];
+		cfds[i] = dconn->fds[i];
 	}
-	ev = russ_conn_sendfds(self, dconn->nfds+1, cfds, NULL);
+	ev = russ_conn_sendfds(self, dconn->nfds, cfds, NULL);
 
-	/* dconn fds and exit_fd are closed by russ_conn_sendfds */
+	/* dconn fds are closed by russ_conn_sendfds */
 	russ_fds_close(&dconn->sd, 1);
 
-	/* close sd, fds, and exit_fd */
+	/* close sd and fds */
 	russ_fds_close(self->fds, self->nfds);
-	russ_fds_close(&self->exit_fd, 1);
 	russ_fds_close(&self->sd, 1);
 
 	free(cfds);
@@ -333,18 +317,17 @@ free_request:
 void
 russ_conn_close(struct russ_conn *self) {
 	russ_fds_close(self->fds, self->nfds);
-	russ_fds_close(&self->exit_fd, 1);
 	russ_fds_close(&self->sd, 1);
 }
 
 /**
 * Send exit information to client.
 *
-* An exit status (integer) and exit string are sent over exit_fd to
-* the client. The exit_fd is then closed. This operation is valid
+* An exit status (integer) and exit string are sent over the exit fd
+* to the client. The exit fd is then closed. This operation is valid
 * for the server side only.
 *
-* Note: the other (non-exit_fd) fds are not affected.
+* Note: the other (non-exit fd) fds are not affected.
 *
 * @param self		connection object
 * @param exit_status	exit status
@@ -356,7 +339,7 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 	char	*exit_string = "";
 	char	*bp, *bend;
 
-	if (self->exit_fd < 0) {
+	if (self->fds[3] < 0) {
 		return -1;
 	}
 	bp = buf;
@@ -366,10 +349,10 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 		// error?
 		return -1;
 	}
-	if (russ_writen(self->exit_fd, buf, bp-buf) < bp-buf) {
+	if (russ_writen(self->fds[3], buf, bp-buf) < bp-buf) {
 		return -1;
 	}
-	russ_fds_close(&self->exit_fd, 1);
+	russ_fds_close(&self->fds[3], 1);
 	return 0;
 }
 
@@ -377,8 +360,8 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 * Helper routine to write error message and exit status.
 *
 * An error message is sent to the connection error fd (with a
-* trailing newline) and the exit_status over the exit_fd. If the
-* exit_fd is already closed, then no message is written or exit
+* trailing newline) and the exit_status over the exit fd. If the
+* exit fd is already closed, then no message is written or exit
 * status sent.
 *
 * @param self		connection object
@@ -388,27 +371,27 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 */
 int
 russ_conn_fatal(struct russ_conn *self, char *msg, int exit_status) {
-	if (self->exit_fd >= 0) {
-		russ_dprintf(self->fds[2], "%s\n", msg);
-		return russ_conn_exit(self, exit_status);
+	if (self->fds[3] < 0) {
+		return -1;
 	}
-	return -1;
+	russ_dprintf(self->fds[2], "%s\n", msg);
+	return russ_conn_exit(self, exit_status);
 }
 
 /**
 * Wait for exit information.
 *
-* Wait on the exit_fd for the exit status (integer) and exit string.
-* This operation is valid for the client side only. The exit_fd is
+* Wait on the exit fd for the exit status (integer) and exit string.
+* This operation is valid for the client side only. The exit fd is
 * closed once the information is received.
 *
-* Note: the other (non-exit_fd) fds are not affected.
+* Note: the other (non-exit fd) fds are not affected.
 *
 * @param self		connection object
 * @param[out] exit_status
 			exit status
 * @param timeout	timeout/deadline to wait
-* @return		0 on success; on -1 general failure; -2 on exit_fd closed; -3 on timeout expired
+* @return		0 on success; on -1 general failure; -2 on exit fd closed; -3 on timeout expired
 */
 int
 russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
@@ -417,11 +400,11 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
 	int		poll_timeout;
 	int		rv, _exit_status;
 
-	if (self->exit_fd < 0) {
+	if (self->fds[3] < 0) {
 		return -2;
 	}
 
-	poll_fds[0].fd = self->exit_fd;
+	poll_fds[0].fd = self->fds[3];
 	poll_fds[0].events = POLLIN;
 	poll_timeout = (int)timeout;
 	while (1) {
@@ -436,7 +419,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
 		} else {
 			if (poll_fds[0].revents & POLLIN) {
 				// TODO: should this be a byte or integer?
-				if (russ_read(self->exit_fd, buf, 4) < 0) {
+				if (russ_read(self->fds[3], buf, 4) < 0) {
 					/* serious error; close fd? */
 					return -1;
 				}
@@ -451,7 +434,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
 			}
 		}
 	}
-	russ_fds_close(&self->exit_fd, 1);
+	russ_fds_close(&self->fds[3], 1);
 	return 0;
 }
 
