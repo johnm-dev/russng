@@ -38,7 +38,7 @@
 
 #include "russ.h"
 
-int
+void
 req_handler(struct russ_conn *conn) {
 	if (strcmp(conn->req.op, "execute") == 0) {
 		/* serve the input from fd passed to client */
@@ -49,9 +49,8 @@ req_handler(struct russ_conn *conn) {
 			russ_writen(conn->fds[1], buf, n);
 		}
 	} else {
-		return -1;
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
-	return 0;
 }
 
 void
