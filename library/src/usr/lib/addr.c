@@ -52,8 +52,9 @@
 char *
 russ_resolve_addr(char *addr) {
 	struct stat	st;
-	char		buf[8192], tmpbuf[8192];
-	char		*bp, *bend;
+	char		buf[8192], lnkbuf[8192], tmpbuf[8192];
+	char		*bp, *bend, *bp2;
+	char		*sfmt, *lfmt;
 	char		*services_dir;
 	int		sdlen, cnt, stval;
 	int		changed;
@@ -92,44 +93,57 @@ russ_resolve_addr(char *addr) {
 			}
 			changed = 1;
 		} else if (buf[0] != '\0') {
-			/* resolve _a_ symlink, if referenced */
+			/* for each subpath, test for symlink and resolve */
 			bp = buf;
 			while (bp != NULL) {
-				/* resolve _a_ symlink, if referenced */
 				if ((bp = index(bp+1, '/')) != NULL) {
 					*bp = '\0'; /* delimit path to check */
 				}
 				if (lstat(buf, &st) == 0) {
-					if (S_ISLNK(st.st_mode)) {
-						if (readlink(buf, tmpbuf, sizeof(tmpbuf)) < 0) {
+					if (S_ISDIR(st.st_mode)) {
+						if (bp != NULL) {
+							*bp = '/'; /* restore */
+						}
+						continue;
+					} else if (S_ISLNK(st.st_mode)) {
+						if (readlink(buf, lnkbuf, sizeof(lnkbuf)) < 0) {
 							/* insufficient space */
 							return NULL;
 						}
-						tmpbuf[st.st_size] = '\0';
-						if ((bp != NULL) 
-							&& (snprintf(tmpbuf+st.st_size, sizeof(tmpbuf)-st.st_size, "/%s", bp+1) < 0)) {
-							/* insufficient space */
-							return NULL;
+						lnkbuf[st.st_size] = '\0';
+
+						if ((lnkbuf[0] == '/') || (strncmp(lnkbuf, "+/", 2) == 0)) {
+							/* replace subpath with lnkbuf */
+							snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf);
+						} else {
+							if ((bp2 = rindex(buf, '/')) != NULL) {
+								/* append lnkbuf to subpath */
+								*bp2 = '\0';
+								snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", buf, lnkbuf);
+								*bp2 = '/';
+							} else {
+								/* replace single component subpath with lnkbuf */
+								snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf);
+							}
 						}
-						if (strncpy(buf, tmpbuf, sizeof(buf)) < 0) {
-							/* insufficient space */
+						if (bp != NULL) {
+							/* append path right of subpath */
+							*bp = '/';
+							strncat(tmpbuf, bp, sizeof(tmpbuf));
+						}
+						/* copy back to buf */
+						if (snprintf(buf, sizeof(buf), "%s", tmpbuf) < 0) {
 							return NULL;
 						}
 						changed = 1;
 						break;
 					}
-					if (bp != NULL) {
-						*bp = '/'; /* restore / */
-					}
-					if (!S_ISDIR(st.st_mode)) {
-						break;
-					}
-				} else {
-					if (bp != NULL) {
-						*bp = '/'; /* restore / */
-					}
-					break;
+					/* stop; not a dir nor a symlink */
+				} 
+				if (bp != NULL) {
+					*bp = '/'; /* restore / */
 				}
+				break;
 			}
 		}
 	}
