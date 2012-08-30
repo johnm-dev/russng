@@ -6,7 +6,7 @@
 include ../../../../Makefile.inc
 
 LIBS=
-BINS=rudial ruls
+BINS=rudial ruls russ_resolve_addr
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
@@ -37,3 +37,6 @@ rudial2:	rudial2.c
 
 ruls:	ruls.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+
+russ_resolve_addr:	russ_resolve_addr.c
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -lruss -lpthread $(LDFLAGS)
