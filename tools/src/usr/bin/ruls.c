@@ -121,7 +121,7 @@ main(int argc, char **argv) {
 	} else if (S_ISDIR(st.st_mode)) {
 		DIR		*dir;
 		struct dirent	*dent;
-		char		path[2048];
+		char		path[RUSS_MAX_PATH_LEN];
 
 		if ((dir = opendir(addr)) == NULL) {
 			fprintf(stderr, "error: cannot open directory\n");
