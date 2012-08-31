@@ -115,6 +115,38 @@ russ_readn(int fd, char *b, size_t count) {
 }
 
 /**
+* Guaranteed read. Return on success or unrecoverable error/EOF.
+*
+* @param fd		descriptor
+* @param[out] b		buffer
+* @param count		# of bytes to read
+* @return		# of bytes read; < count on error/EOF
+*/
+ssize_t
+russ_readn_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
+	struct pollfd	poll_fds[1];
+	int		rv, due_time;
+	ssize_t		n;
+	char		*bend;
+
+	poll_fds[0].fd = fd;
+	poll_fds[0].events = POLLIN|POLLHUP;
+
+	bend = b+count;
+	while (b < bend) {
+		rv = russ_poll(poll_fds, 1, timeout);
+		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
+			break;
+		}
+		if ((n = russ_read(fd, b, bend-b)) <= 0) {
+			break;
+		}
+		b += n;
+	}
+	return count-(bend-b);
+}
+
+/**
 * Write bytes with auto retry on EINTR and EAGAIN.
 *
 * @param fd		descriptor
