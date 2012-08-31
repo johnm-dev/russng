@@ -34,6 +34,8 @@ import traceback
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
 RUSS_CONN_NFDS = 4
+define RUSS_TIMEOUT_NEVER = -1
+define RUSS_TIMEOUT_NOW = 0
 
 #
 # data type descriptions
@@ -98,6 +100,7 @@ libruss.russ_conn_accept.restype = ctypes.c_int
 # russ_conn_await_request
 libruss.russ_conn_await_request.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
+    ctypes.c_int64,  # russ_timeout
 ]
 libruss.russ_conn_await_request.restype = ctypes.c_int
 
@@ -315,8 +318,8 @@ class ServerConn(Conn):
         else:
             return libruss.russ_conn_accept(self.conn_ptr, 0, None, None)
 
-    def await_request(self):
-        return libruss.russ_conn_await_request(self.conn_ptr)
+    def await_request(self, timeout):
+        return libruss.russ_conn_await_request(self.conn_ptr, timeout)
 
     def exit(self, exit_status):
         return libruss.russ_conn_exit(self.conn_ptr, exit_status)
@@ -372,7 +375,7 @@ class Listener:
                     continue
                 if os.fork() == 0:
                     self.close()
-                    if conn.await_request() < 0 \
+                    if conn.await_request(RUSS_TIMEOUT_NEVER) < 0 \
                         or conn.accept(0, None, None) < 0:
                         os.exit(-1)
                     req_handler(conn)
@@ -389,7 +392,7 @@ class Listener:
         """Thread-based loop.
         """
         def pre_handler_thread(conn, req_handler):
-            if conn.await_request() < 0 \
+            if conn.await_request(RUSS_TIMEOUT_NEVER) < 0 \
                 or conn.accept(0, None, None) < 0:
                 return
             req_handler(conn)
