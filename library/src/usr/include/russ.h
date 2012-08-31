@@ -43,7 +43,6 @@
 #endif
 
 #define RUSS_CONN_NFDS		4
-#define RUSS_MAX_SPATH_LEN	8192
 #define RUSS_MAX_PATH_LEN	8192
 #define RUSS_MAX_ATTRC		1024
 #define RUSS_MAX_ARGC		1024
@@ -79,8 +78,8 @@
 * Target of service.
 */
 struct russ_target {
-	char	saddr[RUSS_MAX_SPATH_LEN];
-	char	spath[RUSS_MAX_SPATH_LEN];
+	char	saddr[RUSS_MAX_PATH_LEN];
+	char	spath[RUSS_MAX_PATH_LEN];
 };
 
 /**
