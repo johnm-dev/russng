@@ -275,19 +275,20 @@ russ_conn_splice(struct russ_conn *self, struct russ_conn *dconn) {
 * with the received information.
 *
 * @param self		connection object
+* @param timeout	timeout/deadline to wait
 * @return		0 on success; -1 on error
 */
 int
-russ_conn_await_request(struct russ_conn *self) {
+russ_conn_await_request(struct russ_conn *self, russ_timeout timeout) {
 	struct russ_request	*req;
 	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
 	int			alen, size;
 
 	/* get request size, load, and upack */
 	bp = buf;
-	if ((russ_readn(self->sd, bp, 4) < 0)
+	if ((russ_readn_timeout(self->sd, bp, 4, timeout) < 0)
 		|| ((bp = russ_dec_i(bp, &size)) == NULL)
-		|| (russ_readn(self->sd, bp, size) < 0)) {
+		|| (russ_readn_timeout(self->sd, bp, size, timeout) < 0)) {
 		return -1;
 	}
 

@@ -298,7 +298,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 				if ((bconn = russ_listener_answer(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
 					continue;
 				}
-				if ((russ_conn_await_request(bconn) < 0)
+				if ((russ_conn_await_request(bconn, RUSS_TIMEOUT_NEVER) < 0)
 					|| (russ_conn_accept(bconn, 0, NULL, NULL) < 0)) {
 					russ_conn_close(bconn);
 					bconn = russ_conn_free(bconn);
