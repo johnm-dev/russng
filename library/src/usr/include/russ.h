@@ -182,6 +182,7 @@ struct russ_conn *russ_list(russ_timeout, char *);
 ssize_t russ_read(int, char *, size_t);
 ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);
+ssize_t russ_readn_timeout(int, char *, size_t, russ_timeout);
 ssize_t russ_writen(int, char *, size_t);
 ssize_t russ_writen_timeout(int, char *, size_t, russ_timeout);
 
