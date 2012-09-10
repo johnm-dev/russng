@@ -8,7 +8,7 @@ HERE_DIR:=$(shell dirname $(HERE_FILE))
 
 .PHONY:	doc install
 
-all:	doc
+all:
 	(cd src/usr/lib; $(MAKE))
 
 clean:
