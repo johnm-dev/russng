@@ -13,14 +13,14 @@ all:
 	(cd servers; $(MAKE))
 	(cd tools; $(MAKE))
 	(cd pyruss; $(MAKE))
-	(cd rbruss; $(MAKE))
+	#(cd rbruss; $(MAKE))
 
 clean:
 	(cd library; $(MAKE) clean)
 	(cd servers; $(MAKE) clean)
 	(cd tools; $(MAKE) clean)
 	(cd pyruss; $(MAKE) clean)
-	(cd rbruss; $(MAKE) clean)
+	#(cd rbruss; $(MAKE) clean)
 
 doc:
 	(cd library; $(MAKE) doc)
@@ -37,4 +37,4 @@ install:
 	(cd servers; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd tools; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd pyruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	(cd rbruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
+	#(cd rbruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
