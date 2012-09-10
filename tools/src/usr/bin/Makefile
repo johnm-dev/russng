@@ -39,4 +39,4 @@ ruls:	ruls.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
 
 russ_resolve_addr:	russ_resolve_addr.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
