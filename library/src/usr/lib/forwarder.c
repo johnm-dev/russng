@@ -165,6 +165,10 @@ _forward_bytes2(void *_fwd) {
 			}
 			break;
 		}
+		if (pollfds[1].revents & POLLHUP) {
+			fwd->reason = RUSS_FWD_REASON_OUT_HUP;
+			break;
+		}
 		if (pollfds[0].revents & POLLIN) {
 			rv = _forward_block(fwd->in_fd, fwd->out_fd, bp, fwd->blocksize, fwd->how);
 			if (rv < 0) {
@@ -177,10 +181,6 @@ _forward_bytes2(void *_fwd) {
 			continue;
 		} else if (pollfds[0].revents & POLLHUP) {
 			fwd->reason = RUSS_FWD_REASON_IN_HUP;
-			break;
-		}
-		if (pollfds[1].revents & POLLHUP) {
-			fwd->reason = RUSS_FWD_REASON_OUT_HUP;
 			break;
 		}
 	}
