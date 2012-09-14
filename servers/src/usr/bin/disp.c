@@ -69,29 +69,29 @@ reader_handler(void *arg) {
 	pollfds[1].events = POLLIN;
 
 	while (1) {
-fprintf(stderr, "reader [%d,%d,%d]: waiting for data\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "reader [%d,%d,%d]: waiting for data\n", self->id, self->datafd, self->rsigfd);
 		if (russ_poll(pollfds, 2, -1) < 0) {
-fprintf(stderr, "reader [%d,%d,%d]: errno (%d)\n", self->id, self->datafd, self->rsigfd, errno);
+//fprintf(stderr, "reader [%d,%d,%d]: errno (%d)\n", self->id, self->datafd, self->rsigfd, errno);
 			break;
 		}
-fprintf(stderr, "reader [%d,%d,%d]: revents[0] (%d) revents[1] (%d)\n", self->id, self->datafd, self->rsigfd, pollfds[0].revents, pollfds[1].revents);
+//fprintf(stderr, "reader [%d,%d,%d]: revents[0] (%d) revents[1] (%d)\n", self->id, self->datafd, self->rsigfd, pollfds[0].revents, pollfds[1].revents);
 		//if ((!(pollfds[0].revents & POLLIN)) && (pollfds[0].revents & POLLHEN)) {
 		if (pollfds[0].revents & POLLHEN) {
 			break;
 		}
-fprintf(stderr, "reader [%d,%d,%d]: reading data\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "reader [%d,%d,%d]: reading data\n", self->id, self->datafd, self->rsigfd);
 		/* read data */
 		if ((self->count = russ_read(self->datafd, self->buf, DISPATCHER_BUF_SIZE)) <= 0) {
-fprintf(stderr, "reader [%d,%d,%d]: sending HUP\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "reader [%d,%d,%d]: sending HUP\n", self->id, self->datafd, self->rsigfd);
 			dispatcher_send(self->disp, self->id, DISPATCHER_HUP, NULL, 0);
 			break;
 		}
-fprintf(stderr, "reader [%d,%d,%d]: sending data ([%d]%20s)\n", self->id, self->datafd, self->rsigfd, self->count, self->buf);
+//fprintf(stderr, "reader [%d,%d,%d]: sending data ([%d]%20s)\n", self->id, self->datafd, self->rsigfd, self->count, self->buf);
 		/* send data */
 		if (dispatcher_send(self->disp, self->id, DISPATCHER_DATA, self->buf, self->count) < 0) {
 			break;
 		}
-fprintf(stderr, "reader [%d,%d,%d]: waiting for ack\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "reader [%d,%d,%d]: waiting for ack\n", self->id, self->datafd, self->rsigfd);
 		/* wait for ack */
 		if ((russ_poll(pollfds, 1, -1) < 0)
 			|| (pollfds[0].revents & POLLHEN)
@@ -99,7 +99,7 @@ fprintf(stderr, "reader [%d,%d,%d]: waiting for ack\n", self->id, self->datafd, 
 			break;
 		}
 	}
-fprintf(stderr, "reader [%d,%d,%d]: shutting down\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "reader [%d,%d,%d]: shutting down\n", self->id, self->datafd, self->rsigfd);
 	close(self->rsigfd);
 	close(self->datafd);
 	return NULL;
@@ -129,41 +129,41 @@ writer_handler(void *arg) {
 	pollfds[1].events = POLLHUP;
 
 	while (1) {
-fprintf(stderr, "writer [%d,%d,%d]: waiting for data\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "writer [%d,%d,%d]: waiting for data\n", self->id, self->datafd, self->rsigfd);
 		/* wait for data */
 		if (russ_poll(pollfds, 2, -1) < 0) {
-fprintf(stderr, "writer [%d,%d,%d]: errno (%d)\n", self->id, self->datafd, self->rsigfd, errno);
+//fprintf(stderr, "writer [%d,%d,%d]: errno (%d)\n", self->id, self->datafd, self->rsigfd, errno);
 			break;
 		}
-fprintf(stderr, "writer [%d,%d,%d]: revents[0] (%d) revents[1] (%d)\n", self->id, self->datafd, self->rsigfd, pollfds[0].revents, pollfds[1].revents);
+//fprintf(stderr, "writer [%d,%d,%d]: revents[0] (%d) revents[1] (%d)\n", self->id, self->datafd, self->rsigfd, pollfds[0].revents, pollfds[1].revents);
 		//if ((!(pollfds[0].revents & POLLIN)) && (pollfds[0].revents & POLLHEN)) {
 		if (pollfds[0].revents & POLLHEN) {
 			break;
 		}
-fprintf(stderr, "writer [%d,%d,%d]: checking rsigfd\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "writer [%d,%d,%d]: checking rsigfd\n", self->id, self->datafd, self->rsigfd);
 		if (pollfds[1].revents & POLLHEN) {
-fprintf(stderr, "writer [%d,%d,%d]: sending HUP\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "writer [%d,%d,%d]: sending HUP\n", self->id, self->datafd, self->rsigfd);
 			dispatcher_send(self->disp, self->id, DISPATCHER_HUP, NULL, 0);
 			break;
 		} 
-fprintf(stderr, "writer [%d,%d,%d]: reading rsigfd\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "writer [%d,%d,%d]: reading rsigfd\n", self->id, self->datafd, self->rsigfd);
 		if (russ_readn(self->rsigfd, lbuf, 1) < 0) {
 			break;
 		}
-fprintf(stderr, "writer [%d,%d,%d]: writing data ([%d]%20s)\n", self->id, self->datafd, self->rsigfd, self->count, self->buf);
+//fprintf(stderr, "writer [%d,%d,%d]: writing data ([%d]%20s)\n", self->id, self->datafd, self->rsigfd, self->count, self->buf);
 		/* write data */
 		if (russ_writen(self->datafd, self->buf, self->count) < 0) {
-fprintf(stderr, "writer [%d,%d,%d]: sending HUP\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "writer [%d,%d,%d]: sending HUP\n", self->id, self->datafd, self->rsigfd);
 			dispatcher_send(self->disp, self->id, DISPATCHER_HUP, NULL, 0);
 			break;
 		}
-fprintf(stderr, "writer [%d,%d,%d]: sending ack\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "writer [%d,%d,%d]: sending ack\n", self->id, self->datafd, self->rsigfd);
 		/* send ack */
 		if (dispatcher_send(self->disp, self->id, DISPATCHER_ACK, NULL, 0) < 0) {
 			break;
 		}
 	}
-fprintf(stderr, "writer [%d,%d,%d]: shutting down\n", self->id, self->datafd, self->rsigfd);
+//fprintf(stderr, "writer [%d,%d,%d]: shutting down\n", self->id, self->datafd, self->rsigfd);
 	close(self->rsigfd);
 	close(self->datafd);
 	return NULL;
@@ -269,17 +269,17 @@ dispatcher_loop(struct dispatcher *self) {
 		rw = self->rws[id];
 		rw->count = psize;
 		if (mtype == DISPATCHER_HUP) {
-fprintf(stderr, "loop [%d,%d,%d]: HUP\n", id, rw->datafd, rw->rsigfd);
+//fprintf(stderr, "loop [%d,%d,%d]: HUP\n", id, rw->datafd, rw->rsigfd);
 			close(rw->wsigfd);
 			rw->wsigfd = -1;
 			self->narws--;
 		} else if (((psize > 0) & (russ_readn(self->msgfd, rw->buf, psize) <= 0))
-			|| (fprintf(stderr, "loop [%d,%d,%d]: rw->type (%d) mtype (%d) psize (%d) buf (%20s)\n", id, rw->datafd, rw->rsigfd, rw->type, mtype, psize, rw->buf) < 0)
+			//|| (fprintf(stderr, "loop [%d,%d,%d]: rw->type (%d) mtype (%d) psize (%d) buf (%20s)\n", id, rw->datafd, rw->rsigfd, rw->type, mtype, psize, rw->buf) < 0)
 			|| (russ_writen(rw->wsigfd, "x", 1) < 0)) {
 			break;
 		}
 	}
-fprintf(stderr, "loop: shutdown\n");
+//fprintf(stderr, "loop: shutdown\n");
 
 	/* close wsigfds */
 	for (i = 0; i < self->nrws; i++) {
