@@ -119,17 +119,15 @@ redial(int sd) {
 	char			buf[16384], *bp;
 	int			size, cnt;
 
-fprintf(stderr, "AA\n");
 	/* msg size */
 	bp = buf;
 	if ((read(sd, bp, 4) < 0)
 		|| ((bp = russ_dec_I(bp, &size)) == NULL)
 		|| (size > 16384)
 		|| (read(sd, bp, size) < 0)) {
-fprintf(stderr, "BB\n");
 		return NULL;
 	}
-fprintf(stderr, "CC\n");
+
 	/* op, addr */
 	if (((bp = russ_dec_s(bp, &op)) == NULL)
 		|| ((bp = russ_dec_s(bp, &addr)) == NULL)
@@ -137,11 +135,12 @@ fprintf(stderr, "CC\n");
 		|| ((bp = russ_dec_sarray0(bp, &args, &cnt)) == NULL)) {
 		return NULL;
 	}
-fprintf(stderr, "op (%s) addr (%s)\n", op, addr);
+
+//fprintf(stderr, "op (%s) addr (%s)\n", op, addr);
 	if ((conn = russ_dialv(-1, op, addr, attrs, args)) == NULL) {
 		return NULL;
 	}
-fprintf(stderr, "conn (%p)\n", conn);
+//fprintf(stderr, "conn (%p)\n", conn);
 	return conn;
 }
 
