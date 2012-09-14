@@ -190,6 +190,7 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
+//fprintf(stderr, "STDIN OUT ERR (%d,%d,%d) fds (%d,%d,%d)\n", STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, conn->fds[0], conn->fds[1], conn->fds[2]);
 	/* initialize forwarders (handing off fds) and start threads */
 	russ_forwarder_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, 1);
 	russ_forwarder_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, 1);
