@@ -34,8 +34,8 @@ import traceback
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
 RUSS_CONN_NFDS = 4
-define RUSS_TIMEOUT_NEVER = -1
-define RUSS_TIMEOUT_NOW = 0
+RUSS_TIMEOUT_NEVER = -1
+RUSS_TIMEOUT_NOW = 0
 
 #
 # data type descriptions
