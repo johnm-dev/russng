@@ -46,7 +46,7 @@
 #define RUSS_MAX_PATH_LEN	8192
 #define RUSS_MAX_ATTRC		1024
 #define RUSS_MAX_ARGC		1024
-#define RUSS_PROTOCOL_STRING	"0007"
+#define RUSS_PROTOCOL_STRING	"0008"
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
 #define RUSS_TIMEOUT_NEVER	-1
