@@ -50,7 +50,9 @@
 #define RUSS_PROTOCOL_STRING	"0008"
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
-#define RUSS_TIMEOUT_NEVER	-1
+#define RUSS_DEADLINE_BIT	0x8000000000000000
+#define RUSS_DEADLINE_MASK	0x7fffffffffffffff
+#define RUSS_TIMEOUT_NEVER	RUSS_DEADLINE_MASK
 #define RUSS_TIMEOUT_NOW	0
 
 /* common messages */
@@ -142,7 +144,7 @@ struct pipe_fds {
 	int in_fd, out_fd;
 };
 
-typedef int64_t	russ_timeout;
+typedef int64_t	russ_timeout;	/**< timeout/deadline type */
 
 typedef void (*russ_req_handler)(struct russ_conn *);
 typedef void (*russ_accept_handler)(struct russ_conn *, int, int *, int *);
@@ -196,6 +198,10 @@ void russ_listener_loop(struct russ_listener *, russ_accept_handler, russ_req_ha
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);
+inline russ_timeout russ_gettime(void);
+inline russ_timeout russ_to_timeout(russ_timeout);
+inline russ_timeout russ_to_timeout_future(russ_timeout);
+inline russ_timeout russ_to_deadline(russ_timeout);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
