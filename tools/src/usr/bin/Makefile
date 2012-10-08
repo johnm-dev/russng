@@ -5,7 +5,8 @@
 
 include ../../../../Makefile.inc
 
-LIBS=-lruss -lpthread
+# rt for clock_gettime()
+LIBS=-lruss -lpthread -lrt
 BINS=rudial ruls russ_resolve_addr
 
 ifndef RUSS_INCLUDE_DIR

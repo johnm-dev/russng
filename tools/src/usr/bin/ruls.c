@@ -54,10 +54,13 @@ main(int argc, char **argv) {
 	struct stat		st;
 	char			*prog_name;
 	char			*addr;
-	russ_timeout		timeout;
+	russ_deadline		deadline;
+	int			timeout;
 	int			exit_status;
 
 	prog_name = basename(strdup(argv[0]));
+
+	deadline = RUSS_DEADLINE_NEVER;
 
 	/* parse args */
 	if (argc == 2) {
@@ -65,7 +68,6 @@ main(int argc, char **argv) {
 			print_usage(prog_name);
 			exit(0);
 		}
-		timeout = RUSS_TIMEOUT_NEVER;
 		addr = argv[1];
 	} else if (argc == 4) {
 		if ((strcmp(argv[1], "-t") == 0) || (strcmp(argv[1], "--timeout") == 0)) {
@@ -74,6 +76,7 @@ main(int argc, char **argv) {
 				exit(-1);
 			}
 			timeout *= 1000;
+			deadline = russ_to_deadline(timeout);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 		}
@@ -90,7 +93,7 @@ main(int argc, char **argv) {
 	/* call russ_list() only if a socket file; otherwise list dir */
 	exit_status = 0;
 	if ((stat(addr, &st) < 0) || S_ISSOCK(st.st_mode)) {
-		conn = russ_list(timeout, addr);
+		conn = russ_list(deadline, addr);
 
 		if (conn == NULL) {
 			fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
@@ -104,7 +107,7 @@ main(int argc, char **argv) {
 		conn->fds[0] = -1;
 		conn->fds[1] = -1;
 		conn->fds[2] = -1;
-		if (russ_run_forwarders(conn->nfds, fwds) < 0) {
+		if (russ_run_forwarders(RUSS_CONN_MIN_NFDS-1, fwds) < 0) {
 			fprintf(stderr, "error: could not forward bytes\n");
 			exit(-1);
 		}
