@@ -120,7 +120,6 @@ struct russ_conn {
 	struct russ_credentials	cred;		/**< credentials */
 	struct russ_request	req;		/**< request */
 	int			sd;		/**< socket descriptor */
-	int			nfds;		/**< # of helper fds */
 	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
 };
 

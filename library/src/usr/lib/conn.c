@@ -96,8 +96,7 @@ russ_conn_new(void) {
 		goto free_request;
 	}
 	conn->sd = -1;
-	conn->nfds = RUSS_CONN_NFDS;
-	russ_fds_init(conn->fds, conn->nfds, -1);
+	russ_fds_init(conn->fds, RUSS_CONN_NFDS, -1);
 
 	return conn;
 free_request:
@@ -108,7 +107,7 @@ free_conn:
 }
 
 /**
-* Get fds from connection.
+* Receive fds from connection.
 *
 * @param self		connection object
 * @return		0 on success; -1 on error
@@ -126,24 +125,25 @@ russ_conn_recvfds(struct russ_conn *self) {
 		return -1;
 	}
 
-	/* recv fds */
+	/* initialize and recv fds and load first nfds */
+	russ_fds_init(self->fds, RUSS_CONN_NFDS, -1);
 	for (i = 0; i < nfds; i++) {
 		if (russ_recvfd(self->sd, &(self->fds[i])) < 0) {
 			return -1;
 		}
 	}
-	self->nfds = nfds;
 	return 0;
 }
 
 /**
-* Send fds over connection and cleanup.
+* Send first nfds fds over connection and cleanup.
 *
 * Each cfd has an sfd counterpart. The cfds are sent over the
 * connection and closed. The sfds are saved to the connection
-* object.
+* object. 
 *
 * @param self		connection object
+* @param nfds		number of fds to send (from index 0)
 * @param cfds		client-side descriptors
 * @param sfds		server-side descriptors
 * @return		0 on success; -1 on error
@@ -170,7 +170,6 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 			self->fds[i] = sfds[i];
 		}
 	}
-	self->nfds = nfds;
 	return 0;
 }
 
@@ -186,6 +185,7 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 int
 russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	int	fds[2], tmpfd;
+	int	_cfds[RUSS_CONN_NFDS], _sfds[RUSS_CONN_NFDS];
 	int	allocated_fds = 0;
 	int	i;
 
@@ -197,13 +197,13 @@ russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 
 	if ((cfds == NULL) && (sfds == NULL)) {
 		allocated_fds = 1;
-		if (((cfds = malloc(sizeof(int)*nfds)) == NULL)
-			|| ((sfds = malloc(sizeof(int)*nfds)) == NULL)) {
-			goto free_fds;
-		}
+		russ_fds_init(_cfds, RUSS_CONN_NFDS, -1);
+		russ_fds_init(_sfds, RUSS_CONN_NFDS, -1);
+		cfds = _cfds;
+		sfds = _sfds;
 		if (russ_make_pipes(nfds, cfds, sfds) < 0) {
 			fprintf(stderr, "error: cannot create pipes\n");
-			goto free_fds;
+			return -1;
 		}
 		/* swap fds for stdin */
 		tmpfd = cfds[0];
@@ -222,12 +222,6 @@ close_fds:
 	russ_fds_close(sfds, nfds);
 	russ_fds_close(&self->sd, 1);
 
-free_fds:
-	if (allocated_fds) {
-		free(cfds);
-		free(sfds);
-	}
-
 	return -1;
 }
 
@@ -245,25 +239,20 @@ free_fds:
 */
 int
 russ_conn_splice(struct russ_conn *self, struct russ_conn *dconn) {
-	int	*cfds;
+	int	cfds[RUSS_CONN_NFDS];
 	int	i, ev;
 
-	if ((cfds = malloc(sizeof(int)*(dconn->nfds))) == NULL) {
-		return -1;
-	}
-	for (i = 0; i < dconn->nfds; i++) {
+	for (i = 0; i < RUSS_CONN_NFDS; i++) {
 		cfds[i] = dconn->fds[i];
 	}
-	ev = russ_conn_sendfds(self, dconn->nfds, cfds, NULL);
+	ev = russ_conn_sendfds(self, RUSS_CONN_NFDS, cfds, NULL);
 
 	/* dconn fds are closed by russ_conn_sendfds */
 	russ_fds_close(&dconn->sd, 1);
 
 	/* close sd and fds */
-	russ_fds_close(self->fds, self->nfds);
+	russ_fds_close(self->fds, RUSS_CONN_NFDS);
 	russ_fds_close(&self->sd, 1);
-
-	free(cfds);
 
 	return ev;
 }
@@ -317,7 +306,7 @@ free_request:
 */
 void
 russ_conn_close(struct russ_conn *self) {
-	russ_fds_close(self->fds, self->nfds);
+	russ_fds_close(self->fds, RUSS_CONN_NFDS);
 	russ_fds_close(&self->sd, 1);
 }
 
