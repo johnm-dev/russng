@@ -27,6 +27,7 @@
 #ifndef RUSS_H
 #define RUSS_H
 
+#include <limits.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <sys/stat.h>
@@ -50,10 +51,7 @@
 #define RUSS_PROTOCOL_STRING	"0008"
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
-#define RUSS_DEADLINE_BIT	0x8000000000000000
-#define RUSS_DEADLINE_MASK	0x7fffffffffffffff
-#define RUSS_TIMEOUT_NEVER	RUSS_DEADLINE_MASK
-#define RUSS_TIMEOUT_NOW	0
+#define RUSS_DEADLINE_NEVER	INT64_MAX
 
 /* common messages */
 #define RUSS_MSG_BAD_ARGS	"error: bad/missing arguments"
@@ -143,7 +141,7 @@ struct pipe_fds {
 	int in_fd, out_fd;
 };
 
-typedef int64_t	russ_timeout;	/**< timeout/deadline type */
+typedef int64_t russ_deadline;
 
 typedef void (*russ_req_handler)(struct russ_conn *);
 typedef void (*russ_accept_handler)(struct russ_conn *, int, int *, int *);
@@ -154,7 +152,7 @@ char *russ_resolve_addr(char *);
 
 /* conn.c */
 int russ_conn_accept(struct russ_conn *, int, int *, int *);
-int russ_conn_await_request(struct russ_conn *, russ_timeout);
+int russ_conn_await_request(struct russ_conn *, russ_deadline);
 void russ_conn_close(struct russ_conn *);
 void russ_conn_close_fd(struct russ_conn *, int);
 int russ_conn_exit(struct russ_conn *, int);
@@ -162,10 +160,10 @@ int russ_conn_fatal(struct russ_conn *, char *, int);
 struct russ_conn *russ_conn_free(struct russ_conn *);
 int russ_conn_sendfds(struct russ_conn *, int, int *, int *);
 int russ_conn_splice(struct russ_conn *, struct russ_conn *);
-int russ_conn_wait(struct russ_conn *, int *, russ_timeout);
+int russ_conn_wait(struct russ_conn *, int *, russ_deadline);
 
-struct russ_conn *russ_dialv(russ_timeout, char *, char *, char **, char **);
-struct russ_conn *russ_diall(russ_timeout, char *, char *, char **, ...);
+struct russ_conn *russ_dialv(russ_deadline, char *, char *, char **, char **);
+struct russ_conn *russ_diall(russ_deadline, char *, char *, char **, ...);
 
 /* forwarder */
 void russ_forwarder_init(struct russ_forwarder *, int, int, int, int, int, int, int);
@@ -174,38 +172,40 @@ int russ_forwarder_join(struct russ_forwarder *);
 int russ_run_forwarders(int, struct russ_forwarder *);
 
 /* helpers.c */
-struct russ_conn *russ_execv(russ_timeout, char *, char **, char **);
-struct russ_conn *russ_execl(russ_timeout, char *, char **, ...);
-struct russ_conn *russ_help(russ_timeout, char *);
-struct russ_conn *russ_info(russ_timeout, char *);
-struct russ_conn *russ_list(russ_timeout, char *);
+struct russ_conn *russ_execv(russ_deadline, char *, char **, char **);
+struct russ_conn *russ_execl(russ_deadline, char *, char **, ...);
+struct russ_conn *russ_help(russ_deadline, char *);
+struct russ_conn *russ_info(russ_deadline, char *);
+struct russ_conn *russ_list(russ_deadline, char *);
 
 /* io.c */
 ssize_t russ_read(int, char *, size_t);
 ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);
-ssize_t russ_readn_timeout(int, char *, size_t, russ_timeout);
+ssize_t russ_readn_deadline(int, char *, size_t, russ_deadline);
 ssize_t russ_writen(int, char *, size_t);
-ssize_t russ_writen_timeout(int, char *, size_t, russ_timeout);
+ssize_t russ_writen_deadline(int, char *, size_t, russ_deadline);
 
 /* listener.c */
 struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
-struct russ_conn *russ_listener_answer(struct russ_listener *, russ_timeout);
+struct russ_conn *russ_listener_answer(struct russ_listener *, russ_deadline);
 void russ_listener_close(struct russ_listener *);
 struct russ_listener *russ_listener_free(struct russ_listener *);
 void russ_listener_loop(struct russ_listener *, russ_accept_handler, russ_req_handler);
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);
-inline russ_timeout russ_gettime(void);
-inline russ_timeout russ_to_timeout(russ_timeout);
-inline russ_timeout russ_to_timeout_future(russ_timeout);
-inline russ_timeout russ_to_deadline(russ_timeout);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
 
 /* request.c */
+
+/* time.c */
+inline russ_deadline russ_gettime(void); /* internal */
+inline russ_deadline russ_to_deadline(int);
+inline russ_deadline russ_to_deadline_diff(russ_deadline);
+inline int russ_to_timeout(russ_deadline deadline);
 
 #endif /* RUSS_H */

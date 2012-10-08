@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "russ_priv.h"
@@ -131,62 +130,6 @@ russ_dprintf(int fd, char *format, ...) {
 		}
 	}
 	return n;
-}
-
-/**
-* Get current time as deadline value.
-*
-* @return		deadline value
-*/
-inline russ_timeout
-russ_gettime(void) {
-	struct timespec	tp;
-
-	clock_gettime(CLOCK_MONOTONIC, &tp);
-	return RUSS_DEADLINE_BIT | (tp.tv_sec*1000 + (tp.tv_nsec/1000000));
-}
-
-/**
-* Convert deadline value to timeout, relative to the current time.
-*
-* @param value		deadline value
-* @return		computed timeout value; value if already a timeout
-*/
-inline russ_timeout
-russ_to_timeout(russ_timeout value) {
-	if (value & RUSS_DEADLINE_BIT) {
-		value -= russ_gettime();
-	}
-	return value;
-}
-
-/**
-* Convert deadline value to timeout (with floor of 0), relative to
-* the current time.
-*
-* @param value		deadline value
-* @return		computed timeout value with floor of 0
-*/
-inline russ_timeout
-russ_to_timeout_future(russ_timeout value) {
-	if ((value = russ_to_timeout(value)) < 0) {
-		value = 0;
-	}
-	return value;
-}
-
-/**
-* Convert timeout value to deadline, relative to the current time.
-*
-* @param value		timeout value
-* @return		computed deadline value; value if already a deadline
-*/
-inline russ_timeout
-russ_to_deadline(russ_timeout value) {
-	if (value & RUSS_DEADLINE_BIT) {
-		return value;
-	}
-	return russ_gettime()+value;
 }
 
 /**
