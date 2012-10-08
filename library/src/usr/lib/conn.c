@@ -192,7 +192,7 @@ russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	if (nfds < 0) {
 		return -1;
 	} else if (nfds == 0) {
-		nfds = RUSS_CONN_NFDS;
+		nfds = RUSS_CONN_MIN_NFDS;
 	}
 
 	if ((cfds == NULL) && (sfds == NULL)) {
