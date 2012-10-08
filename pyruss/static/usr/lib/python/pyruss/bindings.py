@@ -33,7 +33,7 @@ import traceback
 
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
-RUSS_CONN_NFDS = 4
+RUSS_CONN_NFDS = 32
 RUSS_TIMEOUT_NEVER = -1
 RUSS_TIMEOUT_NOW = 0
 
@@ -67,7 +67,6 @@ class russ_conn_Structure(ctypes.Structure):
         ("cred", russ_credentials_Structure),
         ("req", russ_request_Structure),
         ("sd", ctypes.c_int),
-        ("nfds", ctypes.c_int),
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
     ]
 
