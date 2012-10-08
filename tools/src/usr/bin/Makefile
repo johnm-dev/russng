@@ -5,7 +5,7 @@
 
 include ../../../../Makefile.inc
 
-LIBS=
+LIBS=-lruss -lpthread
 BINS=rudial ruls russ_resolve_addr
 
 ifndef RUSS_INCLUDE_DIR
@@ -30,13 +30,13 @@ install:
 	(cd $(INSTALL_DIR)/usr/bin; ln -fs rudial ruexec; ln -fs rudial ruhelp; ln -fs rudial ruinfo)
 
 rudial:	rudial.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 rudial2:	rudial2.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 ruls:	ruls.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 russ_resolve_addr:	russ_resolve_addr.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) -lruss -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
