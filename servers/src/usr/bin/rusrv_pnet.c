@@ -411,7 +411,7 @@ alt_russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_ha
 	struct russ_conn	*conn;
 
 	while (1) {
-		if ((conn = russ_listener_answer(self, RUSS_TIMEOUT_NEVER)) == NULL) {
+		if ((conn = russ_listener_answer(self, RUSS_DEADLINE_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
@@ -422,7 +422,7 @@ alt_russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_ha
 		if (fork() == 0) {
 			russ_listener_close(self);
 			self = russ_listener_free(self);
-			if ((russ_conn_await_request(conn, RUSS_TIMEOUT_NEVER) < 0)
+			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)
 				|| (alt_russ_conn_accept(conn, 0, NULL, NULL) < 0)) {
 				exit(-1);
 			}
