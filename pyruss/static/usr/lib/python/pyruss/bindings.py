@@ -34,8 +34,7 @@ import traceback
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
 RUSS_CONN_NFDS = 32
-RUSS_TIMEOUT_NEVER = -1
-RUSS_TIMEOUT_NOW = 0
+RUSS_DEADLINE_NEVER = (2<<63)-1 # INT64_MAX
 
 #
 # data type descriptions
@@ -76,7 +75,7 @@ class russ_conn_Structure(ctypes.Structure):
 
 # russ_dialv
 libruss.russ_dialv.argtypes = [
-    ctypes.c_int64,  # russ_timeout
+    ctypes.c_int64,  # russ_deadline
     ctypes.c_char_p,
     ctypes.c_char_p,
     ctypes.POINTER(ctypes.c_char_p),
@@ -99,7 +98,7 @@ libruss.russ_conn_accept.restype = ctypes.c_int
 # russ_conn_await_request
 libruss.russ_conn_await_request.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
-    ctypes.c_int64,  # russ_timeout
+    ctypes.c_int64,  # russ_deadline
 ]
 libruss.russ_conn_await_request.restype = ctypes.c_int
 
@@ -139,7 +138,7 @@ libruss.russ_conn_free.restype = ctypes.POINTER(russ_conn_Structure)
 libruss.russ_conn_wait.argstypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.POINTER(ctypes.c_int),
-    ctypes.c_int64,  # russ_timeout
+    ctypes.c_int64,  # russ_deadline
 ]
 libruss.russ_conn_wait.restype = ctypes.c_int
 
@@ -161,7 +160,7 @@ libruss.russ_unlink.restype = ctypes.c_int
 # russ_listener_answer
 libruss.russ_listener_answer.argtypes = [
     ctypes.POINTER(russ_listener_Structure),
-    ctypes.c_int64,  # russ_timeout
+    ctypes.c_int64,  # russ_deadline
 ]
 libruss.russ_listener_answer.restype = ctypes.POINTER(russ_conn_Structure)
 
@@ -208,7 +207,7 @@ def announce(path, mode, uid, gid):
     lis_ptr = libruss.russ_announce(path, mode, uid, gid)
     return lis_ptr and Listener(lis_ptr)
 
-def dialv(timeout, op, saddr, attrs, args):
+def dialv(deadline, op, saddr, attrs, args):
     """Dial a service.
     """
     if attrs == None:
@@ -218,14 +217,14 @@ def dialv(timeout, op, saddr, attrs, args):
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
 
-    return ClientConn(libruss.russ_dialv(timeout, op, saddr, c_attrs, c_argv))
+    return ClientConn(libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv))
 
 dial = dialv
 
-def execv(timeout, saddr, attrs, args):
+def execv(deadline, saddr, attrs, args):
     """ruexec a service.
     """
-    return dialv(timeout, "execute", saddr, attrs, args)
+    return dialv(deadline, "execute", saddr, attrs, args)
 
 def unlink(path):
     """Unlink service path.
@@ -302,9 +301,9 @@ class ClientConn(Conn):
     def get_sd(self):
         return self.conn_ptr.contents.sd
 
-    def wait(self, timeout):
+    def wait(self, deadline):
         exit_status = ctypes.c_int()
-        return libruss.russ_conn_wait(self.conn_ptr, ctypes.byref(exit_status), timeout), exit_status.value
+        return libruss.russ_conn_wait(self.conn_ptr, ctypes.byref(exit_status), deadline), exit_status.value
 
 class ServerConn(Conn):
     """Server connection.
@@ -317,8 +316,8 @@ class ServerConn(Conn):
         else:
             return libruss.russ_conn_accept(self.conn_ptr, 0, None, None)
 
-    def await_request(self, timeout):
-        return libruss.russ_conn_await_request(self.conn_ptr, timeout)
+    def await_request(self, deadline):
+        return libruss.russ_conn_await_request(self.conn_ptr, deadline)
 
     def exit(self, exit_status):
         return libruss.russ_conn_exit(self.conn_ptr, exit_status)
@@ -337,9 +336,9 @@ class Listener:
         libruss.russ_listener_free(self.lis_ptr)
         self.lis_ptr = None
 
-    def answer(self, timeout):
+    def answer(self, deadline):
         try:
-            conn_ptr = libruss.russ_listener_answer(self.lis_ptr, timeout)
+            conn_ptr = libruss.russ_listener_answer(self.lis_ptr, deadline)
         except:
             traceback.print_exc()
         return conn_ptr and ServerConn(conn_ptr)
@@ -374,7 +373,7 @@ class Listener:
                     continue
                 if os.fork() == 0:
                     self.close()
-                    if conn.await_request(RUSS_TIMEOUT_NEVER) < 0 \
+                    if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
                         or conn.accept(0, None, None) < 0:
                         os.exit(-1)
                     req_handler(conn)
@@ -391,7 +390,7 @@ class Listener:
         """Thread-based loop.
         """
         def pre_handler_thread(conn, req_handler):
-            if conn.await_request(RUSS_TIMEOUT_NEVER) < 0 \
+            if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
                 or conn.accept(0, None, None) < 0:
                 return
             req_handler(conn)
