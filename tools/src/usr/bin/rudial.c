@@ -87,7 +87,8 @@ int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_forwarder	fwds[RUSS_CONN_NFDS];
-	russ_timeout		timeout;
+	russ_deadline		deadline;
+	int			timeout;
 	char			*prog_name;
 	char			*op, *addr;
 	char			*arg;
@@ -102,7 +103,7 @@ main(int argc, char **argv) {
 	prog_name = basename(strdup(argv[0]));
 
 	/* initialize */
-	timeout = -1;
+	deadline = RUSS_DEADLINE_NEVER;
 	argi = 1;
 	attrc = 0;
 	attrv[0] = NULL;
@@ -143,6 +144,7 @@ main(int argc, char **argv) {
 				exit(-1);
 			}
 			timeout *= 1000;
+			deadline = russ_to_deadline(timeout);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(-1);
@@ -155,11 +157,11 @@ main(int argc, char **argv) {
 			&& (argi+2 <= argc)) {
 			op = argv[argi++];
 			addr = argv[argi++];
-			conn = russ_dialv(timeout, op, addr, attrv, &(argv[argi]));
+			conn = russ_dialv(deadline, op, addr, attrv, &(argv[argi]));
 		} else if ((strcmp(prog_name, "ruexec") == 0)
 			&& (argi+1 <= argc)) {
 			addr = argv[argi++];
-			conn = russ_execv(timeout, addr, attrv, &(argv[argi]));
+			conn = russ_execv(deadline, addr, attrv, &(argv[argi]));
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(-1);
@@ -167,7 +169,7 @@ main(int argc, char **argv) {
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
 		if (argi < argc) {
 			addr = argv[argi];
-			conn = russ_help(timeout, addr);
+			conn = russ_help(deadline, addr);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(-1);
@@ -175,7 +177,7 @@ main(int argc, char **argv) {
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
 		if (argi < argc) {
 			addr = argv[argi];
-			conn = russ_info(timeout, addr);
+			conn = russ_info(deadline, addr);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(-1);
@@ -198,7 +200,7 @@ main(int argc, char **argv) {
 	conn->fds[0] = -1;
 	conn->fds[1] = -1;
 	conn->fds[2] = -1;
-	if (russ_run_forwarders(conn->nfds-1, fwds) < 0) {
+	if (russ_run_forwarders(RUSS_CONN_MIN_NFDS-1, fwds) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
 		exit(-1);
 	}
