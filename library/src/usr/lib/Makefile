@@ -31,3 +31,6 @@ libruss.so:	libruss.a
 
 addr-test:	addr-test.c libruss.a
 	$(CC) $(CFLAGS) -o $@ -I../include $< libruss.a
+
+time-test:	time-test.c libruss.a
+	$(CC) $(CFLAGS) -o $@ -I../include $< libruss.a -lrt
