@@ -120,10 +120,11 @@ russ_readn(int fd, char *b, size_t count) {
 * @param fd		descriptor
 * @param[out] b		buffer
 * @param count		# of bytes to read
+* @param deadline	deadline to complete operation
 * @return		# of bytes read; < count on error/EOF
 */
 ssize_t
-russ_readn_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
+russ_readn_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 	struct pollfd	poll_fds[1];
 	int		rv, due_time;
 	ssize_t		n;
@@ -134,7 +135,7 @@ russ_readn_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
 
 	bend = b+count;
 	while (b < bend) {
-		rv = russ_poll(poll_fds, 1, timeout);
+		rv = russ_poll(poll_fds, 1, russ_to_timeout(deadline));
 		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
 			break;
 		}
@@ -194,19 +195,19 @@ russ_writen(int fd, char *b, size_t count) {
 }
 
 /**
-* Guaranteed write with timeout.
+* Guaranteed write with deadline.
 *
-* All bytes are written unless a timeout or unrecoverable error
-* happens.
+* All bytes are written unless the deadline is reached or
+* unrecoverable error happens.
 *
 * @param fd		descriptor
 * @param b		buffer
 * @param count		# of bytes to write
-* @param timeout	time in which to complete call
+* @param deadline	deadline to complete call
 * @return		# of bytes written; < count on error
 */
 ssize_t
-russ_writen_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
+russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 	struct pollfd	poll_fds[1];
 	int		rv, due_time;
 	ssize_t		n;
@@ -217,7 +218,7 @@ russ_writen_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
 
 	bend = b+count;
 	while (b < bend) {
-		rv = russ_poll(poll_fds, 1, timeout);
+		rv = russ_poll(poll_fds, 1, russ_to_timeout(deadline));
 		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
 			break;
 		}
@@ -234,41 +235,22 @@ russ_writen_timeout(int fd, char *b, size_t count, russ_timeout timeout) {
 *
 * @param poll_fds	initialized pollfd structure
 * @param nfds		# of descriptors in poll_fds
-* @param timeout	timeout at this time (time, RUSS_TIMEOUT_NEVER, RUSS_TIMEOUT_NOW)
+* @param deadline	deadline to complete operation
 * @return		value as returned by system poll
 */
 int
-russ_poll(struct pollfd *poll_fds, int nfds, russ_timeout timeout) {
-	russ_timeout	deadline;
-	int		poll_timeout;
-	int		rv;
+russ_poll(struct pollfd *poll_fds, int nfds, russ_deadline deadline) {
+	int	rv;
 
-	switch (timeout) {
-	case RUSS_TIMEOUT_NEVER:
-		deadline = -1;
-		poll_timeout = -1;
-		break;
-	case RUSS_TIMEOUT_NOW:
-		deadline = 0;
-		poll_timeout = 0;
-		break;
-	default:
-		deadline = (time(NULL)*1000)+timeout;
-	}
-
-	while ((deadline > time(NULL)) || (deadline == RUSS_TIMEOUT_NEVER) || (deadline == RUSS_TIMEOUT_NOW)) {
+	while (1) {
 //fprintf(stderr, "russ_poll rv (%d) errno (%d)\n", rv, errno);
-
-		if ((deadline != RUSS_TIMEOUT_NEVER) && (deadline != RUSS_TIMEOUT_NOW)) {
-			poll_timeout = deadline-(time(NULL)*1000);
-			poll_timeout = MAX(0, poll_timeout);
-		}
-		if ((rv = poll(poll_fds, nfds, poll_timeout)) < 0) {
+		if ((rv = poll(poll_fds, nfds, russ_to_timeout(deadline))) < 0) {
 			if (errno != EINTR) {
 				break;
 			}
 		}
-		if ((deadline == RUSS_TIMEOUT_NOW) || (rv > 0)) {
+		if (rv >= 0) {
+			/* something waiting (>0) or timeout (0) */
 			break;
 		}
 	}

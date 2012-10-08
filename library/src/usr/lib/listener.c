@@ -105,16 +105,15 @@ free_saddr:
 * Answer dial.
 *
 * @param self		listener object
-* @param timeout	time allowed to complete operation
+* @param deadline	deadline to complete operation
 * @return		connection object with credentials (not fully established); NULL on failure
 */
 struct russ_conn *
-russ_listener_answer(struct russ_listener *self, russ_timeout timeout) {
+russ_listener_answer(struct russ_listener *self, russ_deadline deadline) {
 	struct russ_conn	*conn;
 	struct sockaddr_un	servaddr;
 	socklen_t		servaddr_len;
 	struct pollfd		poll_fds[1];
-	russ_timeout		deadline;
 
 	if ((self->sd < 0)
 		|| ((conn = russ_conn_new()) == NULL)) {
@@ -123,12 +122,6 @@ russ_listener_answer(struct russ_listener *self, russ_timeout timeout) {
 
 	poll_fds[0].fd = self->sd;
 	poll_fds[0].events = POLLIN;
-	if ((timeout == RUSS_TIMEOUT_NEVER) || (timeout == RUSS_TIMEOUT_NOW)) {
-		deadline = timeout;
-	} else {
-		deadline = (time(NULL)*1000)+timeout;
-	}
-
 	servaddr_len = sizeof(struct sockaddr_un);
 	while (1) {
 		if (russ_poll(poll_fds, 1, deadline) < 0) {
@@ -198,14 +191,14 @@ russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_handle
 	struct russ_conn	*conn;
 
 	while (1) {
-		if ((conn = russ_listener_answer(self, RUSS_TIMEOUT_NEVER)) == NULL) {
+		if ((conn = russ_listener_answer(self, RUSS_DEADLINE_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
 		if (fork() == 0) {
 			russ_listener_close(self);
 			self = russ_listener_free(self);
-			if ((russ_conn_await_request(conn, RUSS_TIMEOUT_NEVER) < 0)
+			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)
 				|| (russ_conn_accept(conn, 0, NULL, NULL) < 0)) {
 				exit(-1);
 			}

@@ -41,7 +41,7 @@
 
 /* conn.c */
 struct russ_conn *russ_conn_new(void);
-int russ_conn_send_request(struct russ_conn *, russ_timeout);
+int russ_conn_send_request(struct russ_conn *, russ_deadline);
 
 /* encdec.c */
 char *russ_dec_H(char *, uint16_t *);
@@ -66,7 +66,7 @@ void russ_fds_close(int *, int);
 int russ_make_pipes(int, int *, int *);
 
 /* io.c */
-int russ_poll(struct pollfd *, int, russ_timeout);
+int russ_poll(struct pollfd *, int, russ_deadline);
 
 /* request.c */
 int russ_request_init(struct russ_request *, char *, char *, char *, char **, char **);

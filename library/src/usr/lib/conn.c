@@ -115,7 +115,6 @@ free_conn:
 static int
 russ_conn_recvfds(struct russ_conn *self) {
 	char	buf[32], *bp, *bend;
-	int	timeout = -1; /* TODO: change API to accept timeout */
 	int	nfds;
 	int	i;
 
@@ -151,12 +150,11 @@ russ_conn_recvfds(struct russ_conn *self) {
 int
 russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	char	buf[32], *bp, *bend;
-	int	timeout = -1; /* TODO: change API to accept timeout */
 	int	i;
 
 	/* send count of fds */
 	if (((bp = russ_enc_i(buf, buf+sizeof(buf), nfds)) == NULL)
-		|| (russ_writen_timeout(self->sd, buf, bp-buf, timeout) < bp-buf)) {
+		|| (russ_writen_deadline(self->sd, buf, bp-buf, RUSS_DEADLINE_NEVER) < bp-buf)) {
 		return -1;
 	}
 
@@ -264,20 +262,20 @@ russ_conn_splice(struct russ_conn *self, struct russ_conn *dconn) {
 * with the received information.
 *
 * @param self		connection object
-* @param timeout	timeout/deadline to wait
+* @param deadline	deadline to wait
 * @return		0 on success; -1 on error
 */
 int
-russ_conn_await_request(struct russ_conn *self, russ_timeout timeout) {
+russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 	struct russ_request	*req;
 	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
 	int			alen, size;
 
 	/* get request size, load, and upack */
 	bp = buf;
-	if ((russ_readn_timeout(self->sd, bp, 4, timeout) < 0)
+	if ((russ_readn_deadline(self->sd, bp, 4, deadline) < 0)
 		|| ((bp = russ_dec_i(bp, &size)) == NULL)
-		|| (russ_readn_timeout(self->sd, bp, size, timeout) < 0)) {
+		|| (russ_readn_deadline(self->sd, bp, size, deadline) < 0)) {
 		return -1;
 	}
 
@@ -380,14 +378,13 @@ russ_conn_fatal(struct russ_conn *self, char *msg, int exit_status) {
 * @param self		connection object
 * @param[out] exit_status
 			exit status
-* @param timeout	timeout/deadline to wait
-* @return		0 on success; on -1 general failure; -2 on exit fd closed; -3 on timeout expired
+* @param deadline	deadline to wait
+* @return		0 on success; on -1 general failure; -2 on exit fd closed; -3 on deadline expired
 */
 int
-russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
+russ_conn_wait(struct russ_conn *self, int *exit_status, russ_deadline deadline) {
 	struct pollfd	poll_fds[1];
 	char		buf[1024];
-	int		poll_timeout;
 	int		rv, _exit_status;
 
 	if (self->fds[3] < 0) {
@@ -396,9 +393,8 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, russ_timeout timeout) {
 
 	poll_fds[0].fd = self->fds[3];
 	poll_fds[0].events = POLLIN;
-	poll_timeout = (int)timeout;
 	while (1) {
-		rv = poll(poll_fds, 1, poll_timeout);
+		rv = poll(poll_fds, 1, russ_to_deadline(deadline));
 		if (rv == 0) {
 			/* timeout */
 			return -3;
@@ -447,11 +443,11 @@ russ_conn_free(struct russ_conn *self) {
 * Request information is encoded and sent over the connection.
 *
 * @param self		connection object
-* @param timeout	time in which to complete the send
+* @param deadline	deadline to send
 * @return		0 on success; -1 on error
 */
 int
-russ_conn_send_request(struct russ_conn *self, russ_timeout timeout) {
+russ_conn_send_request(struct russ_conn *self, russ_deadline deadline) {
 	struct russ_request	*req;
 	char			buf[MAX_REQUEST_BUF_SIZE], *bp, *bend;
 
@@ -470,7 +466,7 @@ russ_conn_send_request(struct russ_conn *self, russ_timeout timeout) {
 
 	/* patch size and send */
 	russ_enc_i(buf, bend, bp-buf-4);
-	if (russ_writen_timeout(self->sd, buf, bp-buf, timeout) < bp-buf) {
+	if (russ_writen_deadline(self->sd, buf, bp-buf, deadline) < bp-buf) {
 		return -1;
 	}
 	return 0;
@@ -482,7 +478,7 @@ russ_conn_send_request(struct russ_conn *self, russ_timeout timeout) {
 * Connect to a service, send request information, and get fds.
 * Received fds are saved to the connection object.
 *
-* @param timeout	time allowed to complete operation
+* @param deadline	deadline to complete operation
 * @param op		operation string
 * @param addr		full service address
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
@@ -490,7 +486,7 @@ russ_conn_send_request(struct russ_conn *self, russ_timeout timeout) {
 * @return		connection object; NULL on failure
 */
 struct russ_conn *
-russ_dialv(russ_timeout timeout, char *op, char *addr, char **attrv, char **argv) {
+russ_dialv(russ_deadline deadline, char *op, char *addr, char **attrv, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
 	struct russ_target	*targ;
@@ -506,7 +502,7 @@ russ_dialv(russ_timeout timeout, char *op, char *addr, char **attrv, char **argv
 	}
 	if (((conn->sd = __connect(targ->saddr)) < 0)
 		|| (russ_request_init(&(conn->req), RUSS_PROTOCOL_STRING, op, targ->spath, attrv, argv) < 0)
-		|| (russ_conn_send_request(conn, timeout) < 0)
+		|| (russ_conn_send_request(conn, deadline) < 0)
 		|| (russ_conn_recvfds(conn) < 0)) {
 		goto free_request;
 	}
@@ -529,7 +525,7 @@ free_targ:
 *
 * See dialv() for more.
 *
-* @param timeout	time allowed to complete operation
+* @param deadline	deadline to complete operation
 * @param op		operation string
 * @param addr		full service address
 * @param attrv		array of attributes (as name=value strings)
@@ -537,7 +533,7 @@ free_targ:
 * @return		connection object, NULL on failure
 */
 struct russ_conn *
-russ_diall(russ_timeout timeout, char *op, char *addr, char **attrv, ...) {
+russ_diall(russ_deadline deadline, char *op, char *addr, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	void			*p;
@@ -563,7 +559,7 @@ russ_diall(russ_timeout timeout, char *op, char *addr, char **attrv, ...) {
 	}
 	va_end(ap);
 
-	conn = russ_dialv(timeout, addr, op, attrv, argv);
+	conn = russ_dialv(deadline, addr, op, attrv, argv);
 	free(argv);
 
 	return conn;
