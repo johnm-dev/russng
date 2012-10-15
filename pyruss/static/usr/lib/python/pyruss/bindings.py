@@ -188,7 +188,7 @@ libruss.russ_gettime.argtypes = []
 libruss.russ_gettime.restype = ctypes.c_int64
 
 libruss.russ_to_deadline.argtypes = [
-    ctype.c_int,
+    ctypes.c_int,
 ]
 libruss.russ_to_deadline.restype = ctypes.c_int64
 
