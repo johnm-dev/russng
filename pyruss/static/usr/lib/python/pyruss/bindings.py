@@ -184,8 +184,8 @@ libruss.russ_listener_loop.argtypes = [
 libruss.russ_listener_loop.restype = None
 
 # from time.h
-libruss.russ_deadline.argtypes = []
-libruss.russ_deadline.restype = ctypes.c_int64
+libruss.russ_gettime.argtypes = []
+libruss.russ_gettime.restype = ctypes.c_int64
 
 libruss.russ_to_deadline.argtypes = [
     ctype.c_int,
