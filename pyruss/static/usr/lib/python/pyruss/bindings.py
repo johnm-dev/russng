@@ -34,6 +34,7 @@ import traceback
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
 RUSS_CONN_NFDS = 32
+RUSS_CONN_STD_NFDS = 4
 RUSS_DEADLINE_NEVER = (2<<63)-1 # INT64_MAX
 
 #
@@ -179,6 +180,8 @@ libruss.russ_listener_free.restype = ctypes.POINTER(russ_listener_Structure)
 # russ_loop
 libruss.russ_listener_loop.argtypes = [
     ctypes.POINTER(russ_listener_Structure),
+    ctypes.c_void_p,
+    ctypes.c_void_p,
     ctypes.c_void_p,
 ]
 libruss.russ_listener_loop.restype = None
@@ -371,16 +374,18 @@ class Listener:
         else:
             return -1
 
-    def _loop(self, accept_handler, req_handler):
+    def _loop(self, answer_handler, accept_handler, req_handler):
         # TODO: support accept_handler
         def raw_handler(conn_ptr):
             req_handler(ServerConn(conn_ptr))
             return 0    # TODO: allow a integer return value from handler
-        libruss.russ_listener_loop(self.lis_ptr, None, HANDLERFUNC(raw_handler))
+        libruss.russ_listener_loop(self.lis_ptr, None, None, HANDLERFUNC(raw_handler))
 
-    def loop(self, accept_handler, req_handler):
+    def loop(self, answer_handler, accept_handler, req_handler):
         """Fork-based loop.
         """
+        if answer_handler:
+            raise Exception("error: answer_handler not supported")
         if accept_handler:
             raise Exception("error: accept_handler not supported")
 
@@ -405,7 +410,7 @@ class Listener:
                 #traceback.print_exc()
                 pass
 
-    def loop_thread(self, accept_handler, req_handler):
+    def loop_thread(self, answer_handler, accept_handler, req_handler):
         """Thread-based loop.
         """
         def pre_handler_thread(conn, req_handler):
@@ -414,6 +419,8 @@ class Listener:
                 return
             req_handler(conn)
 
+        if answer_handler:
+            raise Exception("error: answer_handler not supported")
         if accept_handler:
             raise Exception("error: accept_handler not supported")
 

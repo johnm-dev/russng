@@ -307,21 +307,17 @@ _random_patch(struct russ_conn *conn) {
 
 * The spaths: /id/, /host/, /first/, /next/, /net/, and /random/ are
 * treated specially before an accept is done. If none of the special
-* spaths are found, the default accept function russ_conn_accept()
-* is called (for further processing).
+* spaths are found, the default accept handler is called (for
+* further processing).
 *
 * @param self		connection object
-* @param nfds		number of fds in cfds array
-* @param cfds		satisfies call requirement; ignored
-* @param sfds		satisfies call requirement; ignored
 * @return		0 on success; -1 on failure
 */
 
 int
-alt_russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
+alt_accept_handler(struct russ_conn *self) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
-	int			i;
 
 	/* ordered by expected use */
 	req = &(self->req);
@@ -338,7 +334,7 @@ alt_russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	} else if (strncmp(req->spath, "/random/", 8) == 0) {
 		_random_patch(self);
 	} else {
-		return russ_conn_accept(self, nfds, cfds, sfds);
+		return russ_standard_accept_handler(self);
 	}
 
 	/* dial next service and splice */
@@ -406,33 +402,15 @@ master_handler(struct russ_conn *conn) {
 	exit(0);
 }
 
-void
-alt_russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_handler, russ_req_handler req_handler) {
+struct russ_conn *
+alt_answer_handler(struct russ_listener *self) {
 	struct russ_conn	*conn;
 
-	while (1) {
-		if ((conn = russ_listener_answer(self, RUSS_DEADLINE_NEVER)) == NULL) {
-			fprintf(stderr, "error: cannot answer connection\n");
-			continue;
-		}
-
+	if ((conn = russ_listener_answer(self, RUSS_DEADLINE_NEVER)) != NULL) {
 		hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
 		random(); /* tickle */
-
-		if (fork() == 0) {
-			russ_listener_close(self);
-			self = russ_listener_free(self);
-			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)
-				|| (alt_russ_conn_accept(conn, 0, NULL, NULL) < 0)) {
-				exit(-1);
-			}
-			req_handler(conn);
-			russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
-			exit(0);
-		}
-		russ_conn_close(conn);
-		conn = russ_conn_free(conn);
 	}
+	return conn;
 }
 
 int
@@ -507,6 +485,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	alt_russ_listener_loop(lis, NULL, master_handler);
+	russ_listener_loop(lis, alt_answer_handler, alt_accept_handler, master_handler);
 	exit(0);
 }
