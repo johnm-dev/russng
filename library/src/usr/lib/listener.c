@@ -173,24 +173,43 @@ russ_listener_free(struct russ_listener *self) {
 }
 
 /**
-* Loop to accept connections and call a handler in child process.
+* Loop to answer and accept connections and them in a child process.
 *
-* Listen on the socket and fork a new process for each connection.
-* All connections are answered in the main process, but requests
-* are waited on and accepted in the child process. This prevents
-* a DoS by a partial request from occupying the loop. Each valid
-* request is the passed to the given handler. The handler is
-* responsible for servicing requests, closing descriptors as
-* appropriate and exiting (with russ_conn_exit()).
+* The loop consists of 3 phases:
+* 1) answer incoming connection on listener socket (prior to fork)
+* 2) accept request on new connection object (after fork)
+* 3) service request
+*
+* A handler for each phase can be given. However, only the request
+* handler is needed. There are standard/default handlers available
+* for the answer_handler, the accept_handler when each are set to
+* NULL.
+*
+* The request handler is responsible for servicing requests, closing
+* descriptors as appropriate and exiting (with russ_conn_exit()).
 *
 * @param self		listener object
-* @param handler	handler function to call on connection
+* @param answer_handler	handler function to call on listener object
+* @param accept_handler	handler function to call new connection
+*			object (from answer)
+* @param req_handler	handler function to call on accepted
 */
 void
-russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_handler, russ_req_handler req_handler) {
+russ_listener_loop(struct russ_listener *self, russ_answer_handler answer_handler,
+	russ_accept_handler accept_handler, russ_req_handler req_handler) {
+
 	struct russ_conn	*conn;
 
+	if (answer_handler == NULL) {
+		answer_handler = russ_standard_answer_handler;
+	}
+	if (accept_handler == NULL) {
+		accept_handler = russ_standard_accept_handler;
+	}
+
 	while (1) {
+		if ((conn = answer_handler(self, RUSS_DEADLINE_NEVER)) == NULL)
+
 		if ((conn = russ_listener_answer(self, RUSS_DEADLINE_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
@@ -199,7 +218,7 @@ russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_handle
 			russ_listener_close(self);
 			self = russ_listener_free(self);
 			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)
-				|| (russ_conn_accept(conn, 0, NULL, NULL) < 0)) {
+				|| (accept_handler(conn) < 0)) {
 				exit(-1);
 			}
 			req_handler(conn);

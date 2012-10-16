@@ -200,7 +200,7 @@ main(int argc, char **argv) {
 	conn->fds[0] = -1;
 	conn->fds[1] = -1;
 	conn->fds[2] = -1;
-	if (russ_run_forwarders(RUSS_CONN_MIN_NFDS-1, fwds) < 0) {
+	if (russ_run_forwarders(RUSS_CONN_STD_NFDS-1, fwds) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
 		exit(-1);
 	}

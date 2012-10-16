@@ -44,7 +44,7 @@
 #endif
 
 #define RUSS_CONN_NFDS		32
-#define RUSS_CONN_MIN_NFDS	4
+#define RUSS_CONN_STD_NFDS	4
 #define RUSS_MAX_PATH_LEN	8192
 #define RUSS_MAX_ATTRC		1024
 #define RUSS_MAX_ARGC		1024
@@ -143,8 +143,9 @@ struct pipe_fds {
 
 typedef int64_t russ_deadline;
 
+typedef int (*russ_accept_handler)(struct russ_conn *);
+typedef struct russ_conn *(*russ_answer_handler)(struct russ_listener *, russ_deadline);
 typedef void (*russ_req_handler)(struct russ_conn *);
-typedef void (*russ_accept_handler)(struct russ_conn *, int, int *, int *);
 
 /* addr.c */
 struct russ_target *russ_find_service_target(char *);
@@ -171,6 +172,10 @@ int russ_forwarder_start(struct russ_forwarder *);
 int russ_forwarder_join(struct russ_forwarder *);
 int russ_run_forwarders(int, struct russ_forwarder *);
 
+/* handlers.c */
+int russ_standard_accept_handler(struct russ_conn *);
+struct russ_conn *russ_standard_answer_handler(struct russ_listener *, russ_deadline);
+
 /* helpers.c */
 struct russ_conn *russ_execv(russ_deadline, char *, char **, char **);
 struct russ_conn *russ_execl(russ_deadline, char *, char **, ...);
@@ -191,7 +196,7 @@ struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_conn *russ_listener_answer(struct russ_listener *, russ_deadline);
 void russ_listener_close(struct russ_listener *);
 struct russ_listener *russ_listener_free(struct russ_listener *);
-void russ_listener_loop(struct russ_listener *, russ_accept_handler, russ_req_handler);
+void russ_listener_loop(struct russ_listener *, russ_answer_handler, russ_accept_handler, russ_req_handler);
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);

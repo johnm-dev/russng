@@ -51,19 +51,16 @@ char	*HELP =
 * Example alternate accept handler.
 *
 * @param self		connection object
-* @param nfds		number of fds in cfds array
-* @param cfds		satisfies call requirement; ignored
-* @param sfds		satisfies call requirement; ignored
 * @return		0 on success; -1 on failure
 */
 int
-alt_russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
+alt_accept_handler(struct russ_conn *self) {
 	struct russ_conn	*conn;
 	struct russ_request	*req;
 
 	req = &(self->req);
 	if (strcmp(req->spath, "/") == 0) {
-		return russ_conn_accept(self, nfds, cfds, sfds);
+		return russ_standard_accept_handler(self);
 	}
 
 	if ((conn = russ_dialv(-1, req->op, req->spath, req->attrv, req->argv)) == NULL) {
@@ -108,32 +105,6 @@ print_usage(char **argv) {
 );
 }
 
-void
-alt_russ_listener_loop(struct russ_listener *self, russ_accept_handler accept_handler, russ_req_handler handler) {
-	struct russ_conn	*conn;
-
-	while (1) {
-		if ((conn = russ_listener_answer(self, RUSS_DEADLINE_NEVER)) == NULL) {
-			fprintf(stderr, "error: cannot answer connection\n");
-			continue;
-		}
-
-		if (fork() == 0) {
-			russ_listener_close(self);
-			self = russ_listener_free(self);
-			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)
-				|| (alt_russ_conn_accept(conn, 0, NULL, NULL) < 0)) {
-				exit(-1);
-			}
-			handler(conn);
-			russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
-			exit(0);
-		}
-		russ_conn_close(conn);
-		conn = russ_conn_free(conn);
-	}
-}
-
 int
 main(int argc, char **argv) {
 	struct russ_listener	*lis;
@@ -157,6 +128,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	alt_russ_listener_loop(lis, NULL, master_handler);
+	russ_listener_loop(lis, NULL, alt_accept_handler, master_handler);
 	exit(0);
 }
