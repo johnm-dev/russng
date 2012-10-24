@@ -191,6 +191,6 @@ class Server:
 
     def loop(self):
         if self.server_type == "fork":
-            self.lis.loop(None, self.service_tree.handler)
+            self.lis.loop(None, None, self.service_tree.handler)
         elif self.server_type == "thread":
             self.lis.loop_thread(None, self.service_tree.handler)
