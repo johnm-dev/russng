@@ -33,13 +33,30 @@ import traceback
 
 libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
+#
+# C library interfaces
+#
+
+# russ.h
 RUSS_CONN_NFDS = 32
 RUSS_CONN_STD_NFDS = 4
 RUSS_DEADLINE_NEVER = (2<<63)-1 # INT64_MAX
+RUSS_MAX_ATTRC = 1024
+RUSS_MAX_ARGC = 1024
 
-#
+RUSS_MSG_BAD_ARGS = "error: bad/missing arguments"
+RUSS_MSG_BAD_OP = "error: unsupported operation"
+RUSS_MSG_NO_DIAL = "error: cannot dial service"
+RUSS_MSG_NO_EXIT = "error: no exit status"
+RUSS_MSG_NO_SERVICE = "error: no service"
+RUSS_MSG_UNDEF_SERVICE = "warning: undefined service"
+
+RUSS_EXIT_SUCCESS = 0
+RUSS_EXIT_FAILURE = -1
+RUSS_EXIT_CALL_FAILURE = -126
+RUSS_EXIT_SYS_FAILURE = -127
+
 # data type descriptions
-#
 class russ_credentials_Structure(ctypes.Structure):
     _fields_ = [
         ("pid", ctypes.c_long),
@@ -70,21 +87,7 @@ class russ_conn_Structure(ctypes.Structure):
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
     ]
 
-#
-# C library interfaces
-#
-
-# russ_dialv
-libruss.russ_dialv.argtypes = [
-    ctypes.c_int64,  # russ_deadline
-    ctypes.c_char_p,
-    ctypes.c_char_p,
-    ctypes.POINTER(ctypes.c_char_p),
-    ctypes.POINTER(ctypes.c_char_p),
-]
-libruss.russ_dialv.restype = ctypes.POINTER(russ_conn_Structure)
-
-# russ_conn_accept
+# conn.c
 libruss.russ_conn_accept.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_int,
@@ -96,32 +99,29 @@ libruss.russ_conn_accept.argtypes = [
 ]
 libruss.russ_conn_accept.restype = ctypes.c_int
 
-# russ_conn_await_request
 libruss.russ_conn_await_request.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_int64,  # russ_deadline
 ]
 libruss.russ_conn_await_request.restype = ctypes.c_int
 
-# russ_conn_close
-libruss.russ_conn_close.argtypes = [ctypes.c_void_p]
+libruss.russ_conn_close.argtypes = [
+    ctypes.c_void_p
+]
 libruss.russ_conn_close.restype = None
 
-# russ_conn_close_fd
 libruss.russ_conn_close_fd.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_int,
 ]
 libruss.russ_conn_close_fd.restype = ctypes.c_int
 
-# russ_conn_exit
 libruss.russ_conn_exit.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_int,
 ]
 libruss.russ_conn_exit.restype = ctypes.c_int
 
-# russ_conn_fatal
 libruss.russ_conn_fatal.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_char_p,
@@ -129,13 +129,25 @@ libruss.russ_conn_fatal.argtypes = [
 ]
 libruss.russ_conn_fatal.restype = ctypes.c_int
 
-# russ_conn_free
-libruss.russ_conn_free_argtypes = [
+libruss.russ_conn_free.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
 ]
 libruss.russ_conn_free.restype = ctypes.POINTER(russ_conn_Structure)
 
-# russ_conn_wait
+libruss.russ_conn_sendfds.argtypes = [
+    ctypes.POINTER(russ_conn_Structure),
+    ctypes.c_int,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+]
+libruss.russ_conn_sendfds.restype = ctypes.c_int
+
+libruss.russ_conn_splice.argtypes = [
+    ctypes.POINTER(russ_conn_Structure),
+    ctypes.POINTER(russ_conn_Structure),
+]
+libruss.russ_conn_splice.restype = ctypes.c_int
+
 libruss.russ_conn_wait.argstypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.POINTER(ctypes.c_int),
@@ -143,7 +155,28 @@ libruss.russ_conn_wait.argstypes = [
 ]
 libruss.russ_conn_wait.restype = ctypes.c_int
 
-# russ_announce
+libruss.russ_dialv.argtypes = [
+    ctypes.c_int64,  # russ_deadline
+    ctypes.c_char_p,
+    ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_char_p),
+    ctypes.POINTER(ctypes.c_char_p),
+]
+libruss.russ_dialv.restype = ctypes.POINTER(russ_conn_Structure)
+
+# handlers.c
+libruss.russ_standard_accept_handler.argtypes = [
+    ctypes.POINTER(russ_conn_Structure)
+]
+libruss.russ_standard_accept_handler.restype = ctypes.c_int
+
+libruss.russ_standard_answer_handler.argtypes = [
+    ctypes.POINTER(russ_listener_Structure),
+    ctypes.c_int64,
+]
+libruss.russ_standard_answer_handler.restype = ctypes.POINTER(russ_conn_Structure)
+
+# listener.c
 libruss.russ_announce.argtypes = [
     ctypes.c_char_p,
     ctypes.c_uint,
@@ -152,32 +185,22 @@ libruss.russ_announce.argtypes = [
 ]
 libruss.russ_announce.restype = ctypes.POINTER(russ_listener_Structure)
 
-# russ_unlink
-libruss.russ_unlink.argtypes = [
-    ctypes.c_char_p,
-]
-libruss.russ_unlink.restype = ctypes.c_int
-
-# russ_listener_answer
 libruss.russ_listener_answer.argtypes = [
     ctypes.POINTER(russ_listener_Structure),
     ctypes.c_int64,  # russ_deadline
 ]
 libruss.russ_listener_answer.restype = ctypes.POINTER(russ_conn_Structure)
 
-# russ_listener_close
 libruss.russ_listener_close.argtypes = [
     ctypes.POINTER(russ_listener_Structure),
 ]
 libruss.russ_listener_close.restype = None
 
-# russ_listener_free
 libruss.russ_listener_free.argtypes = [
     ctypes.POINTER(russ_listener_Structure),
 ]
 libruss.russ_listener_free.restype = ctypes.POINTER(russ_listener_Structure)
 
-# russ_loop
 libruss.russ_listener_loop.argtypes = [
     ctypes.POINTER(russ_listener_Structure),
     ctypes.c_void_p,
@@ -185,6 +208,12 @@ libruss.russ_listener_loop.argtypes = [
     ctypes.c_void_p,
 ]
 libruss.russ_listener_loop.restype = None
+
+# misc.c
+libruss.russ_unlink.argtypes = [
+    ctypes.c_char_p,
+]
+libruss.russ_unlink.restype = ctypes.c_int
 
 # from time.h
 libruss.russ_gettime.argtypes = []
@@ -206,7 +235,7 @@ libruss.russ_to_timeout.argtypes = [
 libruss.russ_to_timeout.restype = ctypes.c_int
 
 #
-# helpers
+# python-based helpers
 #
 def list_of_strings_to_c_string_array(l):
     """Create "char **" from list of strings. All None elements are
@@ -221,7 +250,7 @@ def list_of_strings_to_c_string_array(l):
     return c_strings
         
 #
-# Application-facing classes
+# Application-facing classes and more
 #
 def announce(path, mode, uid, gid):
     """Announce a service.
@@ -347,7 +376,10 @@ class ServerConn(Conn):
     def fatal(self, msg, exit_status):
         return libruss.russ_conn_fatal(self.conn_ptr, msg, exit_status)
 
-HANDLERFUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
+    def standard_accept_handler(self):
+        return libruss.russ_standard_accept_handler(self.conn_ptr)
+
+REQ_HANDLER_FUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
 class Listener:
     def __init__(self, lis_ptr):
@@ -379,26 +411,32 @@ class Listener:
         def raw_handler(conn_ptr):
             req_handler(ServerConn(conn_ptr))
             return 0    # TODO: allow a integer return value from handler
-        libruss.russ_listener_loop(self.lis_ptr, None, None, HANDLERFUNC(raw_handler))
+        libruss.russ_listener_loop(self.lis_ptr, None, None, REQ_HANDLER_FUNC(raw_handler))
 
     def loop(self, answer_handler, accept_handler, req_handler):
         """Fork-based loop.
         """
         if answer_handler:
             raise Exception("error: answer_handler not supported")
-        if accept_handler:
-            raise Exception("error: accept_handler not supported")
+        else:
+            answer_handler = Listener.standard_answer_handler
 
         while self.get_sd() >= 0:
             try:
-                conn = self.answer(-1)
+                conn = answer_handler(self, RUSS_DEADLINE_NEVER)
                 if conn == None:
                     sys.stderr.write("error: cannot answer connection\n")
                     continue
+
+                if accept_handler:
+                    raise Exception("error: accept_handler not supported")
+                else:
+                    accept_handler = ServerConn.standard_accept_handler
+
                 if os.fork() == 0:
                     self.close()
-                    if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
-                        or conn.accept(0, None, None) < 0:
+                    if accept_handler(conn) < 0:
+                        conn.close()
                         os.exit(-1)
                     req_handler(conn)
                     os.exit(0)
@@ -437,3 +475,10 @@ class Listener:
             except:
                 #traceback.print_exc()
                 pass
+
+    def standard_answer_handler(self, deadline):
+        try:
+            conn_ptr = libruss.russ_standard_answer_handler(self.lis_ptr, deadline)
+        except:
+            traceback.print_exc()
+        return conn_ptr and ServerConn(conn_ptr)
