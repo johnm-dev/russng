@@ -438,9 +438,9 @@ class Listener:
                     if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
                         or accept_handler(conn) < 0:
                         conn.close()
-                        os.exit(-1)
+                        sys.exit(-1)
                     req_handler(conn)
-                    os.exit(0)
+                    sys.exit(0)
                 conn.close()
                 del conn
             except SystemExit:
