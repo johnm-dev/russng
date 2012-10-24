@@ -420,6 +420,10 @@ class Listener:
             raise Exception("error: answer_handler not supported")
         else:
             answer_handler = Listener.standard_answer_handler
+        if accept_handler:
+            raise Exception("error: accept_handler not supported")
+        else:
+            accept_handler = ServerConn.standard_accept_handler
 
         while self.get_sd() >= 0:
             try:
@@ -427,11 +431,6 @@ class Listener:
                 if conn == None:
                     sys.stderr.write("error: cannot answer connection\n")
                     continue
-
-                if accept_handler:
-                    raise Exception("error: accept_handler not supported")
-                else:
-                    accept_handler = ServerConn.standard_accept_handler
 
                 if os.fork() == 0:
                     self.close()
@@ -454,18 +453,22 @@ class Listener:
         """
         def pre_handler_thread(conn, req_handler):
             if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
-                or conn.accept(0, None, None) < 0:
+                or accept_handler(conn) < 0:
                 return
             req_handler(conn)
 
         if answer_handler:
             raise Exception("error: answer_handler not supported")
+        else:
+            answer_handler = Listener.standard_answer_handler
         if accept_handler:
             raise Exception("error: accept_handler not supported")
+        else:
+            accept_handler = ServerConn.standard_accept_handler
 
         while True:
             try:
-                conn = self.answer(-1)
+                conn = answer_handler(self, RUSS_DEADLINE_NEVER)
                 if conn == None:
                     sys.stderr.write("error: cannot answer connection\n")
                     continue
