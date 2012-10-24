@@ -208,9 +208,7 @@ russ_listener_loop(struct russ_listener *self, russ_answer_handler answer_handle
 	}
 
 	while (1) {
-		if ((conn = answer_handler(self, RUSS_DEADLINE_NEVER)) == NULL)
-
-		if ((conn = russ_listener_answer(self, RUSS_DEADLINE_NEVER)) == NULL) {
+		if ((conn = answer_handler(self, RUSS_DEADLINE_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
