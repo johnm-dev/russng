@@ -264,10 +264,10 @@ def dialv(deadline, op, saddr, attrs, args):
     if attrs == None:
         attrs = {}
     attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
-
+    if args == None:
+        args = []
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
-
     return ClientConn(libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv))
 
 dial = dialv
