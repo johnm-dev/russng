@@ -268,7 +268,8 @@ def dialv(deadline, op, saddr, attrs, args):
         args = []
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
-    return ClientConn(libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv))
+    conn_ptr = libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv)
+    return conn_ptr and ClientConn(conn_ptr)
 
 dial = dialv
 
