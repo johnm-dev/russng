@@ -277,6 +277,15 @@ def execv(deadline, saddr, attrs, args):
     """
     return dialv(deadline, "execute", saddr, attrs, args)
 
+def gettime():
+    return libruss.russ_gettime()
+
+def to_deadline(timeout):
+    return libruss.russ_to_deadline(timeout)
+
+def to_timeout(deadline):
+    return libruss.russ_to_timeout(deadline)
+
 def unlink(path):
     """Unlink service path.
     """
