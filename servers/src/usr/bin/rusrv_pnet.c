@@ -54,6 +54,9 @@ struct hostslist	hostslist;
 
 char	*HELP = 
 "Provides access to remote user@host using ssh.\n"
+"count\n"
+"\n"
+"    Output the number of targets"
 "\n"
 "first/... <args>\n"
 "\n"
@@ -356,7 +359,10 @@ master_handler(struct russ_conn *conn) {
 
 	outfd = conn->fds[1];
 	req = &(conn->req);
-	if ((strcmp(req->spath, "/first/") == 0)
+	if (strcmp(req->spath, "/count") == 0) {
+		russ_dprintf(outfd, "%d", hostslist.nhosts);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+	} else if ((strcmp(req->spath, "/first/") == 0)
 		|| (strcmp(req->spath, "/host/") == 0)
 		|| (strcmp(req->spath, "/id/") == 0)
 		|| (strcmp(req->spath, "/net/") == 0)
