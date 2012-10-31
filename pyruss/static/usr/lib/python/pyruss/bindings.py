@@ -448,7 +448,16 @@ class Listener:
                         or accept_handler(conn) < 0:
                         conn.close()
                         sys.exit(-1)
-                    req_handler(conn)
+                    try:
+                        req_handler(conn)
+                    except:
+                        pass
+                    try:
+                        if conn:
+                            conn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
+                            conn.close()
+                    except:
+                        pass
                     sys.exit(0)
                 conn.close()
                 del conn
@@ -465,7 +474,16 @@ class Listener:
             if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
                 or accept_handler(conn) < 0:
                 return
-            req_handler(conn)
+            try:
+                req_handler(conn)
+            except:
+                pass
+            try:
+                if conn:
+                    conn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
+                    conn.close()
+            except:
+                pass
 
         if answer_handler:
             raise Exception("error: answer_handler not supported")
