@@ -304,7 +304,7 @@ class Conn:
         self.conn_ptr = None
 
     def close_fd(self, i):
-        return libruss.russ_close_fd(self.conn_ptr, i)
+        return libruss.russ_conn_close_fd(self.conn_ptr, i)
 
     def get_cred(self):
         cred = self.conn_ptr.contents.cred
