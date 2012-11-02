@@ -38,13 +38,11 @@
 #include "russ_conf.h"
 #include "russ.h"
 
+char			*cgroups_home;
 struct russ_conf	*conf = NULL;
+
 char	*HELP =
 "Execute a command/program.\n"
-"\n"
-"job <cgroup> <cmd>\n"
-"    Execute a shell command string with a configured login shell\n"
-"    within a cgroup.\n"
 "\n"
 "login <cmd>\n"
 "    Execute a shell command string with a configured login shell.\n"
@@ -54,6 +52,10 @@ char	*HELP =
 "\n"
 "simple <path> [<arg> ...]\n"
 "    Execute a program with arguments directly (no shell).\n"
+"\n"
+"To specify a cgroup in which to execute, set the cg_path attribute\n"
+"to an absolute path or a path relative to the cgroups home (i.e.,\n"
+"mount point).\n"
 "\n"
 "All services use the given attribute settings to configure the\n"
 "environment and are applied before shell settings.\n";
@@ -101,25 +103,57 @@ squote_string(char *s) {
 	return s2;
 }
 
+/*
+* Find "cg_path" in connection attrv list and return the value part
+* (i.e., string after the "cg_path=").
+*/
+char *
+get_cg_path(char **attrv) {
+	if (attrv) {
+		for (; *attrv != NULL; attrv++) {
+			if (strncmp(*attrv, "cg_path=", 8) == 0) {
+				return &((*attrv)[8]);
+			}
+		}
+	}
+	return NULL;
+}
+
 void
 op_execute_handler(struct russ_conn *conn) {
 	struct russ_request	*req;
 	FILE			*f;
 	char			*cmd, **argv;
 	char			*shell, *lshell, *home;
-	char			cgpath[1024];
+	char			*cg_path, cg_tasks_path[1024];
 	pid_t			pid;
 	int			argc, i, status;
 
 	req = &(conn->req);
+
+	/* find cg_path and set cg_tasks_path */
+	if ((cg_path = get_cg_path(req->attrv)) != NULL) {
+		if (cgroups_home == NULL) {
+			russ_conn_fatal(conn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
+			return;
+		} else if (strncmp(cg_path, "/", 1) != 0) {
+			/* absolutize relative path */
+			if (snprintf(cg_tasks_path, sizeof(cg_tasks_path), "%s/%s/tasks", cgroups_home, cg_path) < 0) {	
+				russ_conn_fatal(conn, "error: bad cgroup", RUSS_EXIT_FAILURE);
+				return;
+			}
+		} else if (snprintf(cg_tasks_path, sizeof(cg_tasks_path), "%s/tasks", cg_path) < 0) {	
+			russ_conn_fatal(conn, "error: bad cgroup", RUSS_EXIT_FAILURE);
+			return;
+		}
+	}
 
 	/* select service */
 	if (strcmp(req->spath, "/simple") == 0) {
 		cmd = req->argv[0];
 		argv = req->argv;
 		home = "/";
-	} else if ((strcmp(req->spath, "/job") == 0)
-		|| (strcmp(req->spath, "/login") == 0)
+	} else if ((strcmp(req->spath, "/login") == 0)
 		|| (strcmp(req->spath, "/shell") == 0)) {
 		/* argv[] = {shell, "-c", cmd, NULL} */
 		if ((argv = malloc(sizeof(char *)*4)) == NULL) {
@@ -136,23 +170,7 @@ op_execute_handler(struct russ_conn *conn) {
 		/* argv[2] is set below */
 		argv[3] = NULL;
 
-		if ((strcmp(req->spath, "/job") == 0)
-			&& (req->argv[0] != NULL)
-			&& (req->argv[1] != NULL)) {
-			argv[0] = lshell;
-			argv[2] = req->argv[1];
-
-			/* setup for cgroups */
-			if ((snprintf(cgpath, sizeof(cgpath), "%s/tasks", req->argv[0]) < 0)
-				|| ((f = fopen(cgpath, "w")) ==  NULL)
-				|| (fprintf(f, "%d", getpid()) < 0)) {
-				fclose(f);
-				russ_conn_fatal(conn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
-				russ_conn_close(conn);
-				exit(0);
-			}
-			fclose(f);
-		} else if ((strcmp(req->spath, "/login") == 0)
+		if ((strcmp(req->spath, "/login") == 0)
 			&& (req->argv[0] != NULL)) {
 			argv[0] = lshell;
 			argv[2] = req->argv[0];
@@ -174,6 +192,20 @@ op_execute_handler(struct russ_conn *conn) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		russ_conn_close(conn);
 		exit(0);
+	}
+
+	if (cgroups_home && cg_path) {
+		/* migrate self process to cgroup (affects child, too) */
+		if (((f = fopen(cg_tasks_path, "w")) ==  NULL)
+			|| (fprintf(f, "%d", getpid()) < 0)) {
+			if (f) {
+				fclose(f);
+			}
+			russ_conn_fatal(conn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
+			russ_conn_close(conn);
+			exit(0);
+		}
+		fclose(f);
 	}
 
 	/* TODO: set minimal settings:
@@ -273,6 +305,7 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
+	cgroups_home = russ_conf_get(conf, "job", "cgroups_home", NULL);
 	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
 		russ_conf_getsint(conf, "server", "mode", 0600),
 		russ_conf_getint(conf, "server", "uid", getuid()),
