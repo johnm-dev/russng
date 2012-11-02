@@ -198,7 +198,7 @@ op_execute_handler(struct russ_conn *conn) {
 
 		/* should not get here! */
 		russ_dprintf(conn->fds[2], "error: could not execute\n");
-		exit(-1);
+		exit(1);
 	}
 	close(conn->fds[0]);
 	close(conn->fds[1]);
@@ -270,7 +270,7 @@ main(int argc, char **argv) {
 		exit(0);
 	} else if ((argc < 2) || ((conf = russ_conf_init(&argc, argv)) == NULL)) {
 		fprintf(stderr, "error: cannot configure\n");
-		exit(-1);
+		exit(1);
 	}
 
 	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
@@ -279,7 +279,7 @@ main(int argc, char **argv) {
 		russ_conf_getint(conf, "server", "gid", getgid()));
 	if (lis == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
-		exit(-1);
+		exit(1);
 	}
 	russ_listener_loop(lis, NULL, NULL, master_handler);
 }

@@ -471,17 +471,17 @@ main(int argc, char **argv) {
 		exit(0);
 	} else if ((argc < 2) || ((conf = russ_conf_init(&argc, argv)) == NULL)) {
 		fprintf(stderr, "error: cannot configure\n");
-		exit(-1);
+		exit(1);
 	}
 
 	if (argc < 2) {
 		fprintf(stderr, "error: missing hosts file\n");
-		exit(-1);
+		exit(1);
 	}
 	hostsfilename = argv[1];
 	if (load_hostsfile(hostsfilename) < 0) {
 		fprintf(stderr, "error: could not load hosts file\n");
-		exit(-1);
+		exit(1);
 	}
 
 	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
@@ -490,7 +490,7 @@ main(int argc, char **argv) {
 		russ_conf_getint(conf, "server", "gid", getgid()));
 	if (lis == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
-		exit(-1);
+		exit(1);
 	}
 	russ_listener_loop(lis, alt_answer_handler, alt_accept_handler, master_handler);
 	exit(0);

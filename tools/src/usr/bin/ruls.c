@@ -73,7 +73,7 @@ main(int argc, char **argv) {
 		if ((strcmp(argv[1], "-t") == 0) || (strcmp(argv[1], "--timeout") == 0)) {
 			if (sscanf(argv[2], "%d", (int *)&timeout) < 0) {
 				fprintf(stderr, "error: bad timeout value\n");
-				exit(-1);
+				exit(1);
 			}
 			timeout *= 1000;
 			deadline = russ_to_deadline(timeout);
@@ -97,7 +97,7 @@ main(int argc, char **argv) {
 
 		if (conn == NULL) {
 			fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
-			exit(-1);
+			exit(RUSS_EXIT_CALL_FAILURE);
 		}
 
 		/* initialize forwarders (handing off fds) and start threads */
@@ -109,13 +109,13 @@ main(int argc, char **argv) {
 		conn->fds[2] = -1;
 		if (russ_run_forwarders(RUSS_CONN_STD_NFDS-1, fwds) < 0) {
 			fprintf(stderr, "error: could not forward bytes\n");
-			exit(-1);
+			exit(RUSS_EXIT_SYS_FAILURE);
 		}
 
 		/* wait for exit */
 		if (russ_conn_wait(conn, &exit_status, -1) < 0) {
 			fprintf(stderr, "error: unexpected connection event\n");
-			exit_status = -127;
+			exit_status = RUSS_EXIT_SYS_FAILURE;
 		}
 		russ_forwarder_join(&(fwds[1]));
 
@@ -128,7 +128,7 @@ main(int argc, char **argv) {
 
 		if ((dir = opendir(addr)) == NULL) {
 			fprintf(stderr, "error: cannot open directory\n");
-			exit_status = -1;
+			exit_status = 1;
 		} else {
 			while ((dent = readdir(dir)) != NULL) {
 				if (strcmp(dent->d_name, "..") == 0) {
@@ -149,7 +149,7 @@ main(int argc, char **argv) {
 		}
 	} else {
 		fprintf(stderr, "error: not a service or directory\n");
-		exit_status = -1;
+		exit_status = 1;
 	}
 
 	exit(exit_status);

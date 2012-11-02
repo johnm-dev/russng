@@ -124,11 +124,11 @@ main(int argc, char **argv) {
 			arg = argv[argi++];
 			if (attrc >= RUSS_MAX_ATTRC-1) {
 				fprintf(stderr, "error: too many attributes\n");
-				exit(-1);
+				exit(1);
 			}
 			if (strstr(arg, "=") == NULL) {
 				fprintf(stderr, "error: bad attribute format\n");
-				exit(-1);
+				exit(1);
 			}
 			attrv[attrc++] = arg;
 			attrv[attrc] = NULL;
@@ -141,13 +141,13 @@ main(int argc, char **argv) {
 			arg = argv[argi++];
 			if (sscanf(argv[argi], "%d", (int *)&timeout) < 0) {
 				fprintf(stderr, "error: bad timeout value\n");
-				exit(-1);
+				exit(1);
 			}
 			timeout *= 1000;
 			deadline = russ_to_deadline(timeout);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
-			exit(-1);
+			exit(1);
 		}
 	}
 
@@ -164,7 +164,7 @@ main(int argc, char **argv) {
 			conn = russ_execv(deadline, addr, attrv, &(argv[argi]));
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
-			exit(-1);
+			exit(1);
 		}
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
 		if (argi < argc) {
@@ -172,7 +172,7 @@ main(int argc, char **argv) {
 			conn = russ_help(deadline, addr);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
-			exit(-1);
+			exit(1);
 		}
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
 		if (argi < argc) {
@@ -180,16 +180,16 @@ main(int argc, char **argv) {
 			conn = russ_info(deadline, addr);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
-			exit(-1);
+			exit(1);
 		}
 	} else {
 		fprintf(stderr, "error: unknown program name\n");
-		exit(-1);
+		exit(1);
 	}
 
 	if (conn == NULL) {
 		fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
-		exit(-1);
+		exit(RUSS_EXIT_CALL_FAILURE);
 	}
 
 //fprintf(stderr, "STDIN OUT ERR (%d,%d,%d) fds (%d,%d,%d)\n", STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, conn->fds[0], conn->fds[1], conn->fds[2]);
@@ -202,13 +202,13 @@ main(int argc, char **argv) {
 	conn->fds[2] = -1;
 	if (russ_run_forwarders(RUSS_CONN_STD_NFDS-1, fwds) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
-		exit(-1);
+		exit(1);
 	}
 
 	/* wait for exit */
 	if (russ_conn_wait(conn, &exit_status, -1) < 0) {
 		fprintf(stderr, "error: unexpected connection event\n");
-		exit_status = -127;
+		exit_status = RUSS_EXIT_SYS_FAILURE;
 	}
 
 	russ_forwarder_join(&(fwds[1]));

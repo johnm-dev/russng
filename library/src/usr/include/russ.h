@@ -63,9 +63,9 @@
 
 /* common exit_status values */
 #define RUSS_EXIT_SUCCESS	0
-#define RUSS_EXIT_FAILURE	-1
-#define RUSS_EXIT_CALL_FAILURE	-126
-#define RUSS_EXIT_SYS_FAILURE	-127
+#define RUSS_EXIT_FAILURE	1
+#define RUSS_EXIT_CALL_FAILURE	126
+#define RUSS_EXIT_SYS_FAILURE	127
 
 /* forwarder reasons */
 #define RUSS_FWD_REASON_EOF	0
