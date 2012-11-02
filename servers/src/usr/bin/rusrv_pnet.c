@@ -410,10 +410,10 @@ master_handler(struct russ_conn *conn) {
 }
 
 struct russ_conn *
-alt_answer_handler(struct russ_listener *self) {
+alt_answer_handler(struct russ_listener *self, russ_deadline deadline) {
 	struct russ_conn	*conn;
 
-	if ((conn = russ_listener_answer(self, RUSS_DEADLINE_NEVER)) != NULL) {
+	if ((conn = russ_listener_answer(self, deadline)) != NULL) {
 		hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
 		random(); /* tickle */
 	}
