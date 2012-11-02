@@ -25,7 +25,7 @@ main(int argc, char **argv) {
 
 	if (argc == 1) {
 		fprintf(stderr, "error: bad/missing arguments\n");
-		exit(-1);
+		exit(1);
 	} else if ((argc == 2)
 		&& ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
 		print_usage(argv);

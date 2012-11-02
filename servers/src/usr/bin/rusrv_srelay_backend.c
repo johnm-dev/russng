@@ -163,7 +163,7 @@ main(int argc, char **argv) {
 	signal(SIGCHLD, SIG_IGN);
 
 	if ((lsd = setup_socket("", 8001)) < 0) {
-		exit(-1);
+		exit(1);
 	}
 	while (1) {
 		if ((csd = accept(lsd, (struct sockaddr *)&cliaddr, &clilen)) < 0) {

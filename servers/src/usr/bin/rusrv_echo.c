@@ -71,13 +71,13 @@ main(int argc, char **argv) {
 
 	if (argc != 2) {
 		print_usage(argv);
-		exit(-1);
+		exit(1);
 	}
 	saddr = argv[1];
 
 	if ((lis = russ_announce(saddr, 0666, getuid(), getgid())) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
-		exit(-1);
+		exit(1);
 	}
 	russ_listener_loop(lis, NULL, NULL, req_handler);
 }
