@@ -112,7 +112,7 @@ fi
 if [ -n "${RURUN_TAG_FORMAT}" ]; then
 	cg_path=`eval echo "$RURUN_TAG_FORMAT"`
 	if [ -n "${cg_path}" ]; then
-		attrs="-a cg_path=\"${cg_path}\""
+		attrs="-a cg_path=${cg_path}"
 	fi
 fi
 
