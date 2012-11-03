@@ -5,7 +5,7 @@
 function print_usage {
 	echo "usage: ${PROG_NAME} [options] ...
 
-Run an mpi program using russ.
+RUSS-specifc mpirun wrapper.
 
 Options:
 -f <filename>
@@ -26,8 +26,8 @@ PROG_NAME=`basename $0`
 
 export HYDRA_BOOTSTRAP_EXEC=${HYDRA_BOOTSTRAP_EXEC:-rurun}
 export HYDRA_BOOTSTRAP=${HYDRA_BOOTSTRAP:-rsh}
-export HYDRA_LAUNCHER_EXEC=${HYDRA_LAUNCHER_EXEC:-rurun}
 export HYDRA_LAUNCHER=${HYDRA_LAUNCHER:-rsh}
+export HYDRA_LAUNCHER_EXEC=${HYDRA_LAUNCHER_EXEC:-rurun}
 export HYDRA_LAUNCHER_AUTOFORK=0
 
 while [ $# -gt 0 ]; do
@@ -44,7 +44,7 @@ done
 
 # set up job tag
 if [ "${JOB_ID}" != "" ]; then
-	export RURUN_JOB_TAG=/cgroups/jobs/${JOB_ID}
+	export RURUN_JOB_TAG=/jobs/${JOB_ID}
 fi
 
 # set up pnet
@@ -65,4 +65,4 @@ fi
 ruls ${RURUN_PNET_ADDR}/id > /tmp/$$.host-indexes
 
 # start
-mpiexec -f /tmp/$$.host-indexes "${@}"
+mpiexec -f /tmp/$$.host-indexes "$*"
