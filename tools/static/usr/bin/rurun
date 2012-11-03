@@ -119,7 +119,17 @@ fi
 
 # set path
 if [ -n "${RURUN_PNET_ADDR}" ]; then
-	path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${colon}${target}"
+	case ${RURUN_TARGET_METHOD} in
+	host)
+		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${target}"
+		;;
+	id)
+		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${colon}${target}"
+		;;
+	*)
+		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}"
+		;;
+	esac
 else
 	if [ -n "${DEBUG}" ]; then
 		echo "warning: RURUN_PNET_ADDR is not set" 1>&2
