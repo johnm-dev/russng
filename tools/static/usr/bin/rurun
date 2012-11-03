@@ -1,0 +1,64 @@
+#! /bin/bash
+#
+# rurun
+
+function print_usage {
+	echo "usage: ${PROG_NAME} <target> ...
+
+Run a program on a target.
+
+If RURUN_PNET_ADDR is not defined, then a the ssh relay service is
+used to start the program in a shell. Otherwise, the pnet service at
+RURUN_PNET_ADDR is used route the connection to the target using the
+ssh relay service. pnet service targets are integer identifiers.
+
+If one of RURUN_JOB_TAG or RURUN_JOB_TAGT is defined, it is used to
+run the program within a job container. If using RURUN_JOB_TAGT,
+'-<target>' is appended.
+
+Environment variables:
+RURUN_EXEC_METHOD
+RURUN_JOB_TAG
+RURUN_JOB_TAGT
+RURUN_PNET_ADDR"
+}
+
+#
+# main
+#
+
+PROG_NAME=`basename $0`
+
+RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
+
+if [ $# -lt 2 ]; then
+	if [ $# -eq 1 ]; then
+		if [ $1 = "-h" -o $1 = "--help" ]; then
+			print_usage
+			exit 0
+		fi
+	fi
+	echo "error: bad/missing arguments"
+	exit -1
+else
+	target=$1; shift 1
+fi
+
+# relay address
+if [ "${RURUN_PNET_ADDR}" ]; then
+	addr="${RURUN_PNET_ADDR}/id/:${target}"
+else
+	addr="+/ssh/${target}"
+fi
+
+# add exec method and call
+if [ "${RURUN_JOB_TAG}" ]; then
+	addr="${addr}/+/exec/job"
+	exec ruexec ${addr} ${RURUN_JOB_TAG} "${@}"
+elif [ "${RURUN_JOB_TAGT}" ]; then
+	addr="${addr}/+/exec/job"
+	exec ruexec ${addr} ${RURUN_JOB_TAGT}-${target} "${@}"
+else
+	addr="${addr}/+/exec/${RURUN_EXEC_METHOD}"
+	exec ruexec ${addr} "${@}"
+fi
