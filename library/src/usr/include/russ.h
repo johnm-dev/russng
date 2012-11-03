@@ -59,6 +59,7 @@
 #define RUSS_MSG_NO_DIAL	"error: cannot dial service"
 #define RUSS_MSG_NO_EXIT	"error: no exit status"
 #define RUSS_MSG_NO_SERVICE	"error: no service"
+#define RUSS_MSG_NO_SWITCH_USER	"error: cannot switch user"
 #define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
 
 /* common exit_status values */
