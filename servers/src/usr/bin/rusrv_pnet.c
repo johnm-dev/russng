@@ -431,7 +431,7 @@ load_hostsfile(char *filename) {
 	if ((f = fopen(filename, "r")) == NULL) {
 		return -1;
 	}
-	for (i = 0; i < MAX_HOSTS; i++) {
+	for (i = 0, hostslist.nhosts = 0; i < MAX_HOSTS; i++) {
 		line = NULL;
 		if ((nbytes = getline(&line, &line_size, f)) < 0) {
 			break;
@@ -439,9 +439,14 @@ load_hostsfile(char *filename) {
 		if (line[nbytes-1] == '\n') {
 			line[nbytes-1] = '\0';
 		}
+		if ((line[0] == '\0') || (line[0] == '#')) {
+			/* ignore empty and comment lines */
+			free(line);
+			continue;
+		}
 		hostslist.hosts[i] = line;
+		hostslist.nhosts++;
 	}
-	hostslist.nhosts = i;
 	hostslist.next = -1;
 	return 0;
 }
