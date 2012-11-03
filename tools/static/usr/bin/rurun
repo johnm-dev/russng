@@ -2,12 +2,6 @@
 #
 # rurun
 
-# defaults
-RURUN_JOB_ID=${RURUN_JOB_ID:-${JOB_ID}}
-RURUN_TAG_FORMAT=${RURUN_TAG_FORMAT:-"jobs/\${RURUN_JOB_ID}-\${target}"}
-RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
-RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-id}
-
 function print_usage {
 	echo "usage: ${PROG_NAME} [options] <target> <arg> ...
 
@@ -98,6 +92,13 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+# defaults
+RURUN_JOB_ID=${RURUN_JOB_ID:-${JOB_ID}}
+RURUN_TAG_FORMAT=${RURUN_TAG_FORMAT:-"jobs/\${RURUN_JOB_ID}-\${target}"}
+RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
+RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-id}
+
+# debugging output
 if [ -n "${DEBUG}" ]; then
 	echo "-----"
 	echo "target (${target})"
