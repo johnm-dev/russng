@@ -1,0 +1,121 @@
+#! /bin/bash
+#
+# rumrun
+
+# given a targets specification, generate a list of the individual
+# target ids. target spec:
+# a - individual item
+# a:b - range a to b (non-inclusive), step 1
+# a:b:c - range a to b (non-inclusive), step c (where c is positive)
+function get_target_ids {
+	local target_ids=""
+	local head rest start end step
+
+	head=""
+	rest=$1; shift 1
+	while [ "${head}" != "${rest}" ]; do
+		head=${rest%%,*}
+		rest=${rest#*,}
+		start=${head%%:*}
+		endstep=${head#*:}
+		end=${endstep%%:*}
+		step=${endstep#*:}
+
+		if [ "${start}" = "${head}" -a "${end}" = "${head}" ]; then
+			# single item
+			target_ids="${target_ids} ${start}"
+		else
+			if [ "${step}" = "${endstep}" -a "${end}" = "${endstep}" ]; then
+				step=1
+			fi
+			# range
+			if [ "${start}" -gt "${end}" ]; then
+				echo "error: bad range (${start}${end})" 1>&2
+				exit 1
+			elif [ "${step}" -le 0 ]; then
+				echo "error: bad step (${step})" 1>&2
+				exit 1
+			fi
+			while [ "${start}" -lt "${end}" ]; do
+				target_ids="${target_ids} ${start}"
+				((start=start+step))
+			done
+		fi
+	done
+	echo ${target_ids}
+}
+
+function print_usage {
+	echo "usage: ${PROG_NAME} [options] <targetspec> <arg> ...
+
+Launch a program on one or more pnet target(s). Uses rurun to do the
+launch. See rurun for "rurun options".
+
+targetspec is a comma separated list of one or more of:
+* value (e.g., 10)
+* start:end (e.g., 0:3 which is equivalent to 0,1,2)
+* start:end:step (e.g., 0:4:2 which is equivalent to 0,2)
+where start must be less than end, and step must be positive.
+
+Options:
+--debug
+	Enable debugging.
+--rurun <options>
+	Option arguments to pass to rurun. Enclose in quotes arguments
+	necessary.
+"
+}
+
+	
+if [ $# -gt 0 ]; then
+	if [ "$1" = "-h" -o "$1" = "--help" ]; then
+		print_usage
+		exit 0
+	fi
+elif [ $# -lt 2 ]; then
+	echo "error: bad/missing arguments" 1>&2
+	exit 1
+fi
+
+while [ $# -gt 0 ]; do
+	case $1 in
+	--debug)
+		shift 1
+		DEBUG=1
+		;;
+	--rurun)
+		shift 1
+		rurun_opts="$1"; shift 1
+		;;
+	--*)
+		echo "error: bad/missing arguments" 1>&2
+		exit 1
+		;;
+	*)
+		targetspec=$1; shift 1
+		break
+		;;
+	esac
+done
+
+targets=`get_target_ids "${targetspec}"`
+
+if [ -n "${DEBUG}" ]; then
+	echo "-----"
+	echo "targetspec (${targets})"
+	echo "targets (${target_ids})"
+	echo "-----"
+fi
+
+ev=0
+for target in ${targets}; do
+	if [ -n "${DEBUG}" ]; then
+		opts="--debug"
+	fi
+	./rurun ${rurun_opts} ${target} "$@"
+	last_ev=$?
+	if [ ${last_ev} -ne 0 ]; then
+		ev=${last_ev}
+	fi
+done
+exit ${ev}
