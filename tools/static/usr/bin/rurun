@@ -2,63 +2,140 @@
 #
 # rurun
 
+# defaults
+RURUN_JOB_ID=${RURUN_JOB_ID:-${JOB_ID}}
+RURUN_TAG_FORMAT=${RURUN_TAG_FORMAT:-"jobs/\${RURUN_JOB_ID}-\${target}"}
+RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
+RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-id}
+
 function print_usage {
-	echo "usage: ${PROG_NAME} <target> ...
+	echo "usage: ${PROG_NAME} [options] <target> <arg> ...
 
-Run a program on a target.
+Launch a program on a pnet target. If a pnet server specified
+(command line or environment variable), the local host will be used.
 
-If RURUN_PNET_ADDR is not defined, then a the ssh relay service is
-used to start the program in a shell. Otherwise, the pnet service at
-RURUN_PNET_ADDR is used route the connection to the target using the
-ssh relay service. pnet service targets are integer identifiers.
-
-If one of RURUN_JOB_TAG or RURUN_JOB_TAGT is defined, it is used to
-run the program within a job container. If using RURUN_JOB_TAGT,
-'-<target>' is appended.
-
-Environment variables:
-RURUN_EXEC_METHOD
-RURUN_JOB_TAG
-RURUN_JOB_TAGT
-RURUN_PNET_ADDR"
+Options:
+--debug
+	Enable debugging.
+--exec=simple|shell|login
+	Use a given exec method. See also --simple, --shell,
+	--login. Defaults to \$RURUN_EXEC_METHOD or "${RURUN_EXEC_METHOD}".
+--job_id <job_id>
+	Use a given job id to generate RURUN_TAG_FORMAT. Defaults to
+	\$JOB_ID.
+--login	Use the exec/login launch.
+--pnet	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
+--tag_format <string>
+	Use a given format string, which is evaluated, to determine
+	the cg_path value passed to the exec service. Defaults to
+	\$RURUN_TAG_FORMAT or \"$RURUN_TAG_FORMAT\".
+--shell	Use the exec/shell launch method.
+--simple
+	Use the exec/simple launch method."
 }
 
-#
-# main
-#
-
-PROG_NAME=`basename $0`
-
-RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
-
-if [ $# -lt 2 ]; then
-	if [ $# -eq 1 ]; then
-		if [ $1 = "-h" -o $1 = "--help" ]; then
-			print_usage
-			exit 0
-		fi
+	
+if [ $# -gt 0 ]; then
+	if [ "$1" = "-h" -o "$1" = "--help" ]; then
+		print_usage
+		exit 0
 	fi
-	echo "error: bad/missing arguments"
-	exit -1
-else
-	target=$1; shift 1
+elif [ $# -lt 2 ]; then
+	echo "error: bad/missing arguments" 1>&2
+	exit 1
 fi
 
-# relay address
-if [ "${RURUN_PNET_ADDR}" ]; then
-	addr="${RURUN_PNET_ADDR}/id/:${target}"
-else
-	addr="+/ssh/${target}"
+while [ $# -gt 0 ]; do
+	case $1 in
+	--debug)
+		shift 1
+		DEBUG=1
+		;;
+	--exec)
+		shift 1
+		RURUN_EXEC_METHOD=$1; shift 1
+		;;
+	--job_id)
+		shift 1
+		RURUN_JOB_ID="$1"; shift 1
+		;;
+	--login)
+		shift 1
+		RURUN_EXEC_METHOD=login
+		;;
+	--notag)
+		shift 1
+		RURUN_TAG_FORMAT=""
+		;;
+	--pnet)
+		shift 1
+		RURUN_PNET_ADDR="$1"; shift 1
+		;;
+	--tag_format)
+		shift 1
+		RURUN_TAG_FORMAT="$1"; shift 1
+		;;
+	--shell)
+		shift 1
+		RURUN_EXEC_METHOD=shell
+		;;
+	--simple)
+		shift 1
+		RURUN_EXEC_METHOD=simple
+		;;
+	--target_method)
+		shift 1
+		RURUN_TARGET_METHOD=$1; shift 1
+		;;
+	--wrap)
+		shift 1
+		colon=":"
+		;;
+	*)
+		target=$1; shift 1
+		break
+		;;
+	esac
+done
+
+if [ -n "${DEBUG}" ]; then
+	echo "-----"
+	echo "target (${target})"
+	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
+	echo "RURUN_JOB_ID (${RURUN_JOB_ID})"
+	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
+	echo "RURUN_TAG_FORMAT (${RURUN_TAG_FORMAT})"
+	echo "-----"
 fi
 
-# add exec method and call
-if [ "${RURUN_JOB_TAG}" ]; then
-	addr="${addr}/+/exec/job"
-	exec ruexec ${addr} ${RURUN_JOB_TAG} "${@}"
-elif [ "${RURUN_JOB_TAGT}" ]; then
-	addr="${addr}/+/exec/job"
-	exec ruexec ${addr} ${RURUN_JOB_TAGT}-${target} "${@}"
-else
-	addr="${addr}/+/exec/${RURUN_EXEC_METHOD}"
-	exec ruexec ${addr} "${@}"
+# set cg_path (if possible)
+if [ -n "${RURUN_TAG_FORMAT}" ]; then
+	cg_path=`eval echo "$RURUN_TAG_FORMAT"`
+	if [ -n "${cg_path}" ]; then
+		attrs="-a cg_path=\"${cg_path}\""
+	fi
 fi
+
+# set path
+if [ -n "${RURUN_PNET_ADDR}" ]; then
+	path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${colon}${target}"
+else
+	if [ -n "${DEBUG}" ]; then
+		echo "warning: RURUN_PNET_ADDR is not set" 1>&2
+	fi
+	path=""
+fi
+path="${path}/+/exec/${RURUN_EXEC_METHOD}"
+
+# mpirun-specific
+# TODO: eliminate
+if [ "${HYDRA_LAUNCHER}" = "ssh" ]; then
+	# drop "-x"
+	shift 1
+fi
+
+# execute
+if [ -n "${DEBUG}" ]; then
+	echo exec ruexec ${attrs} "${path}" "$*"
+fi
+exec ruexec ${attrs} "${path}" "$*"
