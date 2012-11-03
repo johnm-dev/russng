@@ -66,6 +66,7 @@ Options:
 "
 }
 
+RURUN_EXEC=${RURUN:-/usr/bin/rurun}
 	
 if [ $# -gt 0 ]; then
 	if [ "$1" = "-h" -o "$1" = "--help" ]; then
@@ -112,7 +113,7 @@ for target in ${targets}; do
 	if [ -n "${DEBUG}" ]; then
 		opts="--debug"
 	fi
-	./rurun ${rurun_opts} ${target} "$@"
+	${RURUN_EXEC} ${rurun_opts} ${target} "$@"
 	last_ev=$?
 	if [ ${last_ev} -ne 0 ]; then
 		ev=${last_ev}
