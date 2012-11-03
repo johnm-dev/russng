@@ -191,7 +191,7 @@ _id_patch(struct russ_conn *conn) {
 		s = &s[1];
 		wrap = 1;
 	}
-	if (sscanf(s, "%d", &idx) < 0) {
+	if (sscanf(s, "%d", &idx) != 1) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
