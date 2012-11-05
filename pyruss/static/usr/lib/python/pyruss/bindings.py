@@ -291,7 +291,11 @@ def gettime():
     return libruss.russ_gettime()
 
 def switch_user(uid, gid, gids):
-    return libruss.russ_switch_user(uid, gid, len(gids), gids)
+    if gids:
+        _gids = (ctypes.c_int*len(gids))(gids)
+    else:
+        _gids = None
+    return libruss.russ_switch_user(uid, gid, len(gids), _gids)
 
 def to_deadline(timeout):
     return libruss.russ_to_deadline(timeout)
