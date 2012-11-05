@@ -67,8 +67,8 @@ class PydebugServiceTree(ServiceTree):
     def svc_conn(self, conn):
         fd = conn.get_fd(1)
         try:
-            cred = conn.get_cred()
-            os.write(fd, "uid (%s)\ngid (%s)\npid (%d)\n" % (cred[1], cred[2], cred[0]))
+            creds = conn.get_creds()
+            os.write(fd, "uid (%s)\ngid (%s)\npid (%d)\n" % (creds.uid, creds.gid, creds.pid))
         except:
             traceback.print_exc()
         return 0
