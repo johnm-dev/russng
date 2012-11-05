@@ -211,6 +211,14 @@ libruss.russ_listener_loop.argtypes = [
 libruss.russ_listener_loop.restype = None
 
 # misc.c
+libruss.russ_switch_user.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+libruss.russ_switch_user.restype = ctypes.c_int
+
 libruss.russ_unlink.argtypes = [
     ctypes.c_char_p,
 ]
@@ -251,7 +259,7 @@ def list_of_strings_to_c_string_array(l):
     return c_strings
         
 #
-# Application-facing classes and more
+# Application-facing functions, classes, and more
 #
 def announce(path, mode, uid, gid):
     """Announce a service.
@@ -281,6 +289,9 @@ def execv(deadline, saddr, attrs, args):
 
 def gettime():
     return libruss.russ_gettime()
+
+def switch_user(uid, gid, gids):
+    return libruss.russ_switch_user(uid, gid, len(gids), gids)
 
 def to_deadline(timeout):
     return libruss.russ_to_deadline(timeout)
