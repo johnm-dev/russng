@@ -304,6 +304,9 @@ class Conn:
         libruss.russ_conn_free(self.conn_ptr)
         self.conn_ptr = None
 
+    def close(self):
+        libruss.russ_conn_close(self.conn_ptr)
+
     def close_fd(self, i):
         return libruss.russ_conn_close_fd(self.conn_ptr, i)
 
@@ -350,8 +353,6 @@ class Conn:
     def get_sd(self):
         return self.conn_ptr.contents.sd
 
-    def close(self):
-        libruss.russ_conn_close(self.conn_ptr)
 
 class ClientConn(Conn):
     """Client connection.
