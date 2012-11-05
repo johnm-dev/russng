@@ -91,7 +91,7 @@ svc_chargen_handler(struct russ_conn *conn) {
 void
 svc_conn_handler(struct russ_conn *conn) {
 	russ_dprintf(conn->fds[1], "uid (%d)\ngid (%d)\npid (%d)\n",
-		conn->cred.uid, conn->cred.gid, conn->cred.pid);
+		conn->creds.uid, conn->creds.gid, conn->creds.pid);
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 

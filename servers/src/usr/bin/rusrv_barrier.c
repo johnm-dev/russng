@@ -159,7 +159,7 @@ backend_add_waiter(struct russ_conn *conn) {
 		barrier->items[barrier->nitems].tag = strdup(conn->req.argv[0]);
 	} else {
 		/* use pid as tag, if available */
-		snprintf(buf, sizeof(buf), "%ld", conn->cred.pid);
+		snprintf(buf, sizeof(buf), "%ld", conn->creds.pid);
 		barrier->items[barrier->nitems].tag = strdup(buf);
 	}
 	barrier->items[barrier->nitems++].conn = conn;
@@ -360,8 +360,8 @@ svc_new_handler(struct russ_conn *conn) {
 	outfd = conn->fds[1];
 
 	mode = 0600;
-	uid = conn->cred.uid;
-	gid = conn->cred.gid;
+	uid = conn->creds.uid;
+	gid = conn->creds.gid;
 	count = 0;
 	timeout = 600;
 
@@ -435,7 +435,7 @@ master_handler(struct russ_conn *conn) {
 	/* switch to user creds */
 
 	if ((chdir("/tmp") < 0)
-		|| (russ_switch_user(conn->cred.uid, conn->cred.gid, 0, NULL) < 0)) {
+		|| (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0)) {
 		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
