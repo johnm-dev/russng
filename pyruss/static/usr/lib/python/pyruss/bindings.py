@@ -450,13 +450,9 @@ class Listener:
     def loop(self, answer_handler, accept_handler, req_handler):
         """Fork-based loop.
         """
-        if answer_handler:
-            raise Exception("error: answer_handler not supported")
-        else:
+        if answer_handler == None:
             answer_handler = Listener.standard_answer_handler
-        if accept_handler:
-            raise Exception("error: accept_handler not supported")
-        else:
+        if accept_handler == None:
             accept_handler = ServerConn.standard_accept_handler
 
         while self.get_sd() >= 0:
@@ -509,13 +505,9 @@ class Listener:
             except:
                 pass
 
-        if answer_handler:
-            raise Exception("error: answer_handler not supported")
-        else:
+        if answer_handler == None:
             answer_handler = Listener.standard_answer_handler
-        if accept_handler:
-            raise Exception("error: accept_handler not supported")
-        else:
+        if accept_handler == None:
             accept_handler = ServerConn.standard_accept_handler
 
         while True:
