@@ -82,7 +82,7 @@ class russ_request_Structure(ctypes.Structure):
 class russ_conn_Structure(ctypes.Structure):
     _fields_ = [
         ("conn_type", ctypes.c_int),
-        ("cred", russ_credentials_Structure),
+        ("creds", russ_credentials_Structure),
         ("req", russ_request_Structure),
         ("sd", ctypes.c_int),
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
@@ -331,8 +331,8 @@ class Conn:
         return libruss.russ_conn_close_fd(self.conn_ptr, i)
 
     def get_creds(self):
-        cred = self.conn_ptr.contents.cred
-        return Credentials(cred.uid, cred.gid, cred.pid)
+        creds = self.conn_ptr.contents.creds
+        return Credentials(creds.uid, creds.gid, creds.pid)
 
     def get_fd(self, i):
         return self.conn_ptr.contents.fds[i]
