@@ -88,6 +88,7 @@ main(int argc, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_forwarder	fwds[RUSS_CONN_NFDS];
 	russ_deadline		deadline;
+	int			debug;
 	int			timeout;
 	char			*prog_name;
 	char			*op, *addr;
@@ -103,6 +104,7 @@ main(int argc, char **argv) {
 	prog_name = basename(strdup(argv[0]));
 
 	/* initialize */
+	debug = 0;
 	deadline = RUSS_DEADLINE_NEVER;
 	argi = 1;
 	attrc = 0;
@@ -132,6 +134,8 @@ main(int argc, char **argv) {
 			}
 			attrv[attrc++] = arg;
 			attrv[attrc] = NULL;
+		} else if (strcmp(arg, "--debug") == 0) {
+			debug = 1;
 		} else if ((strcmp(arg, "-h") == 0) || (strcmp(arg, "--help") == 0)) {
 			print_usage(prog_name);
 			exit(0);
@@ -206,13 +210,25 @@ main(int argc, char **argv) {
 	}
 
 	/* wait for exit */
+	if (debug) {
+		fprintf(stderr, "debug: waiting for connection exit\n");
+	}
 	if (russ_conn_wait(conn, &exit_status, -1) < 0) {
 		fprintf(stderr, "error: unexpected connection event\n");
 		exit_status = RUSS_EXIT_SYS_FAILURE;
 	}
+	if (debug) {
+		fprintf(stderr, "debug: exit_status (%d)\n", exit_status);
+	}
 
 	russ_forwarder_join(&(fwds[1]));
+	if (debug) {
+		fprintf(stderr, "debug: stdout forwarder joined\n");
+	}
 	russ_forwarder_join(&(fwds[2]));
+	if (debug) {
+		fprintf(stderr, "debug: stderr forwarder joined\n");
+	}
 
 	russ_conn_close(conn);
 	conn = russ_conn_free(conn);
