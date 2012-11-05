@@ -304,15 +304,6 @@ def unlink(path):
     """
     return libruss.russ_unlink(path)
 
-class Credentials:
-    """Connection credentials.
-    """
-
-    def __init__(self, uid, gid, pid):
-        self.uid = uid
-        self.gid = gid
-        self.pid = pid
-
 class Conn:
     """Common (client, server) connection.
     """
@@ -389,6 +380,15 @@ class ClientConn(Conn):
     def wait(self, deadline):
         exit_status = ctypes.c_int()
         return libruss.russ_conn_wait(self.conn_ptr, ctypes.byref(exit_status), deadline), exit_status.value
+
+class Credentials:
+    """Connection credentials.
+    """
+
+    def __init__(self, uid, gid, pid):
+        self.uid = uid
+        self.gid = gid
+        self.pid = pid
 
 class ServerConn(Conn):
     """Server connection.
