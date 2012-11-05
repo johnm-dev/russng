@@ -265,7 +265,7 @@ def announce(path, mode, uid, gid):
     """Announce a service.
     """
     lis_ptr = libruss.russ_announce(path, mode, uid, gid)
-    return lis_ptr and Listener(lis_ptr)
+    return bool(lis_ptr) and Listener(lis_ptr) or None
 
 def dialv(deadline, op, saddr, attrs, args):
     """Dial a service.
@@ -278,7 +278,7 @@ def dialv(deadline, op, saddr, attrs, args):
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
     conn_ptr = libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv)
-    return conn_ptr and ClientConn(conn_ptr)
+    return bool(conn_ptr) and ClientConn(conn_ptr) or None
 
 dial = dialv
 
@@ -429,7 +429,7 @@ class Listener:
             conn_ptr = libruss.russ_listener_answer(self.lis_ptr, deadline)
         except:
             traceback.print_exc()
-        return conn_ptr and ServerConn(conn_ptr)
+        return bool(conn_ptr) and ServerConn(conn_ptr) or None
 
     def close(self):
         libruss.russ_listener_close(self.lis_ptr)
@@ -529,4 +529,4 @@ class Listener:
             conn_ptr = libruss.russ_standard_answer_handler(self.lis_ptr, deadline)
         except:
             traceback.print_exc()
-        return conn_ptr and ServerConn(conn_ptr)
+        return bool(conn_ptr) and ServerConn(conn_ptr) or None
