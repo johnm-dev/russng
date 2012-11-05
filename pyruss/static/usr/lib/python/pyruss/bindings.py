@@ -353,6 +353,8 @@ class Conn:
     def get_sd(self):
         return self.conn_ptr.contents.sd
 
+    def splice(self, dconn):
+        return libruss.russ_conn_splice(self.conn_ptr, dconn.conn_ptr)
 
 class ClientConn(Conn):
     """Client connection.
