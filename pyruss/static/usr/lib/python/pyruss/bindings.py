@@ -49,7 +49,7 @@ RUSS_MSG_BAD_OP = "error: unsupported operation"
 RUSS_MSG_NO_DIAL = "error: cannot dial service"
 RUSS_MSG_NO_EXIT = "error: no exit status"
 RUSS_MSG_NO_SERVICE = "error: no service"
-RUSS_MSG_NO_SWITCH_USER "error: cannot switch user"
+RUSS_MSG_NO_SWITCH_USER = "error: cannot switch user"
 RUSS_MSG_UNDEF_SERVICE = "warning: undefined service"
 
 RUSS_EXIT_SUCCESS = 0
