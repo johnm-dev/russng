@@ -76,6 +76,10 @@
 #define RUSS_FWD_REASON_IN_HUP	-4
 #define RUSS_FWD_REASON_OUT_HUP	-5
 
+#define RUSS_FWD_CLOSE_IN	1
+#define RUSS_FWD_CLOSE_OUT	2
+#define RUSS_FWD_CLOSE_INOUT	RUSS_FWD_CLOSE_IN|RUSS_FWD_CLOSE_OUT
+
 /**
 * Target of service.
 */
