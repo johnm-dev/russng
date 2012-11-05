@@ -151,7 +151,7 @@ req_handler(struct russ_conn *conn) {
 				barrier->items[barrier->nitems].tag = strdup(conn->req.argv[0]);
 			} else {
 				/* use pid as tag, if available */
-				snprintf(buf, sizeof(buf), "%ld", conn->cred.pid);
+				snprintf(buf, sizeof(buf), "%ld", conn->creds.pid);
 				barrier->items[barrier->nitems].tag = strdup(buf);
 			}
 			barrier->items[barrier->nitems++].conn = conn;

@@ -213,9 +213,9 @@ __dial_remote(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	int	n;
 
 	/* prep */
-	if ((conn->cred.gid == 0)
-		|| (conn->cred.uid == 0)
-		|| (russ_switch_user(conn->cred.uid, conn->cred.gid, 0, NULL) < 0)) {
+	if ((conn->creds.gid == 0)
+		|| (conn->creds.uid == 0)
+		|| (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0)) {
 		russ_conn_fatal(conn, "error: permission denied", RUSS_EXIT_FAILURE);
 		return -1;
 	}

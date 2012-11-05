@@ -136,7 +136,7 @@ russ_listener_answer(struct russ_listener *self, russ_deadline deadline) {
 			break;
 		}
 	}
-	if (russ_get_credentials(conn->sd, &(conn->cred)) < 0) {
+	if (russ_get_credentials(conn->sd, &(conn->creds)) < 0) {
 		goto close_sd;
 	}
 	return conn;

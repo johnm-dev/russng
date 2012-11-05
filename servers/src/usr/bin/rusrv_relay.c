@@ -256,9 +256,9 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	int		exit_status = -1;
 
 	/* prep */
-	if ((conn->cred.gid == 0)
-		|| (conn->cred.uid == 0)
-		|| (russ_switch_user(conn->cred.uid, conn->cred.gid, 0, NULL) < 0)) {
+	if ((conn->creds.gid == 0)
+		|| (conn->creds.uid == 0)
+		|| (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0)) {
 		return -1;
 	}
 

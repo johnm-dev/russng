@@ -46,11 +46,11 @@
 * FREEBSD - uid, gid; pid is unavailable and set to -1
 *
 * @param sd		socket descriptor
-* @param cred		credentials object in which to put infomation
+* @param creds		credentials object in which to put infomation
 * @return		0 on success; -1 on error
 */
 int
-russ_get_credentials(int sd, struct russ_credentials *cred) {
+russ_get_credentials(int sd, struct russ_credentials *creds) {
 	socklen_t		_cred_len;
 
 #ifdef AIX
@@ -61,9 +61,9 @@ russ_get_credentials(int sd, struct russ_credentials *cred) {
 		/*printf("errno (%d)\n", errno);*/
 		return -1;
 	}
-	cred->pid = (long)_cred.pid;
-	cred->uid = (long)_cred.euid;
-	cred->gid = (long)_cred.egid;
+	creds->pid = (long)_cred.pid;
+	creds->uid = (long)_cred.euid;
+	creds->gid = (long)_cred.egid;
 
 #elif LINUX
 	struct ucred	_cred;
@@ -72,14 +72,14 @@ russ_get_credentials(int sd, struct russ_credentials *cred) {
 	if (getsockopt(sd, SOL_SOCKET, SO_PEERCRED, &_cred, &_cred_len) < 0) {
 		return -1;
 	}
-	cred->pid = (long)_cred.pid;
-	cred->uid = (long)_cred.uid;
-	cred->gid = (long)_cred.gid;
+	creds->pid = (long)_cred.pid;
+	creds->uid = (long)_cred.uid;
+	creds->gid = (long)_cred.gid;
 #elif FREEBSD
-	if (getpeereid(sd, (uid_t *)&(cred->uid), (gid_t *)&(cred->gid)) < 0) {
+	if (getpeereid(sd, (uid_t *)&(creds->uid), (gid_t *)&(creds->gid)) < 0) {
 		return -1;
 	}
-	cred->pid = -1;
+	creds->pid = -1;
 #elif FREEBSD_ALT
 	struct xucred	_cred;
 
@@ -87,9 +87,9 @@ russ_get_credentials(int sd, struct russ_credentials *cred) {
 	if (getsockopt(sd, SOL_SOCKET, LOCAL_PEERCRED, &_cred, &_cred_len) < 0) {
 		return -1;
 	}
-	cred->pid = (long)-1;
-	cred->uid = (long)_cred.cr_uid;
-	cred->gid = (long)_cred.cr_groups[0];
+	creds->pid = (long)-1;
+	creds->uid = (long)_cred.cr_uid;
+	creds->gid = (long)_cred.cr_groups[0];
 #endif
 	return 0;
 }

@@ -54,8 +54,8 @@ switch_user(struct russ_conn *conn) {
 	uid_t	uid;
 	gid_t	gid;
 
-	uid = conn->cred.uid;
-	gid = conn->cred.gid;
+	uid = conn->creds.uid;
+	gid = conn->creds.gid;
 
 #if 0
 	if (uid == 0) {

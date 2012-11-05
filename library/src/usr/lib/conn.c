@@ -89,9 +89,9 @@ russ_conn_new(void) {
 	if ((conn = malloc(sizeof(struct russ_conn))) == NULL) {
 		return NULL;
 	}
-	conn->cred.pid = -1;
-	conn->cred.uid = -1;
-	conn->cred.gid = -1;
+	conn->creds.pid = -1;
+	conn->creds.uid = -1;
+	conn->creds.gid = -1;
 	if (russ_request_init(&(conn->req), NULL, NULL, NULL, NULL, NULL) < 0) {
 		goto free_request;
 	}
