@@ -304,6 +304,15 @@ def unlink(path):
     """
     return libruss.russ_unlink(path)
 
+class Credentials:
+    """Connection credentials.
+    """
+
+    def __init__(self, uid, gid, pid):
+        self.uid = uid
+        self.gid = gid
+        self.pid = pid
+
 class Conn:
     """Common (client, server) connection.
     """
@@ -321,9 +330,9 @@ class Conn:
     def close_fd(self, i):
         return libruss.russ_conn_close_fd(self.conn_ptr, i)
 
-    def get_cred(self):
+    def get_creds(self):
         cred = self.conn_ptr.contents.cred
-        return (cred.pid, cred.uid, cred.gid)
+        return Credentials(cred.uid, cred.gid, cred.pid)
 
     def get_fd(self, i):
         return self.conn_ptr.contents.fds[i]
