@@ -155,6 +155,7 @@ typedef void (*russ_req_handler)(struct russ_conn *);
 /* addr.c */
 struct russ_target *russ_find_service_target(char *);
 char *russ_resolve_addr(char *);
+char *russ_resolve_addr_uid(char *, uid_t *);
 
 /* conn.c */
 int russ_conn_accept(struct russ_conn *, int, int *, int *);
