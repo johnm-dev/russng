@@ -41,9 +41,9 @@ print_usage(char *prog_name) {
 "       ruls [-h|--help]\n"
 "\n"
 "List service(s) at <addr> or a directory entries at <path>.\n"
-"Directory listings show service files and directories only.\n"
-"Directories are indicated by a trailing / and the ./ entry is\n"
-"always listed for a valid directory.\n"
+"Directory listings show service files, symlinks, and directories\n"
+"only. Directories are indicated by a trailing / and the ./ entry\n"
+"is always listed for a valid directory.\n"
 );
 }
 
@@ -135,13 +135,14 @@ main(int argc, char **argv) {
 					continue;
 				}
 				if ((snprintf(path, sizeof(path), "%s/%s", addr, dent->d_name) < 0)
-					|| (stat(path, &st) < 0)) {
+					|| (lstat(path, &st) < 0)) {
 					/* problem */
 					continue;
 				}
 				if (S_ISDIR(st.st_mode)) {
 					printf("%s/\n", dent->d_name);
-				} else if (S_ISSOCK(st.st_mode)) {
+				} else if (S_ISSOCK(st.st_mode)
+					|| S_ISLNK(st.st_mode)) {
 					printf("%s\n", dent->d_name);
 				}
 			}
