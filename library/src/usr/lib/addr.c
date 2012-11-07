@@ -25,6 +25,7 @@
 */
 
 #include <libgen.h>
+#include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,22 +36,27 @@
 
 #include "russ_priv.h"
 
-
 /**
 * Resolve addr by replacing prefixes and symlinks.
 *
 * Prefixes of /+ and + are resolved as equivalent to
-* RUSS_SERVICES_DIR (from env or C #define). Symlinks are resolved
-* by reading the link rather than following them via the OS. This
-* allows one to use symlinks that use the above prefixes and also
-* which actually do not exist in the filesystem (i.e., for
-* referencing non-local, valid russ addresses).
+* RUSS_SERVICES_DIR (from env or C #define). Prefixes /++ and ++ are
+* resolved as equivalent to the "$HOME/.russ" of the user identified
+* by uid. Symlinks are resolved by reading the link rather than
+* following them via the OS. This allows one to use symlinks that
+* use the above prefixes and also which actually do not exist in the
+* filesystem (i.e., for referencing non-local, valid russ
+* addresses).
+*
+* Note: if uid == NULL, then /++ and ++ prefixes are not resolved
+* and the return value is NULL (failure).
 *
 * @param addr		service address
+* @param uid		pointer to uid (may be NULL)
 * @return		absolute path (malloc'ed); NULL on failure
 */
 char *
-russ_resolve_addr(char *addr) {
+russ_resolve_addr_uid(char *addr, uid_t *uid_p) {
 	struct stat	st;
 	char		buf[RUSS_MAX_PATH_LEN], lnkbuf[RUSS_MAX_PATH_LEN], tmpbuf[RUSS_MAX_PATH_LEN];
 	char		*bp, *bend, *bp2;
@@ -69,8 +75,8 @@ russ_resolve_addr(char *addr) {
 	bend = buf+sizeof(buf);
 
 	/* special case */
-	if (strcmp(buf, "+") == 0) {
-		strcpy(buf, "+/");
+	if ((strcmp(buf, "+") == 0) || (strcmp(buf, "++") == 0)) {
+		strcat(buf, "/");
 	}
 
 	/*
@@ -88,6 +94,23 @@ russ_resolve_addr(char *addr) {
 				bp = &buf[3];
 			}
 			if ((snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", services_dir, bp) < 0)
+				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
+				return NULL;
+			}
+			changed = 1;
+		} else if ((strstr(buf, "++/") == buf) || (strstr(buf, "/++/") == buf)) {
+			struct passwd	pwd, *result;
+			char		pwd_buf[16384];
+
+			if (buf[0] == '+') {
+				bp = &buf[3];
+			} else {
+				bp = &buf[4];
+			}
+			if ((uid_p == NULL)
+				|| (getpwuid_r(*uid_p, &pwd, pwd_buf, sizeof(pwd_buf), &result) != 0)
+				|| (result == NULL)
+				|| (snprintf(tmpbuf, sizeof(tmpbuf), "%s/.russ/%s", pwd.pw_dir, bp) < 0)
 				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
 				return NULL;
 			}
@@ -148,6 +171,16 @@ russ_resolve_addr(char *addr) {
 		}
 	}
 	return strdup(buf);
+}
+
+/**
+* Simple case for russ_resolve_addr_uid without current uid.
+*/
+char *
+russ_resolve_addr(char *addr) {
+	uid_t	uid;
+	uid = getuid();
+	return russ_resolve_addr_uid(addr, &uid);
 }
 
 /**
