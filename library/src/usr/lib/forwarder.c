@@ -78,13 +78,13 @@ _forward_block(int in_fd, int out_fd, char *buf, int bsize, int how) {
 */
 static void *
 _forward_bytes(void *_fwd) {
-	struct russ_forwarder	*fwd;
+	struct russ_fwd	*fwd;
 	char			buf[RUSS_FWD_BUF_MAX], *bp;
 	long			nread, nwrite, count;
 	int			rv = 0;
 
 	/* setup */
-	fwd = (struct russ_forwarder *)_fwd;
+	fwd = (struct russ_fwd *)_fwd;
 	if (fwd->blocksize <= RUSS_FWD_BUF_MAX) {
 		bp = buf;
 	} else {
@@ -134,13 +134,13 @@ _forward_bytes(void *_fwd) {
 */
 static void *
 _forward_bytes2(void *_fwd) {
-	struct russ_forwarder	*fwd;
+	struct russ_fwd	*fwd;
 	struct pollfd		pollfds[2];
 	char			buf[RUSS_FWD_BUF_MAX], *bp;
 	long			nread, nwrite, count;
 	int			rv;
 
-	fwd = (struct russ_forwarder *)_fwd;
+	fwd = (struct russ_fwd *)_fwd;
 	fwd->reason = 0;
 
 	if (fwd->blocksize <= RUSS_FWD_BUF_MAX) {
@@ -215,7 +215,7 @@ _forward_bytes2(void *_fwd) {
 * @param close_fds	for close_fds member
 */
 void
-russ_forwarder_init(struct russ_forwarder *self, int id, int in_fd, int out_fd, int count, int blocksize, int how, int close_fds) {
+russ_fwd_init(struct russ_fwd *self, int id, int in_fd, int out_fd, int count, int blocksize, int how, int close_fds) {
 	self->id = id;
 	self->in_fd = in_fd;
 	self->out_fd = out_fd;
@@ -237,7 +237,7 @@ russ_forwarder_init(struct russ_forwarder *self, int id, int in_fd, int out_fd, 
 * @return		0 on success; -1 on failure
 */
 int
-russ_run_forwarders(int nfwds, struct russ_forwarder *fwds) {
+russ_run_fwds(int nfwds, struct russ_fwd *fwds) {
 	pthread_attr_t	attr;
 	int		i;
 
@@ -267,7 +267,7 @@ kill_threads:
 * @return		0 on success; -1 on failure
 */
 int
-russ_forwarder_start(struct russ_forwarder *self) {
+russ_fwd_start(struct russ_fwd *self) {
 	pthread_attr_t	attr;
 
 	pthread_attr_init(&attr);
@@ -287,6 +287,6 @@ russ_forwarder_start(struct russ_forwarder *self) {
 * @param self		forwarder object
 */
 int
-russ_forwarder_join(struct russ_forwarder *self) {
+russ_fwd_join(struct russ_fwd *self) {
 	pthread_join(self->th, NULL);
 }
