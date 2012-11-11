@@ -79,13 +79,13 @@ _forward_block(int in_fd, int out_fd, char *buf, int bsize, int how) {
 static void *
 _forward_bytes(void *_fwd) {
 	struct russ_forwarder	*fwd;
-	char			buf[1<<20], *bp;
+	char			buf[RUSS_FWD_BUF_MAX], *bp;
 	long			nread, nwrite, count;
 	int			rv = 0;
 
 	/* setup */
 	fwd = (struct russ_forwarder *)_fwd;
-	if (fwd->blocksize <= 1<<20) {
+	if (fwd->blocksize <= RUSS_FWD_BUF_MAX) {
 		bp = buf;
 	} else {
 		if ((bp = malloc(fwd->blocksize)) == NULL) {
@@ -136,14 +136,14 @@ static void *
 _forward_bytes2(void *_fwd) {
 	struct russ_forwarder	*fwd;
 	struct pollfd		pollfds[2];
-	char			buf[1<<20], *bp;
+	char			buf[RUSS_FWD_BUF_MAX], *bp;
 	long			nread, nwrite, count;
 	int			rv;
 
 	fwd = (struct russ_forwarder *)_fwd;
 	fwd->reason = 0;
 
-	if (fwd->blocksize <= 1<<20) {
+	if (fwd->blocksize <= RUSS_FWD_BUF_MAX) {
 		bp = buf;
 	} else {
 		if ((bp = malloc(fwd->blocksize)) == NULL) {
@@ -244,7 +244,7 @@ russ_run_forwarders(int nfwds, struct russ_forwarder *fwds) {
 	/* set up/start threads */
 	for (i = 0; i < nfwds; i++) {
 		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, (1<<20)+(1<<20));
+		pthread_attr_setstacksize(&attr, 2*RUSS_FWD_BUF_MAX+(1<<20));
 		if (pthread_create(&(fwds[i].th), &attr, _forward_bytes2, (void *)&(fwds[i])) < 0) {
 			goto kill_threads;
 		}
@@ -271,7 +271,7 @@ russ_forwarder_start(struct russ_forwarder *self) {
 	pthread_attr_t	attr;
 
 	pthread_attr_init(&attr);
-	pthread_attr_setstacksize(&attr, (1<<20)*2);
+	pthread_attr_setstacksize(&attr, 2*RUSS_FWD_BUF_MAX+(1<<20));
 	if (pthread_create(&(self->th), &attr, _forward_bytes, (void *)self) < 0) {
 		return -1;
 	}
