@@ -36,8 +36,8 @@
 
 #define MAX( a,b ) (((a) > (b)) ? (a) : (b))
 
-#define MAX_REQUEST_BUF_SIZE	262144
-#define FORWARD_BLOCK_SIZE	(1<<16)
+#define RUSS_REQ_BUF_MAX	262144
+#define RUSS_FWD_BUF_MAX	(1<<20)
 
 /* conn.c */
 struct russ_conn *russ_conn_new(void);

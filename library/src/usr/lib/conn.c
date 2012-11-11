@@ -251,7 +251,7 @@ russ_conn_splice(struct russ_conn *self, struct russ_conn *dconn) {
 int
 russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 	struct russ_request	*req;
-	char			buf[MAX_REQUEST_BUF_SIZE], *bp;
+	char			buf[RUSS_REQ_BUF_MAX], *bp;
 	int			alen, size;
 
 	/* get request size, load, and upack */
@@ -432,7 +432,7 @@ russ_conn_free(struct russ_conn *self) {
 int
 russ_conn_send_request(struct russ_conn *self, russ_deadline deadline) {
 	struct russ_request	*req;
-	char			buf[MAX_REQUEST_BUF_SIZE], *bp, *bend;
+	char			buf[RUSS_REQ_BUF_MAX], *bp, *bend;
 
 	req = &(self->req);
 	bp = buf;
@@ -525,7 +525,7 @@ russ_diall(russ_deadline deadline, char *op, char *addr, char **attrv, ...) {
 
 	/* count args */
 	va_start(ap, attrv);
-	for (argc = 0; argc < RUSS_MAX_ARGC; argc++) {
+	for (argc = 0; argc < RUSS_REQ_ARGS_MAX; argc++) {
 		if ((p = va_arg(ap, char *)) == NULL) {
 			break;
 		}

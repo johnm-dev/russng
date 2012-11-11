@@ -58,7 +58,7 @@
 char *
 russ_resolve_addr_uid(char *addr, uid_t *uid_p) {
 	struct stat	st;
-	char		buf[RUSS_MAX_PATH_LEN], lnkbuf[RUSS_MAX_PATH_LEN], tmpbuf[RUSS_MAX_PATH_LEN];
+	char		buf[RUSS_PATH_MAX], lnkbuf[RUSS_PATH_MAX], tmpbuf[RUSS_PATH_MAX];
 	char		*bp, *bend, *bp2;
 	char		*sfmt, *lfmt;
 	char		*services_dir;
@@ -268,8 +268,8 @@ russ_find_service_target(char *addr) {
 	}
 
 	/* copy into target */
-	if ((strncpy(targ->saddr, addr, RUSS_MAX_PATH_LEN) < 0)
-		|| (snprintf(targ->spath, RUSS_MAX_PATH_LEN, "/%s", p) < 0)) {
+	if ((strncpy(targ->saddr, addr, RUSS_PATH_MAX) < 0)
+		|| (snprintf(targ->spath, RUSS_PATH_MAX, "/%s", p) < 0)) {
 		goto free_targ;
 	}
 	free(addr);

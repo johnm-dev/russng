@@ -60,12 +60,12 @@ russ_request_init(struct russ_request *self, char *protocol_string, char *op, ch
 		goto free_req_items;
 	}
 	if (attrv) {
-		if ((self->attrv = russ_sarray0_dup(attrv, RUSS_MAX_ATTRC)) == NULL) {
+		if ((self->attrv = russ_sarray0_dup(attrv, RUSS_REQ_ATTRS_MAX)) == NULL) {
 			goto free_req_items;
 		}
 	}
 	if (argv) {
-		if ((self->argv = russ_sarray0_dup(argv, RUSS_MAX_ARGC)) == NULL) {
+		if ((self->argv = russ_sarray0_dup(argv, RUSS_REQ_ARGS_MAX)) == NULL) {
 			goto free_req_items;
 		}
 	}
