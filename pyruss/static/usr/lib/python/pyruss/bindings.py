@@ -41,8 +41,8 @@ libruss = ctypes.cdll.LoadLibrary("libruss.so")
 RUSS_CONN_NFDS = 32
 RUSS_CONN_STD_NFDS = 4
 RUSS_DEADLINE_NEVER = (2<<63)-1 # INT64_MAX
-RUSS_MAX_ATTRC = 1024
-RUSS_MAX_ARGC = 1024
+RUSS_REQ_ATTRS_MAX = 1024
+RUSS_REQ_ARGS_MAX = 1024
 
 RUSS_MSG_BAD_ARGS = "error: bad/missing arguments"
 RUSS_MSG_BAD_OP = "error: unsupported operation"

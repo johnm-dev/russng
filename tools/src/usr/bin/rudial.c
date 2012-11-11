@@ -93,7 +93,7 @@ main(int argc, char **argv) {
 	char			*prog_name;
 	char			*op, *addr;
 	char			*arg;
-	char			*attrv[RUSS_MAX_ATTRC];
+	char			*attrv[RUSS_REQ_ATTRS_MAX];
 	int			argi;
 	int			attrc;
 	int			req_opt_mask;
@@ -124,7 +124,7 @@ main(int argc, char **argv) {
 			&& (argi < argc)) {
 			
 			arg = argv[argi++];
-			if (attrc >= RUSS_MAX_ATTRC-1) {
+			if (attrc >= RUSS_REQ_ATTRS_MAX-1) {
 				fprintf(stderr, "error: too many attributes\n");
 				exit(1);
 			}
