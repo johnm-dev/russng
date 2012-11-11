@@ -86,7 +86,7 @@ print_usage(char *prog_name) {
 int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
-	struct russ_forwarder	fwds[RUSS_CONN_NFDS];
+	struct russ_fwd		fwds[RUSS_CONN_NFDS];
 	russ_deadline		deadline;
 	int			debug;
 	int			timeout;
@@ -201,14 +201,14 @@ main(int argc, char **argv) {
 	* initialize forwarders (handing off fds) and start threads;
 	* STDERR_FILENO is not closed if debugging
 	*/
-	russ_forwarder_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
-	russ_forwarder_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
-	russ_forwarder_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 65536, 0,
+	russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
+	russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
+	russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 65536, 0,
 		(debug ? RUSS_FWD_CLOSE_IN : RUSS_FWD_CLOSE_INOUT));
 	conn->fds[0] = -1;
 	conn->fds[1] = -1;
 	conn->fds[2] = -1;
-	if (russ_run_forwarders(RUSS_CONN_STD_NFDS-1, fwds) < 0) {
+	if (russ_run_fwds(RUSS_CONN_STD_NFDS-1, fwds) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
 		exit(1);
 	}
@@ -225,11 +225,11 @@ main(int argc, char **argv) {
 		fprintf(stderr, "debug: exit_status (%d)\n", exit_status);
 	}
 
-	russ_forwarder_join(&(fwds[1]));
+	russ_fwd_join(&(fwds[1]));
 	if (debug) {
 		fprintf(stderr, "debug: stdout forwarder joined\n");
 	}
-	russ_forwarder_join(&(fwds[2]));
+	russ_fwd_join(&(fwds[2]));
 	if (debug) {
 		fprintf(stderr, "debug: stderr forwarder joined\n");
 	}

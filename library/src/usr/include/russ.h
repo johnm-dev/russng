@@ -129,7 +129,7 @@ struct russ_conn {
 /**
 * Forwarder information.
 */
-struct russ_forwarder {
+struct russ_fwd {
 	pthread_t	th;		/**< thread doing forwarding */
 	int		id;		/**< configurable id */
 	int		in_fd;		/**< input fd */
@@ -173,10 +173,10 @@ struct russ_conn *russ_dialv(russ_deadline, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_deadline, char *, char *, char **, ...);
 
 /* forwarder */
-void russ_forwarder_init(struct russ_forwarder *, int, int, int, int, int, int, int);
-int russ_forwarder_start(struct russ_forwarder *);
-int russ_forwarder_join(struct russ_forwarder *);
-int russ_run_forwarders(int, struct russ_forwarder *);
+void russ_fwd_init(struct russ_fwd *, int, int, int, int, int, int, int);
+int russ_fwd_start(struct russ_fwd *);
+int russ_fwd_join(struct russ_fwd *);
+int russ_run_fwds(int, struct russ_fwd *);
 
 /* handlers.c */
 int russ_standard_accept_handler(struct russ_conn *);

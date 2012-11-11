@@ -34,7 +34,7 @@
 int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
-	struct russ_forwarder	fwds[3];
+	struct russ_fwd		fwds[3];
 	char			*op, *addr;
 	char			**attrs, **args;
 	int			size, cnt;
@@ -64,13 +64,13 @@ main(int argc, char **argv) {
 	}
 
 	/* initialize forwarders (handing off fds) and start threads */
-	russ_forwarder_init(&(fwds[0]), 100, STDIN_FILENO, conn->fds[0], -1, 65536, 0, 1);
-	russ_forwarder_init(&(fwds[1]), 101, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, 1);
-	russ_forwarder_init(&(fwds[2]), 102, conn->fds[2], STDERR_FILENO, -1, 65536, 0, 1);
+	russ_fwd_init(&(fwds[0]), 100, STDIN_FILENO, conn->fds[0], -1, 65536, 0, 1);
+	russ_fwd_init(&(fwds[1]), 101, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, 1);
+	russ_fwd_init(&(fwds[2]), 102, conn->fds[2], STDERR_FILENO, -1, 65536, 0, 1);
 	conn->fds[0] = -1;
 	conn->fds[1] = -1;
 	conn->fds[2] = -1;
-	if (russ_run_forwarders(RUSS_CONN_NFDS, fwds) < 0) {
+	if (russ_run_fwds(RUSS_CONN_NFDS, fwds) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
 		exit(RUSS_EXIT_SYS_FAILURE);
 	}
@@ -79,8 +79,8 @@ main(int argc, char **argv) {
 	if (russ_conn_wait(conn, &exit_status, -1) != 0) {
 		exit_status = RUSS_EXIT_SYS_FAILURE;
 	}
-	russ_forwarder_join(&(fwds[1]));
-	russ_forwarder_join(&(fwds[2]));
+	russ_fwd_join(&(fwds[1]));
+	russ_fwd_join(&(fwds[2]));
 
 	russ_conn_close(conn);
 	conn = russ_conn_free(conn);
