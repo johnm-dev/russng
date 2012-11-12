@@ -55,16 +55,16 @@
 #define RUSS_EXIT_SYS_FAILURE	127
 
 /* forwarder reasons */
+#define RUSS_FWD_CLOSE_IN	1
+#define RUSS_FWD_CLOSE_OUT	2
+#define RUSS_FWD_CLOSE_INOUT	RUSS_FWD_CLOSE_IN|RUSS_FWD_CLOSE_OUT
+
 #define RUSS_FWD_REASON_EOF	0
 #define RUSS_FWD_REASON_ERROR	-1
 #define RUSS_FWD_REASON_TIMEOUT	-2
 #define RUSS_FWD_REASON_COUNT	-3
 #define RUSS_FWD_REASON_IN_HUP	-4
 #define RUSS_FWD_REASON_OUT_HUP	-5
-
-#define RUSS_FWD_CLOSE_IN	1
-#define RUSS_FWD_CLOSE_OUT	2
-#define RUSS_FWD_CLOSE_INOUT	RUSS_FWD_CLOSE_IN|RUSS_FWD_CLOSE_OUT
 
 /* common messages */
 #define RUSS_MSG_BAD_ARGS	"error: bad/missing arguments"
