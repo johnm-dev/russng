@@ -321,7 +321,7 @@ _random_patch(struct russ_conn *conn) {
 int
 alt_accept_handler(struct russ_conn *self) {
 	struct russ_conn	*conn;
-	struct russ_request	*req;
+	struct russ_req		*req;
 
 	/* ordered by expected use */
 	req = &(self->req);
@@ -354,9 +354,9 @@ alt_accept_handler(struct russ_conn *self) {
 */
 void
 master_handler(struct russ_conn *conn) {
-	struct russ_request	*req;
-	int			outfd;
-	int			i;
+	struct russ_req	*req;
+	int		outfd;
+	int		i;
 
 	outfd = conn->fds[1];
 	req = &(conn->req);
@@ -410,10 +410,10 @@ master_handler(struct russ_conn *conn) {
 }
 
 struct russ_conn *
-alt_answer_handler(struct russ_listener *self, russ_deadline deadline) {
+alt_answer_handler(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_conn	*conn;
 
-	if ((conn = russ_listener_answer(self, deadline)) != NULL) {
+	if ((conn = russ_lis_answer(self, deadline)) != NULL) {
 		hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
 		random(); /* tickle */
 	}
@@ -463,7 +463,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
+	struct russ_lis	*lis;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
@@ -497,6 +497,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_listener_loop(lis, alt_answer_handler, alt_accept_handler, master_handler);
+	russ_lis_loop(lis, alt_answer_handler, alt_accept_handler, master_handler);
 	exit(0);
 }

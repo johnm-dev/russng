@@ -250,9 +250,9 @@ cleanup_and_exit:
 
 int
 backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t gid, int count, time_t timeout) {
-	struct russ_listener	*lis;
+	struct russ_lis		*lis;
 	struct russ_conn	*bconn;
-	struct russ_request	*req;
+	struct russ_req		*req;
 	struct pollfd		poll_fds[2];
 	int			poll_timeout;
 	int			rv;
@@ -295,7 +295,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 			};
 		} else {
 			if (poll_fds[0].revents & POLLIN) {
-				if ((bconn = russ_listener_answer(lis, RUSS_DEADLINE_NEVER)) == NULL) {
+				if ((bconn = russ_lis_answer(lis, RUSS_DEADLINE_NEVER)) == NULL) {
 					continue;
 				}
 				if ((russ_conn_await_request(bconn, RUSS_DEADLINE_NEVER) < 0)
@@ -425,8 +425,8 @@ get_random(void) {
 */
 void
 master_handler(struct russ_conn *conn) {
-	struct russ_request	*req;
-	int			errfd, outfd;
+	struct russ_req	*req;
+	int		errfd, outfd;
 
 	req = &conn->req;
 	errfd = conn->fds[2];
@@ -481,7 +481,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
+	struct russ_lis	*lis;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN); /* no errors on failed writes */
@@ -502,6 +502,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(-1);
 	}
-	russ_listener_loop(lis, NULL, NULL, master_handler);
+	russ_lis_loop(lis, NULL, NULL, master_handler);
 	exit(0);
 }

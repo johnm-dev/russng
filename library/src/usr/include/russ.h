@@ -91,7 +91,7 @@ struct russ_target {
 /**
 * Client credentials object. Obtained from connection.
 */
-struct russ_credentials {
+struct russ_creds {
 	long	pid;
 	long	uid;
 	long	gid;
@@ -100,14 +100,14 @@ struct russ_credentials {
 /**
 * Listener object.
 */
-struct russ_listener {
+struct russ_lis {
 	int	sd;	/**< socket descriptor */
 };
 
 /**
 * Request object.
 */
-struct russ_request {
+struct russ_req {
 	char	*protocol_string;	/**< identifies russ protocol */
 	char	*op;		/**< operation string */
 	char	*spath;		/**< service path */
@@ -120,8 +120,8 @@ struct russ_request {
 */
 struct russ_conn {
 	int			conn_type;	/**< client or server */
-	struct russ_credentials	creds;		/**< credentials */
-	struct russ_request	req;		/**< request */
+	struct russ_creds	creds;		/**< credentials */
+	struct russ_req		req;		/**< request */
 	int			sd;		/**< socket descriptor */
 	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
 };
@@ -149,7 +149,7 @@ struct pipe_fds {
 typedef int64_t russ_deadline;
 
 typedef int (*russ_accept_handler)(struct russ_conn *);
-typedef struct russ_conn *(*russ_answer_handler)(struct russ_listener *, russ_deadline);
+typedef struct russ_conn *(*russ_answer_handler)(struct russ_lis *, russ_deadline);
 typedef void (*russ_req_handler)(struct russ_conn *);
 
 /* addr.c */
@@ -180,7 +180,7 @@ int russ_run_fwds(int, struct russ_fwd *);
 
 /* handlers.c */
 int russ_standard_accept_handler(struct russ_conn *);
-struct russ_conn *russ_standard_answer_handler(struct russ_listener *, russ_deadline);
+struct russ_conn *russ_standard_answer_handler(struct russ_lis *, russ_deadline);
 
 /* helpers.c */
 struct russ_conn *russ_execv(russ_deadline, char *, char **, char **);
@@ -198,11 +198,11 @@ ssize_t russ_writen(int, char *, size_t);
 ssize_t russ_writen_deadline(int, char *, size_t, russ_deadline);
 
 /* listener.c */
-struct russ_listener *russ_announce(char *, mode_t, uid_t, gid_t);
-struct russ_conn *russ_listener_answer(struct russ_listener *, russ_deadline);
-void russ_listener_close(struct russ_listener *);
-struct russ_listener *russ_listener_free(struct russ_listener *);
-void russ_listener_loop(struct russ_listener *, russ_answer_handler, russ_accept_handler, russ_req_handler);
+struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);
+struct russ_conn *russ_lis_answer(struct russ_lis *, russ_deadline);
+void russ_lis_close(struct russ_lis *);
+struct russ_lis *russ_lis_free(struct russ_lis *);
+void russ_lis_loop(struct russ_lis *, russ_answer_handler, russ_accept_handler, russ_req_handler);
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);

@@ -68,6 +68,6 @@ russ_standard_accept_handler(struct russ_conn *self) {
 * @return		new connection object; NULL on failure
 */
 struct russ_conn *
-russ_standard_answer_handler(struct russ_listener *self, russ_deadline deadline) {
-	return russ_listener_answer(self, deadline);
+russ_standard_answer_handler(struct russ_lis *self, russ_deadline deadline) {
+	return russ_lis_answer(self, deadline);
 }

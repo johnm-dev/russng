@@ -230,9 +230,9 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
+	struct russ_lis		*lis;
 	struct russ_conn	*conn;
-	struct russ_request	*req;
+	struct russ_req		*req;
 	struct pollfd		poll_fds[1];
 	char			*saddr;
 	mode_t			mode;
@@ -319,7 +319,7 @@ main(int argc, char **argv) {
 			};
 		} else {
 			if (poll_fds[0].revents && POLLIN) {
-				if ((conn = russ_listener_answer(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
+				if ((conn = russ_lis_answer(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
 					continue;
 				}
 				if ((russ_conn_await_request(conn) < 0)

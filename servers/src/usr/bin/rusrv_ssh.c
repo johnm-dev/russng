@@ -209,9 +209,9 @@ svc_x_handler(struct russ_conn *conn) {
 */
 void
 master_handler(struct russ_conn *conn) {
-	struct russ_request	*req;
-	int			outfd;
-	int			i;
+	struct russ_req	*req;
+	int		outfd;
+	int		i;
 
 	outfd = conn->fds[1];
 	req = &(conn->req);
@@ -255,7 +255,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
+	struct russ_lis	*lis;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
@@ -276,6 +276,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_listener_loop(lis, NULL, NULL, master_handler);
+	russ_lis_loop(lis, NULL, NULL, master_handler);
 	exit(0);
 }

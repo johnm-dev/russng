@@ -218,8 +218,8 @@ fprintf(stderr, "rv (%d) in_chans[0] (%d) out_chans[0] (%d) conn->fds[0] (%d) re
 */
 int
 enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) {
-	struct russ_request	*req;
-	char			*bp, *bend;
+	struct russ_req	*req;
+	char		*bp, *bend;
 
 	req = &(conn->req);
 	bend = buf+buf_size;
@@ -359,8 +359,8 @@ svc_debug_handler(struct russ_conn *conn) {
 */
 void
 svc_dial_handler(struct russ_conn *conn) {
-	struct russ_request	*req;
-	char			**section_names, **p;
+	struct russ_req	*req;
+	char		**section_names, **p;
 
 	req = &(conn->req);
 	if (strcmp(req->op, "list") == 0) {
@@ -385,11 +385,11 @@ svc_dial_handler(struct russ_conn *conn) {
 */
 void
 svc_dial_cluster_host_handler(struct russ_conn *conn) {
-	struct russ_request	*req = NULL;
-	char			*cluster_name = NULL, *hostname = NULL, *method = NULL;
-	char			*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
-	char			section_name[256];
-	int			exit_status;
+	struct russ_req	*req = NULL;
+	char		*cluster_name = NULL, *hostname = NULL, *method = NULL;
+	char		*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
+	char		section_name[256];
+	int		exit_status;
 
 	/* init */
 	req = &(conn->req);
@@ -427,8 +427,8 @@ free_vars:
 */
 void
 master_handler(struct russ_conn *conn) {
-	struct russ_request	*req;
-	int			rv;
+	struct russ_req	*req;
+	int		rv;
 
 	req = &(conn->req);
 	if (strncmp(req->spath, "/dial/", 6) == 0) {
@@ -468,7 +468,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
+	struct russ_lis	*lis;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
@@ -489,5 +489,5 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_listener_loop(lis, NULL, NULL, master_handler);
+	russ_lis_loop(lis, NULL, NULL, master_handler);
 }

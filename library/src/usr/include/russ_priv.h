@@ -69,11 +69,11 @@ int russ_make_pipes(int, int *, int *);
 int russ_poll(struct pollfd *, int, russ_deadline);
 
 /* request.c */
-int russ_request_init(struct russ_request *, char *, char *, char *, char **, char **);
-void russ_request_free_members(struct russ_request *);
+int russ_req_init(struct russ_req *, char *, char *, char *, char **, char **);
+void russ_req_free_members(struct russ_req *);
 
 /* socket.c */
-int russ_get_credentials(int, struct russ_credentials *);
+int russ_get_creds(int, struct russ_creds *);
 int russ_recvfd(int, int *);
 int russ_sendfd(int, int);
 

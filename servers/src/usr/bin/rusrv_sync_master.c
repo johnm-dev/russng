@@ -80,9 +80,9 @@ get_next_time(struct barrier *barriers) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
-	char			*saddr;
-	time_t			next_time;
+	struct russ_lis	*lis;
+	char		*saddr;
+	time_t		next_time;
 
 	signal(SIGCHLD, SIG_IGN);
 

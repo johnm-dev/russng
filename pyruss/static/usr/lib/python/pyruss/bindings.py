@@ -58,19 +58,19 @@ RUSS_EXIT_CALL_FAILURE = 126
 RUSS_EXIT_SYS_FAILURE = 127
 
 # data type descriptions
-class russ_credentials_Structure(ctypes.Structure):
+class russ_creds_Structure(ctypes.Structure):
     _fields_ = [
         ("pid", ctypes.c_long),
         ("uid", ctypes.c_long),
         ("gid", ctypes.c_long),
     ]
 
-class russ_listener_Structure(ctypes.Structure):
+class russ_lis_Structure(ctypes.Structure):
     _fields_ = [
         ("sd", ctypes.c_int),
     ]
 
-class russ_request_Structure(ctypes.Structure):
+class russ_req_Structure(ctypes.Structure):
     _fields_ = [
         ("protocol_string", ctypes.c_char_p),
         ("op", ctypes.c_char_p),
@@ -82,8 +82,8 @@ class russ_request_Structure(ctypes.Structure):
 class russ_conn_Structure(ctypes.Structure):
     _fields_ = [
         ("conn_type", ctypes.c_int),
-        ("creds", russ_credentials_Structure),
-        ("req", russ_request_Structure),
+        ("creds", russ_creds_Structure),
+        ("req", russ_req_Structure),
         ("sd", ctypes.c_int),
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
     ]
@@ -172,7 +172,7 @@ libruss.russ_standard_accept_handler.argtypes = [
 libruss.russ_standard_accept_handler.restype = ctypes.c_int
 
 libruss.russ_standard_answer_handler.argtypes = [
-    ctypes.POINTER(russ_listener_Structure),
+    ctypes.POINTER(russ_lis_Structure),
     ctypes.c_int64,
 ]
 libruss.russ_standard_answer_handler.restype = ctypes.POINTER(russ_conn_Structure)
@@ -184,31 +184,31 @@ libruss.russ_announce.argtypes = [
     ctypes.c_uint,
     ctypes.c_uint,
 ]
-libruss.russ_announce.restype = ctypes.POINTER(russ_listener_Structure)
+libruss.russ_announce.restype = ctypes.POINTER(russ_lis_Structure)
 
-libruss.russ_listener_answer.argtypes = [
-    ctypes.POINTER(russ_listener_Structure),
+libruss.russ_lis_answer.argtypes = [
+    ctypes.POINTER(russ_lis_Structure),
     ctypes.c_int64,  # russ_deadline
 ]
-libruss.russ_listener_answer.restype = ctypes.POINTER(russ_conn_Structure)
+libruss.russ_lis_answer.restype = ctypes.POINTER(russ_conn_Structure)
 
-libruss.russ_listener_close.argtypes = [
-    ctypes.POINTER(russ_listener_Structure),
+libruss.russ_lis_close.argtypes = [
+    ctypes.POINTER(russ_lis_Structure),
 ]
-libruss.russ_listener_close.restype = None
+libruss.russ_lis_close.restype = None
 
-libruss.russ_listener_free.argtypes = [
-    ctypes.POINTER(russ_listener_Structure),
+libruss.russ_lis_free.argtypes = [
+    ctypes.POINTER(russ_lis_Structure),
 ]
-libruss.russ_listener_free.restype = ctypes.POINTER(russ_listener_Structure)
+libruss.russ_lis_free.restype = ctypes.POINTER(russ_lis_Structure)
 
-libruss.russ_listener_loop.argtypes = [
-    ctypes.POINTER(russ_listener_Structure),
+libruss.russ_lis_loop.argtypes = [
+    ctypes.POINTER(russ_lis_Structure),
     ctypes.c_void_p,
     ctypes.c_void_p,
     ctypes.c_void_p,
 ]
-libruss.russ_listener_loop.restype = None
+libruss.russ_lis_loop.restype = None
 
 # misc.c
 libruss.russ_switch_user.argtypes = [
@@ -424,19 +424,19 @@ class Listener:
         self.lis_ptr = lis_ptr
 
     def __del__(self):
-        libruss.russ_listener_close(self.lis_ptr)
-        libruss.russ_listener_free(self.lis_ptr)
+        libruss.russ_lis_close(self.lis_ptr)
+        libruss.russ_lis_free(self.lis_ptr)
         self.lis_ptr = None
 
     def answer(self, deadline):
         try:
-            conn_ptr = libruss.russ_listener_answer(self.lis_ptr, deadline)
+            conn_ptr = libruss.russ_lis_answer(self.lis_ptr, deadline)
         except:
             traceback.print_exc()
         return bool(conn_ptr) and ServerConn(conn_ptr) or None
 
     def close(self):
-        libruss.russ_listener_close(self.lis_ptr)
+        libruss.russ_lis_close(self.lis_ptr)
 
     def get_sd(self):
         if self.lis_ptr:
@@ -449,7 +449,7 @@ class Listener:
         def raw_handler(conn_ptr):
             req_handler(ServerConn(conn_ptr))
             return 0    # TODO: allow a integer return value from handler
-        libruss.russ_listener_loop(self.lis_ptr, None, None, REQ_HANDLER_FUNC(raw_handler))
+        libruss.russ_lis_loop(self.lis_ptr, None, None, REQ_HANDLER_FUNC(raw_handler))
 
     def loop(self, answer_handler, accept_handler, req_handler):
         """Fork-based loop.

@@ -56,7 +56,7 @@ char	*HELP =
 int
 alt_accept_handler(struct russ_conn *self) {
 	struct russ_conn	*conn;
-	struct russ_request	*req;
+	struct russ_req		*req;
 
 	req = &(self->req);
 	if (strcmp(req->spath, "/") == 0) {
@@ -74,7 +74,7 @@ alt_accept_handler(struct russ_conn *self) {
 */
 void
 master_handler(struct russ_conn *conn) {
-	struct russ_request	*req;
+	struct russ_req	*req;
 
 	req = &(conn->req);
 	if (strcmp(req->spath, "/") == 0) {
@@ -107,7 +107,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
+	struct russ_lis	*lis;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
@@ -128,6 +128,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_listener_loop(lis, NULL, alt_accept_handler, master_handler);
+	russ_lis_loop(lis, NULL, alt_accept_handler, master_handler);
 	exit(0);
 }
