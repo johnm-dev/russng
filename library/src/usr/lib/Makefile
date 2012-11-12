@@ -7,7 +7,7 @@ include ../../../../Makefile.inc
 
 SRCS=address.c conf.c connection.c encdec.c fd.c forwarder.c handlers.c helpers.c io.c listener.c misc.c request.c socket.c time.c
 OBJS=address.o conf.o connection.o encdec.o fd.o forwarder.o handlers.o helpers.o io.o listener.o misc.o request.o socket.o time.o
-LIBS=-lrt
+LIBS=$(LIBS_PLAT)
 
 all: libruss.a libruss.so
 
@@ -31,7 +31,7 @@ libruss.so:	libruss.a
 	fi
 
 addr-test:	addr-test.c libruss.a
-	$(CC) $(CFLAGS) -o $@ -I../include $< libruss.a
+	$(CC) $(CFLAGS) -o $@ -I../include $< libruss.a $(LIBS)
 
 time-test:	time-test.c libruss.a
-	$(CC) $(CFLAGS) -o $@ -I../include $< libruss.a -lrt
+	$(CC) $(CFLAGS) -o $@ -I../include $< libruss.a $(LIBS)

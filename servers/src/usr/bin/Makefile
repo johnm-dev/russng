@@ -6,7 +6,7 @@
 include ../../../../Makefile.inc
 
 # rt for clock_gettime
-LIBS=-lruss -lpthread -lrt
+LIBS=-lruss -lpthread $(LIBS_PLAT)
 
 BINS=rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pass \
 	rusrv_pexec rusrv_pnet rusrv_relay rusrv_relay_backend \
