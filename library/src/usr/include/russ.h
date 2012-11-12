@@ -216,9 +216,9 @@ int russ_unlink(char *);
 /* request.c */
 
 /* time.c */
-inline russ_deadline russ_gettime(void); /* internal */
-inline russ_deadline russ_to_deadline(int);
-inline russ_deadline russ_to_deadline_diff(russ_deadline);
-inline int russ_to_timeout(russ_deadline deadline);
+russ_deadline russ_gettime(void); /* internal */
+russ_deadline russ_to_deadline(int);
+russ_deadline russ_to_deadline_diff(russ_deadline);
+int russ_to_timeout(russ_deadline deadline);
 
 #endif /* RUSS_H */

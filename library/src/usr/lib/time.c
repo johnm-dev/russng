@@ -26,13 +26,13 @@
 
 #include <limits.h>
 #include <sys/types.h>
+#include <unistd.h>
 
+#if (_POSIX_TIMERS > 0)
 #include <time.h>
-#ifndef _POSIX_MONOTONIC_CLOCK
+#else
 #include <sys/time.h>
 #endif
-
-#include <unistd.h>
 
 #include "russ_priv.h"
 
@@ -43,17 +43,18 @@
 */
 inline russ_deadline
 russ_gettime(void) {
-#ifdef _POSIX_MONOTONIC_CLOCK
+#if (_POSIX_TIMERS > 0)
 	struct timespec	tp;
 
 	clock_gettime(CLOCK_MONOTONIC, &tp);
 	return (russ_deadline)(tp.tv_sec*1000 + (tp.tv_nsec/1000000));
 #else
+	/* fallback */
 	struct timeval tv;
 
 	gettimeofday(&tv, NULL);
 	return (russ_deadline)(tv.tv_sec*1000 + (tv.tv_usec/1000));
-#endif /* _POSIX_MONOTONIC_CLOCK */
+#endif /* _POSIX_TIMERS */
 }
 
 /**
