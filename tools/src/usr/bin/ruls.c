@@ -117,7 +117,7 @@ main(int argc, char **argv) {
 
 		/* wait for exit */
 		if (russ_conn_wait(conn, &exit_status, -1) < 0) {
-			fprintf(stderr, "error: unexpected connection event\n");
+			fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 			exit_status = RUSS_EXIT_SYS_FAILURE;
 		}
 		russ_fwd_join(&(fwds[1]));
