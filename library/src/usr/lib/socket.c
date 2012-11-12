@@ -50,7 +50,7 @@
 * @return		0 on success; -1 on error
 */
 int
-russ_get_credentials(int sd, struct russ_credentials *creds) {
+russ_get_creds(int sd, struct russ_creds *creds) {
 	socklen_t		_cred_len;
 
 #ifdef AIX

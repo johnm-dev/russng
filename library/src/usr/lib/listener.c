@@ -53,9 +53,9 @@
 * @param gid		group owner of path
 * @return		listener object; NULL on failure
 */
-struct russ_listener *
+struct russ_lis *
 russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
-	struct russ_listener	*lis;
+	struct russ_lis		*lis;
 	struct sockaddr_un	servaddr;
 	int			sd;
 
@@ -86,7 +86,7 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	if ((chmod(saddr, mode) < 0)
 		|| (chown(saddr, uid, gid) < 0)
 		|| (listen(sd, 5) < 0)
-		|| ((lis = malloc(sizeof(struct russ_listener))) == NULL)) {
+		|| ((lis = malloc(sizeof(struct russ_lis))) == NULL)) {
 		goto close_sd;
 	}
 
@@ -109,7 +109,7 @@ free_saddr:
 * @return		connection object with credentials (not fully established); NULL on failure
 */
 struct russ_conn *
-russ_listener_answer(struct russ_listener *self, russ_deadline deadline) {
+russ_lis_answer(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_conn	*conn;
 	struct sockaddr_un	servaddr;
 	socklen_t		servaddr_len;
@@ -136,7 +136,7 @@ russ_listener_answer(struct russ_listener *self, russ_deadline deadline) {
 			break;
 		}
 	}
-	if (russ_get_credentials(conn->sd, &(conn->creds)) < 0) {
+	if (russ_get_creds(conn->sd, &(conn->creds)) < 0) {
 		goto close_sd;
 	}
 	return conn;
@@ -154,7 +154,7 @@ free_conn:
 * @param self		listener object
 */
 void
-russ_listener_close(struct russ_listener *self) {
+russ_lis_close(struct russ_lis *self) {
 	if (self->sd > -1) {
 		russ_fds_close(&self->sd, 1);
 	}
@@ -166,8 +166,8 @@ russ_listener_close(struct russ_listener *self) {
 * @param self		listener object
 * @return		NULL value
 */
-struct russ_listener *
-russ_listener_free(struct russ_listener *self) {
+struct russ_lis *
+russ_lis_free(struct russ_lis *self) {
 	free(self);
 	return NULL;
 }
@@ -195,7 +195,7 @@ russ_listener_free(struct russ_listener *self) {
 * @param req_handler	handler function to call on accepted
 */
 void
-russ_listener_loop(struct russ_listener *self, russ_answer_handler answer_handler,
+russ_lis_loop(struct russ_lis *self, russ_answer_handler answer_handler,
 	russ_accept_handler accept_handler, russ_req_handler req_handler) {
 
 	struct russ_conn	*conn;
@@ -213,8 +213,8 @@ russ_listener_loop(struct russ_listener *self, russ_answer_handler answer_handle
 			continue;
 		}
 		if (fork() == 0) {
-			russ_listener_close(self);
-			self = russ_listener_free(self);
+			russ_lis_close(self);
+			self = russ_lis_free(self);
 			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)
 				|| (accept_handler(conn) < 0)) {
 				exit(-1);
@@ -274,13 +274,13 @@ __pre_handler_thread(void *vp) {
 * @param handler	handler function to call on connection
 */
 void
-russ_listener_loop_thread(struct russ_listener *self, russ_req_handler handler) {
+russ_lis_loop_thread(struct russ_lis *self, russ_req_handler handler) {
 	pthread_attr_t			attr;
 	struct russ_conn		*conn;
 	struct pre_handler_thread_args	*phta;
 
 	while (1) {
-		if ((conn = russ_listener_answer(self, RUSS_TIMEOUT_NEVER)) == NULL) {
+		if ((conn = russ_lis_answer(self, RUSS_TIMEOUT_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}

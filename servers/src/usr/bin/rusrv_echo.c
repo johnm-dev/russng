@@ -64,8 +64,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
-	char			*saddr;
+	struct russ_lis	*lis;
+	char		*saddr;
 
 	signal(SIGCHLD, SIG_IGN);
 
@@ -79,5 +79,5 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_listener_loop(lis, NULL, NULL, req_handler);
+	russ_lis_loop(lis, NULL, NULL, req_handler);
 }

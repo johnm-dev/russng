@@ -114,9 +114,9 @@ close_fds(int low_fd, int hi_fd) {
 
 void
 op_execute_handler(struct russ_conn *conn) {
-	struct russ_request	*req;
-	char			*shell, *lshell, *home;
-	int			argc, i;
+	struct russ_req	*req;
+	char		*shell, *lshell, *home;
+	int		argc, i;
 
 	req = &(conn->req);
 
@@ -180,7 +180,7 @@ op_list_handler(struct russ_conn *conn) {
 
 void
 master_handler(struct russ_conn *conn) {
-	struct russ_request	*req;
+	struct russ_req	*req;
 
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
@@ -213,7 +213,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_listener	*lis;
+	struct russ_lis	*lis;
 
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
@@ -240,6 +240,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_listener_loop(lis, NULL, NULL, master_handler);
+	russ_lis_loop(lis, NULL, NULL, master_handler);
 	exit(0);
 }

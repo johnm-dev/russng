@@ -45,7 +45,7 @@
 * @return		0 on success; -1 on error
 */
 int
-russ_request_init(struct russ_request *self, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
+russ_req_init(struct russ_req *self, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
 	int			i;
 
 	self->protocol_string = NULL;
@@ -72,14 +72,14 @@ russ_request_init(struct russ_request *self, char *protocol_string, char *op, ch
 	return 0;
 
 free_req_items:
-	russ_request_free_members(self);
+	russ_req_free_members(self);
 	return -1;
 }
 
 /**
 * Free allocated request members.
 *
-* All allocations done in russ_request_init() are freed and members
+* All allocations done in russ_req_init() are freed and members
 * set to NULL.
 *
 * Note: The request itself is not freed.
@@ -87,7 +87,7 @@ free_req_items:
 * @param self		request object
 */
 void
-russ_request_free_members(struct russ_request *self) {
+russ_req_free_members(struct russ_req *self) {
 	int			i;
 
 	free(self->protocol_string);
@@ -105,5 +105,5 @@ russ_request_free_members(struct russ_request *self) {
 	    }
 	    free(self->argv);
 	}
-	russ_request_init(self, NULL, NULL, NULL, NULL, NULL);
+	russ_req_init(self, NULL, NULL, NULL, NULL, NULL);
 }
