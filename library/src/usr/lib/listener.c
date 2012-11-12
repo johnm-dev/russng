@@ -214,6 +214,7 @@ russ_lis_loop(struct russ_lis *self, russ_answer_handler answer_handler,
 			continue;
 		}
 		if (fork() == 0) {
+			setsid();
 			russ_lis_close(self);
 			self = russ_lis_free(self);
 			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)

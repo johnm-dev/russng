@@ -471,6 +471,7 @@ class Listener:
                     continue
 
                 if os.fork() == 0:
+                    os.setsid()
                     self.close()
                     if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
                         or accept_handler(conn) < 0:
