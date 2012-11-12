@@ -100,7 +100,10 @@ main(int argc, char **argv) {
 			exit(RUSS_EXIT_CALL_FAILURE);
 		}
 
-		/* initialize forwarders (handing off fds) and start threads */
+		/*
+		** initialize forwarders (handing off fds; but not
+		** closing) and start threads
+		*/
 		russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0, 1);
 		russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 16384, 0, 1);
 		russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 16384, 0, 1);
