@@ -232,12 +232,12 @@ russ_fwd_init(struct russ_fwd *self, int id, int in_fd, int out_fd, int count, i
 * One or more forwarders are started, each in its own thread, to
 * forward data between fds.
 *
-* @param nfwds		# of forwarders
 * @param fwds		array of (initialized) forwarders
+* @param nfwds		# of forwarders
 * @return		0 on success; -1 on failure
 */
 int
-russ_run_fwds(int nfwds, struct russ_fwd *fwds) {
+russ_fwds_run(struct russ_fwd *fwds, int nfwds) {
 	pthread_attr_t	attr;
 	int		i;
 
