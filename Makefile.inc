@@ -9,7 +9,7 @@ ifeq ($(UNAME_SYSTEM),AIX)
 	CC=xlc_r
 	CFLAGS=-DAIX -g
 	CFLAGS_STATIC=$(CFLAGS) -bstatic
-	LIBS=-lbsd
+	LIBS_PLAT=-lbsd
 	PYTHON=python2.6
 	MAKE=gmake
 endif
@@ -18,6 +18,7 @@ ifeq ($(UNAME_SYSTEM),Linux)
 	CC=gcc
 	CFLAGS=-DLINUX -g
 	CFLAGS_STATIC=$(CFLAGS) -static
+	LIBS_PLAT=-lrt
 	MAKE=make
 endif
 
