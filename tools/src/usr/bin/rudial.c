@@ -198,8 +198,9 @@ main(int argc, char **argv) {
 
 //fprintf(stderr, "STDIN OUT ERR (%d,%d,%d) fds (%d,%d,%d)\n", STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, conn->fds[0], conn->fds[1], conn->fds[2]);
 	/*
-	* initialize forwarders (handing off fds) and start threads;
-	* STDERR_FILENO is not closed if debugging
+	* initialize forwarders (handing off fds; but not closing)
+	* and start threads; STDERR_FILENO is not closed if
+	* debugging
 	*/
 	russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
 	russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
