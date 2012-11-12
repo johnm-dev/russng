@@ -49,6 +49,19 @@ char	*HELP =
 #define SSH_EXEC	"/usr/bin/ssh"
 #define RUDIAL_EXEC	"/usr/bin/rudial"
 
+#ifdef __APPLE__
+/*
+** simple, minimal replacement for clearenv which does not actually
+** free the environ strings; use recommended for forking situations
+** only
+*/
+int
+clearenv(void) {
+	*environ = NULL;
+	return 0;
+}
+#endif
+
 int
 switch_user(struct russ_conn *conn) {
 	uid_t	uid;
