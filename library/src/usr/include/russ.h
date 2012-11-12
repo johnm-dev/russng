@@ -45,22 +45,8 @@
 
 #define RUSS_CONN_NFDS		32
 #define RUSS_CONN_STD_NFDS	4
-#define RUSS_PATH_MAX		8192
-#define RUSS_REQ_ATTRS_MAX	1024
-#define RUSS_REQ_ARGS_MAX	1024
-#define RUSS_PROTOCOL_STRING	"0008"
-#define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
 #define RUSS_DEADLINE_NEVER	INT64_MAX
-
-/* common messages */
-#define RUSS_MSG_BAD_ARGS	"error: bad/missing arguments"
-#define RUSS_MSG_BAD_OP		"error: unsupported operation"
-#define RUSS_MSG_NO_DIAL	"error: cannot dial service"
-#define RUSS_MSG_NO_EXIT	"error: no exit status"
-#define RUSS_MSG_NO_SERVICE	"error: no service"
-#define RUSS_MSG_NO_SWITCH_USER	"error: cannot switch user"
-#define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
 
 /* common exit_status values */
 #define RUSS_EXIT_SUCCESS	0
@@ -79,6 +65,22 @@
 #define RUSS_FWD_CLOSE_IN	1
 #define RUSS_FWD_CLOSE_OUT	2
 #define RUSS_FWD_CLOSE_INOUT	RUSS_FWD_CLOSE_IN|RUSS_FWD_CLOSE_OUT
+
+/* common messages */
+#define RUSS_MSG_BAD_ARGS	"error: bad/missing arguments"
+#define RUSS_MSG_BAD_OP		"error: unsupported operation"
+#define RUSS_MSG_NO_DIAL	"error: cannot dial service"
+#define RUSS_MSG_NO_EXIT	"error: no exit status"
+#define RUSS_MSG_NO_SERVICE	"error: no service"
+#define RUSS_MSG_NO_SWITCH_USER	"error: cannot switch user"
+#define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
+
+#define RUSS_REQ_ATTRS_MAX	1024
+#define RUSS_REQ_ARGS_MAX	1024
+#define RUSS_PROTOCOL_STRING	"0008"
+#define RUSS_PATH_MAX		8192
+
+#define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
 /**
 * Target of service.

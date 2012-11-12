@@ -40,9 +40,13 @@ libruss = ctypes.cdll.LoadLibrary("libruss.so")
 # russ.h
 RUSS_CONN_NFDS = 32
 RUSS_CONN_STD_NFDS = 4
+
 RUSS_DEADLINE_NEVER = (2<<63)-1 # INT64_MAX
-RUSS_REQ_ATTRS_MAX = 1024
-RUSS_REQ_ARGS_MAX = 1024
+
+RUSS_EXIT_SUCCESS = 0
+RUSS_EXIT_FAILURE = 1
+RUSS_EXIT_CALL_FAILURE = 126
+RUSS_EXIT_SYS_FAILURE = 127
 
 RUSS_MSG_BAD_ARGS = "error: bad/missing arguments"
 RUSS_MSG_BAD_OP = "error: unsupported operation"
@@ -52,10 +56,8 @@ RUSS_MSG_NO_SERVICE = "error: no service"
 RUSS_MSG_NO_SWITCH_USER = "error: cannot switch user"
 RUSS_MSG_UNDEF_SERVICE = "warning: undefined service"
 
-RUSS_EXIT_SUCCESS = 0
-RUSS_EXIT_FAILURE = 1
-RUSS_EXIT_CALL_FAILURE = 126
-RUSS_EXIT_SYS_FAILURE = 127
+RUSS_REQ_ATTRS_MAX = 1024
+RUSS_REQ_ARGS_MAX = 1024
 
 # data type descriptions
 class russ_creds_Structure(ctypes.Structure):
