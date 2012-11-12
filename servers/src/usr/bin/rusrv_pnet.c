@@ -132,7 +132,7 @@ _first_patch(struct russ_conn *conn) {
 int
 _host_patch(struct russ_conn *conn) {
 	char	*p, *spath_tail, *userhost, *relay_addr;
-	char	new_spath[RUSS_PATH_MAX];
+	char	new_spath[RUSS_REQ_PATH_MAX];
 	int	i;
 
 	/* extract and validate user@host and new_spath */
@@ -176,7 +176,7 @@ _host_patch(struct russ_conn *conn) {
 int
 _id_patch(struct russ_conn *conn) {
 	char	*p, *spath_tail, *s, *userhost, *relay_addr;
-	char	new_spath[RUSS_PATH_MAX];
+	char	new_spath[RUSS_REQ_PATH_MAX];
 	int	i, idx, wrap = 0;
 
 	/* extract and validate user@host and new_spath */
@@ -235,7 +235,7 @@ _id_patch(struct russ_conn *conn) {
 int
 _net_patch(struct russ_conn *conn) {
 	char	*p, *spath_tail, *userhost, *relay_addr;
-	char	new_spath[RUSS_PATH_MAX];
+	char	new_spath[RUSS_REQ_PATH_MAX];
 
 	/* extract and validate user@host and new_spath */
 	userhost = &conn->req.spath[5];
@@ -268,7 +268,7 @@ _net_patch(struct russ_conn *conn) {
 */
 int
 _next_patch(struct russ_conn *conn) {
-	char	new_spath[RUSS_PATH_MAX];
+	char	new_spath[RUSS_REQ_PATH_MAX];
 	int	idx;
 
 	idx = hostslist.next;
@@ -293,7 +293,7 @@ _next_patch(struct russ_conn *conn) {
 */
 int
 _random_patch(struct russ_conn *conn) {
-	char	new_spath[RUSS_PATH_MAX];
+	char	new_spath[RUSS_REQ_PATH_MAX];
 	int	idx;
 
 	idx = (random()/(double)RAND_MAX)*hostslist.nhosts;

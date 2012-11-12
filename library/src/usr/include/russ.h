@@ -75,10 +75,10 @@
 #define RUSS_MSG_NO_SWITCH_USER	"error: cannot switch user"
 #define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
 
-#define RUSS_REQ_ATTRS_MAX	1024
 #define RUSS_REQ_ARGS_MAX	1024
-#define RUSS_PROTOCOL_STRING	"0008"
-#define RUSS_PATH_MAX		8192
+#define RUSS_REQ_ATTRS_MAX	1024
+#define RUSS_REQ_PATH_MAX	8192
+#define RUSS_REQ_PROTOCOL_STRING	"0008"
 
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
@@ -86,8 +86,8 @@
 * Target of service.
 */
 struct russ_target {
-	char	saddr[RUSS_PATH_MAX];
-	char	spath[RUSS_PATH_MAX];
+	char	saddr[RUSS_REQ_PATH_MAX];
+	char	spath[RUSS_REQ_PATH_MAX];
 };
 
 /**

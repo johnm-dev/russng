@@ -56,8 +56,10 @@ RUSS_MSG_NO_SERVICE = "error: no service"
 RUSS_MSG_NO_SWITCH_USER = "error: cannot switch user"
 RUSS_MSG_UNDEF_SERVICE = "warning: undefined service"
 
-RUSS_REQ_ATTRS_MAX = 1024
 RUSS_REQ_ARGS_MAX = 1024
+RUSS_REQ_ATTRS_MAX = 1024
+RUSS_REQ_PATH_MAX = 8192
+RUSS_REQ_PROTOCOL_STRING = "0008"
 
 # data type descriptions
 class russ_creds_Structure(ctypes.Structure):
