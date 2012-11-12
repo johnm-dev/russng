@@ -264,7 +264,7 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 
 	req = &(self->req);
 	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
-		|| (strcmp(RUSS_PROTOCOL_STRING, req->protocol_string) != 0)
+		|| (strcmp(RUSS_REQ_PROTOCOL_STRING, req->protocol_string) != 0)
 		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
 		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &(req->attrv), &alen)) == NULL)
@@ -484,7 +484,7 @@ russ_dialv(russ_deadline deadline, char *op, char *addr, char **attrv, char **ar
 		goto free_targ;
 	}
 	if (((conn->sd = __connect(targ->saddr)) < 0)
-		|| (russ_req_init(&(conn->req), RUSS_PROTOCOL_STRING, op, targ->spath, attrv, argv) < 0)
+		|| (russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, op, targ->spath, attrv, argv) < 0)
 		|| (russ_conn_send_request(conn, deadline) < 0)
 		|| (russ_conn_recvfds(conn) < 0)) {
 		goto free_request;
