@@ -68,6 +68,7 @@
 
 /* common messages */
 #define RUSS_MSG_BAD_ARGS	"error: bad/missing arguments"
+#define RUSS_MSG_BAD_CONN_EVENT	"error: unexpected connection event"
 #define RUSS_MSG_BAD_OP		"error: unsupported operation"
 #define RUSS_MSG_NO_DIAL	"error: cannot dial service"
 #define RUSS_MSG_NO_EXIT	"error: no exit status"
