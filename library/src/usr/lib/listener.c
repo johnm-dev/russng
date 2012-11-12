@@ -223,6 +223,8 @@ russ_lis_loop(struct russ_lis *self, russ_answer_handler answer_handler,
 			}
 			req_handler(conn);
 			russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+			russ_conn_close(conn);
+			conn = russ_conn_free(conn);
 			exit(0);
 		}
 		russ_conn_close(conn);
