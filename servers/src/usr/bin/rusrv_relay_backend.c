@@ -70,7 +70,7 @@ main(int argc, char **argv) {
 	conn->fds[0] = -1;
 	conn->fds[1] = -1;
 	conn->fds[2] = -1;
-	if (russ_run_fwds(RUSS_CONN_NFDS, fwds) < 0) {
+	if (russ_fwds_run(fwds, RUSS_CONN_NFDS) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
 		exit(RUSS_EXIT_SYS_FAILURE);
 	}

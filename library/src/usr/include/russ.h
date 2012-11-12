@@ -176,7 +176,7 @@ struct russ_conn *russ_diall(russ_deadline, char *, char *, char **, ...);
 void russ_fwd_init(struct russ_fwd *, int, int, int, int, int, int, int);
 int russ_fwd_start(struct russ_fwd *);
 int russ_fwd_join(struct russ_fwd *);
-int russ_run_fwds(int, struct russ_fwd *);
+int russ_fwds_run(struct russ_fwd *, int);
 
 /* handlers.c */
 int russ_standard_accept_handler(struct russ_conn *);
