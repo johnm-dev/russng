@@ -290,3 +290,56 @@ int
 russ_fwd_join(struct russ_fwd *self) {
 	pthread_join(self->th, NULL);
 }
+
+#if 0
+/*
+** forward bytes between in fd and out fd
+**
+** Linux: optimized using zero-copy splice()
+*/
+void
+russ_forward_bytes(int fd_in, int fd_out) {
+#ifdef x_GNU_SOURCE
+	int	cnt;
+
+	while (1) {
+/*fprintf(stderr, "calling splice\n");*/
+		cnt = splice(fd_in, NULL, fd_out, NULL, RUSS_FWD_BUF_MAX, 0);
+	}
+#else /* _GNU_SOURCE */
+	char	buf[RUSS_FWD_BUF_MAX];
+	int	cnt, rn, wn;
+
+	while (1) {
+		rn = read(fd_in, buf, RUSS_FWD_BUF_MAX);
+/*fprintf(stderr, "rn (%d) buf (%20s)\n", rn, buf);*/
+		if (rn > 0) {
+			for (wn = 0; wn < rn; ) {
+				cnt = write(fd_out, &buf[wn], rn-wn);
+				wn += cnt;
+			}
+		} else if (rn < 0) {
+			/* error */
+			if (errno != EINTR) {
+				break;
+			}
+		} else {
+			/* EOF */
+			break;
+		}
+	}
+#endif /* _GNU_SOURCE */
+
+/*fprintf(stderr, "exiting russ_forward_bytes\n");*/
+	close(fd_in);
+	close(fd_out);
+}
+
+void *
+russ_forward_bytes_vp(void *vp) {
+	struct pipe_fds	*pfds;
+
+	pfds = (struct pipe_fds *)vp;
+	russ_forward_bytes(pfds->in_fd, pfds->out_fd);
+}
+#endif
