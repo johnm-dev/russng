@@ -153,7 +153,7 @@ class ServiceTree:
             node = self.find(req.spath)
             if node and node.children:
                 os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
-                conn.exit(0)
+                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
         elif req.op == "help":
@@ -161,7 +161,7 @@ class ServiceTree:
             node = self.find("/")
             if node and node.ops and node.handler "help" in node.ops:
                 node.handler(conn)
-                conn.exit(0)
+                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
         else:
