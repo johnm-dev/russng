@@ -20,7 +20,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	char	*res_addr;
+	char	*res_spath;
 	int	i;
 
 	if (argc == 1) {
@@ -33,8 +33,8 @@ main(int argc, char **argv) {
 	}
 
 	for (i = 1; i < argc; i++) {
-		res_addr = russ_resolve_addr(argv[i]);
-		printf("addr (%s)\nresolved addr (%s)\n\n", argv[i], res_addr);
+		res_spath = russ_resolve_spath(argv[i]);
+		printf("spath (%s)\nresolved spath (%s)\n\n", argv[i], res_spath);
 	}
 	exit(0);
 }

@@ -35,7 +35,7 @@
 #include "russ_priv.h"
 
 /**
-* Resolve addr by replacing prefixes and symlinks.
+* Resolve spath by replacing prefixes and symlinks.
 *
 * Prefixes of /+ and + are resolved as equivalent to
 * RUSS_SERVICES_DIR (from env or C #define). Prefixes /++ and ++ are
@@ -43,27 +43,27 @@
 * by uid. Symlinks are resolved by reading the link rather than
 * following them via the OS. This allows one to use symlinks that
 * use the above prefixes and also which actually do not exist in the
-* filesystem (i.e., for referencing non-local, valid russ
-* addresses).
+* filesystem (i.e., for referencing non-local, valid russ service
+* paths).
 *
 * Note: if uid == NULL, then /++ and ++ prefixes are not resolved
 * and the return value is NULL (failure).
 *
-* @param addr		service address
+* @param spath		service path
 * @param uid		pointer to uid (may be NULL)
 * @return		absolute path (malloc'ed); NULL on failure
 */
 char *
-russ_resolve_addr_uid(char *addr, uid_t *uid_p) {
+russ_resolve_spath_uid(char *spath, uid_t *uid_p) {
 	struct stat	st;
-	char		buf[RUSS_REQ_PATH_MAX], lnkbuf[RUSS_REQ_PATH_MAX], tmpbuf[RUSS_REQ_PATH_MAX];
+	char		buf[RUSS_REQ_SPATH_MAX], lnkbuf[RUSS_REQ_SPATH_MAX], tmpbuf[RUSS_REQ_SPATH_MAX];
 	char		*bp, *bend, *bp2;
 	char		*sfmt, *lfmt;
 	char		*services_dir;
 	int		sdlen, cnt, stval;
 	int		changed;
 
-	if (strncpy(buf, addr, sizeof(buf)) < 0) {
+	if (strncpy(buf, spath, sizeof(buf)) < 0) {
 		return NULL;
 	}
 	if ((services_dir = getenv("RUSS_SERVICES_DIR")) == NULL) {
@@ -172,75 +172,75 @@ russ_resolve_addr_uid(char *addr, uid_t *uid_p) {
 }
 
 /**
-* Simple case for russ_resolve_addr_uid without current uid.
+* Simple case for russ_resolve_spath_uid without current uid.
 */
 char *
-russ_resolve_addr(char *addr) {
+russ_resolve_spath(char *spath) {
 	uid_t	uid;
 	uid = getuid();
-	return russ_resolve_addr_uid(addr, &uid);
+	return russ_resolve_spath_uid(spath, &uid);
 }
 
 /**
-* Find socket address from full address.
+* Find socket address from service path.
 *
-* @param addr	full service address
+* @param spath	full service path
 * @return	socket address; NULL on failure
 */
 char *
-russ_find_service_addr(char *addr) {
+russ_find_socket_addr(char *spath) {
 	char		*saddr;
 	struct stat	st;
 
-	if ((addr = russ_resolve_addr(addr)) != NULL) {
-		saddr = strdup(addr);
+	if ((spath = russ_resolve_spath(spath)) != NULL) {
+		saddr = strdup(spath);
 		while (stat(saddr, &st) != 0) {
 			saddr = dirname(saddr);
 		}
 		if (S_ISSOCK(st.st_mode)) {
-			free(addr);
+			free(spath);
 			return saddr;
 		}
-		free(addr);
+		free(spath);
 		free(saddr);
 	}
 	return NULL;
 }
 
 /**
-* Find service target (saddr and spath).
+* Find service target: saddr and (remaining) spath.
 *
-* A service address is composed of a socket address (saddr) and a
+* A service target is composed of a socket address (saddr) and a
 * service path (spath). The saddr is local, the spath is passed to
 * the service server. Depending on the service server, the spath may
-* also be a service address and need to be resolved and followed.
+* also be a service target and need to be resolved and followed.
 *
-* @param addr		full service address
+* @param spath		full service path
 * @return		russ_target object; NULL on failure
 */
 struct russ_target *
-russ_find_service_target(char *addr) {
+russ_find_service_target(char *spath) {
 	struct russ_target	*targ;
 	struct stat		st;
 	char			*p;
 
 	/* must be non-NULL, non-empty string; return value must be free */
-	if (((addr = russ_resolve_addr(addr)) == NULL)
-		|| (addr[0] == '\0')) {
+	if (((spath = russ_resolve_spath(spath)) == NULL)
+		|| (spath[0] == '\0')) {
 		return NULL;
 	}
 
 	/*
-	* search for socket file in addr as sub-paths (from left to
+	* search for socket file in spath as sub-paths (from left to
 	* right); temporarily replacing '/' with '\0' avoids
 	* needless copying
 	*/
-	p = addr;
+	p = spath;
 	while (p != NULL) {
 		if ((p = index(p+1, '/')) != NULL) {
 			*p = '\0';
 		}
-		if (lstat(addr, &st) == 0) {
+		if (lstat(spath, &st) == 0) {
 			if (S_ISSOCK(st.st_mode)) {
 				/* found socket; position p to end or next char */
 				if (p == NULL) {
@@ -262,20 +262,20 @@ russ_find_service_target(char *addr) {
 
 	/* allocate and initialize */
 	if ((targ = malloc(sizeof(struct russ_target))) == NULL) {
-		goto free_addr;
+		goto free_spath;
 	}
 
 	/* copy into target */
-	if ((strncpy(targ->saddr, addr, RUSS_REQ_PATH_MAX) < 0)
-		|| (snprintf(targ->spath, RUSS_REQ_PATH_MAX, "/%s", p) < 0)) {
+	if ((strncpy(targ->saddr, spath, RUSS_REQ_SPATH_MAX) < 0)
+		|| (snprintf(targ->spath, RUSS_REQ_SPATH_MAX, "/%s", p) < 0)) {
 		goto free_targ;
 	}
-	free(addr);
+	free(spath);
 	return targ;
 
 free_targ:
 	free(targ);
-free_addr:
-	free(addr);
+free_spath:
+	free(spath);
 	return NULL;
 }

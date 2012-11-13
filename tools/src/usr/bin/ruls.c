@@ -84,7 +84,7 @@ main(int argc, char **argv) {
 	}
 
 	/* resolve before calling russ_list() */
-	addr = russ_resolve_addr(addr);
+	addr = russ_resolve_spath(addr);
 
 	/* TODO: clean up exit_status usage */
 
@@ -125,7 +125,7 @@ main(int argc, char **argv) {
 	} else if (S_ISDIR(st.st_mode)) {
 		DIR		*dir;
 		struct dirent	*dent;
-		char		path[RUSS_REQ_PATH_MAX];
+		char		path[RUSS_REQ_SPATH_MAX];
 
 		if ((dir = opendir(addr)) == NULL) {
 			fprintf(stderr, "error: cannot open directory\n");

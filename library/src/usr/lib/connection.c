@@ -48,7 +48,7 @@ __connect(char *saddr) {
 	int			sd;
 
 	/* returned path must be freed */
-	if ((saddr = russ_resolve_addr(saddr)) == NULL) {
+	if ((saddr = russ_resolve_spath(saddr)) == NULL) {
 		return -1;
 	}
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
@@ -461,19 +461,18 @@ russ_conn_send_request(struct russ_conn *self, russ_deadline deadline) {
 *
 * @param deadline	deadline to complete operation
 * @param op		operation string
-* @param addr		full service address
+* @param spath		full service path
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
 * @param argv		NULL-terminated array of arguments
 * @return		connection object; NULL on failure
 */
 struct russ_conn *
-russ_dialv(russ_deadline deadline, char *op, char *addr, char **attrv, char **argv) {
+russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_req		*req;
 	struct russ_target	*targ;
-	char			*path, *spath;
 
-	if ((targ = russ_find_service_target(addr)) == NULL) {
+	if ((targ = russ_find_service_target(spath)) == NULL) {
 		return NULL;
 	}
 
@@ -508,13 +507,13 @@ free_targ:
 *
 * @param deadline	deadline to complete operation
 * @param op		operation string
-* @param addr		full service address
+* @param spath		full service path
 * @param attrv		array of attributes (as name=value strings)
 * @param ...		variable argument list of "char *" with NULL sentinel
 * @return		connection object, NULL on failure
 */
 struct russ_conn *
-russ_diall(russ_deadline deadline, char *op, char *addr, char **attrv, ...) {
+russ_diall(russ_deadline deadline, char *op, char *spath, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	void			*p;
@@ -540,7 +539,7 @@ russ_diall(russ_deadline deadline, char *op, char *addr, char **attrv, ...) {
 	}
 	va_end(ap);
 
-	conn = russ_dialv(deadline, addr, op, attrv, argv);
+	conn = russ_dialv(deadline, spath, op, attrv, argv);
 	free(argv);
 
 	return conn;

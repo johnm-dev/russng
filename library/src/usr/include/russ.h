@@ -76,7 +76,7 @@
 
 #define RUSS_REQ_ARGS_MAX	1024
 #define RUSS_REQ_ATTRS_MAX	1024
-#define RUSS_REQ_PATH_MAX	8192
+#define RUSS_REQ_SPATH_MAX	8192
 #define RUSS_REQ_PROTOCOL_STRING	"0008"
 
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
@@ -85,8 +85,8 @@
 * Target of service.
 */
 struct russ_target {
-	char	saddr[RUSS_REQ_PATH_MAX];
-	char	spath[RUSS_REQ_PATH_MAX];
+	char	saddr[RUSS_REQ_SPATH_MAX];
+	char	spath[RUSS_REQ_SPATH_MAX];
 };
 
 /**
@@ -155,8 +155,8 @@ typedef void (*russ_req_handler)(struct russ_conn *);
 
 /* addr.c */
 struct russ_target *russ_find_service_target(char *);
-char *russ_resolve_addr(char *);
-char *russ_resolve_addr_uid(char *, uid_t *);
+char *russ_resolve_spath(char *);
+char *russ_resolve_spath_uid(char *, uid_t *);
 
 /* conn.c */
 int russ_conn_accept(struct russ_conn *, int, int *, int *);
