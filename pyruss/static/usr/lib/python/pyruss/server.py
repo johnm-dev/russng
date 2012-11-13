@@ -41,10 +41,13 @@ class ServiceNode:
     """
 
     def __init__(self, ops=None, handler=None, typ=None):
+        self.set(ops, handler, typ)
+        self.children = {}
+
+    def set(self, ops, handler, typ):
         self.ops = ops
         self.handler = handler
         self.typ = typ
-        self.children = {}
 
 class ServiceTree:
     """Provides a hierarchy of ServiceNode objects. Nodes in the
