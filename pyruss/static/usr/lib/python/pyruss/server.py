@@ -144,24 +144,26 @@ class ServiceTree:
         """
         req = conn.get_request()
         node = self.find(req.spath)
-        if node and node.handler and (req.op in node.ops or req.op == None):
+        if node and node.handler \
+            and (req.op == None or req.op in (node.ops or [])):
             # handler registered for op and spath
             node.handler(conn)
-        elif op == "list":
+        elif req.op == "list":
             # default handling for "list"; list "children" at spath
             node = self.find(req.spath)
-            if node:
-                if node.children:
-                    os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
+            if node and node.children:
+                os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
                 conn.exit(0)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif op == "help":
+        elif req.op == "help":
             # default handling for "help"; use node spath == "/"
             node = self.find("/")
-            if node:
+            if node and node.ops and node.handler "help" in node.ops:
                 node.handler(conn)
                 conn.exit(0)
+            else:
+                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
         else:
             conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
 
