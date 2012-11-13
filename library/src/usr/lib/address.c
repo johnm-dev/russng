@@ -1,5 +1,5 @@
 /*
-** lib/addr.c
+** lib/address.c
 */
 
 /*

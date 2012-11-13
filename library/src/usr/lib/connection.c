@@ -1,5 +1,5 @@
 /*
-** lib/conn.c
+** lib/connection.c
 */
 
 /*
