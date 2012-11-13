@@ -82,14 +82,6 @@
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
 /**
-* Target of service.
-*/
-struct russ_target {
-	char	saddr[RUSS_REQ_SPATH_MAX];
-	char	spath[RUSS_REQ_SPATH_MAX];
-};
-
-/**
 * Client credentials object. Obtained from connection.
 */
 struct russ_creds {
@@ -154,7 +146,7 @@ typedef struct russ_conn *(*russ_answer_handler)(struct russ_lis *, russ_deadlin
 typedef void (*russ_req_handler)(struct russ_conn *);
 
 /* addr.c */
-struct russ_target *russ_find_service_target(char *);
+int russ_spath_split(char *, char **, char **);
 char *russ_resolve_spath(char *);
 char *russ_resolve_spath_uid(char *, uid_t *);
 

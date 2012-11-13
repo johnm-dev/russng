@@ -471,22 +471,24 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 	struct russ_conn	*conn;
 	struct russ_req		*req;
 	struct russ_target	*targ;
+	char			*saddr, *spath2;
 
-	if ((targ = russ_find_service_target(spath)) == NULL) {
+	if (russ_spath_split(spath, &saddr, &spath2) < 0) {
 		return NULL;
 	}
 
 	/* steps to set up conn object */
 	if ((conn = russ_conn_new()) == NULL) {
-		goto free_targ;
+		goto free_saddr;
 	}
-	if (((conn->sd = __connect(targ->saddr)) < 0)
-		|| (russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, op, targ->spath, attrv, argv) < 0)
+	if (((conn->sd = __connect(saddr)) < 0)
+		|| (russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv) < 0)
 		|| (russ_conn_send_request(conn, deadline) < 0)
 		|| (russ_conn_recvfds(conn) < 0)) {
 		goto free_request;
 	}
-	free(targ);
+	free(saddr);
+	free(spath2);
 	russ_fds_close(&conn->sd, 1);	/* sd not needed anymore */
 	return conn;
 
@@ -495,8 +497,9 @@ free_request:
 close_conn:
 	russ_conn_close(conn);
 	free(conn);
-free_targ:
-	free(targ);
+free_saddr:
+	free(saddr);
+	free(spath2);
 	return NULL;
 }
 
