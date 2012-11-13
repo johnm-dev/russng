@@ -1,5 +1,5 @@
 /*
-** lib/address.c
+** lib/spath.c
 */
 
 /*
@@ -54,7 +54,7 @@
 * @return		absolute path (malloc'ed); NULL on failure
 */
 char *
-russ_resolve_spath_uid(char *spath, uid_t *uid_p) {
+russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
 	struct stat	st;
 	char		buf[RUSS_REQ_SPATH_MAX], lnkbuf[RUSS_REQ_SPATH_MAX], tmpbuf[RUSS_REQ_SPATH_MAX];
 	char		*bp, *bend, *bp2;
@@ -172,13 +172,13 @@ russ_resolve_spath_uid(char *spath, uid_t *uid_p) {
 }
 
 /**
-* Simple case for russ_resolve_spath_uid without current uid.
+* Simple case for russ_spath_resolve_with_uid without current uid.
 */
 char *
-russ_resolve_spath(char *spath) {
+russ_spath_resolve(char *spath) {
 	uid_t	uid;
 	uid = getuid();
-	return russ_resolve_spath_uid(spath, &uid);
+	return russ_spath_resolve_with_uid(spath, &uid);
 }
 
 /**
@@ -192,7 +192,7 @@ russ_find_socket_addr(char *spath) {
 	char		*saddr;
 	struct stat	st;
 
-	if ((spath = russ_resolve_spath(spath)) != NULL) {
+	if ((spath = russ_spath_resolve(spath)) != NULL) {
 		saddr = strdup(spath);
 		while (stat(saddr, &st) != 0) {
 			saddr = dirname(saddr);
@@ -232,7 +232,7 @@ russ_spath_split(char *spath, char **saddr, char **spath2) {
 	*spath2 = NULL;
 
 	/* must be non-NULL, non-empty string; return value must be free */
-	if (((spath = russ_resolve_spath(spath)) == NULL)
+	if (((spath = russ_spath_resolve(spath)) == NULL)
 		|| (spath[0] == '\0')) {
 		goto free_spath;
 	}

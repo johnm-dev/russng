@@ -192,7 +192,7 @@ restore:
 */
 int
 russ_unlink(char *saddr) {
-	if ((saddr = russ_resolve_spath(saddr)) == NULL) {
+	if ((saddr = russ_spath_resolve(saddr)) == NULL) {
 		return -1;
 	}
 	if (unlink(saddr) < 0) {

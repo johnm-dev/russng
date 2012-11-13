@@ -145,11 +145,6 @@ typedef int (*russ_accept_handler)(struct russ_conn *);
 typedef struct russ_conn *(*russ_answer_handler)(struct russ_lis *, russ_deadline);
 typedef void (*russ_req_handler)(struct russ_conn *);
 
-/* addr.c */
-int russ_spath_split(char *, char **, char **);
-char *russ_resolve_spath(char *);
-char *russ_resolve_spath_uid(char *, uid_t *);
-
 /* conn.c */
 int russ_conn_accept(struct russ_conn *, int, int *, int *);
 int russ_conn_await_request(struct russ_conn *, russ_deadline);
@@ -205,6 +200,11 @@ int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
 
 /* request.c */
+
+/* spath.c */
+int russ_spath_split(char *, char **, char **);
+char *russ_spath_resolve(char *);
+char *russ_spath_resolve_with_uid(char *, uid_t *);
 
 /* time.c */
 russ_deadline russ_gettime(void); /* internal */
