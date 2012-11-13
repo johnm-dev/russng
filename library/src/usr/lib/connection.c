@@ -48,7 +48,7 @@ __connect(char *saddr) {
 	int			sd;
 
 	/* returned path must be freed */
-	if ((saddr = russ_resolve_spath(saddr)) == NULL) {
+	if ((saddr = russ_spath_resolve(saddr)) == NULL) {
 		return -1;
 	}
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {

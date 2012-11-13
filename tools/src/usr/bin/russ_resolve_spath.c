@@ -53,7 +53,7 @@ main(int argc, char **argv) {
 	}
 
 	for (i = 1; i < argc; i++) {
-		res_spath = russ_resolve_spath(argv[i]);
+		res_spath = russ_spath_resolve(argv[i]);
 		printf("spath (%s)\nresolved spath (%s)\n\n", argv[i], res_spath);
 	}
 	exit(0);

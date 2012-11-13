@@ -84,7 +84,7 @@ main(int argc, char **argv) {
 	}
 
 	/* resolve before calling russ_list() */
-	addr = russ_resolve_spath(addr);
+	addr = russ_spath_resolve(addr);
 
 	/* TODO: clean up exit_status usage */
 
