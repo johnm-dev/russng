@@ -128,38 +128,34 @@ class ServiceTree:
     def handler(self, conn):
         """Select op handler and call.
         
+        Special cases:
+        * op == "list" - list node.children if found
+
         Calling conn.exit() is left to the service handler. All
         connection fds are closed before returning.
+        conn.exit(pyruss.RUSS_EXIT_FAILURE) is a fallback.
         """
         req = conn.get_request()
         node = self.find(req.spath)
         if node and node.handler and (req.op in node.ops or req.op == None):
+            # handler registered for op and spath
             node.handler(conn)
-        else:
-            self.fallback_handler(conn)
-        conn.close()
-        del conn
-
-    def fallback_handler(self, conn):
-        """Default/fallback handlers.
-        
-        Only op == "list" has an implementation for which exit
-        status is 0, otherwise -1.
-        """
-        req = conn.get_request()
-        op = req.op
-        if op == "list":
+        elif op == "list":
+            # default handling for "list"; list "children" at spath
             node = self.find(req.spath)
             if node:
                 if node.children:
                     os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
                 conn.exit(0)
             else:
-                os.write(conn.get_fd(2), "error: no service available\n")
-                conn.exit(-1)
+                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
         else:
-            os.write(conn.get_fd(2), "error: no service available\n")
-            conn.exit(-1)
+            conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+            
+        # clean up
+        conn.exit(pyruss.RUSS_EXIT_FAILURE)
+        conn.close()
+        del conn
 
 class Server:
     """Server to handle requests and service them.
