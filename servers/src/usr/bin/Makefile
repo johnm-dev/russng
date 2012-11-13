@@ -8,9 +8,12 @@ include ../../../../Makefile.inc
 # rt for clock_gettime
 LIBS=-lruss -lpthread $(LIBS_PLAT)
 
-BINS=rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pass \
-	rusrv_pexec rusrv_pnet rusrv_relay rusrv_relay_backend \
-	rusrv_srelay rusrv_srelay_backend rusrv_ssh
+#BINS=rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pass \
+	#rusrv_pexec rusrv_pnet rusrv_relay rusrv_relay_backend \
+	#rusrv_srelay rusrv_srelay_backend rusrv_ssh
+BINS=rusrv_debug rusrv_echo rusrv_exec \
+	rusrv_pnet \
+	rusrv_ssh
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
