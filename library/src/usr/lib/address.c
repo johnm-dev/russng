@@ -208,26 +208,33 @@ russ_find_socket_addr(char *spath) {
 }
 
 /**
-* Find service target: saddr and (remaining) spath.
+* Split spath into saddr and remaing spath.
 *
-* A service target is composed of a socket address (saddr) and a
-* service path (spath). The saddr is local, the spath is passed to
-* the service server. Depending on the service server, the spath may
-* also be a service target and need to be resolved and followed.
+* A service path may be composed of a socket address (saddr) and a
+* (remaining) service path (spath). The saddr is local, the spath is
+* passed to the service server. Depending on the service server, the
+* spath may also be a service target and need to be resolved and
+* followed.
 *
 * @param spath		full service path
-* @return		russ_target object; NULL on failure
+* @param[out] saddr	socket address
+* @param[out] spath2	remaining service path
+* @return		0 on succes; -1 on failure
 */
-struct russ_target *
-russ_find_service_target(char *spath) {
+int
+russ_spath_split(char *spath, char **saddr, char **spath2) {
 	struct russ_target	*targ;
 	struct stat		st;
-	char			*p;
+	char			*p, _spath2[RUSS_REQ_SPATH_MAX];
+
+	/* initialize */
+	*saddr = NULL;
+	*spath2 = NULL;
 
 	/* must be non-NULL, non-empty string; return value must be free */
 	if (((spath = russ_resolve_spath(spath)) == NULL)
 		|| (spath[0] == '\0')) {
-		return NULL;
+		goto free_spath;
 	}
 
 	/*
@@ -251,7 +258,7 @@ russ_find_service_target(char *spath) {
 				break;
 			} else if (!S_ISDIR(st.st_mode)) {
 				/* non-socket file */
-				return NULL;
+				goto free_spath;
 			}
 		}
 		/* restore '/' if possible */
@@ -260,22 +267,19 @@ russ_find_service_target(char *spath) {
 		}
 	}
 
-	/* allocate and initialize */
-	if ((targ = malloc(sizeof(struct russ_target))) == NULL) {
-		goto free_spath;
-	}
-
 	/* copy into target */
-	if ((strncpy(targ->saddr, spath, RUSS_REQ_SPATH_MAX) < 0)
-		|| (snprintf(targ->spath, RUSS_REQ_SPATH_MAX, "/%s", p) < 0)) {
-		goto free_targ;
+	if (((*saddr = strdup(spath)) == NULL)
+		|| ((*spath2 = malloc(strlen(p)+1+1)) == NULL)
+		|| (snprintf(*spath2, RUSS_REQ_SPATH_MAX, "/%s", p) < 0)) {
+		goto free_saddr;
 	}
 	free(spath);
-	return targ;
+	return 0;
 
-free_targ:
-	free(targ);
+free_saddr:
+	free(*saddr);
+	free(*spath2);
 free_spath:
 	free(spath);
-	return NULL;
+	return -1;
 }
