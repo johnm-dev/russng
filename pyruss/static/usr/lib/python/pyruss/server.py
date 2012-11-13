@@ -66,13 +66,16 @@ class ServiceTree:
         """Add service node to tree.
         """
         node = self.root
-        comps = path.split("/")
-        for comp in comps[1:-1]:
-            next_node = node.children.get(comp)
-            if next_node == None:
-                next_node = node.children[comp] = ServiceNode()
-            node = next_node
-        node.children[comps[-1]] = ServiceNode(ops, handler, typ)
+        if path == "/":
+            node.set(ops, handler, typ)
+        else:
+            comps = path.split("/")
+            for comp in comps[1:-1]:
+                next_node = node.children.get(comp)
+                if next_node == None:
+                    next_node = node.children[comp] = ServiceNode()
+                node = next_node
+            node.children[comps[-1]] = ServiceNode(ops, handler, typ)
 
     def _find(self, comps):
         """Find node for path comps.
