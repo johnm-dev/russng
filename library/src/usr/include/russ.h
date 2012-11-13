@@ -134,11 +134,6 @@ struct russ_fwd {
 	int		reason;		/**< reason forwarder returned */
 };
 
-/* TODO: is this necessary */
-struct pipe_fds {
-	int in_fd, out_fd;
-};
-
 typedef int64_t russ_deadline;
 
 typedef int (*russ_accept_handler)(struct russ_conn *);
