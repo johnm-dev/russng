@@ -32,6 +32,10 @@
 
 #include "russ_priv.h"
 
+struct pipe_fds {
+	int in_fd, out_fd;
+};
+
 /*
 * Forward a block by bunch of bytes or line.
 *
