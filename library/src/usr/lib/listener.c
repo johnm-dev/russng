@@ -58,7 +58,7 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	struct sockaddr_un	servaddr;
 	int			sd;
 
-	if ((saddr = russ_resolve_addr(saddr)) == NULL) {
+	if ((saddr = russ_resolve_spath(saddr)) == NULL) {
 		return NULL;
 	}
 
