@@ -129,8 +129,9 @@ class ServiceTree:
         """Select op handler and call.
         
         Special cases:
+        * op == "help" - fallback to spath == "/" if available
         * op == "list" - list node.children if found
-
+        
         Calling conn.exit() is left to the service handler. All
         connection fds are closed before returning.
         conn.exit(pyruss.RUSS_EXIT_FAILURE) is a fallback.
@@ -149,9 +150,15 @@ class ServiceTree:
                 conn.exit(0)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+        elif op == "help":
+            # default handling for "help"; use node spath == "/"
+            node = self.find("/")
+            if node:
+                node.handler(conn)
+                conn.exit(0)
         else:
             conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-            
+
         # clean up
         conn.exit(pyruss.RUSS_EXIT_FAILURE)
         conn.close()
