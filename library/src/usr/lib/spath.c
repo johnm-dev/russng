@@ -63,7 +63,7 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
 	int		sdlen, cnt, stval;
 	int		changed;
 
-	if (strncpy(buf, spath, sizeof(buf)) < 0) {
+	if ((spath == NULL) || (strncpy(buf, spath, sizeof(buf)) < 0)) {
 		return NULL;
 	}
 	if ((services_dir = getenv("RUSS_SERVICES_DIR")) == NULL) {
