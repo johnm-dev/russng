@@ -220,12 +220,12 @@ backend_master_handler(struct russ_conn *conn) {
 			} else {
 				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			}
-			goto close_conn;
+			return;
 		}
 	} else if (strcmp(conn->req.op, "help") == 0) {
 		russ_dprintf(outfd, "%s", BACKEND_HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		goto close_conn;
+		return;
 	} else if (strcmp(conn->req.op, "list") == 0) {
 		if (strcmp(conn->req.spath, "/") == 0) {
 			russ_dprintf(outfd, "cancel\ncount\ntags\nttl\nwait\nwcount\n");
@@ -233,13 +233,12 @@ backend_master_handler(struct russ_conn *conn) {
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
-		goto close_conn;
+		return;
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-		goto close_conn;
+		return;
 	}
 
-close_conn:
 	russ_conn_close(conn);
 	return;
 

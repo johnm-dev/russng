@@ -339,12 +339,33 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 * @return		0 on success; -1 on failure
 */
 int
-russ_conn_fatal(struct russ_conn *self, char *msg, int exit_status) {
+russ_conn_exits(struct russ_conn *self, char *msg, int exit_status) {
 	if (self->fds[3] < 0) {
 		return -1;
 	}
 	russ_dprintf(self->fds[2], "%s\n", msg);
 	return russ_conn_exit(self, exit_status);
+}
+
+/**
+* Helper routine to write error message, write exit status, and
+* close connection fds.
+*
+* Calls russ_conn_exits() followed by russ_conn_close().
+*
+* @param self		connection object
+* @param msg		message string (no newline)
+* @param exit_status	exit status
+* @return		0 on success; -1 on failure (but the
+*			connection object is closed)
+*/
+int
+russ_conn_fatal(struct russ_conn *self, char *msg, int exit_status) {
+	int	ev;
+
+	ev = russ_conn_exits(self, msg, exit_status);
+	russ_conn_close(self);
+	return ev;
 }
 
 /**

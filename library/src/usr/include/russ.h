@@ -146,6 +146,7 @@ int russ_conn_await_request(struct russ_conn *, russ_deadline);
 void russ_conn_close(struct russ_conn *);
 void russ_conn_close_fd(struct russ_conn *, int);
 int russ_conn_exit(struct russ_conn *, int);
+int russ_conn_exits(struct russ_conn *, char *, int);
 int russ_conn_fatal(struct russ_conn *, char *, int);
 struct russ_conn *russ_conn_free(struct russ_conn *);
 int russ_conn_sendfds(struct russ_conn *, int, int *, int *);

@@ -178,17 +178,14 @@ op_execute_handler(struct russ_conn *conn) {
 			argv[2] = req->argv[0];
 		} else {
 			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
-			russ_conn_close(conn);
 			exit(0);
 		}
 		if (argv[2] == NULL) {
 			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
-			russ_conn_close(conn);
 			exit(0);
 		}
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		russ_conn_close(conn);
 		exit(0);
 	}
 
@@ -200,7 +197,6 @@ op_execute_handler(struct russ_conn *conn) {
 				fclose(f);
 			}
 			russ_conn_fatal(conn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
-			russ_conn_close(conn);
 			exit(0);
 		}
 		fclose(f);

@@ -139,7 +139,6 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 			args[nargs++] = "-a";
 			if ((args[nargs++] = escape_special(conn->req.attrv[i])) == NULL) {
 				russ_conn_fatal(conn, "error: out of memory", RUSS_EXIT_FAILURE);
-				russ_conn_close(conn);
 				exit(0);
 			}
 		}
@@ -150,7 +149,6 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 		for (i = 0; conn->req.argv[i] != NULL; i++) {
 			if ((args[nargs++] = escape_special(conn->req.argv[i])) == NULL) {
 				russ_conn_fatal(conn, "error: out of memory", RUSS_EXIT_FAILURE);
-				russ_conn_close(conn);
 				exit(0);
 			}
 		}

@@ -125,6 +125,13 @@ libruss.russ_conn_exit.argtypes = [
 ]
 libruss.russ_conn_exit.restype = ctypes.c_int
 
+libruss.russ_conn_exits.argtypes = [
+    ctypes.POINTER(russ_conn_Structure),
+    ctypes.c_char_p,
+    ctypes.c_int,
+]
+libruss.russ_conn_exits.restype = ctypes.c_int
+
 libruss.russ_conn_fatal.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_char_p,
@@ -412,6 +419,9 @@ class ServerConn(Conn):
 
     def exit(self, exit_status):
         return libruss.russ_conn_exit(self.conn_ptr, exit_status)
+
+    def exits(self, msg, exit_status):
+        return libruss.russ_conn_exits(self.conn_ptr, msg, exit_status)
 
     def fatal(self, msg, exit_status):
         return libruss.russ_conn_fatal(self.conn_ptr, msg, exit_status)
