@@ -263,6 +263,8 @@ master_handler(struct russ_conn *conn) {
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
+	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+	russ_conn_close(conn);
 }
 
 void
