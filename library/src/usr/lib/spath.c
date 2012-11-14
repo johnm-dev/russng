@@ -267,6 +267,11 @@ russ_spath_split(char *spath, char **saddr, char **spath2) {
 		}
 	}
 
+	if (p == NULL) {
+		/* no socket file */
+		goto free_spath;
+	}
+
 	/* copy into target */
 	if (((*saddr = strdup(spath)) == NULL)
 		|| ((*spath2 = malloc(strlen(p)+1+1)) == NULL)
