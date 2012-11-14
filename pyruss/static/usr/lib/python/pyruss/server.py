@@ -159,7 +159,7 @@ class ServiceTree:
         elif req.op == "help":
             # default handling for "help"; use node spath == "/"
             node = self.find("/")
-            if node and node.ops and node.handler "help" in node.ops:
+            if node and node.ops and node.handler and "help" in node.ops:
                 node.handler(conn)
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
