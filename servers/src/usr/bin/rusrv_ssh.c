@@ -47,7 +47,7 @@ char	*HELP =
 #define SSH_EXEC	"/usr/bin/ssh"
 #define RUDIAL_EXEC	"/usr/bin/rudial"
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
 /*
 ** simple, minimal replacement for clearenv which does not actually
 ** free the environ strings; use recommended for forking situations
