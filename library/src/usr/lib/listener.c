@@ -131,8 +131,6 @@ russ_lis_answer(struct russ_lis *self, russ_deadline deadline) {
 		}
 		if (errno != EINTR) {
 			goto free_conn;
-		} else {
-			break;
 		}
 	}
 	if (russ_get_creds(conn->sd, &(conn->creds)) < 0) {
