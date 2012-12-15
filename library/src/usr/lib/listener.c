@@ -112,26 +112,15 @@ russ_lis_answer(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_conn	*conn;
 	struct sockaddr_un	servaddr;
 	socklen_t		servaddr_len;
-	struct pollfd		poll_fds[1];
 
 	if ((self->sd < 0)
 		|| ((conn = russ_conn_new()) == NULL)) {
 		return NULL;
 	}
 
-	poll_fds[0].fd = self->sd;
-	poll_fds[0].events = POLLIN;
 	servaddr_len = sizeof(struct sockaddr_un);
-	while (1) {
-		if (russ_poll(poll_fds, 1, deadline) < 0) {
-			goto free_conn;
-		}
-		if ((conn->sd = accept(self->sd, (struct sockaddr *)&servaddr, &servaddr_len)) >= 0) {
-			break;
-		}
-		if (errno != EINTR) {
-			goto free_conn;
-		}
+	if ((conn->sd = russ_accept(self->sd, (struct sockaddr *)&servaddr, &servaddr_len, deadline)) < 0) {
+		goto free_conn;
 	}
 	if (russ_get_creds(conn->sd, &(conn->creds)) < 0) {
 		goto close_sd;
