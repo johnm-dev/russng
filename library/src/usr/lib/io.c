@@ -242,13 +242,9 @@ russ_poll(struct pollfd *poll_fds, int nfds, russ_deadline deadline) {
 
 	while (1) {
 //fprintf(stderr, "russ_poll rv (%d) errno (%d)\n", rv, errno);
-		if ((rv = poll(poll_fds, nfds, russ_to_timeout(deadline))) < 0) {
-			if (errno != EINTR) {
-				break;
-			}
-		}
-		if (rv >= 0) {
-			/* something waiting (>0) or timeout (0) */
+		if (((rv = poll(poll_fds, nfds, russ_to_timeout(deadline))) >= 0)
+			|| (errno != EINTR)) {
+			/* data (>0), timeout (0), non-EINTR error */
 			break;
 		}
 	}
