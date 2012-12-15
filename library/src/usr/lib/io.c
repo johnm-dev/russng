@@ -229,6 +229,34 @@ russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 }
 
 /**
+* Guaranteed modified accept with automatic restart on EINTR.
+*
+* @param sd		socket descriptor
+* @param addr		to socket address structure
+* @param addrlen[in,out]	socket address structure length
+* @param deadline	deadline to complete operation
+* @return		value as returned from accept; -1 on failure
+*/
+int
+russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline deadline) {
+	struct pollfd	poll_fds[1];
+	int		rv;
+
+	poll_fds[0].fd = sd;
+	poll_fds[0].events = POLLIN;
+	while (1) {
+		if ((rv = poll(poll_fds, 1, russ_to_timeout(deadline))) > 0) {
+			return accept(sd, addr, addrlen);
+		} else if (rv == 0) {
+			errno = 0; /* reset */
+			return -1;
+		} else if (errno != EINTR) {
+			return -1;
+		}
+	}
+}
+
+/**
 * Guaranteed modified poll with automatic restart on EINTR.
 *
 * @param poll_fds	initialized pollfd structure
