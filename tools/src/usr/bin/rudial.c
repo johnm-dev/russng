@@ -141,7 +141,7 @@ main(int argc, char **argv) {
 			&& (argi < argc)) {
 
 			arg = argv[argi++];
-			if (sscanf(argv[argi], "%d", (int *)&timeout) < 0) {
+			if (sscanf(arg, "%d", (int *)&timeout) < 0) {
 				fprintf(stderr, "error: bad timeout value\n");
 				exit(1);
 			}
