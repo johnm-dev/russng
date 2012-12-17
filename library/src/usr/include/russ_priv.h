@@ -38,6 +38,8 @@
 #define RUSS_REQ_BUF_MAX	262144
 #define RUSS_FWD_BUF_MAX	(1<<20)
 
+#define RUSS_LISTEN_BACKLOG	20
+
 /* conn.c */
 struct russ_conn *russ_conn_new(void);
 int russ_conn_send_request(struct russ_conn *, russ_deadline);
