@@ -233,7 +233,7 @@ russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 }
 
 /**
-* Guaranteed modified accept with automatic restart on EINTR.
+* accept() with automatic restart on EINTR.
 *
 * @param sd		socket descriptor
 * @param addr		to socket address structure
@@ -289,7 +289,7 @@ russ_connect(char *saddr) {
 }
 
 /**
-* Guaranteed modified poll with automatic restart on EINTR.
+* poll() with automatic restart on EINTR.
 *
 * @param poll_fds	initialized pollfd structure
 * @param nfds		# of descriptors in poll_fds
