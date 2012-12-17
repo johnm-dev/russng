@@ -139,14 +139,17 @@ russ_readn_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 
 	bend = b+count;
 	while (b < bend) {
-		rv = russ_poll(poll_fds, 1, deadline);
-		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
+		if ((rv = russ_poll(poll_fds, 1, deadline)) <= 0) {
+			/* error or timeout */
+			break;
+		} else if (poll_fds[0].revents & POLLIN) {
+			if ((n = russ_read(fd, b, bend-b)) <= 0) {
+				break;
+			}
+			b += n;
+		} else if (poll_fds[0].revents & POLLHUP) {
 			break;
 		}
-		if ((n = russ_read(fd, b, bend-b)) <= 0) {
-			break;
-		}
-		b += n;
 	}
 	return count-(bend-b);
 }
