@@ -29,40 +29,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/un.h>
 #include <unistd.h>
 
 #include "russ_priv.h"
-
-/**
-* Connect to socket.
-*
-* @param saddr		"unresolved" socket address
-* @return		descriptor value; -1 on error
-*/
-static int
-__connect(char *saddr) {
-	struct sockaddr_un	servaddr;
-	int			sd;
-
-	/* returned path must be freed */
-	if ((saddr = russ_spath_resolve(saddr)) == NULL) {
-		return -1;
-	}
-	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
-		bzero(&servaddr, sizeof(servaddr));
-		servaddr.sun_family = AF_UNIX;
-		strcpy(servaddr.sun_path, saddr);
-		if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-			close(sd);
-			sd = -1;
-		}
-	}
-	free(saddr);
-	return sd;
-}
 
 /**
 * Close a descriptor of the connection.
@@ -502,7 +472,7 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 	if ((conn = russ_conn_new()) == NULL) {
 		goto free_saddr;
 	}
-	if (((conn->sd = __connect(saddr)) < 0)
+	if (((conn->sd = russ_connect(saddr)) < 0)
 		|| (russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv) < 0)
 		|| (russ_conn_send_request(conn, deadline) < 0)
 		|| (russ_conn_recvfds(conn) < 0)) {

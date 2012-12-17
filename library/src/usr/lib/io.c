@@ -28,6 +28,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
 #include <time.h>
 
 #include "russ_priv.h"
@@ -254,6 +258,34 @@ russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline dea
 			return -1;
 		}
 	}
+}
+
+/**
+* connect() with automatic restart on EINTR.
+*
+* @param saddr		"unresolved" socket address
+* @return		descriptor value; -1 on error
+*/
+int
+russ_connect(char *saddr) {
+	struct sockaddr_un	servaddr;
+	int			sd;
+
+	/* returned path must be freed */
+	if ((saddr = russ_spath_resolve(saddr)) == NULL) {
+		return -1;
+	}
+	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
+		bzero(&servaddr, sizeof(servaddr));
+		servaddr.sun_family = AF_UNIX;
+		strcpy(servaddr.sun_path, saddr);
+		if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+			close(sd);
+			sd = -1;
+		}
+	}
+	free(saddr);
+	return sd;
 }
 
 /**
