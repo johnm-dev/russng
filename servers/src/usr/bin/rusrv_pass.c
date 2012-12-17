@@ -61,7 +61,7 @@ alt_accept_handler(struct russ_conn *self) {
 		return russ_standard_accept_handler(self);
 	}
 
-	if ((conn = russ_dialv(-1, req->op, req->spath, req->attrv, req->argv)) == NULL) {
+	if ((conn = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL) {
 		return -1;
 	}
 	return russ_conn_splice(self, conn);

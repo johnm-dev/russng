@@ -137,7 +137,7 @@ redial(int sd) {
 	}
 
 //fprintf(stderr, "op (%s) addr (%s)\n", op, addr);
-	if ((conn = russ_dialv(-1, op, addr, attrs, args)) == NULL) {
+	if ((conn = russ_dialv(RUSS_DEADLINE_NEVER, op, addr, attrs, args)) == NULL) {
 		return NULL;
 	}
 //fprintf(stderr, "conn (%p)\n", conn);
