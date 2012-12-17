@@ -278,7 +278,7 @@ russ_connect(int sd, struct sockaddr *addr, socklen_t addrlen, russ_deadline dea
 
 	/* save and set non-blocking */
 	if (((flags = fcntl(sd, F_GETFL)) < 0)
-		|| (fcntl(sd, F_SETFL, O_NONBLOCK) < 0)) {
+		|| (fcntl(sd, F_SETFL, flags|O_NONBLOCK) < 0)) {
 		return -1;
 	}
 	if (connect(sd, addr, addrlen) < 0) {
