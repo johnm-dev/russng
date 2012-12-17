@@ -238,7 +238,7 @@ russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 * accept() with automatic restart on EINTR.
 *
 * @param sd		socket descriptor
-* @param addr		to socket address structure
+* @param addr		socket address structure
 * @param addrlen[in,out]	socket address structure length
 * @param deadline	deadline to complete operation
 * @return		value as returned from accept; -1 on failure
@@ -265,42 +265,36 @@ russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline dea
 /**
 * connect() with automatic restart on EINTR.
 *
-* @param saddr		socket address
+* @param sd		socket descriptor
+* @param addr		sockaddr structure
+* @param addrlen	sockaddr structure length
 * @param deadline	deadline to complete operation
-* @return		descriptor value; -1 on error
+* @return		0 on success; -1 on error
 */
 int
-russ_connect(char *saddr, russ_deadline deadline) {
+russ_connect(int sd, struct sockaddr *addr, socklen_t addrlen, russ_deadline deadline) {
 	struct pollfd		poll_fds[1];
-	struct sockaddr_un	servaddr;
-	int			sd;
 	int			flags;
 
-	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
-		bzero(&servaddr, sizeof(servaddr));
-		servaddr.sun_family = AF_UNIX;
-		strcpy(servaddr.sun_path, saddr);
-		if (((flags = fcntl(sd, F_GETFL)) < 0)
-			|| (fcntl(sd, F_SETFL, O_NONBLOCK) < 0)) {
-			goto close_sd;
-		}
-		if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-			if ((errno == EINTR) || (errno == EINPROGRESS)) {
-				poll_fds[0].fd = sd;
-				poll_fds[0].events = POLLIN;
-				if (russ_poll(poll_fds, 1, deadline) < 0) {
-					goto close_sd;
-				}
+	/* save and set non-blocking */
+	if (((flags = fcntl(sd, F_GETFL)) < 0)
+		|| (fcntl(sd, F_SETFL, O_NONBLOCK) < 0)) {
+		return -1;
+	}
+	if (connect(sd, addr, addrlen) < 0) {
+		if ((errno == EINTR) || (errno == EINPROGRESS)) {
+			poll_fds[0].fd = sd;
+			poll_fds[0].events = POLLIN;
+			if (russ_poll(poll_fds, 1, deadline) < 0) {
+				return -1;
 			}
 		}
-		if (fcntl(sd, F_SETFL, flags) < 0) {
-			goto close_sd;
-		}
 	}
-	return sd;
-close_sd:
-	close(sd);
-	return -1;
+	/* restore */
+	if (fcntl(sd, F_SETFL, flags) < 0) {
+		return -1;
+	}
+	return 0;
 }
 
 /**
