@@ -59,7 +59,7 @@ main(int argc, char **argv) {
 		|| ((bp = russ_dec_sarray0(bp, &args, &cnt)) == NULL)) {
 		exit(RUSS_EXIT_SYS_FAILURE);
 	}
-	if ((conn = russ_dialv(-1, op, addr, attrs, args)) == NULL) {
+	if ((conn = russ_dialv(RUSS_DEADLINE_NEVER, op, addr, attrs, args)) == NULL) {
 		exit(RUSS_EXIT_SYS_FAILURE);
 	}
 

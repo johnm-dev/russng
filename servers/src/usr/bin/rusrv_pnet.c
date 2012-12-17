@@ -341,7 +341,7 @@ alt_accept_handler(struct russ_conn *self) {
 
 	/* dial next service and splice */
 	if ((switch_user(self) < 0)
-		|| ((conn = russ_dialv(-1, req->op, req->spath, req->attrv, req->argv)) == NULL)) {
+		|| ((conn = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL)) {
 		return -1;
 	}
 	return russ_conn_splice(self, conn);
