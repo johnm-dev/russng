@@ -251,6 +251,7 @@ russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline dea
 	poll_fds[0].fd = sd;
 	poll_fds[0].events = POLLIN;
 	while (1) {
+#if 0
 		if ((rv = poll(poll_fds, 1, russ_to_timeout(deadline))) > 0) {
 			return accept(sd, addr, addrlen);
 		} else if (rv == 0) {
@@ -258,6 +259,11 @@ russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline dea
 			return -1;
 		} else if (errno != EINTR) {
 			return -1;
+		}
+#endif
+		if (((rv = accept(sd, addr, addrlen)) >= 0)
+			|| (errno != EINTR)) {
+			return rv;
 		}
 	}
 }
