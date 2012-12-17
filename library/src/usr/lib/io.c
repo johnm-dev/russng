@@ -139,7 +139,7 @@ russ_readn_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 
 	bend = b+count;
 	while (b < bend) {
-		rv = russ_poll(poll_fds, 1, russ_to_timeout(deadline));
+		rv = russ_poll(poll_fds, 1, deadline);
 		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
 			break;
 		}
@@ -222,7 +222,7 @@ russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 
 	bend = b+count;
 	while (b < bend) {
-		rv = russ_poll(poll_fds, 1, russ_to_timeout(deadline));
+		rv = russ_poll(poll_fds, 1, deadline);
 		if ((rv <= 0) || (poll_fds[0].revents & POLLHUP)) {
 			break;
 		}
