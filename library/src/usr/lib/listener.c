@@ -84,7 +84,7 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	}
 	if ((chmod(saddr, mode) < 0)
 		|| (chown(saddr, uid, gid) < 0)
-		|| (listen(sd, 5) < 0)
+		|| (listen(sd, RUSS_LISTEN_BACKLOG) < 0)
 		|| ((lis = malloc(sizeof(struct russ_lis))) == NULL)) {
 		goto close_sd;
 	}
