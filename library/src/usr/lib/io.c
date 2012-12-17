@@ -23,6 +23,7 @@
 */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -33,6 +34,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "russ_priv.h"
 
@@ -264,23 +266,41 @@ russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline dea
 * connect() with automatic restart on EINTR.
 *
 * @param saddr		socket address
+* @param deadline	deadline to complete operation
 * @return		descriptor value; -1 on error
 */
 int
-russ_connect(char *saddr) {
+russ_connect(char *saddr, russ_deadline deadline) {
+	struct pollfd		poll_fds[1];
 	struct sockaddr_un	servaddr;
 	int			sd;
+	int			flags;
 
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
 		bzero(&servaddr, sizeof(servaddr));
 		servaddr.sun_family = AF_UNIX;
 		strcpy(servaddr.sun_path, saddr);
+		if (((flags = fcntl(sd, F_GETFL)) < 0)
+			|| (fcntl(sd, F_SETFL, O_NONBLOCK) < 0)) {
+			goto close_sd;
+		}
 		if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-			close(sd);
-			sd = -1;
+			if ((errno == EINTR) || (errno == EINPROGRESS)) {
+				poll_fds[0].fd = sd;
+				poll_fds[0].events = POLLIN;
+				if (russ_poll(poll_fds, 1, deadline) < 0) {
+					goto close_sd;
+				}
+			}
+		}
+		if (fcntl(sd, F_SETFL, flags) < 0) {
+			goto close_sd;
 		}
 	}
 	return sd;
+close_sd:
+	close(sd);
+	return -1;
 }
 
 /**
