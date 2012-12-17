@@ -80,18 +80,19 @@ free_conn:
 * Receive fds from connection.
 *
 * @param self		connection object
+* @param deadline	deadline for operation
 * @return		0 on success; -1 on error
 */
 static int
-russ_conn_recvfds(struct russ_conn *self) {
+russ_conn_recvfds(struct russ_conn *self, russ_deadline deadline) {
 	char	buf[32+RUSS_CONN_NFDS], *bp, *bend;
 	int	nfds, i;
 
 	/* recv count of fds and fd statuses */
-	if ((russ_readn(self->sd, buf, 4) < 4)
+	if ((russ_readn_deadline(self->sd, buf, 4, deadline) < 4)
 		|| (russ_dec_i(buf, &nfds) == NULL)
 		|| (nfds > RUSS_CONN_NFDS)
-		|| (russ_readn(self->sd, buf, nfds) < nfds)) {
+		|| (russ_readn_deadline(self->sd, buf, nfds, deadline) < nfds)) {
 		return -1;
 	}
 
@@ -486,7 +487,7 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 
 	if ((russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv) < 0)
 		|| (russ_conn_send_request(conn, deadline) < 0)
-		|| (russ_conn_recvfds(conn) < 0)) {
+		|| (russ_conn_recvfds(conn, deadline) < 0)) {
 		goto free_request;
 	}
 	free(saddr);
