@@ -472,7 +472,7 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 	if ((conn = russ_conn_new()) == NULL) {
 		goto free_saddr;
 	}
-	if (((conn->sd = russ_connect(saddr)) < 0)
+	if (((conn->sd = russ_connect(saddr, deadline)) < 0)
 		|| (russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv) < 0)
 		|| (russ_conn_send_request(conn, deadline) < 0)
 		|| (russ_conn_recvfds(conn) < 0)) {
