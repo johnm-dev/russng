@@ -263,7 +263,7 @@ russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline dea
 /**
 * connect() with automatic restart on EINTR.
 *
-* @param saddr		"unresolved" socket address
+* @param saddr		socket address
 * @return		descriptor value; -1 on error
 */
 int
@@ -271,10 +271,6 @@ russ_connect(char *saddr) {
 	struct sockaddr_un	servaddr;
 	int			sd;
 
-	/* returned path must be freed */
-	if ((saddr = russ_spath_resolve(saddr)) == NULL) {
-		return -1;
-	}
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0) {
 		bzero(&servaddr, sizeof(servaddr));
 		servaddr.sun_family = AF_UNIX;
@@ -284,7 +280,6 @@ russ_connect(char *saddr) {
 			sd = -1;
 		}
 	}
-	free(saddr);
 	return sd;
 }
 
