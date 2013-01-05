@@ -387,12 +387,6 @@ class ClientConn(Conn):
     """Client connection.
     """
 
-    def get_fd(self, i):
-        return self.conn_ptr.contents.fds[i]
-
-    def get_sd(self):
-        return self.conn_ptr.contents.sd
-
     def wait(self, deadline):
         exit_status = ctypes.c_int()
         return libruss.russ_conn_wait(self.conn_ptr, ctypes.byref(exit_status), deadline), exit_status.value
