@@ -108,7 +108,7 @@ free_saddr:
 * @return		connection object with credentials (not fully established); NULL on failure
 */
 struct russ_conn *
-russ_lis_answer(struct russ_lis *self, russ_deadline deadline) {
+russ_lis_accept(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_conn	*conn;
 	struct sockaddr_un	servaddr;
 	socklen_t		servaddr_len;
@@ -162,39 +162,39 @@ russ_lis_free(struct russ_lis *self) {
 * Loop to answer and accept connections and them in a child process.
 *
 * The loop consists of 3 phases:
-* 1) answer incoming connection on listener socket (prior to fork)
-* 2) accept request on new connection object (after fork)
+* 1) accept incoming connection on listener socket (prior to fork)
+* 2) anwer request on new connection object (after fork)
 * 3) service request
 *
 * A handler for each phase can be given. However, only the request
 * handler is needed. There are standard/default handlers available
-* for the answer_handler, the accept_handler when each are set to
+* for the accept_handler, the answer_handler when each are set to
 * NULL.
 *
 * The request handler is responsible for servicing requests, closing
 * descriptors as appropriate and exiting (with russ_conn_exit()).
 *
 * @param self		listener object
-* @param answer_handler	handler function to call on listener object
-* @param accept_handler	handler function to call new connection
-*			object (from answer)
+* @param accept_handler	handler function to call on listener object
+* @param answer_handler	handler function to call new connection
+*			object (from accept)
 * @param req_handler	handler function to call on accepted
 */
 void
-russ_lis_loop(struct russ_lis *self, russ_answer_handler answer_handler,
-	russ_accept_handler accept_handler, russ_req_handler req_handler) {
+russ_lis_loop(struct russ_lis *self, russ_accept_handler accept_handler,
+	russ_answer_handler answer_handler, russ_req_handler req_handler) {
 
 	struct russ_conn	*conn;
 
-	if (answer_handler == NULL) {
-		answer_handler = russ_standard_answer_handler;
-	}
 	if (accept_handler == NULL) {
 		accept_handler = russ_standard_accept_handler;
 	}
+	if (answer_handler == NULL) {
+		answer_handler = russ_standard_answer_handler;
+	}
 
 	while (1) {
-		if ((conn = answer_handler(self, RUSS_DEADLINE_NEVER)) == NULL) {
+		if ((conn = accept_handler(self, RUSS_DEADLINE_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
@@ -203,7 +203,7 @@ russ_lis_loop(struct russ_lis *self, russ_answer_handler answer_handler,
 			russ_lis_close(self);
 			self = russ_lis_free(self);
 			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)
-				|| (accept_handler(conn) < 0)) {
+				|| (answer_handler(conn) < 0)) {
 				exit(-1);
 			}
 			req_handler(conn);

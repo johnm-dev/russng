@@ -136,12 +136,12 @@ struct russ_fwd {
 
 typedef int64_t russ_deadline;
 
-typedef int (*russ_accept_handler)(struct russ_conn *);
-typedef struct russ_conn *(*russ_answer_handler)(struct russ_lis *, russ_deadline);
+typedef struct russ_conn *(*russ_accept_handler)(struct russ_lis *, russ_deadline);
+typedef int (*russ_answer_handler)(struct russ_conn *);
 typedef void (*russ_req_handler)(struct russ_conn *);
 
 /* conn.c */
-int russ_conn_accept(struct russ_conn *, int, int *, int *);
+int russ_conn_answer(struct russ_conn *, int, int *, int *);
 int russ_conn_await_request(struct russ_conn *, russ_deadline);
 void russ_conn_close(struct russ_conn *);
 void russ_conn_close_fd(struct russ_conn *, int);
@@ -163,8 +163,8 @@ int russ_fwd_join(struct russ_fwd *);
 int russ_fwds_run(struct russ_fwd *, int);
 
 /* handlers.c */
-int russ_standard_accept_handler(struct russ_conn *);
-struct russ_conn *russ_standard_answer_handler(struct russ_lis *, russ_deadline);
+struct russ_conn *russ_standard_accept_handler(struct russ_lis *, russ_deadline);
+int russ_standard_answer_handler(struct russ_conn *);
 
 /* helpers.c */
 struct russ_conn *russ_execv(russ_deadline, char *, char **, char **);
@@ -183,10 +183,10 @@ ssize_t russ_writen_deadline(int, char *, size_t, russ_deadline);
 
 /* listener.c */
 struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);
-struct russ_conn *russ_lis_answer(struct russ_lis *, russ_deadline);
+struct russ_conn *russ_lis_accept(struct russ_lis *, russ_deadline);
 void russ_lis_close(struct russ_lis *);
 struct russ_lis *russ_lis_free(struct russ_lis *);
-void russ_lis_loop(struct russ_lis *, russ_answer_handler, russ_accept_handler, russ_req_handler);
+void russ_lis_loop(struct russ_lis *, russ_accept_handler, russ_answer_handler, russ_req_handler);
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);

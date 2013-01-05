@@ -46,19 +46,19 @@ char	*HELP =
 "    Connect to service ... and pass fds back.\n";
 
 /*
-* Example alternate accept handler.
+* Example alternate answer handler.
 *
 * @param self		connection object
 * @return		0 on success; -1 on failure
 */
 int
-alt_accept_handler(struct russ_conn *self) {
+alt_answer_handler(struct russ_conn *self) {
 	struct russ_conn	*conn;
 	struct russ_req		*req;
 
 	req = &(self->req);
 	if (strcmp(req->spath, "/") == 0) {
-		return russ_standard_accept_handler(self);
+		return russ_standard_answer_handler(self);
 	}
 
 	if ((conn = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL) {
@@ -126,6 +126,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, NULL, alt_accept_handler, master_handler);
+	russ_lis_loop(lis, NULL, alt_answer_handler, master_handler);
 	exit(0);
 }

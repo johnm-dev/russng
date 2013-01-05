@@ -168,7 +168,7 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 * @return		0 on success; -1 on error
 */
 int
-russ_conn_accept(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
+russ_conn_answer(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 	if ((nfds < 0) || (russ_conn_sendfds(self, nfds, cfds, sfds) < 0)) {
 		russ_fds_close(&self->sd, 1);
 		return -1;

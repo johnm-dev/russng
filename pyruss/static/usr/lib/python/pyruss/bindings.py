@@ -91,7 +91,7 @@ class russ_conn_Structure(ctypes.Structure):
     ]
 
 # conn.c
-libruss.russ_conn_accept.argtypes = [
+libruss.russ_conn_answer.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_int,
     ctypes.c_void_p,
@@ -100,7 +100,7 @@ libruss.russ_conn_accept.argtypes = [
     #ctypes.c_int*4,
     #ctypes.c_int*4,
 ]
-libruss.russ_conn_accept.restype = ctypes.c_int
+libruss.russ_conn_answer.restype = ctypes.c_int
 
 libruss.russ_conn_await_request.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
@@ -176,15 +176,15 @@ libruss.russ_dialv.restype = ctypes.POINTER(russ_conn_Structure)
 
 # handlers.c
 libruss.russ_standard_accept_handler.argtypes = [
-    ctypes.POINTER(russ_conn_Structure)
-]
-libruss.russ_standard_accept_handler.restype = ctypes.c_int
-
-libruss.russ_standard_answer_handler.argtypes = [
     ctypes.POINTER(russ_lis_Structure),
     ctypes.c_int64,
 ]
-libruss.russ_standard_answer_handler.restype = ctypes.POINTER(russ_conn_Structure)
+libruss.russ_standard_accept_handler.restype = ctypes.POINTER(russ_conn_Structure)
+
+libruss.russ_standard_answer_handler.argtypes = [
+    ctypes.POINTER(russ_conn_Structure)
+]
+libruss.russ_standard_answer_handler.restype = ctypes.c_int
 
 # listener.c
 libruss.russ_announce.argtypes = [
@@ -195,11 +195,11 @@ libruss.russ_announce.argtypes = [
 ]
 libruss.russ_announce.restype = ctypes.POINTER(russ_lis_Structure)
 
-libruss.russ_lis_answer.argtypes = [
+libruss.russ_lis_accept.argtypes = [
     ctypes.POINTER(russ_lis_Structure),
     ctypes.c_int64,  # russ_deadline
 ]
-libruss.russ_lis_answer.restype = ctypes.POINTER(russ_conn_Structure)
+libruss.russ_lis_accept.restype = ctypes.POINTER(russ_conn_Structure)
 
 libruss.russ_lis_close.argtypes = [
     ctypes.POINTER(russ_lis_Structure),
@@ -404,12 +404,12 @@ class ServerConn(Conn):
     """Server connection.
     """
 
-    def accept(self, nfds, cfds, sfds):
+    def answer(self, nfds, cfds, sfds):
         if 0:
             # TODO: how to handle passing fds?
-            return libruss.russ_conn_accept(self.conn_ptr, nfds, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+            return libruss.russ_conn_answer(self.conn_ptr, nfds, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
         else:
-            return libruss.russ_conn_accept(self.conn_ptr, 0, None, None)
+            return libruss.russ_conn_answer(self.conn_ptr, 0, None, None)
 
     def await_request(self, deadline):
         return libruss.russ_conn_await_request(self.conn_ptr, deadline)
@@ -423,8 +423,8 @@ class ServerConn(Conn):
     def fatal(self, msg, exit_status):
         return libruss.russ_conn_fatal(self.conn_ptr, msg, exit_status)
 
-    def standard_accept_handler(self):
-        return libruss.russ_standard_accept_handler(self.conn_ptr)
+    def standard_answer_handler(self):
+        return libruss.russ_standard_answer_handler(self.conn_ptr)
 
 REQ_HANDLER_FUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
 
@@ -437,9 +437,9 @@ class Listener:
         libruss.russ_lis_free(self.lis_ptr)
         self.lis_ptr = None
 
-    def answer(self, deadline):
+    def accept(self, deadline):
         try:
-            conn_ptr = libruss.russ_lis_answer(self.lis_ptr, deadline)
+            conn_ptr = libruss.russ_lis_accept(self.lis_ptr, deadline)
         except:
             traceback.print_exc()
         return bool(conn_ptr) and ServerConn(conn_ptr) or None
@@ -453,24 +453,24 @@ class Listener:
         else:
             return -1
 
-    def _loop(self, answer_handler, accept_handler, req_handler):
-        # TODO: support accept_handler
+    def _loop(self, accept_handler, answer_handler, req_handler):
+        # TODO: support answer_handler
         def raw_handler(conn_ptr):
             req_handler(ServerConn(conn_ptr))
             return 0    # TODO: allow a integer return value from handler
         libruss.russ_lis_loop(self.lis_ptr, None, None, REQ_HANDLER_FUNC(raw_handler))
 
-    def loop(self, answer_handler, accept_handler, req_handler):
+    def loop(self, accept_handler, answer_handler, req_handler):
         """Fork-based loop.
         """
-        if answer_handler == None:
-            answer_handler = Listener.standard_answer_handler
         if accept_handler == None:
             accept_handler = ServerConn.standard_accept_handler
+        if answer_handler == None:
+            answer_handler = Listener.standard_answer_handler
 
         while self.get_sd() >= 0:
             try:
-                conn = answer_handler(self, RUSS_DEADLINE_NEVER)
+                conn = accept_handler(self, RUSS_DEADLINE_NEVER)
                 if conn == None:
                     sys.stderr.write("error: cannot answer connection\n")
                     continue
@@ -479,7 +479,7 @@ class Listener:
                     os.setsid()
                     self.close()
                     if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
-                        or accept_handler(conn) < 0:
+                        or answer_handler(conn) < 0:
                         conn.close()
                         sys.exit(-1)
                     try:
@@ -501,12 +501,12 @@ class Listener:
                 #traceback.print_exc()
                 pass
 
-    def loop_thread(self, answer_handler, accept_handler, req_handler):
+    def loop_thread(self, accept_handler, answer_handler, req_handler):
         """Thread-based loop.
         """
         def pre_handler_thread(conn, req_handler):
             if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
-                or accept_handler(conn) < 0:
+                or answer_handler(conn) < 0:
                 return
             try:
                 req_handler(conn)
@@ -519,14 +519,14 @@ class Listener:
             except:
                 pass
 
-        if answer_handler == None:
-            answer_handler = Listener.standard_answer_handler
         if accept_handler == None:
             accept_handler = ServerConn.standard_accept_handler
+        if answer_handler == None:
+            answer_handler = Listener.standard_answer_handler
 
         while True:
             try:
-                conn = answer_handler(self, RUSS_DEADLINE_NEVER)
+                conn = accept_handler(self, RUSS_DEADLINE_NEVER)
                 if conn == None:
                     sys.stderr.write("error: cannot answer connection\n")
                     continue
@@ -538,9 +538,9 @@ class Listener:
                 #traceback.print_exc()
                 pass
 
-    def standard_answer_handler(self, deadline):
+    def standard_accept_handler(self, deadline):
         try:
-            conn_ptr = libruss.russ_standard_answer_handler(self.lis_ptr, deadline)
+            conn_ptr = libruss.russ_standard_accept_handler(self.lis_ptr, deadline)
         except:
             traceback.print_exc()
         return bool(conn_ptr) and ServerConn(conn_ptr) or None

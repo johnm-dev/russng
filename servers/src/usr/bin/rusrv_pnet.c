@@ -305,11 +305,11 @@ _random_patch(struct russ_conn *conn) {
 }
 
 /*
-* Alternate accept handler for certain spaths.
+* Alternate answer handler for certain spaths.
 
 * The spaths: /id/, /host/, /first/, /next/, /net/, and /random/ are
 * treated specially before an accept is done. If none of the special
-* spaths are found, the default accept handler is called (for
+* spaths are found, the default answer handler is called (for
 * further processing).
 *
 * @param self		connection object
@@ -317,7 +317,7 @@ _random_patch(struct russ_conn *conn) {
 */
 
 int
-alt_accept_handler(struct russ_conn *self) {
+alt_answer_handler(struct russ_conn *self) {
 	struct russ_conn	*conn;
 	struct russ_req		*req;
 
@@ -336,7 +336,7 @@ alt_accept_handler(struct russ_conn *self) {
 	} else if (strncmp(req->spath, "/random/", 8) == 0) {
 		_random_patch(self);
 	} else {
-		return russ_standard_accept_handler(self);
+		return russ_standard_answer_handler(self);
 	}
 
 	/* dial next service and splice */
@@ -408,10 +408,10 @@ master_handler(struct russ_conn *conn) {
 }
 
 struct russ_conn *
-alt_answer_handler(struct russ_lis *self, russ_deadline deadline) {
+alt_accept_handler(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_conn	*conn;
 
-	if ((conn = russ_lis_answer(self, deadline)) != NULL) {
+	if ((conn = russ_lis_accept(self, deadline)) != NULL) {
 		hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
 		random(); /* tickle */
 	}
@@ -495,6 +495,6 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, alt_answer_handler, alt_accept_handler, master_handler);
+	russ_lis_loop(lis, alt_accept_handler, alt_answer_handler, master_handler);
 	exit(0);
 }

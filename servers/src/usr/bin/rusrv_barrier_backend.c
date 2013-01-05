@@ -319,11 +319,11 @@ main(int argc, char **argv) {
 			};
 		} else {
 			if (poll_fds[0].revents && POLLIN) {
-				if ((conn = russ_lis_answer(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
+				if ((conn = russ_lis_accept(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
 					continue;
 				}
 				if ((russ_conn_await_request(conn) < 0)
-					|| (russ_conn_accept(conn, NULL, NULL) < 0)) {
+					|| (russ_conn_answer(conn, NULL, NULL) < 0)) {
 					russ_conn_close(conn);
 					conn = russ_conn_free(conn);
 					continue;
