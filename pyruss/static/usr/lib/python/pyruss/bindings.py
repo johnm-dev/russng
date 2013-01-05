@@ -341,6 +341,9 @@ class Conn:
     def get_fd(self, i):
         return self.conn_ptr.contents.fds[i]
 
+    def get_fds(self):
+        return [self.conn_ptr.contents.fds[i] for i in range(RUSS_CONN_NFDS)]
+
     def get_request(self):
         return self.conn_ptr.contents.req
 
