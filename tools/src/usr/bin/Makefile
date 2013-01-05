@@ -10,16 +10,16 @@ LIBS=-lruss -lpthread $(LIBS_PLAT)
 BINS=rudial ruls russ_resolve_spath
 
 ifndef RUSS_INCLUDE_DIR
-        $(error "error: missing RUSS_INCLUDE_DIR")
+	$(error "error: missing RUSS_INCLUDE_DIR")
 endif
 
 ifndef RUSS_LIB_DIR
-        $(error "error: missing RUSS_LIB_DIR")
+	$(error "error: missing RUSS_LIB_DIR")
 endif
 
-.PHONY: install
+.PHONY:	install
 
-all: $(BINS)
+all:	$(BINS)
 
 clean:
 	rm -f $(BINS) *.o
