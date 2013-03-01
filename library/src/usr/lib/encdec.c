@@ -74,6 +74,39 @@ russ_dec_i(char *b, int32_t *v) {
 }
 
 /**
+* Decode LE 64-bit unsigned integer.
+*
+* @param b		buffer
+* @param[out] v		storage area
+* @return		new buffer position; NULL if failure
+*/
+char *
+russ_dec_Q(char *b, uint64_t *v) {
+	*v = (uint8_t)(b[0]) | ((uint8_t)(b[1])<<8)
+		| ((uint8_t)(b[2])<<16) | ((uint8_t)(b[3])<<24)
+		| ((uint8_t)(b[2])<<32) | ((uint8_t)(b[3])<<40)
+		| ((uint8_t)(b[2])<<48) | ((uint8_t)(b[3])<<56);
+	return b+8;
+}
+
+/**
+* Decode LE 64-bit signed integer.
+*
+* @param b		buffer
+* @param[out] v		storage area
+* @return		new buffer position; NULL if failure
+*/
+char *
+russ_dec_q(char *b, int64_t *v) {
+	uint64_t	v2;
+	char		*b2;
+
+	b2 = russ_dec_Q(b, &v2);
+	*v = (int64_t)v2;
+	return b2;
+}
+
+/**
 * Decode size-encoded byte-array.
 *
 * @param b		buffer
@@ -235,6 +268,54 @@ russ_enc_i(char *b, char *bend, int32_t v) {
 	b[2] = (uint8_t)(v >> 16) & 0xff;
 	b[3] = (uint8_t)(v >> 24) & 0xff;
 	return b+4;
+}
+
+/**
+* Encode uint64.
+*
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		uint64 value
+* @return		new buffer position; NULL if failure
+*/
+char *
+russ_enc_Q(char *b, char *bend, uint64_t v) {
+	if ((bend-b) < 8) {
+		return NULL;
+	}
+	b[0] = (uint8_t)v & 0xff;
+	b[1] = (uint8_t)(v>>8) & 0xff;
+	b[2] = (uint8_t)(v>>16) & 0xff;
+	b[3] = (uint8_t)(v>>24) & 0xff;
+	b[4] = (uint8_t)(v>>32) & 0xff;
+	b[5] = (uint8_t)(v>>40) & 0xff;
+	b[6] = (uint8_t)(v>>48) & 0xff;
+	b[7] = (uint8_t)(v>>56) & 0xff;
+	return b+8;
+}
+
+/**
+* Encode int64.
+*
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		int64 value
+* @return		new buffer position; NULL if failure
+*/
+char *
+russ_enc_q(char *b, char *bend, int64_t v) {
+	if ((bend-b) < 8) {
+		return NULL;
+	}
+	b[0] = (uint8_t)v & 0xff;
+	b[1] = (uint8_t)(v>>8) & 0xff;
+	b[2] = (uint8_t)(v>>16) & 0xff;
+	b[3] = (uint8_t)(v>>24) & 0xff;
+	b[4] = (uint8_t)(v>>32) & 0xff;
+	b[5] = (uint8_t)(v>>40) & 0xff;
+	b[6] = (uint8_t)(v>>48) & 0xff;
+	b[7] = (uint8_t)(v>>56) & 0xff;
+	return b+8;
 }
 
 /**
