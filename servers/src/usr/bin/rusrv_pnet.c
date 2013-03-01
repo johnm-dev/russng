@@ -368,41 +368,47 @@ master_handler(struct russ_conn *conn) {
 		|| (strcmp(req->spath, "/next/") == 0)
 		|| (strcmp(req->spath, "/random/") == 0)) {
 		/* nothing */
-	} else if (strcmp(req->op, "execute") == 0) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-	} else if (strcmp(req->op, "help") == 0) {
-        	russ_dprintf(outfd, "%s", HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-	} else if (strcmp(req->op, "list") == 0) {
-		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(outfd, "first\nhost\nid\nnet\nnext\nrandom\n");
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		} else if (strcmp(req->spath, "/host") == 0) {
-			if (hostslist.nhosts == 0) {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			} else {
-				for (i = 0; i < hostslist.nhosts; i++) {
-					russ_dprintf(outfd, "%s\n", hostslist.hosts[i]);
-				}
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			}
-		} else if (strcmp(req->spath, "/id") == 0) {
-			if (hostslist.nhosts == 0) {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			} else {
-				for (i = 0; i < hostslist.nhosts; i++) {
-					russ_dprintf(outfd, "%d\n", i);
-				}
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			}
-		} else if ((strcmp(req->spath, "/net") == 0)) {
-			//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
-			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
 	} else {
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		switch (req->op) {
+		case RUSS_OP_EXECUTE:
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			break;
+		case RUSS_OP_HELP:
+	        	russ_dprintf(outfd, "%s", HELP);
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			break;
+		case RUSS_OP_LIST:
+			if (strcmp(req->spath, "/") == 0) {
+				russ_dprintf(outfd, "first\nhost\nid\nnet\nnext\nrandom\n");
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			} else if (strcmp(req->spath, "/host") == 0) {
+				if (hostslist.nhosts == 0) {
+					russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+				} else {
+					for (i = 0; i < hostslist.nhosts; i++) {
+						russ_dprintf(outfd, "%s\n", hostslist.hosts[i]);
+					}
+					russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+				}
+			} else if (strcmp(req->spath, "/id") == 0) {
+				if (hostslist.nhosts == 0) {
+					russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+				} else {
+					for (i = 0; i < hostslist.nhosts; i++) {
+						russ_dprintf(outfd, "%d\n", i);
+					}
+					russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+				}
+			} else if ((strcmp(req->spath, "/net") == 0)) {
+				//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
+				russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
+			} else {
+				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			}
+			break;
+		default:
+			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		}
 	}
 	exit(0);
 }

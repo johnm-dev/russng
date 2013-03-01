@@ -224,7 +224,7 @@ enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) 
 	req = &(conn->req);
 	bend = buf+buf_size;
 	bp = buf+4;
-	if (((bp = russ_enc_s(bp, bend, req->op)) == NULL)
+	if (((bp = russ_enc_I(bp, bend, req->op)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, new_spath)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->argv)) == NULL)) {
@@ -363,7 +363,7 @@ svc_dial_handler(struct russ_conn *conn) {
 	char		**section_names, **p;
 
 	req = &(conn->req);
-	if (strcmp(req->op, "list") == 0) {
+	if (req->op == RUSS_OP_LIST) {
 		if ((section_names = russ_conf_sections(conf)) == NULL) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 			return;
@@ -434,26 +434,32 @@ master_handler(struct russ_conn *conn) {
 	if (strncmp(req->spath, "/dial/", 6) == 0) {
 		/* service /dial/ for any op */
 		svc_dial_cluster_host_handler(conn);
-	} else if (strcmp(req->op, "execute") == 0) {
-		if (strcmp(req->spath, "/debug") == 0) {
-			svc_debug_handler(conn);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
-	} else if (strcmp(req->op, "help") == 0) {
-		russ_dprintf(conn->fds[1], HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-	} else if (strcmp(req->op, "list") == 0) {
-		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(conn->fds[1], "debug\ndial\n");
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		} else if (strcmp(req->spath, "/dial") == 0) {
-			svc_dial_handler(conn);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
 	} else {
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		switch (req->op) {
+		case RUSS_OP_EXECUTE:
+			if (strcmp(req->spath, "/debug") == 0) {
+				svc_debug_handler(conn);
+			} else {
+				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			}
+			break;
+		case RUSS_OP_HELP:
+			russ_dprintf(conn->fds[1], HELP);
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			break;
+		case RUSS_OP_LIST:
+			if (strcmp(req->spath, "/") == 0) {
+				russ_dprintf(conn->fds[1], "debug\ndial\n");
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			} else if (strcmp(req->spath, "/dial") == 0) {
+				svc_dial_handler(conn);
+			} else {
+				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			}
+			break;
+		default:
+			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		}
 	}
 	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 	russ_conn_close(conn);

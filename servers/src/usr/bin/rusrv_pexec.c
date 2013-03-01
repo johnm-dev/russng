@@ -190,13 +190,16 @@ master_handler(struct russ_conn *conn) {
 	}
 
 	req = &(conn->req);
-	if (strcmp(req->op, "help") == 0) {
+	switch (req->op) {
+	case RUSS_OP_HELP:
 		op_help_handler(conn);
-	} else if (strcmp(req->op, "list") == 0) {
+		break;
+	case RUSS_OP_LIST:
 		op_list_handler(conn);
-	} else if (strcmp(req->op, "execute") == 0) {
+		break;
+	case RUSS_OP_EXECUTE:
 		op_execute_handler(conn);
-	} else {
+	default:
 		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
 }

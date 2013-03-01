@@ -76,13 +76,16 @@ master_handler(struct russ_conn *conn) {
 
 	req = &(conn->req);
 	if (strcmp(req->spath, "/") == 0) {
-		if (strcmp(req->op, "help") == 0) {
+		switch (req->op) {
+		case RUSS_OP_HELP:
 			russ_dprintf(conn->fds[1], "%s", HELP);
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		} else if (strcmp(req->op, "list") == 0) {
+			break;
+		case RUSS_OP_LIST:
 			russ_dprintf(conn->fds[1], "%s", HELP);
 			russ_conn_fatal(conn, RUSS_MSG_UNDEF_SERVICE, RUSS_EXIT_FAILURE);
-		} else {
+			break;
+		default:
 			/* TODO: something else needs to be here */
 			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 		}

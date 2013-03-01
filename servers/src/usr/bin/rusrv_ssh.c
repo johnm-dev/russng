@@ -119,6 +119,7 @@ void
 execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	char	*args[1024];
 	int	nargs;
+	char	op_str[256];
 	int	i, status, pid;
 
 	switch_user(conn);
@@ -143,7 +144,11 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 			}
 		}
 	}
-	args[nargs++] = conn->req.op;
+	if (snprintf(op_str, sizeof(op_str), "%u", conn->req.op) < 0) {
+		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	args[nargs++] = op_str;
 	args[nargs++] = new_spath;
 	if ((conn->req.argv != NULL) && (conn->req.argv[0] != NULL)) {
 		for (i = 0; conn->req.argv[i] != NULL; i++) {
@@ -227,22 +232,28 @@ master_handler(struct russ_conn *conn) {
 	if (index(&req->spath[1], '/') > 0) {
 		/* /.../ */
 		svc_x_handler(conn);
-	} else if (strcmp(req->op, "execute") == 0) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-	} else if (strcmp(req->op, "help") == 0) {
-        	russ_dprintf(outfd, "%s", HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-	} else if (strcmp(req->op, "list") == 0) {
-#if 0
-		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(conn->fds[1], "dial\n");
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		}
-#endif
-		//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
-		russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
 	} else {
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		switch (req->op) {
+		case RUSS_OP_EXECUTE:
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			break;
+		case RUSS_OP_HELP:
+	        	russ_dprintf(outfd, "%s", HELP);
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			break;
+		case RUSS_OP_LIST:
+#if 0
+			if (strcmp(req->spath, "/") == 0) {
+				russ_dprintf(conn->fds[1], "dial\n");
+				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			}
+#endif
+			//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
+			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
+			break;
+		default:
+			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		}
 	}
 	exit(0);
 }

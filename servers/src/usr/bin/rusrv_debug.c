@@ -205,7 +205,7 @@ svc_request_handler(struct russ_conn *conn) {
 
 	russ_dprintf(fd, "protocol string (%s)\n", req->protocol_string);
 	russ_dprintf(fd, "spath (%s)\n", req->spath);
-	russ_dprintf(fd, "op (%s)\n", req->op);
+	russ_dprintf(fd, "op (%u)\n", req->op);
 
 	/* attrv */
 	if (req->attrv == NULL) {
@@ -232,7 +232,8 @@ master_handler(struct russ_conn *conn) {
 	struct russ_req	*req;
 
 	req = &(conn->req);
-	if (strcmp(req->op, "execute") == 0) {
+	switch (req->op):
+	case RUSS_OP_EXECUTE:
 		if (strcmp(req->spath, "/chargen") == 0) {
 			svc_chargen_handler(conn);
 		} else if (strcmp(req->spath, "/conn") == 0) {
@@ -250,17 +251,20 @@ master_handler(struct russ_conn *conn) {
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
-	} else if (strcmp(req->op, "help") == 0) {
+		break;
+	case RUSS_OP_HELP:
         	russ_dprintf(conn->fds[1], "%s", HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-	} else if (strcmp(req->op, "list") == 0) {
+		break;
+	case RUSS_OP_LIST:
 		if (strcmp(req->spath, "/") == 0) {
 			russ_dprintf(conn->fds[1], "chargen\nconn\ndaytime\ndiscard\necho\nenv\nrequest\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
-	} else {
+		break;
+	default:
 		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
 	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
