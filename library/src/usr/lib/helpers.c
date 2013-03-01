@@ -122,5 +122,5 @@ russ_info(russ_deadline deadline, char *addr) {
 */
 struct russ_conn *
 russ_list(russ_deadline deadline, char *addr) {
-	return russ_dialv(deadline, RUSS_OP_LIST addr, NULL, NULL);
+	return russ_dialv(deadline, RUSS_OP_LIST, addr, NULL, NULL);
 }
