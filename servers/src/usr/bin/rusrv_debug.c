@@ -232,7 +232,7 @@ master_handler(struct russ_conn *conn) {
 	struct russ_req	*req;
 
 	req = &(conn->req);
-	switch (req->op):
+	switch (req->op) {
 	case RUSS_OP_EXECUTE:
 		if (strcmp(req->spath, "/chargen") == 0) {
 			svc_chargen_handler(conn);
