@@ -144,7 +144,7 @@ russ_dprintf(int fd, char *format, ...) {
 * @return		0 on success; -1 on failure
 */
 int
-russ_op_lookup(char *op_str, uint32_t *op, uint32_t *op_ext) {
+russ_op_lookup(char *op_str, russ_op *op, russ_op *op_ext) {
 	*op = RUSS_OP_NULL;
 	*op_ext = RUSS_OP_NULL;
 

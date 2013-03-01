@@ -109,12 +109,12 @@ struct russ_lis {
 * Request object.
 */
 struct russ_req {
-	char		*protocol_string;	/**< identifies russ protocol */
-	uint32_t	op;		/**< operation */
-	uint32_t	op_ext;		/**< operation extension */
-	char		*spath;		/**< service path */
-	char		**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
-	char		**argv;		/**< NULL-terminated array of args */
+	char	*protocol_string;	/**< identifies russ protocol */
+	russ_op	op;		/**< operation */
+	russ_op	op_ext;		/**< operation extension */
+	char	*spath;		/**< service path */
+	char	**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
+	char	**argv;		/**< NULL-terminated array of args */
 };
 
 /**
@@ -202,7 +202,7 @@ void russ_lis_loop(struct russ_lis *, russ_accept_handler, russ_answer_handler, 
 int russ_dprintf(int, char *, ...);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
-int russ_op_lookup(char *, uint32_t *, uint32_t *);
+int russ_op_lookup(char *, russ_op *, russ_op *);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
 

@@ -43,7 +43,7 @@
 * @return		0 on success; -1 on error
 */
 int
-russ_req_init(struct russ_req *self, char *protocol_string, uint32_t *op, char *spath, char **attrv, char **argv) {
+russ_req_init(struct russ_req *self, char *protocol_string, russ_op *op, char *spath, char **attrv, char **argv) {
 	int			i;
 
 	self->protocol_string = NULL;
