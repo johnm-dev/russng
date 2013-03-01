@@ -108,7 +108,7 @@ main(int argc, char **argv) {
 	argi = 1;
 	attrc = 0;
 	attrv[0] = NULL;
-	op = NULL;
+	op = RUSS_OP_NULL;
 
 	/* options */
 	while (argi < argc) {
