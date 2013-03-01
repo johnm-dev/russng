@@ -64,7 +64,7 @@ __russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 */
 struct russ_conn *
 russ_execv(russ_deadline deadline, char *addr, char **attrv, char **argv) {
-	return russ_dialv(deadline, "execute", addr, attrv, argv);
+	return russ_dialv(deadline, RUSS_OP_EXECUTE, addr, attrv, argv);
 }
 
 /**
@@ -83,7 +83,7 @@ russ_execl(russ_deadline deadline, char *addr, char **attrv, ...) {
 	if ((argv = __russ_variadic_to_argv(&argc, ap, ap)) == NULL) {
 		return NULL;
 	}
-	conn = russ_dialv(deadline, "execute", addr, attrv, argv);
+	conn = russ_dialv(deadline, RUSS_OP_EXECUTE, addr, attrv, argv);
 	free(argv);
 
 	return conn;
@@ -98,7 +98,7 @@ russ_execl(russ_deadline deadline, char *addr, char **attrv, ...) {
 */
 struct russ_conn *
 russ_help(russ_deadline deadline, char *addr) {
-	return russ_dialv(deadline, "help", addr, NULL, NULL);
+	return russ_dialv(deadline, RUSS_OP_HELP, addr, NULL, NULL);
 }
 
 /**
@@ -110,7 +110,7 @@ russ_help(russ_deadline deadline, char *addr) {
 */
 struct russ_conn *
 russ_info(russ_deadline deadline, char *addr) {
-	return russ_dialv(deadline, "info", addr, NULL, NULL);
+	return russ_dialv(deadline, RUSS_OP_INFO, addr, NULL, NULL);
 }
 
 /**
@@ -122,5 +122,5 @@ russ_info(russ_deadline deadline, char *addr) {
 */
 struct russ_conn *
 russ_list(russ_deadline deadline, char *addr) {
-	return russ_dialv(deadline, "list", addr, NULL, NULL);
+	return russ_dialv(deadline, RUSS_OP_LIST addr, NULL, NULL);
 }
