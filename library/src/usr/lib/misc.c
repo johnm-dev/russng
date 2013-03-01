@@ -131,6 +131,44 @@ russ_dprintf(int fd, char *format, ...) {
 }
 
 /**
+* Look up an operation string and return op and op_ext values
+* corresponding to it.
+*
+* The standard operation strings are recognized. Extension op
+* values are specified as "ext:<uint32>" where the RUSS_OP_EXT
+* is then used for op and the uint32 value is used for op_ext.
+*
+* @param op_str		operation string
+* @param op		pointer to op value
+* @param op_ext		pointer to op_ext value
+* @return		0 on success; -1 on failure
+*/
+int
+russ_op_lookup(char *op_str, uint32_t *op, uint32_t *op_ext) {
+	*op = RUSS_OP_NULL;
+	*op_ext = RUSS_OP_NULL;
+
+	/* in order of likelihood */
+	if (strcmp(op_str, "execute") == 0) {
+		op = RUSS_OP_EXECUTE;
+	} elif (strcmp(op_str, "list") == 0) {
+		op = RUSS_OP_LIST;
+	} elif (strcmp(op_str, "help") == 0) {
+		op = RUSS_OP_HELP;
+	} elif (strcmp(op_str, "id") == 0) {
+		op = RUSS_OP_ID;
+	} elif (strcmp(op_str, "info") == 0) {
+		op = RUSS_OP_INFO;
+	} elif (strncmp(op_str, "ext:", 4) == 0) {
+		op = RUSS_OP_EXT;
+		if (sscanf(op_str, "ext:%ud", op_str, op_ext) <= 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+/**
 * Switch user (uid, gid, supplemental groups).
 *
 * This will succeed for non-root trying to setuid/setgid to own
