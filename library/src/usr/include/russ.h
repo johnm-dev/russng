@@ -89,6 +89,8 @@
 
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
+typedef uint32_t	russ_op;
+
 /**
 * Client credentials object. Obtained from connection.
 */
@@ -144,7 +146,6 @@ struct russ_fwd {
 };
 
 typedef int64_t 	russ_deadline;
-typedef uint32_t	russ_op;
 
 typedef struct russ_conn *(*russ_accept_handler)(struct russ_lis *, russ_deadline);
 typedef int (*russ_answer_handler)(struct russ_conn *);
