@@ -36,24 +36,24 @@
 * @param self		request object
 * @param protocol_string
 *			russ protocol identification string
-* @param op		operation string
+* @param op		operation
 * @param spath		service path
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
 * @param argv		NULL-terminated array of arguments
 * @return		0 on success; -1 on error
 */
 int
-russ_req_init(struct russ_req *self, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
+russ_req_init(struct russ_req *self, char *protocol_string, uint32_t *op, char *spath, char **attrv, char **argv) {
 	int			i;
 
 	self->protocol_string = NULL;
 	self->spath = NULL;
-	self->op = NULL;
+	self->op = op;
+	self->op_ext = RUSS_OP_NULL;
 	self->attrv = NULL;
 	self->argv = NULL;
 
 	if (((protocol_string) && ((self->protocol_string = strdup(protocol_string)) == NULL))
-		|| ((op) && ((self->op = strdup(op)) == NULL))
 		|| ((spath) && ((self->spath = strdup(spath)) == NULL))) {
 		goto free_req_items;
 	}
@@ -89,7 +89,6 @@ russ_req_free_members(struct russ_req *self) {
 	int			i;
 
 	free(self->protocol_string);
-	free(self->op);
 	free(self->spath);
 	if (self->attrv) {
 	    for (i = 0; self->attrv[i] != NULL; i++) {

@@ -77,7 +77,7 @@
 #define RUSS_REQ_ARGS_MAX	1024
 #define RUSS_REQ_ATTRS_MAX	1024
 #define RUSS_REQ_SPATH_MAX	8192
-#define RUSS_REQ_PROTOCOL_STRING	"0008"
+#define RUSS_REQ_PROTOCOL_STRING	"0009"
 
 #define RUSS_OP_NULL		0
 #define RUSS_OP_EXECUTE		1
@@ -108,11 +108,12 @@ struct russ_lis {
 * Request object.
 */
 struct russ_req {
-	char	*protocol_string;	/**< identifies russ protocol */
-	char	*op;		/**< operation string */
-	char	*spath;		/**< service path */
-	char	**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
-	char	**argv;		/**< NULL-terminated array of args */
+	char		*protocol_string;	/**< identifies russ protocol */
+	uint32_t	op;		/**< operation */
+	uint32_t	op_ext;		/**< operation extension */
+	char		*spath;		/**< service path */
+	char		**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
+	char		**argv;		/**< NULL-terminated array of args */
 };
 
 /**
