@@ -547,7 +547,7 @@ russ_diall(russ_deadline deadline, char *op, char *spath, char **attrv, ...) {
 	}
 	va_end(ap);
 
-	conn = russ_dialv(deadline, spath, op, attrv, argv);
+	conn = russ_dialv(deadline, op, spath, attrv, argv);
 	free(argv);
 
 	return conn;
