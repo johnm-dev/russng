@@ -475,26 +475,30 @@ class Listener:
                     sys.stderr.write("error: cannot answer connection\n")
                     continue
 
-                if os.fork() == 0:
+                # double fork to satisfy waitpid() in parent (no zombies)
+                pid = os.fork()
+                if pid == 0:
                     os.setsid()
                     self.close()
-                    if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
-                        or answer_handler(conn) < 0:
-                        conn.close()
-                        sys.exit(-1)
-                    try:
-                        req_handler(conn)
-                    except:
-                        pass
-                    try:
-                        if conn:
-                            conn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
+                    if os.fork() == 0:
+                        if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
+                            or answer_handler(conn) < 0:
                             conn.close()
-                    except:
-                        pass
+                            sys.exit(-1)
+                        try:
+                            req_handler(conn)
+                        except:
+                            pass
+                        try:
+                            if conn:
+                                conn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
+                                conn.close()
+                        except:
+                            pass
                     sys.exit(0)
                 conn.close()
                 del conn
+                os.waitpid(pid, 0)
             except SystemExit:
                 pass
             except:
