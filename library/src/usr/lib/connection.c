@@ -62,7 +62,7 @@ russ_conn_new(void) {
 	conn->creds.pid = -1;
 	conn->creds.uid = -1;
 	conn->creds.gid = -1;
-	if (russ_req_init(&(conn->req), NULL, NULL, NULL, NULL, NULL) < 0) {
+	if (russ_req_init(&(conn->req), NULL, RUSS_OP_NULL, NULL, NULL, NULL) < 0) {
 		goto free_request;
 	}
 	conn->sd = -1;
@@ -521,7 +521,7 @@ free_saddr:
 * @return		connection object, NULL on failure
 */
 struct russ_conn *
-russ_diall(russ_deadline deadline, char *op, char *spath, char **attrv, ...) {
+russ_diall(russ_deadline deadline, russ_op op, char *spath, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	void			*p;

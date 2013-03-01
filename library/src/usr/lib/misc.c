@@ -150,18 +150,18 @@ russ_op_lookup(char *op_str, russ_op *op, russ_op *op_ext) {
 
 	/* in order of likelihood */
 	if (strcmp(op_str, "execute") == 0) {
-		op = RUSS_OP_EXECUTE;
-	} elif (strcmp(op_str, "list") == 0) {
-		op = RUSS_OP_LIST;
-	} elif (strcmp(op_str, "help") == 0) {
-		op = RUSS_OP_HELP;
-	} elif (strcmp(op_str, "id") == 0) {
-		op = RUSS_OP_ID;
-	} elif (strcmp(op_str, "info") == 0) {
-		op = RUSS_OP_INFO;
-	} elif (strncmp(op_str, "ext:", 4) == 0) {
-		op = RUSS_OP_EXT;
-		if (sscanf(op_str, "ext:%ud", op_str, op_ext) <= 0) {
+		*op = RUSS_OP_EXECUTE;
+	} else if (strcmp(op_str, "list") == 0) {
+		*op = RUSS_OP_LIST;
+	} else if (strcmp(op_str, "help") == 0) {
+		*op = RUSS_OP_HELP;
+	} else if (strcmp(op_str, "id") == 0) {
+		*op = RUSS_OP_ID;
+	} else if (strcmp(op_str, "info") == 0) {
+		*op = RUSS_OP_INFO;
+	} else if (strncmp(op_str, "ext:", 4) == 0) {
+		*op = RUSS_OP_EXT;
+		if (sscanf(op_str, "ext:%u", op_ext) <= 0) {
 			return -1;
 		}
 	}

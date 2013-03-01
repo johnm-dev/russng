@@ -102,5 +102,5 @@ russ_req_free_members(struct russ_req *self) {
 	    }
 	    free(self->argv);
 	}
-	russ_req_init(self, NULL, NULL, NULL, NULL, NULL);
+	russ_req_init(self, NULL, RUSS_OP_NULL, NULL, NULL, NULL);
 }
