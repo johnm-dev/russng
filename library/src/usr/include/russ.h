@@ -79,6 +79,12 @@
 #define RUSS_REQ_SPATH_MAX	8192
 #define RUSS_REQ_PROTOCOL_STRING	"0008"
 
+#define RUSS_OP_EXECUTE		1
+#define RUSS_OP_HELP		2
+#define RUSS_OP_ID		3
+#define RUSS_OP_LIST		4
+#define RUSS_OP_EXT		5
+
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
 /**
