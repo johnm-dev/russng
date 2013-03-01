@@ -456,14 +456,14 @@ russ_conn_send_request(struct russ_conn *self, russ_deadline deadline) {
 * Received fds are saved to the connection object.
 *
 * @param deadline	deadline to complete operation
-* @param op		operation string
+* @param op		operation
 * @param spath		full service path
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
 * @param argv		NULL-terminated array of arguments
 * @return		connection object; NULL on failure
 */
 struct russ_conn *
-russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv) {
+russ_dialv(russ_deadline deadline, russ_op op, char *spath, char **attrv, char **argv) {
 	struct sockaddr_un	servaddr;
 	struct russ_conn	*conn;
 	struct russ_req		*req;
