@@ -15,6 +15,7 @@ ifeq ($(UNAME_SYSTEM),AIX)
 endif
 
 ifeq ($(UNAME_SYSTEM),Linux)
+	#CC=arm-linux-gnueabi-gcc
 	CC=gcc
 	CFLAGS=-DLINUX -g
 	CFLAGS_STATIC=$(CFLAGS) -static
