@@ -67,6 +67,7 @@ RUSS_OP_INFO = 4
 RUSS_OP_LIST = 5
 
 # typedef aliases
+russ_deadline = ctypes.c_int64
 russ_op = ctypes.c_uint32
 
 # data type descriptions
@@ -114,7 +115,7 @@ libruss.russ_conn_answer.restype = ctypes.c_int
 
 libruss.russ_conn_await_request.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
-    ctypes.c_int64,  # russ_deadline
+    russ_dealine,
 ]
 libruss.russ_conn_await_request.restype = ctypes.c_int
 
@@ -171,12 +172,12 @@ libruss.russ_conn_splice.restype = ctypes.c_int
 libruss.russ_conn_wait.argstypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.POINTER(ctypes.c_int),
-    ctypes.c_int64,  # russ_deadline
+    russ_deadline,
 ]
 libruss.russ_conn_wait.restype = ctypes.c_int
 
 libruss.russ_dialv.argtypes = [
-    ctypes.c_int64,  # russ_deadline
+    russ_deadline,
     russ_op,
     ctypes.c_char_p,
     ctypes.POINTER(ctypes.c_char_p),
@@ -187,7 +188,7 @@ libruss.russ_dialv.restype = ctypes.POINTER(russ_conn_Structure)
 # handlers.c
 libruss.russ_standard_accept_handler.argtypes = [
     ctypes.POINTER(russ_lis_Structure),
-    ctypes.c_int64,
+    russ_deadline,
 ]
 libruss.russ_standard_accept_handler.restype = ctypes.POINTER(russ_conn_Structure)
 
@@ -207,7 +208,7 @@ libruss.russ_announce.restype = ctypes.POINTER(russ_lis_Structure)
 
 libruss.russ_lis_accept.argtypes = [
     ctypes.POINTER(russ_lis_Structure),
-    ctypes.c_int64,  # russ_deadline
+    russ_deadline,
 ]
 libruss.russ_lis_accept.restype = ctypes.POINTER(russ_conn_Structure)
 
@@ -250,20 +251,20 @@ libruss.russ_unlink.restype = ctypes.c_int
 
 # from time.h
 libruss.russ_gettime.argtypes = []
-libruss.russ_gettime.restype = ctypes.c_int64
+libruss.russ_gettime.restype = russ_deadline
 
 libruss.russ_to_deadline.argtypes = [
     ctypes.c_int,
 ]
-libruss.russ_to_deadline.restype = ctypes.c_int64
+libruss.russ_to_deadline.restype = russ_deadline
 
 libruss.russ_to_deadline_diff.argtypes = [
-    ctypes.c_int64,
+    russ_deadline,
 ]
-libruss.russ_to_deadline_diff.restype = ctypes.c_int64
+libruss.russ_to_deadline_diff.restype = russ_deadline
 
 libruss.russ_to_timeout.argtypes = [
-    ctypes.c_int64,
+    russ_deadline,
 ]
 libruss.russ_to_timeout.restype = ctypes.c_int
 
