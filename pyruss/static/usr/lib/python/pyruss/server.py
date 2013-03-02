@@ -130,50 +130,6 @@ class ServiceTree:
         except:
             pass
 
-    def handler(self, conn):
-        """Select op handler and call.
-        
-        Special cases:
-        * op == RUSS_OP_HELP - fallback to spath == "/" if available
-        * op == RUSS_OP_LIST - list node.children if found
-        
-        Calling conn.exit() is left to the service handler. All
-        connection fds are closed before returning.
-        conn.exit(pyruss.RUSS_EXIT_FAILURE) is a fallback.
-
-        TODO: when req.spath is not found within the service tree,
-            node == None and no service is found. this needs to be
-            fixed so that a (leaf) node could service the request
-            based on a partial match of req.spath
-        """
-        req = conn.get_request()
-        node = self.find(req.spath)
-        if node and req.op == pyruss.RUSS_OP_LIST:
-            # default handling for "list"; list "children" at spath
-            if node and node.children:
-                os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
-                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            else:
-                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif req.op == pyruss.RUSS_OP_HELP:
-            # default handling for "help"; use node spath == "/"
-            node = self.find("/")
-            if node and node.handler:
-                node.handler(conn)
-                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            else:
-                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif node and node.handler:
-            # service request from this tree for all other ops
-            node.handler(conn)
-        else:
-            conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-
-        # clean up
-        conn.exit(pyruss.RUSS_EXIT_FAILURE)
-        conn.close()
-        del conn
-
 class Server:
     """Server to handle requests and service them.
     """
@@ -199,6 +155,50 @@ class Server:
         self.uid = uid
         self.gid = gid
         self.lis = pyruss.announce(saddr, mode, uid, gid)
+
+    def handler(self, conn):
+        """Find service handler and invoke it.
+        
+        Special cases:
+        * op == RUSS_OP_HELP - fallback to spath == "/" if available
+        * op == RUSS_OP_LIST - list node.children if found
+        
+        Calling conn.exit() is left to the service handler. All
+        connection fds are closed before returning.
+        conn.exit(pyruss.RUSS_EXIT_FAILURE) is a fallback.
+
+        TODO: when req.spath is not found within the service tree,
+            node == None and no service is found. this needs to be
+            fixed so that a (leaf) node could service the request
+            based on a partial match of req.spath
+        """
+        req = conn.get_request()
+        node = self.service_tree.find(req.spath)
+        if node and req.op == pyruss.RUSS_OP_LIST:
+            # default handling for "list"; list "children" at spath
+            if node and node.children:
+                os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
+                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            else:
+                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+        elif req.op == pyruss.RUSS_OP_HELP:
+            # default handling for "help"; use node spath == "/"
+            node = self.service_tree.find("/")
+            if node and node.handler:
+                node.handler(conn)
+                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            else:
+                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+        elif node and node.handler:
+            # service request from this tree for all other ops
+            node.handler(conn)
+        else:
+            conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+
+        # clean up
+        conn.exit(pyruss.RUSS_EXIT_FAILURE)
+        conn.close()
+        del conn
 
     def loop(self):
         if self.server_type == "fork":
