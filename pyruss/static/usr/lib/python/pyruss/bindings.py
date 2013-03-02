@@ -469,13 +469,6 @@ class Listener:
         else:
             return -1
 
-    def _loop(self, accept_handler, answer_handler, req_handler):
-        # TODO: support answer_handler
-        def raw_handler(conn_ptr):
-            req_handler(ServerConn(conn_ptr))
-            return 0    # TODO: allow a integer return value from handler
-        libruss.russ_lis_loop(self.lis_ptr, None, None, REQ_HANDLER_FUNC(raw_handler))
-
     def loop(self, accept_handler, answer_handler, req_handler):
         """Fork-based loop.
         """
