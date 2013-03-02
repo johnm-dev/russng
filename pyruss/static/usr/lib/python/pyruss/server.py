@@ -198,10 +198,8 @@ class Server:
         self.gid = gid
         self.lis = pyruss.announce(saddr, mode, uid, gid)
 
-    def loop(self, accept_handler=None, answer_handler=None, request_handler=None):
-        request_handler = request_handler or self.service_tree.handler
-
+    def loop(self):
         if self.server_type == "fork":
-            self.lis.loop( accept_handler, answer_handler, self.service_tree.handler)
+            self.lis.loop(self.service_tree.handler)
         elif self.server_type == "thread":
-            self.lis.loop_thread( accept_handler, answer_handler, self.service_tree.handler)
+            self.lis.loop_thread(self.service_tree.handler)
