@@ -160,6 +160,8 @@ russ_op_lookup(char *op_str, russ_op *op) {
 		if (sscanf(op_str, "%u", op) <= 0) {
 			return -1;
 		}
+	} else {
+		return -1;
 	}
 	return 0;
 }
