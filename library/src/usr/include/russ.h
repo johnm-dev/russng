@@ -201,7 +201,7 @@ void russ_lis_loop(struct russ_lis *, russ_accept_handler, russ_answer_handler, 
 int russ_dprintf(int, char *, ...);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
-int russ_op_lookup(char *, russ_op *);
+russ_op russ_op_lookup(char *);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
 

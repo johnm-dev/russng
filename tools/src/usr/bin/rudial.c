@@ -158,7 +158,7 @@ main(int argc, char **argv) {
 	if ((strcmp(prog_name, "rudial") == 0) || (strcmp(prog_name, "ruexec") == 0)) {
 		if ((strcmp(prog_name, "rudial") == 0) 
 			&& (argi+2 <= argc)) {
-			if (russ_op_lookup(argv[argi++], &op) < 0) {
+			if ((op = russ_op_lookup(argv[argi++])) == RUSS_OP_NULL) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BAD_OP);
 				exit(1);
 			}

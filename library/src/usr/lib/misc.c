@@ -131,7 +131,7 @@ russ_dprintf(int fd, char *format, ...) {
 }
 
 /**
-* Look up an operation string and return an op values corresponding
+* Look up an operation string and return an op value corresponding
 * to it.
 *
 * The standard operation strings are recognized as are integer
@@ -139,31 +139,31 @@ russ_dprintf(int fd, char *format, ...) {
 *
 * @param op_str		operation string
 * @param op		pointer to op value
-* @return		0 on success; -1 on failure
+* @return		op value; RUSS_OP_NULL on no match
 */
-int
-russ_op_lookup(char *op_str, russ_op *op) {
-	*op = RUSS_OP_NULL;
+russ_op
+russ_op_lookup(char *op_str) {
+	russ_op	op = RUSS_OP_NULL;
 
 	/* in order of likelihood */
 	if (strcmp(op_str, "execute") == 0) {
-		*op = RUSS_OP_EXECUTE;
+		op = RUSS_OP_EXECUTE;
 	} else if (strcmp(op_str, "list") == 0) {
-		*op = RUSS_OP_LIST;
+		op = RUSS_OP_LIST;
 	} else if (strcmp(op_str, "help") == 0) {
-		*op = RUSS_OP_HELP;
+		op = RUSS_OP_HELP;
 	} else if (strcmp(op_str, "id") == 0) {
-		*op = RUSS_OP_ID;
+		op = RUSS_OP_ID;
 	} else if (strcmp(op_str, "info") == 0) {
-		*op = RUSS_OP_INFO;
+		op = RUSS_OP_INFO;
 	} else if (isdigit(op_str[0])) {
 		if (sscanf(op_str, "%u", op) <= 0) {
-			return -1;
+			op = RUSS_OP_NULL;
 		}
 	} else {
-		return -1;
+		op = RUSS_OP_NULL;
 	}
-	return 0;
+	return op;
 }
 
 /**
