@@ -226,7 +226,7 @@ russ_enc_H(char *b, char *bend, uint16_t v) {
 		return NULL;
 	}
 	b[0] = (uint8_t)v & 0xff;
-	b[1] = (uint8_t)(v >> 8) & 0xff;
+	b[1] = (uint8_t)(v>>8) & 0xff;
 	return b+2;
 }
 
@@ -264,9 +264,9 @@ russ_enc_i(char *b, char *bend, int32_t v) {
 		return NULL;
 	}
 	b[0] = (uint8_t)v & 0xff;
-	b[1] = (uint8_t)(v >> 8) & 0xff;
-	b[2] = (uint8_t)(v >> 16) & 0xff;
-	b[3] = (uint8_t)(v >> 24) & 0xff;
+	b[1] = (uint8_t)(v>>8) & 0xff;
+	b[2] = (uint8_t)(v>>16) & 0xff;
+	b[3] = (uint8_t)(v>>24) & 0xff;
 	return b+4;
 }
 
