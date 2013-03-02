@@ -85,7 +85,6 @@
 #define RUSS_OP_ID		3
 #define RUSS_OP_INFO		4
 #define RUSS_OP_LIST		5
-#define RUSS_OP_EXT		6
 
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
@@ -113,7 +112,6 @@ struct russ_lis {
 struct russ_req {
 	char	*protocol_string;	/**< identifies russ protocol */
 	russ_op	op;		/**< operation */
-	russ_op	op_ext;		/**< operation extension */
 	char	*spath;		/**< service path */
 	char	**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
 	char	**argv;		/**< NULL-terminated array of args */

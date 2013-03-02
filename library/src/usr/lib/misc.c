@@ -131,22 +131,19 @@ russ_dprintf(int fd, char *format, ...) {
 }
 
 /**
-* Look up an operation string and return op and op_ext values
-* corresponding to it.
+* Look up an operation string and return an op values corresponding
+* to it.
 *
-* The standard operation strings are recognized. Extension op
-* values are specified as "ext:<uint32>" where the RUSS_OP_EXT
-* is then used for op and the uint32 value is used for op_ext.
+* The standard operation strings are recognized as are integer
+* values up to the sizeof(russ_op) == sizeof(uint32_t).
 *
 * @param op_str		operation string
 * @param op		pointer to op value
-* @param op_ext		pointer to op_ext value
 * @return		0 on success; -1 on failure
 */
 int
-russ_op_lookup(char *op_str, russ_op *op, russ_op *op_ext) {
+russ_op_lookup(char *op_str, russ_op *op) {
 	*op = RUSS_OP_NULL;
-	*op_ext = RUSS_OP_NULL;
 
 	/* in order of likelihood */
 	if (strcmp(op_str, "execute") == 0) {
@@ -159,9 +156,6 @@ russ_op_lookup(char *op_str, russ_op *op, russ_op *op_ext) {
 		*op = RUSS_OP_ID;
 	} else if (strcmp(op_str, "info") == 0) {
 		*op = RUSS_OP_INFO;
-	} else if (strncmp(op_str, "ext:", 4) == 0) {
-		*op = RUSS_OP_EXT;
-		if (sscanf(op_str, "ext:%u", op_ext) <= 0) {
 			return -1;
 		}
 	}

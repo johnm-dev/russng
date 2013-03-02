@@ -238,7 +238,6 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 		|| (strcmp(RUSS_REQ_PROTOCOL_STRING, req->protocol_string) != 0)
 		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
 		|| ((bp = russ_dec_I(bp, &(req->op))) == NULL)
-		|| ((bp = russ_dec_I(bp, &(req->op_ext))) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &(req->attrv), &alen)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &(req->argv), &alen)) == NULL)) {
 
@@ -434,7 +433,6 @@ russ_conn_send_request(struct russ_conn *self, russ_deadline deadline) {
 		|| ((bp = russ_enc_s(bp, bend, req->protocol_string)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, req->spath)) == NULL)
 		|| ((bp = russ_enc_I(bp, bend, req->op)) == NULL)
-		|| ((bp = russ_enc_I(bp, bend, req->op_ext)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->argv)) == NULL)) {
 		//|| ((bp = russ_enc_sarrayn(bp, bend, req->argv, req->argc)) == NULL)) {

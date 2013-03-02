@@ -90,7 +90,7 @@ main(int argc, char **argv) {
 	int			timeout;
 	char			*prog_name;
 	char			*op_str, *addr;
-	russ_op			op, op_ext;
+	russ_op			op;
 	char			*arg;
 	char			*attrv[RUSS_REQ_ATTRS_MAX];
 	int			argi;
@@ -158,13 +158,12 @@ main(int argc, char **argv) {
 	if ((strcmp(prog_name, "rudial") == 0) || (strcmp(prog_name, "ruexec") == 0)) {
 		if ((strcmp(prog_name, "rudial") == 0) 
 			&& (argi+2 <= argc)) {
-			if (russ_op_lookup(argv[argi++], &op, &op_ext) < 0) {
+			if (russ_op_lookup(argv[argi++], &op) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BAD_OP);
 				exit(1);
 			}
 			addr = argv[argi++];
 			conn = russ_dialv(deadline, op, addr, attrv, &(argv[argi]));
-			conn->req->op_ext = op_ext;
 		} else if ((strcmp(prog_name, "ruexec") == 0)
 			&& (argi+1 <= argc)) {
 			addr = argv[argi++];

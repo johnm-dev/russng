@@ -49,7 +49,6 @@ russ_req_init(struct russ_req *self, char *protocol_string, russ_op op, char *sp
 	self->protocol_string = NULL;
 	self->spath = NULL;
 	self->op = op;
-	self->op_ext = RUSS_OP_NULL;
 	self->attrv = NULL;
 	self->argv = NULL;
 
