@@ -57,7 +57,17 @@ RUSS_MSG_UNDEF_SERVICE = "warning: undefined service"
 RUSS_REQ_ARGS_MAX = 1024
 RUSS_REQ_ATTRS_MAX = 1024
 RUSS_REQ_SPATH_MAX = 8192
-RUSS_REQ_PROTOCOL_STRING = "0008"
+RUSS_REQ_PROTOCOL_STRING = "0009"
+
+RUSS_OP_NULL = 0
+RUSS_OP_EXECUTE = 1
+RUSS_OP_HELP = 2
+RUSS_OP_ID = 3
+RUSS_OP_INFO = 4
+RUSS_OP_LIST = 5
+
+# typedef aliases
+russ_op = ctypes.c_uint32
 
 # data type descriptions
 class russ_creds_Structure(ctypes.Structure):
@@ -75,7 +85,7 @@ class russ_lis_Structure(ctypes.Structure):
 class russ_req_Structure(ctypes.Structure):
     _fields_ = [
         ("protocol_string", ctypes.c_char_p),
-        ("op", ctypes.c_char_p),
+        ("op", russ_op),
         ("spath", ctypes.c_char_p),
         ("attrv", ctypes.POINTER(ctypes.c_char_p)),
         ("argv", ctypes.POINTER(ctypes.c_char_p)),
@@ -167,7 +177,7 @@ libruss.russ_conn_wait.restype = ctypes.c_int
 
 libruss.russ_dialv.argtypes = [
     ctypes.c_int64,  # russ_deadline
-    ctypes.c_char_p,
+    russ_op,
     ctypes.c_char_p,
     ctypes.POINTER(ctypes.c_char_p),
     ctypes.POINTER(ctypes.c_char_p),
@@ -220,6 +230,11 @@ libruss.russ_lis_loop.argtypes = [
 libruss.russ_lis_loop.restype = None
 
 # misc.c
+libruss.russ_op_lookup.argtypes = [
+    ctypes.c_char_p,
+]
+libruss.russ_op_lookup.restype = russ_op
+
 libruss.russ_switch_user.argtypes = [
     ctypes.c_int,
     ctypes.c_int,
@@ -294,7 +309,7 @@ dial = dialv
 def execv(deadline, saddr, attrs, args):
     """ruexec a service.
     """
-    return dialv(deadline, "execute", saddr, attrs, args)
+    return dialv(deadline, RUSS_OP_EXECUTE, saddr, attrs, args)
 
 def gettime():
     return libruss.russ_gettime()
