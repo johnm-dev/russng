@@ -469,19 +469,14 @@ class Listener:
         else:
             return -1
 
-    def loop(self, accept_handler, answer_handler, req_handler):
+    def loop(self, handler):
         """Fork-based loop.
         """
-        if accept_handler == None:
-            accept_handler = ServerConn.standard_accept_handler
-        if answer_handler == None:
-            answer_handler = Listener.standard_answer_handler
-
         while self.get_sd() >= 0:
             try:
-                conn = accept_handler(self, RUSS_DEADLINE_NEVER)
+                conn = self.accept(self, RUSS_DEADLINE_NEVER)
                 if conn == None:
-                    sys.stderr.write("error: cannot answer connection\n")
+                    sys.stderr.write("error: cannot accept connection\n")
                     continue
 
                 # double fork to satisfy waitpid() in parent (no zombies)
@@ -490,12 +485,11 @@ class Listener:
                     os.setsid()
                     self.close()
                     if os.fork() == 0:
-                        if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
-                            or answer_handler(conn) < 0:
+                        if conn.await_request(RUSS_DEADLINE_NEVER) < 0:
                             conn.close()
                             sys.exit(-1)
                         try:
-                            req_handler(conn)
+                            handler(conn)
                         except:
                             pass
                         try:
@@ -514,15 +508,14 @@ class Listener:
                 #traceback.print_exc()
                 pass
 
-    def loop_thread(self, accept_handler, answer_handler, req_handler):
+    def loop_thread(self, handler):
         """Thread-based loop.
         """
-        def pre_handler_thread(conn, req_handler):
-            if conn.await_request(RUSS_DEADLINE_NEVER) < 0 \
-                or answer_handler(conn) < 0:
+        def pre_handler_thread(conn, handler):
+            if conn.await_request(RUSS_DEADLINE_NEVER) < 0:
                 return
             try:
-                req_handler(conn)
+                handler(conn)
             except:
                 pass
             try:
@@ -532,16 +525,11 @@ class Listener:
             except:
                 pass
 
-        if accept_handler == None:
-            accept_handler = ServerConn.standard_accept_handler
-        if answer_handler == None:
-            answer_handler = Listener.standard_answer_handler
-
         while True:
             try:
-                conn = accept_handler(self, RUSS_DEADLINE_NEVER)
+                conn = self.accept(self, RUSS_DEADLINE_NEVER)
                 if conn == None:
-                    sys.stderr.write("error: cannot answer connection\n")
+                    sys.stderr.write("error: cannot accept connection\n")
                     continue
                 # no limiting of thread count
                 Thread(target=pre_handler_thread, args=(conn, req_handler)).start()
@@ -550,10 +538,3 @@ class Listener:
             except:
                 #traceback.print_exc()
                 pass
-
-    def standard_accept_handler(self, deadline):
-        try:
-            conn_ptr = libruss.russ_standard_accept_handler(self.lis_ptr, deadline)
-        except:
-            traceback.print_exc()
-        return bool(conn_ptr) and ServerConn(conn_ptr) or None
