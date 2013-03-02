@@ -36,16 +36,15 @@ import pyruss
 
 class ServiceNode:
     """Used by ServiceTree in support of a hierarchy organized by
-    path components. Each node contains ops, handler, type
+    path components. Each node contains handler, type
     information.
     """
 
-    def __init__(self, ops=None, handler=None, typ=None):
-        self.set(ops, handler, typ)
+    def __init__(self, handler=None, typ=None):
+        self.set(handler, typ)
         self.children = {}
 
-    def set(self, ops, handler, typ):
-        self.ops = ops
+    def set(self, handler, typ):
         self.handler = handler
         self.typ = typ
 
@@ -62,12 +61,12 @@ class ServiceTree:
     def __init__(self):
         self.root = ServiceNode()
 
-    def add(self, path, ops, handler, typ=None):
+    def add(self, path, handler, typ=None):
         """Add service node to tree.
         """
         node = self.root
         if path == "/":
-            node.set(ops, handler, typ)
+            node.set(handler, typ)
         else:
             comps = path.split("/")
             for comp in comps[1:-1]:
@@ -75,7 +74,7 @@ class ServiceTree:
                 if next_node == None:
                     next_node = node.children[comp] = ServiceNode()
                 node = next_node
-            node.children[comps[-1]] = ServiceNode(ops, handler, typ)
+            node.children[comps[-1]] = ServiceNode(handler, typ)
 
     def _find(self, comps):
         """Find node for path comps.
@@ -141,16 +140,16 @@ class ServiceTree:
         Calling conn.exit() is left to the service handler. All
         connection fds are closed before returning.
         conn.exit(pyruss.RUSS_EXIT_FAILURE) is a fallback.
+
+        TODO: when req.spath is not found within the service tree,
+            node == None and no service is found. this needs to be
+            fixed so that a (leaf) node could service the request
+            based on a partial match of req.spath
         """
         req = conn.get_request()
         node = self.find(req.spath)
-        if node and node.handler \
-            and (req.op == None or req.op in (node.ops or [])):
-            # handler registered for op and spath
-            node.handler(conn)
-        elif req.op == pyruss.RUSS_OP_LIST:
+        if node and req.op == pyruss.RUSS_OP_LIST:
             # default handling for "list"; list "children" at spath
-            node = self.find(req.spath)
             if node and node.children:
                 os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
@@ -159,11 +158,14 @@ class ServiceTree:
         elif req.op == pyruss.RUSS_OP_HELP:
             # default handling for "help"; use node spath == "/"
             node = self.find("/")
-            if node and node.ops and node.handler and RUSS_OP_HELP in node.ops:
+            if node and node.handler:
                 node.handler(conn)
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+        elif node and node.handler:
+            # service request from this tree for all other ops
+            node.handler(conn)
         else:
             conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
 
