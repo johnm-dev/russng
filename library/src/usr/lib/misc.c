@@ -156,6 +156,8 @@ russ_op_lookup(char *op_str, russ_op *op) {
 		*op = RUSS_OP_ID;
 	} else if (strcmp(op_str, "info") == 0) {
 		*op = RUSS_OP_INFO;
+	} else if (isdigit(op_str[0])) {
+		if (sscanf(op_str, "%u", op) <= 0) {
 			return -1;
 		}
 	}
