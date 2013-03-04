@@ -77,28 +77,37 @@ class ServiceTree:
             node.children[comps[-1]] = ServiceNode(handler, typ)
 
     def _find(self, comps):
-        """Find node for path comps.
+        """Find node for path comps and return the comps for each
+        matched node starting at the root node. Since empty ("")
+        path components are ignored, path.split("/") can be passed
+        directly.
         """
         node = self.root
+        ncomps = []
         for comp in comps:
             if comp == "":
                 # don't change current node
                 continue
-            node = node.children.get(comp)
-            if node == None:
+            node2 = node.children.get(comp)
+            if node2 == None:
                 break
-        return node
+            node = node2
+            ncomps.append(comp)
+        return node, ncomps
 
     def find(self, path):
-        """Find node for path.
+        """Find node for path and return matched path.
         """
         node = self.root
-        return self._find(path.split("/")[1:])
+        node, ncomps = self._find(path.split("/")[1:])
+        if ncomps:
+            npath = "/"+"/".join(ncomps)
+        return node, npath
 
     def find_children(self, path):
         """Find node for path and return node's children.
         """
-        node = self._find(path.split("/")[1:])
+        node, _ = self._find(path.split("/")[1:])
         if node:
             return node.children
         else:
@@ -109,7 +118,7 @@ class ServiceTree:
         otherwise whole node.
         """
         comps = path.split("/")
-        parent_node = self._find(comps[1:-1])
+        parent_node, _ = self._find(comps[1:-1])
         try:
             node = parent_node.children.get(comps[-1])
             if len(node.children) == 0:
@@ -173,7 +182,7 @@ class Server:
             based on a partial match of req.spath
         """
         req = conn.get_request()
-        node = self.service_tree.find(req.spath)
+        node, npath = self.service_tree.find(req.spath)
         if node and req.op == pyruss.RUSS_OP_LIST:
             # default handling for "list"; list "children" at spath
             if node and node.children:
@@ -183,7 +192,7 @@ class Server:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
         elif req.op == pyruss.RUSS_OP_HELP:
             # default handling for "help"; use node spath == "/"
-            node = self.service_tree.find("/")
+            node, npath = self.service_tree.find("/")
             if node and node.handler:
                 node.handler(conn)
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
