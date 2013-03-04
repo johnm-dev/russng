@@ -48,6 +48,13 @@ class ServiceNode:
         self.handler = handler
         self.typ = typ
 
+class ServiceContext:
+    """Provides context to service handler.
+    """
+
+    def __init__(self):
+        self.spath = ""
+
 class ServiceTree:
     """Provides a hierarchy of ServiceNode objects. Nodes in the
     hierarchy can be added, removed, and searched for based on a
