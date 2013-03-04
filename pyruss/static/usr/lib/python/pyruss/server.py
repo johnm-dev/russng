@@ -189,25 +189,26 @@ class Server:
             based on a partial match of req.spath
         """
         req = conn.get_request()
-        node, npath = self.service_tree.find(req.spath)
-        if node and req.op == pyruss.RUSS_OP_LIST:
+        ctxt = ServiceContext()
+        node, ctxt.spath = self.service_tree.find(req.spath)
+        if req.op == pyruss.RUSS_OP_LIST and req.spath == ctxt.spath:
             # default handling for "list"; list "children" at spath
             if node and node.children:
                 os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif req.op == pyruss.RUSS_OP_HELP:
+        elif req.op == pyruss.RUSS_OP_HELP and req.spath == ctxt.spath:
             # default handling for "help"; use node spath == "/"
-            node, npath = self.service_tree.find("/")
+            node, ctxt.spath = self.service_tree.find("/")
             if node and node.handler:
-                node.handler(conn)
+                node.handler(conn, ctxt)
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif node and node.handler:
+        elif node.handler:
             # service request from this tree for all other ops
-            node.handler(conn)
+            node.handler(conn, ctxt)
         else:
             conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
 
