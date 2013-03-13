@@ -109,6 +109,8 @@ class ServiceTree:
         node, ncomps = self._find(path.split("/")[1:])
         if ncomps:
             npath = "/"+"/".join(ncomps)
+        else:
+            npath = ""
         return node, npath
 
     def find_children(self, path):
