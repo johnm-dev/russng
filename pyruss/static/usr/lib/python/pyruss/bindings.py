@@ -487,7 +487,7 @@ class Listener:
                     if os.fork() == 0:
                         if conn.await_request(RUSS_DEADLINE_NEVER) < 0:
                             conn.close()
-                            sys.exit(-1)
+                            sys.exit(1)
                         try:
                             handler(conn)
                         except:
