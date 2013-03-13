@@ -115,7 +115,7 @@ libruss.russ_conn_answer.restype = ctypes.c_int
 
 libruss.russ_conn_await_request.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
-    russ_dealine,
+    russ_deadline,
 ]
 libruss.russ_conn_await_request.restype = ctypes.c_int
 
