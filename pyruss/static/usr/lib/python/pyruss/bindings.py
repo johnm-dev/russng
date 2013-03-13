@@ -474,7 +474,7 @@ class Listener:
         """
         while self.get_sd() >= 0:
             try:
-                conn = self.accept(self, RUSS_DEADLINE_NEVER)
+                conn = self.accept(RUSS_DEADLINE_NEVER)
                 if conn == None:
                     sys.stderr.write("error: cannot accept connection\n")
                     continue
@@ -527,7 +527,7 @@ class Listener:
 
         while True:
             try:
-                conn = self.accept(self, RUSS_DEADLINE_NEVER)
+                conn = self.accept(RUSS_DEADLINE_NEVER)
                 if conn == None:
                     sys.stderr.write("error: cannot accept connection\n")
                     continue
