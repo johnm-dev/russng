@@ -193,17 +193,21 @@ class Server:
         req = conn.get_request()
         ctxt = ServiceContext()
         node, ctxt.spath = self.service_tree.find(req.spath)
-        if req.op == pyruss.RUSS_OP_LIST and req.spath == ctxt.spath:
+
+        # call standard_answer_handler() for now
+        conn.standard_answer_handler()
+
+        if req.op == pyruss.RUSS_OP_LIST:
             # default handling for "list"; list "children" at spath
-            if node and node.children:
+            if req.spath in ["/", ctxt.spath]:
                 os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif req.op == pyruss.RUSS_OP_HELP and req.spath == ctxt.spath:
+        elif req.op == pyruss.RUSS_OP_HELP:
             # default handling for "help"; use node spath == "/"
             node, ctxt.spath = self.service_tree.find("/")
-            if node and node.handler:
+            if req.spath in ["/", ctxt.spath]:
                 node.handler(conn, ctxt)
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
