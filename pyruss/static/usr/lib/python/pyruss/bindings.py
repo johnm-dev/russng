@@ -503,7 +503,7 @@ class Listener:
                 del conn
                 os.waitpid(pid, 0)
             except SystemExit:
-                pass
+                raise
             except:
                 #traceback.print_exc()
                 pass
@@ -534,7 +534,7 @@ class Listener:
                 # no limiting of thread count
                 Thread(target=pre_handler_thread, args=(conn, req_handler)).start()
             except SystemExit:
-                pass
+                raise
             except:
                 #traceback.print_exc()
                 pass
