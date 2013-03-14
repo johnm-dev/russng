@@ -396,6 +396,9 @@ class Conn:
     def get_sd(self):
         return self.conn_ptr.contents.sd
 
+    def set_fd(self, i, value):
+        self.conn_ptr.contents.fds[i] = value
+        
     def splice(self, dconn):
         return libruss.russ_conn_splice(self.conn_ptr, dconn.conn_ptr)
 
