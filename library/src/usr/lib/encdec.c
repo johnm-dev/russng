@@ -38,7 +38,8 @@
 */
 char *
 russ_dec_H(char *b, uint16_t *v) {
-	*v = (uint16_t)(b[0]) | ((uint16_t)(b[1])<<8);
+	*v = (uint16_t)(uint8_t)b[0]
+		| (uint16_t)(uint8_t)b[1]<<8;
 	return b+2;
 }
 
@@ -51,8 +52,10 @@ russ_dec_H(char *b, uint16_t *v) {
 */
 char *
 russ_dec_I(char *b, uint32_t *v) {
-	*v = (uint32_t)(b[0]) | ((uint32_t)(b[1])<<8)
-		| ((uint32_t)(b[2])<<16) | ((uint32_t)(b[3])<<24);
+	*v = (uint32_t)(uint8_t)b[0]
+		| (uint32_t)(uint8_t)b[1]<<8
+		| (uint32_t)(uint8_t)b[2]<<16
+		| (uint32_t)(uint8_t)b[3]<<24;
 	return b+4;
 }
 
@@ -82,10 +85,14 @@ russ_dec_i(char *b, int32_t *v) {
 */
 char *
 russ_dec_Q(char *b, uint64_t *v) {
-	*v = (uint64_t)(b[0]) | ((uint64_t)(b[1])<<8)
-		| ((uint64_t)(b[2])<<16) | ((uint64_t)(b[3])<<24)
-		| ((uint64_t)(b[4])<<32) | ((uint64_t)(b[5])<<40)
-		| ((uint64_t)(b[6])<<48) | ((uint64_t)(b[7])<<56);
+	*v = (uint64_t)(uint8_t)b[0]
+		| (uint64_t)(uint8_t)b[1]<<8
+		| (uint64_t)(uint8_t)b[2]<<16
+		| (uint64_t)(uint8_t)b[3]<<24
+		| (uint64_t)(uint8_t)b[4]<<32
+		| (uint64_t)(uint8_t)b[5]<<40
+		| (uint64_t)(uint8_t)b[6]<<48
+		| (uint64_t)(uint8_t)b[7]<<56;
 	return b+8;
 }
 
@@ -225,8 +232,8 @@ russ_enc_H(char *b, char *bend, uint16_t v) {
 	if ((bend-b) < 2) {
 		return NULL;
 	}
-	b[0] = (uint8_t)v & 0xff;
-	b[1] = (uint8_t)(v>>8) & 0xff;
+	b[0] = (uint8_t)v;
+	b[1] = (uint8_t)(v>>8);
 	return b+2;
 }
 
@@ -243,10 +250,10 @@ russ_enc_I(char *b, char *bend, uint32_t v) {
 	if ((bend-b) < 4) {
 		return NULL;
 	}
-	b[0] = (uint8_t)v & 0xff;
-	b[1] = (uint8_t)(v>>8) & 0xff;
-	b[2] = (uint8_t)(v>>16) & 0xff;
-	b[3] = (uint8_t)(v>>24) & 0xff;
+	b[0] = (uint8_t)v;
+	b[1] = (uint8_t)(v>>8);
+	b[2] = (uint8_t)(v>>16);
+	b[3] = (uint8_t)(v>>24);
 	return b+4;
 }
 
@@ -263,10 +270,10 @@ russ_enc_i(char *b, char *bend, int32_t v) {
 	if ((bend-b) < 4) {
 		return NULL;
 	}
-	b[0] = (uint8_t)v & 0xff;
-	b[1] = (uint8_t)(v>>8) & 0xff;
-	b[2] = (uint8_t)(v>>16) & 0xff;
-	b[3] = (uint8_t)(v>>24) & 0xff;
+	b[0] = (uint8_t)v;
+	b[1] = (uint8_t)(v>>8);
+	b[2] = (uint8_t)(v>>16);
+	b[3] = (uint8_t)(v>>24);
 	return b+4;
 }
 
@@ -283,14 +290,14 @@ russ_enc_Q(char *b, char *bend, uint64_t v) {
 	if ((bend-b) < 8) {
 		return NULL;
 	}
-	b[0] = (uint8_t)v & 0xff;
-	b[1] = (uint8_t)(v>>8) & 0xff;
-	b[2] = (uint8_t)(v>>16) & 0xff;
-	b[3] = (uint8_t)(v>>24) & 0xff;
-	b[4] = (uint8_t)(v>>32) & 0xff;
-	b[5] = (uint8_t)(v>>40) & 0xff;
-	b[6] = (uint8_t)(v>>48) & 0xff;
-	b[7] = (uint8_t)(v>>56) & 0xff;
+	b[0] = (uint8_t)v;
+	b[1] = (uint8_t)(v>>8);
+	b[2] = (uint8_t)(v>>16);
+	b[3] = (uint8_t)(v>>24);
+	b[4] = (uint8_t)(v>>32);
+	b[5] = (uint8_t)(v>>40);
+	b[6] = (uint8_t)(v>>48);
+	b[7] = (uint8_t)(v>>56);
 	return b+8;
 }
 
@@ -307,14 +314,14 @@ russ_enc_q(char *b, char *bend, int64_t v) {
 	if ((bend-b) < 8) {
 		return NULL;
 	}
-	b[0] = (uint8_t)v & 0xff;
-	b[1] = (uint8_t)(v>>8) & 0xff;
-	b[2] = (uint8_t)(v>>16) & 0xff;
-	b[3] = (uint8_t)(v>>24) & 0xff;
-	b[4] = (uint8_t)(v>>32) & 0xff;
-	b[5] = (uint8_t)(v>>40) & 0xff;
-	b[6] = (uint8_t)(v>>48) & 0xff;
-	b[7] = (uint8_t)(v>>56) & 0xff;
+	b[0] = (uint8_t)v;
+	b[1] = (uint8_t)(v>>8);
+	b[2] = (uint8_t)(v>>16);
+	b[3] = (uint8_t)(v>>24);
+	b[4] = (uint8_t)(v>>32);
+	b[5] = (uint8_t)(v>>40);
+	b[6] = (uint8_t)(v>>48);
+	b[7] = (uint8_t)(v>>56);
 	return b+8;
 }
 
