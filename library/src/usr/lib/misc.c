@@ -170,6 +170,18 @@ russ_op_lookup(char *str) {
 	return op;
 }
 
+const char *
+russ_opstr_lookup(russ_op op) {
+	struct russ_op_table	*table;
+
+	for (table = russ_op_table; table->op != RUSS_OP_NULL; table++) {
+		if (table->op == op) {
+			break;
+		}
+	}
+	return table->str;
+}
+
 /**
 * Switch user (uid, gid, supplemental groups).
 *

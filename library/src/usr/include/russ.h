@@ -239,6 +239,7 @@ int russ_dprintf(int, char *, ...);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
 russ_op russ_op_lookup(char *);
+const char *russ_opstr_lookup(russ_op);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
 
