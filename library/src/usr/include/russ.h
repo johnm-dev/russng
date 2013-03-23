@@ -86,6 +86,9 @@
 #define RUSS_OP_INFO		4
 #define RUSS_OP_LIST		5
 
+#define RUSS_SVR_TYPE_FORK	1
+#define RUSS_SVR_TYPE_THREAD	2
+
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
 typedef uint32_t	russ_op;
@@ -141,6 +144,40 @@ struct russ_fwd {
 	int		how;		/**< 0 for normal read, 1 for readline */
 	int		close_fds;	/**< 1 to close fds before returning */
 	int		reason;		/**< reason forwarder returned */
+};
+
+/**
+* Context object for service handler.
+*/
+struct russ_svc_ctxt {
+	char	spath[RUSS_REQ_SPATH_MAX];
+};
+
+//typedef void (*russ_svc_handler)(struct russ_conn *, struct russ_svc_ctxt *);
+typedef void (*russ_svc_handler)(struct russ_conn *);
+
+/**
+* Service node object.
+*/
+struct russ_svc_node {
+	russ_svc_handler	handler;
+	char			*name;
+	struct russ_svc_node	*next;
+	struct russ_svc_node	*children;
+	int			virtual;
+};
+
+/**
+* Server object.
+*/
+struct russ_svr {
+	struct russ_svc_node	*root;
+	int			type;
+	char			*saddr;
+	mode_t			mode;
+	uid_t			uid;
+	gid_t			gid;
+	struct russ_lis		*lis;
 };
 
 typedef int64_t 	russ_deadline;
@@ -206,6 +243,15 @@ int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
 
 /* request.c */
+
+/* server.c */
+struct russ_svc_node *russ_svc_node_new(char *, russ_svc_handler);
+struct russ_svc_node *russ_svc_node_free(struct russ_svc_node *);
+struct russ_svc_node *russ_svc_node_add(struct russ_svc_node *, char *, russ_svc_handler);
+struct russ_svc_node *russ_svc_node_find(struct russ_svc_node *, char *);
+struct russ_svr *russ_svr_new(struct russ_svc_node *, int);
+struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid_t);
+void russ_svr_loop(struct russ_svr *);
 
 /* spath.c */
 int russ_spath_split(char *, char **, char **);
