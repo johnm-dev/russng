@@ -263,12 +263,14 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 		node = self->root;
 		/* TODO: test against ctxt.spath */
 		/* fall through */
-	default:
-		if (node->handler) {
-			node->handler(conn);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
+		break;
+	}
+
+call_node_handler:
+	if (node->handler) {
+		node->handler(conn);
+	} else {
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 
 cleanup:
