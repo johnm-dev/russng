@@ -38,10 +38,10 @@ extern char **environ;
 
 /* global */
 struct russ_conf	*conf = NULL;
-
-char	*HELP = 
+char			*HELP = 
 "Provides access to remote host using ssh.\n"
-"[<user>@]<host>[:<port>]/... <args>\n"
+"\n"
+"/[<user>@]<host>[:<port>]/... <args>\n"
 "    Connect to service ... at <user>@<host>:<port> using ssh.\n";
 
 #define SSH_EXEC	"/usr/bin/ssh"
@@ -203,59 +203,33 @@ svc_net_handler(struct russ_conn *conn) {
 #endif
 
 void
-svc_x_handler(struct russ_conn *conn) {
+svc_root_handler(struct russ_conn *conn) {
 	char	*p, *new_spath, *userhost;
 	int	i;
 
-	/* extract and validate user@host and new_spath */
-	userhost = &conn->req.spath[1];
-	if ((p = index(userhost, '/')) == NULL) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	new_spath = strdup(p);
-	p[0] = '\0'; /* terminate userhost */
-
-	execute(conn, userhost, new_spath);
-}
-
-/*
-*/
-void
-master_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	int		outfd;
-	int		i;
-
-	outfd = conn->fds[1];
-	req = &(conn->req);
-	if (index(&req->spath[1], '/') > 0) {
-		/* /.../ */
-		svc_x_handler(conn);
-	} else {
-		switch (req->op) {
-		case RUSS_OP_EXECUTE:
+	switch (conn->req.op) {
+	case RUSS_OP_HELP:
+		russ_dprintf(conn->fds[1], "%s", HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		break;
+	case RUSS_OP_EXECUTE:
+		/* extract and validate user@host and new_spath */
+		userhost = &conn->req.spath[1];
+		if ((p = index(userhost, '/')) == NULL) {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			break;
-		case RUSS_OP_HELP:
-	        	russ_dprintf(outfd, "%s", HELP);
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			break;
-		case RUSS_OP_LIST:
-#if 0
-			if (strcmp(req->spath, "/") == 0) {
-				russ_dprintf(conn->fds[1], "dial\n");
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			}
-#endif
-			//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
-			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
-			break;
-		default:
-			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+			exit(0);
 		}
+		new_spath = strdup(p);
+		p[0] = '\0'; /* terminate userhost */
+
+		execute(conn, userhost, new_spath);
+		break;
+	case RUSS_OP_LIST:
+		russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_FAILURE);
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
-	exit(0);
 }
 
 void
@@ -265,16 +239,14 @@ print_usage(char **argv) {
 "\n"
 "russ-based server for ssh-based remote connections. Configuration\n"
 "can be obtained from the conf file if no options are used, otherwise\n"
-"all configuration is taken from the given options.\n";
+"all configuration is taken from the given options.\n"
 );
 }
 
 int
 main(int argc, char **argv) {
-	struct russ_lis	*lis;
-
-	signal(SIGCHLD, SIG_IGN);
-	signal(SIGPIPE, SIG_IGN);
+	struct russ_svc_node	*root;
+	struct russ_svr		*svr;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
@@ -284,14 +256,19 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+	if (((root = russ_svc_node_new("", svc_root_handler)) == NULL)
+		|| (russ_svc_node_set_virtual(root, 1) < 0)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		fprintf(stderr, "error: cannot set up\n");
+	}
+	if (russ_svr_announce(svr,
+		russ_conf_get(conf, "server", "path", NULL),
 		russ_conf_getsint(conf, "server", "mode", 0600),
 		russ_conf_getint(conf, "server", "uid", getuid()),
-		russ_conf_getint(conf, "server", "gid", getgid()));
-	if (lis == NULL) {
+		russ_conf_getint(conf, "server", "gid", getgid())) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, NULL, NULL, master_handler);
+	russ_svr_loop(svr);
 	exit(0);
 }
