@@ -142,12 +142,21 @@ russ_svc_node_find(struct russ_svc_node *self, char *path) {
 			break;
 		} else if ((cmp == 0) && (node->name[len] == '\0')) {
 			if (*sep != '\0') {
+				if (node->virtual) {
+					break;
+				}
 				node = russ_svc_node_find(node, &path[len+1]);
 			}
 			break;
 		}
 	}
 	return node;
+}
+
+int
+russ_svc_node_set_virtual(struct russ_svc_node *self, int value) {
+	self->virtual = value;
+	return 1;
 }
 
 struct russ_svr *

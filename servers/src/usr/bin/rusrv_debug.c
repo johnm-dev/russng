@@ -46,29 +46,39 @@ char	*HELP =
 "stdin, stdout, and stderr all refer to the file descriptor triple\n"
 "that is returned from a russ_dial call.\n"
 "\n"
-"chargen\n"
+"/chargen\n"
 "    Character generator outputting to stdout; follows the RPC 864\n"
 "    the RFC 864 protocol sequence.\n"
 "\n"
-"conn\n"
+"/conn\n"
 "    Outputs russ connection information.\n"
 "\n"
-"daytime\n"
+"/daytime\n"
 "    Outputs the date and time to the stdout.\n"
 "\n"
-"discard [--perf]\n"
+"/discard [--perf]\n"
 "    Discards all data received from stdin; if --perf is specified,\n"
 "    performance feedback is provide to stderr, otherwise there is\n"
 "    none.\n"
 "\n"
-"echo\n"
+"/echo\n"
 "    Simple echo service; receives from stdin and outputs to stdout.\n"
 "\n"
-"env\n"
+"/env\n"
 "    Outputs environ entries to stdout.\n"
 "\n"
-"request\n"
+"/request\n"
 "    Outputs the request information at the server stdout.\n";
+
+void
+svc_root_handler(struct russ_conn *conn) {
+	if (conn->req.op == RUSS_OP_HELP) {
+		russ_dprintf(conn->fds[1], HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+	} else {
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+}
 
 void
 svc_chargen_handler(struct russ_conn *conn) {
@@ -228,50 +238,6 @@ svc_request_handler(struct russ_conn *conn) {
 }
 
 void
-master_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-
-	req = &(conn->req);
-	switch (req->op) {
-	case RUSS_OP_EXECUTE:
-		if (strcmp(req->spath, "/chargen") == 0) {
-			svc_chargen_handler(conn);
-		} else if (strcmp(req->spath, "/conn") == 0) {
-			svc_conn_handler(conn);
-		} else if (strcmp(req->spath, "/daytime") == 0) {
-			svc_daytime_handler(conn);
-		} else if (strcmp(req->spath, "/discard") == 0) {
-			svc_discard_handler(conn);
-		} else if (strcmp(req->spath, "/echo") == 0) {
-			svc_echo_handler(conn);
-		} else if (strcmp(req->spath, "/env") == 0) {
-			svc_env_handler(conn);
-		} else if (strcmp(req->spath, "/request") == 0) {
-			svc_request_handler(conn);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
-		break;
-	case RUSS_OP_HELP:
-        	russ_dprintf(conn->fds[1], "%s", HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		break;
-	case RUSS_OP_LIST:
-		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(conn->fds[1], "chargen\nconn\ndaytime\ndiscard\necho\nenv\nrequest\n");
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
-		break;
-	default:
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-	}
-	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
-	russ_conn_close(conn);
-}
-
-void
 print_usage(char **argv) {
 	fprintf(stderr,
 "usage: rusrv_debug [<conf options>]\n"
@@ -282,10 +248,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_lis	*lis;
-
-	signal(SIGCHLD, SIG_IGN);
-	signal(SIGPIPE, SIG_IGN);
+	struct russ_svc_node	*root;
+	struct russ_svr		*svr;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
@@ -295,14 +259,27 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+	if (((root = russ_svc_node_new("", svc_root_handler)) == NULL)
+		|| (russ_svc_node_add(root, "chargen", svc_chargen_handler) == NULL)
+		|| (russ_svc_node_add(root, "conn", svc_conn_handler) == NULL)
+		|| (russ_svc_node_add(root, "daytime", svc_daytime_handler) == NULL)
+		|| (russ_svc_node_add(root, "discard", svc_discard_handler) == NULL)
+		|| (russ_svc_node_add(root, "echo", svc_echo_handler) == NULL)
+		|| (russ_svc_node_add(root, "env", svc_env_handler) == NULL)
+		|| (russ_svc_node_add(root, "request", svc_request_handler) == NULL)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		fprintf(stderr, "error: cannot set up\n");
+		exit(1);
+	}
+
+	if (russ_svr_announce(svr,
+		russ_conf_get(conf, "server", "path", NULL),
 		russ_conf_getsint(conf, "server", "mode", 0666),
 		russ_conf_getint(conf, "server", "uid", getuid()),
-		russ_conf_getint(conf, "server", "gid", getgid()));
-	if (lis == NULL) {
+		russ_conf_getint(conf, "server", "gid", getgid())) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, NULL, NULL, master_handler);
+	russ_svr_loop(svr);
 	exit(0);
 }
