@@ -40,6 +40,11 @@
 
 #define RUSS_LISTEN_BACKLOG	20
 
+struct russ_op_table {
+	const char	*str;
+	russ_op		op;
+};
+
 /* conn.c */
 struct russ_conn *russ_conn_new(void);
 int russ_conn_send_request(struct russ_conn *, russ_deadline);

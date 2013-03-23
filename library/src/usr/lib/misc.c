@@ -32,6 +32,15 @@
 
 #include "russ_priv.h"
 
+struct russ_op_table russ_op_table[] = {
+	{ "execute", RUSS_OP_EXECUTE },
+	{ "list", RUSS_OP_LIST },
+	{ "help", RUSS_OP_HELP },
+	{ "id", RUSS_OP_ID },
+	{ "info", RUSS_OP_INFO },
+	{ NULL, RUSS_OP_NULL },
+};
+
 /**
 * Count elements of NULL-terminated string array (not including
 * NULL).
@@ -137,31 +146,26 @@ russ_dprintf(int fd, char *format, ...) {
 * The standard operation strings are recognized as are integer
 * values up to the sizeof(russ_op) == sizeof(uint32_t).
 *
-* @param op_str		operation string
-* @param op		pointer to op value
+* @param str		operation string
 * @return		op value; RUSS_OP_NULL on no match
 */
 russ_op
-russ_op_lookup(char *op_str) {
-	russ_op	op = RUSS_OP_NULL;
+russ_op_lookup(char *str) {
+	struct russ_op_table	*table;
+	russ_op			op;
 
-	/* in order of likelihood */
-	if (strcmp(op_str, "execute") == 0) {
-		op = RUSS_OP_EXECUTE;
-	} else if (strcmp(op_str, "list") == 0) {
-		op = RUSS_OP_LIST;
-	} else if (strcmp(op_str, "help") == 0) {
-		op = RUSS_OP_HELP;
-	} else if (strcmp(op_str, "id") == 0) {
-		op = RUSS_OP_ID;
-	} else if (strcmp(op_str, "info") == 0) {
-		op = RUSS_OP_INFO;
-	} else if (isdigit(op_str[0])) {
-		if (sscanf(op_str, "%u", &op) <= 0) {
+	op = RUSS_OP_NULL;
+	if (isdigit(str[0])) {
+		if (sscanf(str, "%u", &op) <= 0) {
 			op = RUSS_OP_NULL;
-		}
+		}		
 	} else {
-		op = RUSS_OP_NULL;
+		for (table = russ_op_table; table->op != RUSS_OP_NULL; table++) {
+			if (strcmp(str, table->str) == 0) {
+				op = table->op;
+				break;
+			}
+		}
 	}
 	return op;
 }
