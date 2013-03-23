@@ -265,11 +265,7 @@ print_usage(char **argv) {
 "\n"
 "russ-based server for ssh-based remote connections. Configuration\n"
 "can be obtained from the conf file if no options are used, otherwise\n"
-"all configuration is taken from the given options.\n"
-"\n"
-"Where:"
-"-h <hostsfile>\n"
-"    Set up /hosts/* and /hid/* services.\n"
+"all configuration is taken from the given options.\n";
 );
 }
 

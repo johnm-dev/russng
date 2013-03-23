@@ -34,19 +34,30 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "russ_conf.h"
 #include "russ.h"
 
-void
-req_handler(struct russ_conn *conn) {
-	if (conn->req.op == RUSS_OP_EXECUTE) {
-		/* serve the input from fd passed to client */
-		char	buf[1024];
-		ssize_t	n;
+struct russ_conf	*conf = NULL;
+char			*HELP =
+"Echoes lines of input back.\n";
 
+void
+svc_root_handler(struct russ_conn *conn) {
+	char	buf[1024];
+	ssize_t	n;
+
+	switch (conn->req.op) {
+	case RUSS_OP_HELP:
+		russ_dprintf(conn->fds[1], HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		break;
+	case RUSS_OP_EXECUTE:
+		/* serve the input from fd passed to client */
 		while ((n = russ_read(conn->fds[0], buf, sizeof(buf))) > 0) {
 			russ_writen(conn->fds[1], buf, n);
 		}
-	} else {
+		break;
+	default:
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 }
@@ -54,7 +65,7 @@ req_handler(struct russ_conn *conn) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_echo <saddr>\n"
+"usage: rusrv_echo [<conf options>]\n"
 "\n"
 "Russ-based echo server.\n"
 );
@@ -62,20 +73,32 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_lis	*lis;
-	char		*saddr;
+	struct russ_svc_node	*root;
+	struct russ_svr		*svr;
 
-	signal(SIGCHLD, SIG_IGN);
-
-	if (argc != 2) {
+	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
+		exit(0);
+	} else if ((argc < 2) || ((conf = russ_conf_init(&argc, argv)) == NULL)) {
+		fprintf(stderr, "error: cannot configure\n");
 		exit(1);
 	}
-	saddr = argv[1];
 
-	if ((lis = russ_announce(saddr, 0666, getuid(), getgid())) == NULL) {
+	if (((root = russ_svc_node_new("", svc_root_handler)) == NULL)
+		|| (russ_svc_node_set_virtual(root, 1) < 0)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		fprintf(stderr, "error: cannot set up\n");
+		exit(1);
+	}
+
+	if (russ_svr_announce(svr,
+		russ_conf_get(conf, "server", "path", NULL),
+		russ_conf_getsint(conf, "server", "mode", 0666),
+		russ_conf_getint(conf, "server", "uid", getuid()),
+		russ_conf_getint(conf, "server", "gid", getgid())) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, NULL, NULL, req_handler);
+	russ_svr_loop(svr);
+	exit(0);
 }
