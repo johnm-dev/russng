@@ -129,9 +129,10 @@ russ_svc_node_find(struct russ_svc_node *self, char *path) {
 	char			*sep;
 	int			len, cmp;
 
-	if (strcmp(path, "") == 0) {
+	if ((self->virtual) || (strcmp(path, "") == 0)) {
 		return self;
 	}
+
 	if ((sep = strchr(path, '/')) == NULL) {
 		sep = strchr(path, '\0');
 	}
@@ -142,9 +143,6 @@ russ_svc_node_find(struct russ_svc_node *self, char *path) {
 			break;
 		} else if ((cmp == 0) && (node->name[len] == '\0')) {
 			if (*sep != '\0') {
-				if (node->virtual) {
-					break;
-				}
 				node = russ_svc_node_find(node, &path[len+1]);
 			}
 			break;
@@ -226,7 +224,6 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 			goto cleanup;
 	}
 
-	/* TODO: add support for virtual node */
 	if ((node = russ_svc_node_find(self->root, &(req->spath[1]))) == NULL) {
 		/* TODO: how to handle this in general?
 		** for HELP, LIST, EXECUTE? other? under what conditions
@@ -246,6 +243,11 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 		}
 	} else if (russ_standard_answer_handler(conn) < 0) {
 		goto cleanup;
+	}
+
+	/* virtual node */
+	if (node->virtual) {
+		goto call_node_handler;
 	}
 
 	/* default handling; non-virtual node */
