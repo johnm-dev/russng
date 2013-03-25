@@ -217,11 +217,18 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 		goto cleanup;
 	}
 
-	/* validate spath: must be absolute */
 	req = &(conn->req);
+
+	/* validate opnum */
+	if (req->opnum == RUSS_OPNUM_NOT_SET) {
+		/* invalid opnum */
+		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_SYS_FAILURE);
+		goto cleanup;
+	}
+	/* validate spath: must be absolute */
 	if ((req->spath[0] != '/') || (req->spath[0] == '\0')) {
-			/* invalid spath */
-			goto cleanup;
+		/* invalid spath */
+		goto cleanup;
 	}
 
 	if ((node = russ_svc_node_find(self->root, &(req->spath[1]))) == NULL) {
