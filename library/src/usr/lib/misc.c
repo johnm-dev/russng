@@ -38,7 +38,7 @@ struct russ_op_table russ_op_table[] = {
 	{ "help", RUSS_OPNUM_HELP },
 	{ "id", RUSS_OPNUM_ID },
 	{ "info", RUSS_OPNUM_INFO },
-	{ NULL, RUSS_OPNUM_NULL },
+	{ NULL, RUSS_OPNUM_NOT_SET },
 };
 
 /**
@@ -147,22 +147,22 @@ russ_dprintf(int fd, char *format, ...) {
 * values up to the sizeof(russ_opnum) == sizeof(uint32_t).
 *
 * @param str		operation string
-* @return		op value; RUSS_OPNUM_NULL on no match
+* @return		op value; RUSS_OPNUM_NOT_SET on no match
 */
 russ_opnum
 russ_opnum_lookup(char *str) {
 	struct russ_op_table	*table;
 	russ_opnum		opnum;
 
-	opnum = RUSS_OPNUM_NULL;
+	opnum = RUSS_OPNUM_NOT_SET;
 	if (str == NULL) {
 		;
 	} else if (isdigit(str[0])) {
 		if (sscanf(str, "%u", &opnum) <= 0) {
-			opnum = RUSS_OPNUM_NULL;
+			opnum = RUSS_OPNUM_NOT_SET;
 		}		
 	} else {
-		for (table = russ_op_table; table->num != RUSS_OPNUM_NULL; table++) {
+		for (table = russ_op_table; table->num != RUSS_OPNUM_NOT_SET; table++) {
 			if (strcmp(str, table->str) == 0) {
 				opnum = table->num;
 				break;
@@ -176,7 +176,7 @@ const char *
 russ_op_lookup(russ_opnum opnum) {
 	struct russ_op_table	*table;
 
-	for (table = russ_op_table; table->num != RUSS_OPNUM_NULL; table++) {
+	for (table = russ_op_table; table->num != RUSS_OPNUM_NOT_SET; table++) {
 		if (table->num == opnum) {
 			break;
 		}

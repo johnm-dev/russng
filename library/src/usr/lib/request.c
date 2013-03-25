@@ -49,7 +49,7 @@ russ_req_init(struct russ_req *self, char *protocol_string, char *op, char *spat
 	self->protocol_string = NULL;
 	self->spath = NULL;
 	self->op = NULL;
-	self->opnum = RUSS_OPNUM_NULL;;
+	self->opnum = RUSS_OPNUM_NOT_SET;;
 	self->attrv = NULL;
 	self->argv = NULL;
 
