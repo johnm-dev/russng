@@ -157,10 +157,6 @@ russ_opnum_lookup(char *str) {
 	opnum = RUSS_OPNUM_EXTENSION;
 	if (str == NULL) {
 		opnum = RUSS_OPNUM_NOT_SET;
-	} else if (isdigit(str[0])) {
-		if (sscanf(str, "%u", &opnum) <= 0) {
-			opnum = RUSS_OPNUM_NOT_SET;
-		}		
 	} else {
 		for (table = russ_op_table; table->num != RUSS_OPNUM_NOT_SET; table++) {
 			if (strcmp(str, table->str) == 0) {
