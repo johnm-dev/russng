@@ -147,16 +147,16 @@ russ_dprintf(int fd, char *format, ...) {
 * values up to the sizeof(russ_opnum) == sizeof(uint32_t).
 *
 * @param str		operation string
-* @return		op value; RUSS_OPNUM_NOT_SET on no match
+* @return		op value; RUSS_OPNUM_EXTENSION if no match
 */
 russ_opnum
 russ_opnum_lookup(char *str) {
 	struct russ_op_table	*table;
 	russ_opnum		opnum;
 
-	opnum = RUSS_OPNUM_NOT_SET;
+	opnum = RUSS_OPNUM_EXTENSION;
 	if (str == NULL) {
-		;
+		opnum = RUSS_OPNUM_NOT_SET;
 	} else if (isdigit(str[0])) {
 		if (sscanf(str, "%u", &opnum) <= 0) {
 			opnum = RUSS_OPNUM_NOT_SET;
