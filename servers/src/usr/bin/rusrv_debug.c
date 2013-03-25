@@ -215,6 +215,7 @@ svc_request_handler(struct russ_conn *conn) {
 
 	russ_dprintf(fd, "protocol string (%s)\n", req->protocol_string);
 	russ_dprintf(fd, "spath (%s)\n", req->spath);
+	russ_dprintf(fd, "op (%s)\n", req->op);
 	russ_dprintf(fd, "opnum (%u)\n", req->opnum);
 
 	/* attrv */
