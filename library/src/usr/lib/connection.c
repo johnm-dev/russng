@@ -454,14 +454,14 @@ russ_conn_send_request(struct russ_conn *self, russ_deadline deadline) {
 * Received fds are saved to the connection object.
 *
 * @param deadline	deadline to complete operation
-* @param op		operation
+* @param opstr		operation string
 * @param spath		full service path
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
 * @param argv		NULL-terminated array of arguments
 * @return		connection object; NULL on failure
 */
 struct russ_conn *
-russ_dialv(russ_deadline deadline, russ_op op, char *spath, char **attrv, char **argv) {
+russ_dialv(russ_deadline deadline, char *opstr, char *spath, char **attrv, char **argv) {
 	struct sockaddr_un	servaddr;
 	struct russ_conn	*conn;
 	struct russ_req		*req;
@@ -485,7 +485,7 @@ russ_dialv(russ_deadline deadline, russ_op op, char *spath, char **attrv, char *
 		goto close_conn;
 	}
 
-	if ((russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv) < 0)
+	if ((russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, opstr, spath2, attrv, argv) < 0)
 		|| (russ_conn_send_request(conn, deadline) < 0)
 		|| (russ_conn_recvfds(conn, deadline) < 0)) {
 		goto free_request;
@@ -512,14 +512,14 @@ free_saddr:
 * See dialv() for more.
 *
 * @param deadline	deadline to complete operation
-* @param op		operation string
+* @param opstr		operation string
 * @param spath		full service path
 * @param attrv		array of attributes (as name=value strings)
 * @param ...		variable argument list of "char *" with NULL sentinel
 * @return		connection object, NULL on failure
 */
 struct russ_conn *
-russ_diall(russ_deadline deadline, russ_op op, char *spath, char **attrv, ...) {
+russ_diall(russ_deadline deadline, char *opstr, char *spath, char **attrv, ...) {
 	struct russ_conn	*conn;
 	va_list			ap;
 	void			*p;
@@ -545,7 +545,7 @@ russ_diall(russ_deadline deadline, russ_op op, char *spath, char **attrv, ...) {
 	}
 	va_end(ap);
 
-	conn = russ_dialv(deadline, op, spath, attrv, argv);
+	conn = russ_dialv(deadline, opstr, spath, attrv, argv);
 	free(argv);
 
 	return conn;

@@ -200,8 +200,8 @@ int russ_conn_sendfds(struct russ_conn *, int, int *, int *);
 int russ_conn_splice(struct russ_conn *, struct russ_conn *);
 int russ_conn_wait(struct russ_conn *, int *, russ_deadline);
 
-struct russ_conn *russ_dialv(russ_deadline, russ_op, char *, char **, char **);
-struct russ_conn *russ_diall(russ_deadline, russ_op, char *, char **, ...);
+struct russ_conn *russ_dialv(russ_deadline, char *, char *, char **, char **);
+struct russ_conn *russ_diall(russ_deadline, char *, char *, char **, ...);
 
 /* forwarder */
 void russ_fwd_init(struct russ_fwd *, int, int, int, int, int, int, int);
