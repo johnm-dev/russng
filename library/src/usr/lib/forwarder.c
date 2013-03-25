@@ -154,9 +154,9 @@ _forward_bytes2(void *_fwd) {
 	}
 
 	pollfds[0].fd = fwd->in_fd;
-	pollfds[0].events = POLLIN;
+	pollfds[0].events = POLLIN|POLLERR;
 	pollfds[1].fd = fwd->out_fd;
-	pollfds[1].events = POLLHUP;
+	pollfds[1].events = POLLHUP|POLLERR;
 
 	while (1) {
 		if ((rv = poll(pollfds, 2, -1)) <= 0) {
@@ -165,6 +165,10 @@ _forward_bytes2(void *_fwd) {
 			} else {
 				fwd->reason = RUSS_FWD_REASON_ERROR;
 			}
+			break;
+		}
+		if ((pollfds[0].revents & POLLERR) || (pollfds[1].revents & POLLERR)) {
+			fwd->reason = RUSS_FWD_REASON_ERROR;
 			break;
 		}
 		if (pollfds[1].revents & POLLHUP) {
