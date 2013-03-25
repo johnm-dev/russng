@@ -38,7 +38,7 @@ struct russ_op_table russ_op_table[] = {
 	{ "help", RUSS_OPNUM_HELP },
 	{ "id", RUSS_OPNUM_ID },
 	{ "info", RUSS_OPNUM_INFO },
-	{ NULL, RUSS_OPNUM_NOT_SET },
+	{ NULL, RUSS_OPNUM_EXTENSION },
 };
 
 /**
@@ -152,20 +152,16 @@ russ_dprintf(int fd, char *format, ...) {
 russ_opnum
 russ_opnum_lookup(char *str) {
 	struct russ_op_table	*table;
-	russ_opnum		opnum;
 
-	opnum = RUSS_OPNUM_EXTENSION;
 	if (str == NULL) {
-		opnum = RUSS_OPNUM_NOT_SET;
-	} else {
-		for (table = russ_op_table; table->num != RUSS_OPNUM_NOT_SET; table++) {
-			if (strcmp(str, table->str) == 0) {
-				opnum = table->num;
-				break;
-			}
+		return RUSS_OPNUM_NOT_SET;
+	}
+	/* RUSS_OPNUM_EXTENSION tests last to ensure match */
+	for (table = russ_op_table; ; table++) {
+		if ((table->num == RUSS_OPNUM_EXTENSION) || (strcmp(str, table->str) == 0)) {
+			return table->num;
 		}
 	}
-	return opnum;
 }
 
 const char *
