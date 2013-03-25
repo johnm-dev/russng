@@ -36,26 +36,29 @@
 * @param self		request object
 * @param protocol_string
 *			russ protocol identification string
-* @param op		operation
+* @param opstr		operation string
 * @param spath		service path
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
 * @param argv		NULL-terminated array of arguments
 * @return		0 on success; -1 on error
 */
 int
-russ_req_init(struct russ_req *self, char *protocol_string, russ_op op, char *spath, char **attrv, char **argv) {
+russ_req_init(struct russ_req *self, char *protocol_string, char *opstr, char *spath, char **attrv, char **argv) {
 	int			i;
 
 	self->protocol_string = NULL;
 	self->spath = NULL;
-	self->op = op;
+	self->op = RUSS_OP_NULL;;
+	self->opstr = NULL;
 	self->attrv = NULL;
 	self->argv = NULL;
 
 	if (((protocol_string) && ((self->protocol_string = strdup(protocol_string)) == NULL))
+		|| ((opstr) && ((self->opstr = strdup(opstr)) == NULL))
 		|| ((spath) && ((self->spath = strdup(spath)) == NULL))) {
 		goto free_req_items;
 	}
+	self->op = russ_op_lookup(opstr);
 	if (attrv) {
 		if ((self->attrv = russ_sarray0_dup(attrv, RUSS_REQ_ATTRS_MAX)) == NULL) {
 			goto free_req_items;
@@ -88,6 +91,7 @@ russ_req_free_members(struct russ_req *self) {
 	int			i;
 
 	free(self->protocol_string);
+	free(self->opstr);
 	free(self->spath);
 	if (self->attrv) {
 	    for (i = 0; self->attrv[i] != NULL; i++) {
@@ -101,5 +105,5 @@ russ_req_free_members(struct russ_req *self) {
 	    }
 	    free(self->argv);
 	}
-	russ_req_init(self, NULL, RUSS_OP_NULL, NULL, NULL, NULL);
+	russ_req_init(self, NULL, NULL, NULL, NULL, NULL);
 }

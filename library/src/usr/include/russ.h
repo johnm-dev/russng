@@ -115,6 +115,7 @@ struct russ_lis {
 struct russ_req {
 	char	*protocol_string;	/**< identifies russ protocol */
 	russ_op	op;		/**< operation */
+	char	*opstr;		/**< operation string */
 	char	*spath;		/**< service path */
 	char	**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
 	char	**argv;		/**< NULL-terminated array of args */
