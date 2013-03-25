@@ -87,7 +87,7 @@ svc_dial_handler(struct russ_conn *conn) {
 	char		**section_names, **p;
 
 	req = &(conn->req);
-	if (req->op == RUSS_OP_LIST) {
+	if (req->opnum == RUSS_OPNUM_LIST) {
 		if ((section_names = russ_conf_sections(conf)) == NULL) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 			return;
@@ -306,19 +306,19 @@ master_handler(struct russ_conn *conn) {
 		/* service /dial/ for any op */
 		svc_dial_cluster_host_handler(conn);
 	} else {
-		switch (req->op) {
-		case RUSS_OP_EXECUTE:
+		switch (req->opnum) {
+		case RUSS_OPNUM_EXECUTE:
 			if (strcmp(req->spath, "/debug") == 0) {
 				svc_debug_handler(conn);
 			} else {
 				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			}
 			break;
-		case RUSS_OP_HELP:
+		case RUSS_OPNUM_HELP:
 			russ_dprintf(conn->fds[1], HELP);
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			break;
-		case RUSS_OP_LIST:
+		case RUSS_OPNUM_LIST:
 			if (strcmp(req->spath, "/") == 0) {
 				russ_dprintf(conn->fds[1], "debug\ndial\n");
 				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);

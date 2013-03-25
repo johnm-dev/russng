@@ -145,8 +145,8 @@ req_handler(struct russ_conn *conn) {
 	int	i;
 
 	outfd = conn->fds[1];
-	switch (conn->req.op) {
-	case RUSS_OP_EXECUTE:
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_EXECUTE:
 		if (strcmp(conn->req.spath, "/wait") == 0) {
 			if ((conn->req.argv) && (conn->req.argv[0] != NULL)) {
 				barrier->items[barrier->nitems].tag = strdup(conn->req.argv[0]);
@@ -190,11 +190,11 @@ req_handler(struct russ_conn *conn) {
 			goto close_conn;
 		}
 		break;
-	case RUSS_OP_HELP:
+	case RUSS_OPNUM_HELP:
 		print_service_usage(conn);
 		goto close_conn;
 		break;
-	case RUSS_OP_LIST:
+	case RUSS_OPNUM_LIST:
 		russ_dprintf(conn->fds[1], "count\nkill\ntags\nttl\nwait\nwcount\n");
 		goto close_conn;
 		break;

@@ -197,8 +197,8 @@ free_saddr:
 * Find service handler and it invoke it.
 *
 * Special cases:
-* op == RUSS_OP_HELP - fallback to spath == "/" if available
-* op == RUSS_OP_LIST - list node->children if found
+* opnum == RUSS_OPNUM_HELP - fallback to spath == "/" if available
+* opnum == RUSS_OPNUM_LIST - list node->children if found
 *
 * Service handlers are expected to call russ_conn_exit() before
 * returning. As a failsafe procedure, exit codes are sent back
@@ -251,15 +251,15 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	}
 
 	/* default handling; non-virtual node */
-	switch (req->op) {
-	case RUSS_OP_LIST:
+	switch (req->opnum) {
+	case RUSS_OPNUM_LIST:
 		/* TODO: test against ctxt.spath */
 		for (node = node->children; node != NULL; node = node->next) {
 			russ_dprintf(conn->fds[1], "%s\n", node->name);
 		}
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		break;
-	case RUSS_OP_HELP:
+	case RUSS_OPNUM_HELP:
 		node = self->root;
 		/* TODO: test against ctxt.spath */
 		/* fall through */

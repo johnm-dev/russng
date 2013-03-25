@@ -42,7 +42,7 @@
 
 struct russ_op_table {
 	const char	*str;
-	russ_op		op;
+	russ_opnum	num;
 };
 
 /* conn.c */

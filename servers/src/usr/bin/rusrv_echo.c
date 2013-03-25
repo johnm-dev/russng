@@ -46,12 +46,12 @@ svc_root_handler(struct russ_conn *conn) {
 	char	buf[1024];
 	ssize_t	n;
 
-	switch (conn->req.op) {
-	case RUSS_OP_HELP:
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		break;
-	case RUSS_OP_EXECUTE:
+	case RUSS_OPNUM_EXECUTE:
 		/* serve the input from fd passed to client */
 		while ((n = russ_read(conn->fds[0], buf, sizeof(buf))) > 0) {
 			russ_writen(conn->fds[1], buf, n);

@@ -59,16 +59,16 @@ RUSS_REQ_ATTRS_MAX = 1024
 RUSS_REQ_SPATH_MAX = 8192
 RUSS_REQ_PROTOCOL_STRING = "0009"
 
-RUSS_OP_NULL = 0
-RUSS_OP_EXECUTE = 1
-RUSS_OP_HELP = 2
-RUSS_OP_ID = 3
-RUSS_OP_INFO = 4
-RUSS_OP_LIST = 5
+RUSS_OPNUM_NULL = 0
+RUSS_OPNUM_EXECUTE = 1
+RUSS_OPNUM_HELP = 2
+RUSS_OPNUM_ID = 3
+RUSS_OPNUM_INFO = 4
+RUSS_OPNUM_LIST = 5
 
 # typedef aliases
 russ_deadline = ctypes.c_int64
-russ_op = ctypes.c_uint32
+russ_opnum = ctypes.c_uint32
 
 # data type descriptions
 class russ_creds_Structure(ctypes.Structure):
@@ -86,8 +86,8 @@ class russ_lis_Structure(ctypes.Structure):
 class russ_req_Structure(ctypes.Structure):
     _fields_ = [
         ("protocol_string", ctypes.c_char_p),
-        ("op", russ_op),
-        ("opstr", ctypes.c_char_p),
+        ("op", ctypes.c_char_p),
+        ("opnum", russ_opnum),
         ("spath", ctypes.c_char_p),
         ("attrv", ctypes.POINTER(ctypes.c_char_p)),
         ("argv", ctypes.POINTER(ctypes.c_char_p)),
@@ -232,10 +232,10 @@ libruss.russ_lis_loop.argtypes = [
 libruss.russ_lis_loop.restype = None
 
 # misc.c
-libruss.russ_op_lookup.argtypes = [
+libruss.russ_opnum_lookup.argtypes = [
     ctypes.c_char_p,
 ]
-libruss.russ_op_lookup.restype = russ_op
+libruss.russ_opnum_lookup.restype = russ_opnum
 
 libruss.russ_switch_user.argtypes = [
     ctypes.c_int,
@@ -293,7 +293,7 @@ def announce(path, mode, uid, gid):
     lis_ptr = libruss.russ_announce(path, mode, uid, gid)
     return bool(lis_ptr) and Listener(lis_ptr) or None
 
-def dialv(deadline, opstr, saddr, attrs, args):
+def dialv(deadline, op, saddr, attrs, args):
     """Dial a service.
     """
     if attrs == None:
@@ -303,7 +303,7 @@ def dialv(deadline, opstr, saddr, attrs, args):
         args = []
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
-    conn_ptr = libruss.russ_dialv(deadline, opstr, saddr, c_attrs, c_argv)
+    conn_ptr = libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv)
     return bool(conn_ptr) and ClientConn(conn_ptr) or None
 
 dial = dialv

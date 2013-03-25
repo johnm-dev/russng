@@ -33,12 +33,12 @@
 #include "russ_priv.h"
 
 struct russ_op_table russ_op_table[] = {
-	{ "execute", RUSS_OP_EXECUTE },
-	{ "list", RUSS_OP_LIST },
-	{ "help", RUSS_OP_HELP },
-	{ "id", RUSS_OP_ID },
-	{ "info", RUSS_OP_INFO },
-	{ NULL, RUSS_OP_NULL },
+	{ "execute", RUSS_OPNUM_EXECUTE },
+	{ "list", RUSS_OPNUM_LIST },
+	{ "help", RUSS_OPNUM_HELP },
+	{ "id", RUSS_OPNUM_ID },
+	{ "info", RUSS_OPNUM_INFO },
+	{ NULL, RUSS_OPNUM_NULL },
 };
 
 /**
@@ -144,38 +144,40 @@ russ_dprintf(int fd, char *format, ...) {
 * to it.
 *
 * The standard operation strings are recognized as are integer
-* values up to the sizeof(russ_op) == sizeof(uint32_t).
+* values up to the sizeof(russ_opnum) == sizeof(uint32_t).
 *
 * @param str		operation string
-* @return		op value; RUSS_OP_NULL on no match
+* @return		op value; RUSS_OPNUM_NULL on no match
 */
-russ_op
-russ_op_lookup(char *str) {
+russ_opnum
+russ_opnum_lookup(char *str) {
 	struct russ_op_table	*table;
-	russ_op			op;
+	russ_opnum		opnum;
 
-	op = RUSS_OP_NULL;
-	if (isdigit(str[0])) {
-		if (sscanf(str, "%u", &op) <= 0) {
-			op = RUSS_OP_NULL;
+	opnum = RUSS_OPNUM_NULL;
+	if (str == NULL) {
+		;
+	} else if (isdigit(str[0])) {
+		if (sscanf(str, "%u", &opnum) <= 0) {
+			opnum = RUSS_OPNUM_NULL;
 		}		
 	} else {
-		for (table = russ_op_table; table->op != RUSS_OP_NULL; table++) {
+		for (table = russ_op_table; table->num != RUSS_OPNUM_NULL; table++) {
 			if (strcmp(str, table->str) == 0) {
-				op = table->op;
+				opnum = table->num;
 				break;
 			}
 		}
 	}
-	return op;
+	return opnum;
 }
 
 const char *
-russ_opstr_lookup(russ_op op) {
+russ_op_lookup(russ_opnum opnum) {
 	struct russ_op_table	*table;
 
-	for (table = russ_op_table; table->op != RUSS_OP_NULL; table++) {
-		if (table->op == op) {
+	for (table = russ_op_table; table->num != RUSS_OPNUM_NULL; table++) {
+		if (table->num == opnum) {
 			break;
 		}
 	}

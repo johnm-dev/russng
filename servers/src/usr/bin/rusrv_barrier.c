@@ -185,7 +185,7 @@ backend_master_handler(struct russ_conn *conn) {
 	errfd = conn->fds[2];
 	outfd = conn->fds[1];
 	switch (conn->req.op) {
-	case RUSS_OP_EXECUTE:
+	case RUSS_OPNUM_EXECUTE:
 		if (strcmp(conn->req.spath, "/wait") == 0) {
 			backend_add_waiter(conn);
 			//russ_close_fds(&conn->fds[0], 1);
@@ -224,12 +224,12 @@ backend_master_handler(struct russ_conn *conn) {
 			return;
 		}
 		break;
-	case RUSS_OP_HELP:
+	case RUSS_OPNUM_HELP:
 		russ_dprintf(outfd, "%s", BACKEND_HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		return;
 		break;
-	case RUSS_OP_LIST:
+	case RUSS_OPNUM_LIST:
 		if (strcmp(conn->req.spath, "/") == 0) {
 			russ_dprintf(outfd, "cancel\ncount\ntags\nttl\nwait\nwcount\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
@@ -443,7 +443,7 @@ master_handler(struct russ_conn *conn) {
 		exit(0);
 	}
 
-	if (req->op == RUSS_OP_EXECUTE) {
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		if (strcmp(req->spath, "/generate") == 0) {
 			char	hostname[1024];
 
@@ -455,10 +455,10 @@ master_handler(struct russ_conn *conn) {
 		} else {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
-	} else if (req->op == RUSS_OP_HELP) {
+	} else if (req->opnum == RUSS_OPNUM_HELP) {
 		russ_dprintf(outfd, "%s", FRONTEND_HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-	} else if (req->op == RUSS_OP_LIST) {
+	} else if (req->opnum == RUSS_OPNUM_LIST) {
 		if (strcmp(req->spath, "/") == 0) {
 			russ_dprintf(outfd, "generate\nnew\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);

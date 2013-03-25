@@ -79,19 +79,19 @@
 #define RUSS_REQ_SPATH_MAX	8192
 #define RUSS_REQ_PROTOCOL_STRING	"0008"
 
-#define RUSS_OP_NULL		0
-#define RUSS_OP_EXECUTE		1
-#define RUSS_OP_HELP		2
-#define RUSS_OP_ID		3
-#define RUSS_OP_INFO		4
-#define RUSS_OP_LIST		5
+#define RUSS_OPNUM_NULL		0
+#define RUSS_OPNUM_EXECUTE	1
+#define RUSS_OPNUM_HELP		2
+#define RUSS_OPNUM_ID		3
+#define RUSS_OPNUM_INFO		4
+#define RUSS_OPNUM_LIST		5
 
 #define RUSS_SVR_TYPE_FORK	1
 #define RUSS_SVR_TYPE_THREAD	2
 
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
-typedef uint32_t	russ_op;
+typedef uint32_t	russ_opnum;
 
 /**
 * Client credentials object. Obtained from connection.
@@ -113,12 +113,12 @@ struct russ_lis {
 * Request object.
 */
 struct russ_req {
-	char	*protocol_string;	/**< identifies russ protocol */
-	russ_op	op;		/**< operation */
-	char	*opstr;		/**< operation string */
-	char	*spath;		/**< service path */
-	char	**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
-	char	**argv;		/**< NULL-terminated array of args */
+	char		*protocol_string;	/**< identifies russ protocol */
+	char		*op;		/**< operation string */
+	russ_opnum	opnum;		/**< operation number*/
+	char		*spath;		/**< service path */
+	char		**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
+	char		**argv;		/**< NULL-terminated array of args */
 };
 
 /**
@@ -239,8 +239,8 @@ void russ_lis_loop(struct russ_lis *, russ_accept_handler, russ_answer_handler, 
 int russ_dprintf(int, char *, ...);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
-russ_op russ_op_lookup(char *);
-const char *russ_opstr_lookup(russ_op);
+const char *russ_op_lookup(russ_opnum);
+russ_opnum russ_opnum_lookup(char *);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
 

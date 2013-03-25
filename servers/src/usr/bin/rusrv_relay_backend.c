@@ -35,7 +35,7 @@ int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
 	struct russ_fwd		fwds[3];
-	russ_op			op;
+	char			*op;
 	char			*addr;
 	char			**attrs, **args;
 	int			size, cnt;
@@ -54,7 +54,7 @@ main(int argc, char **argv) {
 		exit(RUSS_EXIT_SYS_FAILURE);
 	}
 	/* op, addr */
-	if (((bp = russ_dec_I(bp, &op)) == NULL)
+	if (((bp = russ_dec_s(bp, &op)) == NULL)
 		|| ((bp = russ_dec_s(bp, &addr)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &attrs, &cnt)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &args, &cnt)) == NULL)) {

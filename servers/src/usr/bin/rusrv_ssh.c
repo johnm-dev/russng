@@ -119,7 +119,6 @@ void
 execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	char	*args[1024];
 	int	nargs;
-	char	op_str[256];
 	int	i, status, pid;
 
 	switch_user(conn);
@@ -144,11 +143,7 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 			}
 		}
 	}
-	if (snprintf(op_str, sizeof(op_str), "%u", conn->req.op) < 0) {
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	args[nargs++] = op_str;
+	args[nargs++] = conn->req.op;
 	args[nargs++] = new_spath;
 	if ((conn->req.argv != NULL) && (conn->req.argv[0] != NULL)) {
 		for (i = 0; conn->req.argv[i] != NULL; i++) {
@@ -207,12 +202,12 @@ svc_root_handler(struct russ_conn *conn) {
 	char	*p, *new_spath, *userhost;
 	int	i;
 
-	switch (conn->req.op) {
-	case RUSS_OP_HELP:
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], "%s", HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		break;
-	case RUSS_OP_EXECUTE:
+	case RUSS_OPNUM_EXECUTE:
 		/* extract and validate user@host and new_spath */
 		userhost = &conn->req.spath[1];
 		if ((p = index(userhost, '/')) == NULL) {
@@ -224,7 +219,7 @@ svc_root_handler(struct russ_conn *conn) {
 
 		execute(conn, userhost, new_spath);
 		break;
-	case RUSS_OP_LIST:
+	case RUSS_OPNUM_LIST:
 		russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_FAILURE);
 		break;
 	default:

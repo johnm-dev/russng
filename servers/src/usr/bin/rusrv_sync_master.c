@@ -34,7 +34,7 @@ int		nchildren = 0;
 */
 int
 req_handler(struct russ_conn *conn) {
-	if (conn->req->op == RUSS_OP_EXECUTE) {
+	if (conn->req->opnum == RUSS_OPNUM_EXECUTE) {
 		/* serve the input from fd passed to client */
 		char	buf[1024];
 		ssize_t	n;

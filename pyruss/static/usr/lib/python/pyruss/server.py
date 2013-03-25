@@ -178,8 +178,8 @@ class Server:
         """Find service handler and invoke it.
         
         Special cases:
-        * op == RUSS_OP_HELP - fallback to spath == "/" if available
-        * op == RUSS_OP_LIST - list node.children if found
+        * opnum == RUSS_OPNUM_HELP - fallback to spath == "/" if available
+        * opnum == RUSS_OPNUM_LIST - list node.children if found
         
         Calling conn.exit() is left to the service handler. All
         connection fds are closed before returning.
@@ -197,14 +197,14 @@ class Server:
         # call standard_answer_handler() for now
         conn.standard_answer_handler()
 
-        if req.op == pyruss.RUSS_OP_LIST:
+        if req.opnum == pyruss.RUSS_OPNUM_LIST:
             # default handling for "list"; list "children" at spath
             if req.spath in ["/", ctxt.spath]:
                 os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
                 conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif req.op == pyruss.RUSS_OP_HELP:
+        elif req.opnum == pyruss.RUSS_OPNUM_HELP:
             # default handling for "help"; use node spath == "/"
             node, ctxt.spath = self.service_tree.find("/")
             if req.spath in ["/", ctxt.spath]:

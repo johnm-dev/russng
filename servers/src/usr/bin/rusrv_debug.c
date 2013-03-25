@@ -72,7 +72,7 @@ char	*HELP =
 
 void
 svc_root_handler(struct russ_conn *conn) {
-	if (conn->req.op == RUSS_OP_HELP) {
+	if (conn->req.opnum == RUSS_OPNUM_HELP) {
 		russ_dprintf(conn->fds[1], HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else {
@@ -215,7 +215,7 @@ svc_request_handler(struct russ_conn *conn) {
 
 	russ_dprintf(fd, "protocol string (%s)\n", req->protocol_string);
 	russ_dprintf(fd, "spath (%s)\n", req->spath);
-	russ_dprintf(fd, "op (%u)\n", req->op);
+	russ_dprintf(fd, "opnum (%u)\n", req->opnum);
 
 	/* attrv */
 	if (req->attrv == NULL) {

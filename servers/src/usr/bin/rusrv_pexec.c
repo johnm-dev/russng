@@ -190,14 +190,14 @@ master_handler(struct russ_conn *conn) {
 	}
 
 	req = &(conn->req);
-	switch (req->op) {
-	case RUSS_OP_HELP:
+	switch (req->opnum) {
+	case RUSS_OPNUM_HELP:
 		op_help_handler(conn);
 		break;
-	case RUSS_OP_LIST:
+	case RUSS_OPNUM_LIST:
 		op_list_handler(conn);
 		break;
-	case RUSS_OP_EXECUTE:
+	case RUSS_OPNUM_EXECUTE:
 		op_execute_handler(conn);
 	default:
 		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);

@@ -114,7 +114,7 @@ cleanup:
 struct russ_conn *
 redial(int sd) {
 	struct russ_conn	*conn;
-	russ_op			op;
+	char			*op;
 	char			*addr;
 	char			**attrs, **args;
 	char			buf[16384], *bp;
@@ -130,7 +130,7 @@ redial(int sd) {
 	}
 
 	/* op, addr */
-	if (((bp = russ_dec_I(bp, &op)) == NULL)
+	if (((bp = russ_dec_s(bp, &op)) == NULL)
 		|| ((bp = russ_dec_s(bp, &addr)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &attrs, &cnt)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &args, &cnt)) == NULL)) {

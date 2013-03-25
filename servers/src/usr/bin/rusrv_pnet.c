@@ -369,15 +369,15 @@ master_handler(struct russ_conn *conn) {
 		|| (strcmp(req->spath, "/random/") == 0)) {
 		/* nothing */
 	} else {
-		switch (req->op) {
-		case RUSS_OP_EXECUTE:
+		switch (req->opnum) {
+		case RUSS_OPNUM_EXECUTE:
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			break;
-		case RUSS_OP_HELP:
+		case RUSS_OPNUM_HELP:
 	        	russ_dprintf(outfd, "%s", HELP);
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			break;
-		case RUSS_OP_LIST:
+		case RUSS_OPNUM_LIST:
 			if (strcmp(req->spath, "/") == 0) {
 				russ_dprintf(outfd, "first\nhost\nid\nnet\nnext\nrandom\n");
 				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
