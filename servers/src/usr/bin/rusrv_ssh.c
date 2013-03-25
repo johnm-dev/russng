@@ -155,6 +155,15 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	}
 	args[nargs++] = NULL;
 
+#if 0
+	{
+		char **xargs;
+		for (xargs = args; *xargs != NULL; xargs++) {
+			fprintf(stderr, "(%s)\n", *xargs);
+		}
+	}
+#endif
+
 	/* fix up fds and exec */
 	signal(SIGCHLD, SIG_DFL);
 	if ((pid = fork()) == 0) {
