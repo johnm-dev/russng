@@ -87,6 +87,7 @@ class russ_req_Structure(ctypes.Structure):
     _fields_ = [
         ("protocol_string", ctypes.c_char_p),
         ("op", russ_op),
+        ("opstr", ctypes.c_char_p),
         ("spath", ctypes.c_char_p),
         ("attrv", ctypes.POINTER(ctypes.c_char_p)),
         ("argv", ctypes.POINTER(ctypes.c_char_p)),
@@ -178,7 +179,7 @@ libruss.russ_conn_wait.restype = ctypes.c_int
 
 libruss.russ_dialv.argtypes = [
     russ_deadline,
-    russ_op,
+    ctypes.c_char_p,
     ctypes.c_char_p,
     ctypes.POINTER(ctypes.c_char_p),
     ctypes.POINTER(ctypes.c_char_p),
@@ -292,7 +293,7 @@ def announce(path, mode, uid, gid):
     lis_ptr = libruss.russ_announce(path, mode, uid, gid)
     return bool(lis_ptr) and Listener(lis_ptr) or None
 
-def dialv(deadline, op, saddr, attrs, args):
+def dialv(deadline, opstr, saddr, attrs, args):
     """Dial a service.
     """
     if attrs == None:
@@ -302,7 +303,7 @@ def dialv(deadline, op, saddr, attrs, args):
         args = []
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
-    conn_ptr = libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv)
+    conn_ptr = libruss.russ_dialv(deadline, opstr, saddr, c_attrs, c_argv)
     return bool(conn_ptr) and ClientConn(conn_ptr) or None
 
 dial = dialv
@@ -310,7 +311,7 @@ dial = dialv
 def execv(deadline, saddr, attrs, args):
     """ruexec a service.
     """
-    return dialv(deadline, RUSS_OP_EXECUTE, saddr, attrs, args)
+    return dialv(deadline, "execute", saddr, attrs, args)
 
 def gettime():
     return libruss.russ_gettime()
