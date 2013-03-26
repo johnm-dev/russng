@@ -56,6 +56,7 @@ russ_svc_node_new(char *name, russ_svc_handler handler) {
 	self->handler = handler;
 	self->next = NULL;
 	self->children = NULL;
+	self->virtual = 0;
 	return self;
 free_node:
 	free(self);
