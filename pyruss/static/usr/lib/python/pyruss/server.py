@@ -211,8 +211,6 @@ class ServerConn(Conn):
     def standard_answer_handler(self):
         return libruss.russ_standard_answer_handler(self.conn_ptr)
 
-REQ_HANDLER_FUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p)
-
 class Listener:
     def __init__(self, lis_ptr):
         self.lis_ptr = lis_ptr
