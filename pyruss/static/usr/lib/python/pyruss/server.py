@@ -107,7 +107,7 @@ class Conn:
         self.conn_ptr = conn_ptr
 
     def __del__(self):
-        libruss.russ_conn_free(self.conn_ptr)
+        #libruss.russ_conn_free(self.conn_ptr)
         self.conn_ptr = None
 
     def close(self):
@@ -216,8 +216,8 @@ class Listener:
         self.lis_ptr = lis_ptr
 
     def __del__(self):
-        libruss.russ_lis_close(self.lis_ptr)
-        libruss.russ_lis_free(self.lis_ptr)
+        #libruss.russ_lis_close(self.lis_ptr)
+        #libruss.russ_lis_free(self.lis_ptr)
         self.lis_ptr = None
 
     def accept(self, deadline):
