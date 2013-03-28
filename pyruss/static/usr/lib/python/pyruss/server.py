@@ -32,7 +32,7 @@ import os
 import sys
 
 #
-import pyruss
+from pyruss.bindings import *
 
 #
 # python-based helpers
