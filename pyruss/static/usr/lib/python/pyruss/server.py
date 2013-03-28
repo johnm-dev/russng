@@ -103,34 +103,34 @@ class Conn:
     """Common (client, server) connection.
     """
 
-    def __init__(self, conn_ptr):
-        self.conn_ptr = conn_ptr
+    def __init__(self, _ptr):
+        self._ptr = _ptr
 
     def __del__(self):
-        #libruss.russ_conn_free(self.conn_ptr)
-        self.conn_ptr = None
+        #libruss.russ_conn_free(self._ptr)
+        self._ptr = None
 
     def close(self):
-        libruss.russ_conn_close(self.conn_ptr)
+        libruss.russ_conn_close(self._ptr)
 
     def close_fd(self, i):
-        return libruss.russ_conn_close_fd(self.conn_ptr, i)
+        return libruss.russ_conn_close_fd(self._ptr, i)
 
     def get_creds(self):
-        creds = self.conn_ptr.contents.creds
+        creds = self._ptr.contents.creds
         return Credentials(creds.uid, creds.gid, creds.pid)
 
     def get_fd(self, i):
-        return self.conn_ptr.contents.fds[i]
+        return self._ptr.contents.fds[i]
 
     def get_fds(self):
-        return [self.conn_ptr.contents.fds[i] for i in range(RUSS_CONN_NFDS)]
+        return [self._ptr.contents.fds[i] for i in range(RUSS_CONN_NFDS)]
 
     def get_request(self):
-        return self.conn_ptr.contents.req
+        return self._ptr.contents.req
 
     def get_request_args(self):
-        req = self.conn_ptr.contents.req
+        req = self._ptr.contents.req
         args = []
         if bool(req.argv):
             i = 0
@@ -143,7 +143,7 @@ class Conn:
         return  args
 
     def get_request_attrs(self):
-        req = self.conn_ptr.contents.req
+        req = self._ptr.contents.req
         attrs = {}
         if bool(req.attrv):
             i = 0
@@ -160,13 +160,13 @@ class Conn:
         return attrs
 
     def get_sd(self):
-        return self.conn_ptr.contents.sd
+        return self._ptr.contents.sd
 
     def set_fd(self, i, value):
-        self.conn_ptr.contents.fds[i] = value
+        self._ptr.contents.fds[i] = value
         
     def splice(self, dconn):
-        return libruss.russ_conn_splice(self.conn_ptr, dconn.conn_ptr)
+        return libruss.russ_conn_splice(self._ptr, dconn._ptr)
 
 class ClientConn(Conn):
     """Client connection.
@@ -174,7 +174,7 @@ class ClientConn(Conn):
 
     def wait(self, deadline):
         exit_status = ctypes.c_int()
-        return libruss.russ_conn_wait(self.conn_ptr, ctypes.byref(exit_status), deadline), exit_status.value
+        return libruss.russ_conn_wait(self._ptr, ctypes.byref(exit_status), deadline), exit_status.value
 
 class Credentials:
     """Connection credentials.
@@ -192,47 +192,47 @@ class ServerConn(Conn):
     def answer(self, nfds, cfds, sfds):
         if 0:
             # TODO: how to handle passing fds?
-            return libruss.russ_conn_answer(self.conn_ptr, nfds, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+            return libruss.russ_conn_answer(self._ptr, nfds, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
         else:
-            return libruss.russ_conn_answer(self.conn_ptr, 0, None, None)
+            return libruss.russ_conn_answer(self._ptr, 0, None, None)
 
     def await_request(self, deadline):
-        return libruss.russ_conn_await_request(self.conn_ptr, deadline)
+        return libruss.russ_conn_await_request(self._ptr, deadline)
 
     def exit(self, exit_status):
-        return libruss.russ_conn_exit(self.conn_ptr, exit_status)
+        return libruss.russ_conn_exit(self._ptr, exit_status)
 
     def exits(self, msg, exit_status):
-        return libruss.russ_conn_exits(self.conn_ptr, msg, exit_status)
+        return libruss.russ_conn_exits(self._ptr, msg, exit_status)
 
     def fatal(self, msg, exit_status):
-        return libruss.russ_conn_fatal(self.conn_ptr, msg, exit_status)
+        return libruss.russ_conn_fatal(self._ptr, msg, exit_status)
 
     def standard_answer_handler(self):
-        return libruss.russ_standard_answer_handler(self.conn_ptr)
+        return libruss.russ_standard_answer_handler(self._ptr)
 
 class Listener:
-    def __init__(self, lis_ptr):
-        self.lis_ptr = lis_ptr
+    def __init__(self, _ptr):
+        self._ptr = _ptr
 
     def __del__(self):
-        #libruss.russ_lis_close(self.lis_ptr)
-        #libruss.russ_lis_free(self.lis_ptr)
-        self.lis_ptr = None
+        #libruss.russ_lis_close(self._ptr)
+        #libruss.russ_lis_free(self._ptr)
+        self._ptr = None
 
     def accept(self, deadline):
         try:
-            conn_ptr = libruss.russ_lis_accept(self.lis_ptr, deadline)
+            conn_ptr = libruss.russ_lis_accept(self._ptr, deadline)
         except:
             traceback.print_exc()
         return bool(conn_ptr) and ServerConn(conn_ptr) or None
 
     def close(self):
-        libruss.russ_lis_close(self.lis_ptr)
+        libruss.russ_lis_close(self._ptr)
 
     def get_sd(self):
-        if self.lis_ptr:
-            return self.lis_ptr.contents.sd
+        if self._ptr:
+            return self._ptr.contents.sd
         else:
             return -1
 
