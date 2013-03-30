@@ -32,8 +32,7 @@ import os
 import sys
 
 #
-from pyruss.bindings import *
-from pyruss.base import *
+import pyruss
 
 class ServiceNode:
     """Used by ServiceTree in support of a hierarchy organized by
