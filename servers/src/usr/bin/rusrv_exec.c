@@ -25,11 +25,16 @@
 #include <errno.h>
 #include <libgen.h>
 #include <pwd.h>
+#ifdef USE_PAM
+#include <security/pam_appl.h>
+#include <security/pam_misc.h>
+#endif /* USE_PAM */
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -102,6 +107,54 @@ free_strings:
 
 	return -1;
 }
+
+#ifdef USE_PAM
+/**
+* Set according to pam service settings.
+*
+* This is primarily to hook into limits, env so that the execution
+* environment of the process is like a login.
+*
+* @param service_name	service name as found under /etc/pam.d
+* @param username	user name
+* @return		0 for success; -1 for failure
+*/
+int
+setup_by_pam(char *service_name, char *username) {
+	pam_handle_t	*pamh;
+	struct pam_conv	pamc;
+
+	pamc.conv = &misc_conv;
+	pamc.appdata_ptr = NULL;
+
+	if (pam_start(service_name, username, &pamc, &pamh) != PAM_SUCCESS) {
+		goto shutdown_pam;
+	}
+#if 0
+	if (pam_acct_mgmt(pamh, PAM_SILENT) != PAM_SUCCESS) {
+		goto shutdown_pam;
+	}
+#endif
+	if ((pam_open_session(pamh, PAM_SILENT) != PAM_SUCCESS)
+		|| (pam_close_session(pamh, PAM_SILENT) != PAM_SUCCESS)) {
+		goto shutdown_pam;
+	}
+
+#if 0
+{
+	struct rlimit	rlim;
+	getrlimit(RLIMIT_NOFILE, &rlim);
+	fprintf(stderr, "no file hard (%ld) soft (%ld)\n", (long)rlim.rlim_max, (long)rlim.rlim_cur);
+}
+#endif
+
+	pam_end(pamh, 0);
+	return 0;
+shutdown_pam:
+	pam_end(pamh, 0);
+	return -1;
+}
+#endif /* USE_PAM */
 
 char *
 squote_string(char *s) {
@@ -268,6 +321,19 @@ op_list_handler(struct russ_conn *conn) {
 void
 master_handler(struct russ_conn *conn) {
 	struct russ_req	*req;
+	char		*username, *shell, *lshell, *home;
+
+	if (get_user_info(conn->creds.uid, &username, &shell, &lshell, &home) < 0) {
+		russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
+		return;
+	}
+
+#ifdef USE_PAM
+	if (setup_by_pam("rusrv_exec", username) < 0) {
+		russ_conn_fatal(conn, "error: could not set up for user", RUSS_EXIT_FAILURE);
+		return;
+	}
+#endif
 
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */

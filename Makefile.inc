@@ -17,9 +17,9 @@ endif
 ifeq ($(UNAME_SYSTEM),Linux)
 	#CC=arm-linux-gnueabi-gcc
 	CC=gcc
-	CFLAGS=-DLINUX -g
+	CFLAGS=-DLINUX -g -DUSE_PAM
 	CFLAGS_STATIC=$(CFLAGS) -static
-	LIBS_PLAT=-lrt
+	LIBS_PLAT=-lrt -lpam -lpam_misc
 	MAKE=make
 endif
 
