@@ -59,23 +59,35 @@ char	*HELP =
 "environment and are applied before shell settings.\n";
 
 /*
-* Return shell path, shell path with - prefix (indicating login),
-* and user home. Free shell, lshell, and home when finished.
+* Given a uid, return username, shell path, shell path with - prefix
+* (indicating login), and user home.
+*
+* Caller must free username, shell, lshell, and home when finished.
+*
+* @param uid		user id
+* @param username	place to store username reference
+* @param shell		place to store shell reference
+* @param lshell		place to store shell (with -) reference
+* @param home		place to store home reference
+* @return		0 on success; -1 on error
 */
 int
-get_user_info(uid_t uid, char **shell, char **lshell, char **home) {
+get_user_info(uid_t uid, char **username, char **shell, char **lshell, char **home) {
 	struct passwd	*pwd;
-	char		*_shell = NULL, *_lshell = NULL, *_home = NULL;
+	char		*_username = NULL, *_home = NULL;
+	char		*_shell = NULL, *_lshell = NULL;
 
 	if ((pwd = getpwuid(uid)) == NULL) {
 		return -1;
 	}
-	if (((_shell = strdup(pwd->pw_shell)) == NULL)
+	if (((_username = strdup(pwd->pw_name)) == NULL)
+		|| ((_shell = strdup(pwd->pw_shell)) == NULL)
 		|| ((_lshell = malloc(strlen(pwd->pw_shell)+1+1)) == NULL)
 		|| (strcpy(&(_lshell[1]), pwd->pw_shell) == NULL)
 		|| ((_home = strdup(pwd->pw_dir)) == NULL)) {
 		goto free_strings;
 	}
+	*username = _username;
 	_lshell[0] = '-';
 	*shell = _shell;
 	*lshell = _lshell;
@@ -83,6 +95,7 @@ get_user_info(uid_t uid, char **shell, char **lshell, char **home) {
 
 	return 0;
 free_strings:
+	free(_username);
 	free(_shell);
 	free(_lshell);
 	free(_home);
@@ -122,7 +135,7 @@ op_execute_handler(struct russ_conn *conn) {
 	struct russ_req	*req;
 	FILE		*f;
 	char		*cmd, **argv;
-	char		*shell, *lshell, *home;
+	char		*username, *shell, *lshell, *home;
 	char		*cg_path, cg_tasks_path[1024];
 	pid_t		pid;
 	int		argc, i, status;
@@ -159,7 +172,7 @@ op_execute_handler(struct russ_conn *conn) {
 			return;
 		}
 
-		if (get_user_info(getuid(), &shell, &lshell, &home) < 0) {
+		if (get_user_info(getuid(), &username, &shell, &lshell, &home) < 0) {
 			russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
 			return;
 		}
