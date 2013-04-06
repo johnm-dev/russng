@@ -250,14 +250,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 		goto cleanup;
 	}
 
-	if (0) {
-		/* TODO: add support for non-standard answer handler */
-		if (node->handler) {
-			node->handler(conn);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
-	} else if (russ_standard_answer_handler(conn) < 0) {
+	if ((node->auto_answer) && (russ_standard_answer_handler(conn) < 0)) {
 		goto cleanup;
 	}
 
