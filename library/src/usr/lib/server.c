@@ -56,6 +56,8 @@ russ_svc_node_new(char *name, russ_svc_handler handler) {
 	self->handler = handler;
 	self->next = NULL;
 	self->children = NULL;
+
+	self->auto_answer = 1;
 	self->virtual = 0;
 	return self;
 free_node:
@@ -150,6 +152,12 @@ russ_svc_node_find(struct russ_svc_node *self, char *path) {
 		}
 	}
 	return node;
+}
+
+int
+russ_svc_node_set_auto_answer(struct russ_svc_node *self, int value) {
+	self->auto_answer = value;
+	return 1;
 }
 
 int

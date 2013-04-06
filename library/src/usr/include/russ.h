@@ -166,6 +166,7 @@ struct russ_svc_node {
 	char			*name;
 	struct russ_svc_node	*next;
 	struct russ_svc_node	*children;
+	int			auto_answer;
 	int			virtual;
 };
 
@@ -252,6 +253,7 @@ struct russ_svc_node *russ_svc_node_new(char *, russ_svc_handler);
 struct russ_svc_node *russ_svc_node_free(struct russ_svc_node *);
 struct russ_svc_node *russ_svc_node_add(struct russ_svc_node *, char *, russ_svc_handler);
 struct russ_svc_node *russ_svc_node_find(struct russ_svc_node *, char *);
+int russ_svc_node_set_auto_answer(struct russ_svc_node *, int);
 int russ_svc_node_set_virtual(struct russ_svc_node *, int);
 struct russ_svr *russ_svr_new(struct russ_svc_node *, int);
 struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid_t);
