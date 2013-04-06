@@ -184,16 +184,28 @@ get_cg_path(char **attrv) {
 }
 
 void
-op_execute_handler(struct russ_conn *conn) {
+execute(struct russ_conn *conn, char *username, char *home, char *cmd, char **argv, char **envp) {
 	struct russ_req	*req;
 	FILE		*f;
-	char		*cmd, **argv;
-	char		*username, *shell, *lshell, *home;
 	char		*cg_path, cg_tasks_path[1024];
 	pid_t		pid;
-	int		argc, i, status;
+	int		status;
 
 	req = &(conn->req);
+
+#ifdef USE_PAM
+	if (setup_by_pam("rusrv_exec", username) < 0) {
+		russ_conn_fatal(conn, "error: could not set up for user", RUSS_EXIT_FAILURE);
+		return;
+	}
+#endif
+
+	/* change uid/gid ASAP */
+	/* TODO: this may have to move to support job service */
+	if (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0) {
+		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
+		return;
+	}
 
 	/* find cg_path and set cg_tasks_path */
 	if ((cg_path = get_cg_path(req->attrv)) != NULL) {
@@ -210,49 +222,6 @@ op_execute_handler(struct russ_conn *conn) {
 			russ_conn_fatal(conn, "error: bad cgroup", RUSS_EXIT_FAILURE);
 			return;
 		}
-	}
-
-	/* select service */
-	if (strcmp(req->spath, "/simple") == 0) {
-		cmd = req->argv[0];
-		argv = req->argv;
-		home = "/";
-	} else if ((strcmp(req->spath, "/login") == 0)
-		|| (strcmp(req->spath, "/shell") == 0)) {
-		/* argv[] = {shell, "-c", cmd, NULL} */
-		if ((argv = malloc(sizeof(char *)*4)) == NULL) {
-			russ_conn_fatal(conn, "error: could not run", RUSS_EXIT_FAILURE);
-			return;
-		}
-
-		if (get_user_info(getuid(), &username, &shell, &lshell, &home) < 0) {
-			russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
-			return;
-		}
-		cmd = shell;
-		argv[1] = "-c";
-		/* argv[2] is set below */
-		argv[3] = NULL;
-
-		if ((strcmp(req->spath, "/login") == 0)
-			&& (req->argv[0] != NULL)) {
-			argv[0] = lshell;
-			argv[2] = req->argv[0];
-		} else if ((strcmp(req->spath, "/shell") == 0)
-			&& (req->argv[0] != NULL)) {
-			argv[0] = shell;
-			argv[2] = req->argv[0];
-		} else {
-			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-		if (argv[2] == NULL) {
-			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-	} else {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
 	}
 
 	if (cgroups_home && cg_path) {
@@ -286,7 +255,7 @@ op_execute_handler(struct russ_conn *conn) {
 		//for (i = 3; i < 128; i++) {
 			//close(i);
 		//}
-		execve(cmd, argv, req->attrv);
+		execve(cmd, argv, envp);
 
 		/* should not get here! */
 		russ_dprintf(conn->fds[2], "error: could not execute\n");
@@ -303,59 +272,76 @@ op_execute_handler(struct russ_conn *conn) {
 }
 
 void
-op_help_handler(struct russ_conn *conn) {
-	russ_dprintf(conn->fds[1], "%s", HELP);
-	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+svc_root_handler(struct russ_conn *conn) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_HELP:
+		russ_dprintf(conn->fds[1], "%s", HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+	exit(0);
 }
 
 void
-op_list_handler(struct russ_conn *conn) {
-	if (strcmp(conn->req.spath, "/") == 0) {
-		russ_dprintf(conn->fds[1], "job\nlogin\nshell\nsimple\n");
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+svc_login_shell_handler(struct russ_conn *conn) {
+	struct russ_req	*req;
+	char		**argv;
+	char		*username, *shell, *lshell, *home;
+
+	req = &(conn->req);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		if (req->argv[0] == NULL) {
+			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
+			return;
+		}
+		/* argv[] = {shell, "-c", cmd, NULL} */
+		if ((argv = malloc(sizeof(char *)*4)) == NULL) {
+			russ_conn_fatal(conn, "error: could not run", RUSS_EXIT_FAILURE);
+			return;
+		}
+
+		if (get_user_info(getuid(), &username, &shell, &lshell, &home) < 0) {
+			russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
+			return;
+		}
+
+		argv[0] = shell;
+		argv[1] = "-c";
+		argv[2] = req->argv[0];
+		argv[3] = NULL;
+
+		if (strcmp(req->spath, "/login") == 0) {
+			argv[0] = lshell;
+		}
+
+		execute(conn, username, home, shell, argv, req->attrv);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
+	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+	exit(0);
 }
 
 void
-master_handler(struct russ_conn *conn) {
+svc_simple_handler(struct russ_conn *conn) {
 	struct russ_req	*req;
 	char		*username, *shell, *lshell, *home;
 
-	if (get_user_info(conn->creds.uid, &username, &shell, &lshell, &home) < 0) {
+	if (get_user_info(getuid(), &username, &shell, &lshell, &home) < 0) {
 		russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
 		return;
 	}
 
-#ifdef USE_PAM
-	if (setup_by_pam("rusrv_exec", username) < 0) {
-		russ_conn_fatal(conn, "error: could not set up for user", RUSS_EXIT_FAILURE);
-		return;
-	}
-#endif
-
-	/* change uid/gid ASAP */
-	/* TODO: this may have to move to support job service */
-	if (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0) {
-		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
-		return;
-	}
-
 	req = &(conn->req);
-	switch (req->opnum) {
-	case RUSS_OPNUM_HELP:
-		op_help_handler(conn);
-		break;
-	case RUSS_OPNUM_LIST:
-		op_list_handler(conn);
-		break;
-	case RUSS_OPNUM_EXECUTE:
-		op_execute_handler(conn);
-		break;
-	default:
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_SYS_FAILURE);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		execute(conn, username, "/", req->argv[0], req->argv, req->attrv);
+	} else {
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
+	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+	exit(0);
 }
 
 void
@@ -369,9 +355,9 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_lis	*lis;
+	struct russ_svc_node	*root, *node;
+	struct russ_svr		*svr;
 
-	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -382,14 +368,24 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
+	if (((root = russ_svc_node_new("", svc_root_handler)) == NULL)
+		|| ((node = russ_svc_node_add(root, "login", svc_login_shell_handler)) == NULL)
+		|| ((node = russ_svc_node_add(root, "shell", svc_login_shell_handler)) == NULL)
+		|| ((node = russ_svc_node_add(root, "simple", svc_simple_handler)) == NULL)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		fprintf(stderr, "error: cannot set up\n");
+		exit(1);
+	}
+
 	cgroups_home = russ_conf_get(conf, "job", "cgroups_home", NULL);
-	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+	if (russ_svr_announce(svr,
+		russ_conf_get(conf, "server", "path", NULL),
 		russ_conf_getsint(conf, "server", "mode", 0600),
 		russ_conf_getint(conf, "server", "uid", getuid()),
-		russ_conf_getint(conf, "server", "gid", getgid()));
-	if (lis == NULL) {
+		russ_conf_getint(conf, "server", "gid", getgid())) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, NULL, NULL, master_handler);
+	russ_svr_loop(svr);
+	exit(0);
 }
