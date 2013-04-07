@@ -180,6 +180,7 @@ russ_svr_new(struct russ_svc_node *root, int type) {
 	self->uid = -1;
 	self->gid = -1;
 	self->lis = NULL;
+	self->accept_handler = russ_standard_accept_handler;
 
 	return self;
 }
@@ -200,6 +201,22 @@ free_saddr:
 	free(self->saddr);
 	self->saddr = NULL;
 	return NULL;
+}
+
+/**
+* Register an alternative accept handler.
+*
+* @param self		russ server object
+* @param handler	accept handler
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_accept_handler(struct russ_svr *self, russ_accept_handler handler) {
+	if (handler == NULL) {
+		return -1;
+	}
+	self->accept_handler = handler;
+	return 0;
 }
 
 /**
@@ -299,7 +316,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	pid_t			pid;
 
 	while (1) {
-		if ((conn = russ_standard_accept_handler(self->lis, RUSS_DEADLINE_NEVER)) == NULL) {
+		if ((conn = self->accept_handler(self->lis, RUSS_DEADLINE_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
 			continue;
 		}
