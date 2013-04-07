@@ -102,6 +102,7 @@ redial_and_splice(struct russ_conn *conn) {
 	req = &(conn->req);
 	if (((conn2 = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL)
 		|| (russ_conn_splice(conn, conn2) < 0)) {
+		russ_conn_close(conn2);
 		russ_standard_answer_handler(conn);
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
