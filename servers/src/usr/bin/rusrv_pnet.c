@@ -80,32 +80,9 @@ char	*HELP =
 "    Connect to a randomly selected target from the hostsfile\n"
 "    list.\n";
 
-int
-switch_user(struct russ_conn *conn) {
-	uid_t	uid;
-	gid_t	gid;
-
-	uid = conn->creds.uid;
-	gid = conn->creds.gid;
-
-#if 0
-	if (uid == 0) {
-		russ_conn_fatal(conn, "error: cannot run for root (uid of 0)", -1);
-		exit(0);
-	}
-#endif
-
-	/* switch user */
-	if (russ_switch_user(uid, gid, 0, NULL) < 0) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	return 0;
-}
-
 /**
 * Dial a service and splice its connection fds into the given
-* connection fds.
+* connection fds. The real and effective uid/gid are also set.
 *
 * @param conn		connection object
 */
@@ -114,11 +91,16 @@ redial_and_splice(struct russ_conn *conn) {
 	struct russ_conn	*conn2;
 	struct russ_req		*req;
 
-	req = &(conn->req);
+	/* switch user */
+	if (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0) {
+		russ_standard_answer_handler(conn);
+		russ_conn_fatal(conn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
 
-	/* dial next service and splice */
-	if ((switch_user(conn) < 0)
-		|| ((conn2 = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL)
+	/* switch user, dial next service, and splice */
+	req = &(conn->req);
+	if (((conn2 = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL)
 		|| (russ_conn_splice(conn, conn2) < 0)) {
 		russ_standard_answer_handler(conn);
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
