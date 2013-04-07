@@ -104,193 +104,335 @@ switch_user(struct russ_conn *conn) {
 }
 
 /**
-* Patch conn->spath based on a target which answer.
+* Dial a service and splice its connection fds into the given
+* connection fds.
+*
+* @param conn		connection object
+*/
+void
+redial_and_splice(struct russ_conn *conn) {
+	struct russ_conn	*conn2;
+	struct russ_req		*req;
+
+	req = &(conn->req);
+
+	/* dial next service and splice */
+	if ((switch_user(conn) < 0)
+		|| ((conn2 = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL)
+		|| (russ_conn_splice(conn, conn2) < 0)) {
+		russ_standard_answer_handler(conn);
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+}
+
+/**
+* Handler for the / service.
+*
+* Provides HELP.
+*
+* @param conn		connection object
+*/
+void
+svc_root_handler(struct russ_conn *conn) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_HELP:
+		russ_dprintf(conn->fds[1], "%s", HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+}
+
+/**
+* Handler for the /count service.
+*
+* Output the number of targets.
+*
+* @param conn		connection object
+*/
+void
+svc_count_handler(struct russ_conn *conn) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_EXECUTE:
+		russ_dprintf(conn->fds[1], "%d", hostslist.nhosts);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+}
+
+/**
+* Handler for the /first service.
 *
 * Convert:
 *	first/... -> <relay_addr>/<userhost>/...
 * where <userhost> is select because it answers.
 *
 * @param conn		connection object
-* @return		0 on success; -1 on failure
 */
-int
-_first_patch(struct russ_conn *conn) {
-	return -1;
+void
+svc_first_handler(struct russ_conn *conn) {
+	/* NIY */
+	exit(1);
 }
 
 /**
-* Patch conn->spath based on original "host" spath.
+* Handler for the /host service.
 *
 * Convert:
 *	host/<userhost>/... -> <relay_addr>/<userhost>/...
 *
 * @param conn		connection object
-* @return		0 on success; -1 on failure
 */
-int
-_host_patch(struct russ_conn *conn) {
-	char	*p, *spath_tail, *userhost, *relay_addr;
-	char	new_spath[RUSS_REQ_SPATH_MAX];
-	int	i;
+void
+svc_host_handler(struct russ_conn *conn) {
+	struct russ_req	*req;
+	char		*p, *spath_tail, *userhost, *relay_addr;
+	char		new_spath[RUSS_REQ_SPATH_MAX];
+	int		i;
 
-	/* extract and validate user@host and new_spath */
-	userhost = &conn->req.spath[6];
-	if ((p = index(userhost, '/')) == NULL) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	spath_tail = strdup(p+1);
-	p[0] = '\0'; /* terminate userhost */
+	req = &(conn->req);
+	switch (req->opnum) {
+	case RUSS_OPNUM_EXECUTE:
+		/* extract and validate user@host and new_spath */
+		userhost = &conn->req.spath[6];
+		if ((p = index(userhost, '/')) == NULL) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			return;
+		}
+		spath_tail = strdup(p+1);
+		p[0] = '\0'; /* terminate userhost */
 
-	for (i = 0; i < hostslist.nhosts; i++) {
-		if (strcmp(userhost, hostslist.hosts[i]) == 0) {
-			break;
+		for (i = 0; i < hostslist.nhosts; i++) {
+			if (strcmp(userhost, hostslist.hosts[i]) == 0) {
+				break;
+			}
+		}
+		if (i == hostslist.nhosts) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			return;
+		}
+
+		relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
+		if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
+			russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
+			return;
+		}
+		free(conn->req.spath);
+		conn->req.spath = strdup(new_spath);
+
+		redial_and_splice(conn);
+		break;
+	case RUSS_OPNUM_LIST:
+		if (russ_standard_answer_handler(conn) < 0) {
+			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+		} else if (hostslist.nhosts == 0) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		} else {
+			for (i = 0; i < hostslist.nhosts; i++) {
+				russ_dprintf(conn->fds[1], "%s\n", hostslist.hosts[i]);
+			}
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		}
+		break;
+	case RUSS_OPNUM_HELP:
+		if (russ_standard_answer_handler(conn) == 0) {
+			svc_root_handler(conn);
+		} else {
+			russ_conn_close(conn);
+		}
+		break;
+	default:
+		if (russ_standard_answer_handler(conn) == 0) {
+			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 		}
 	}
-	if (i == hostslist.nhosts) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-
-	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
-		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	free(conn->req.spath);
-	conn->req.spath = strdup(new_spath);
-	return 0;
 }
 
 /**
-* Patch conn->spath based on original "id" spath.
+* Handler for the /id service.
 *
 * Convert:
 *	id/<index>/... -> <relay_addr>/<userhost>/...
 *
 * @param conn		connection object
-* @return		0 on success; -1 on failure
 */
-int
-_id_patch(struct russ_conn *conn) {
-	char	*p, *spath_tail, *s, *userhost, *relay_addr;
-	char	new_spath[RUSS_REQ_SPATH_MAX];
-	int	i, idx, wrap = 0;
+void
+svc_id_handler(struct russ_conn *conn) {
+	struct russ_req	*req;
+	char		*p, *spath_tail, *s, *userhost, *relay_addr;
+	char		new_spath[RUSS_REQ_SPATH_MAX];
+	int		i, idx, wrap = 0;
 
-	/* extract and validate user@host and new_spath */
-	s = &conn->req.spath[4];
-	if ((p = index(s, '/')) == NULL) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	spath_tail = strdup(p+1);
-	p[0] = '\0'; /* terminate userhost */
-	if (s[0] == ':') {
-		s = &s[1];
-		wrap = 1;
-	}
-	if (sscanf(s, "%d", &idx) != 1) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
+	req = &(conn->req);
+	switch (req->opnum) {
+	case RUSS_OPNUM_EXECUTE:
+		/* extract and validate user@host and new_spath */
+		s = &conn->req.spath[4];
+		if ((p = index(s, '/')) == NULL) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			exit(0);
+		}
+		spath_tail = strdup(p+1);
+		p[0] = '\0'; /* terminate userhost */
+		if (s[0] == ':') {
+			s = &s[1];
+			wrap = 1;
+		}
+		if (sscanf(s, "%d", &idx) != 1) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			exit(0);
+		}
 
-	/* wrap if requested */
-	if (wrap) {
-		idx = idx % hostslist.nhosts;
-	}
+		/* wrap if requested */
+		if (wrap) {
+			idx = idx % hostslist.nhosts;
+		}
 
-	/* negative indexes */
-	if ((idx < 0) && (-idx <= hostslist.nhosts)) {
-		idx = hostslist.nhosts+idx;
-	}
+		/* negative indexes */
+		if ((idx < 0) && (-idx <= hostslist.nhosts)) {
+			idx = hostslist.nhosts+idx;
+		}
 
-	/* validate */
-	if ((idx < 0) || (idx >= hostslist.nhosts)) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	userhost = hostslist.hosts[idx];
+		/* validate */
+		if ((idx < 0) || (idx >= hostslist.nhosts)) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			return;
+		}
+		userhost = hostslist.hosts[idx];
 
-	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
-		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
-		exit(0);
+		relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
+		if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
+			russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
+			return;
+		}
+		free(conn->req.spath);
+		conn->req.spath = strdup(new_spath);
+
+		redial_and_splice(conn);
+		break;
+	case RUSS_OPNUM_LIST:
+		if (russ_standard_answer_handler(conn) < 0) {
+			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+		} else if (hostslist.nhosts == 0) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		} else {
+			for (i = 0; i < hostslist.nhosts; i++) {
+				russ_dprintf(conn->fds[1], "%d\n", i);
+			}
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		}
+		break;
+	case RUSS_OPNUM_HELP:
+		if (russ_standard_answer_handler(conn) == 0) {
+			svc_root_handler(conn);
+		} else {
+			russ_conn_close(conn);
+		}
+		break;
+	default:
+		if (russ_standard_answer_handler(conn) == 0) {
+			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		}
 	}
-	free(conn->req.spath);
-	conn->req.spath = strdup(new_spath);
-	return 0;
 }
 
 /**
-* Patch conn->spath to use provided userhost.
+* Handler for the /net service.
 *
 * Convert:
 *	net/<userhost>/... -> <relay_addr>/<userhost>/...
 *
 * @param conn		connection object
-* @return		0 on success; -1 on failure
 */
-int
-_net_patch(struct russ_conn *conn) {
-	char	*p, *spath_tail, *userhost, *relay_addr;
-	char	new_spath[RUSS_REQ_SPATH_MAX];
+void
+svc_net_handler(struct russ_conn *conn) {
+	struct russ_req	*req;
+	char		*p, *spath_tail, *userhost, *relay_addr;
+	char		new_spath[RUSS_REQ_SPATH_MAX];
 
-	/* extract and validate user@host and new_spath */
-	userhost = &conn->req.spath[5];
-	if ((p = index(userhost, '/')) == NULL) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	spath_tail = strdup(p+1);
-	p[0] = '\0'; /* terminate userhost */
+	req = &(conn->req);
+	switch (req->opnum) {
+	case RUSS_OPNUM_EXECUTE:
+		/* extract and validate user@host and new_spath */
+		userhost = &conn->req.spath[5];
+		if ((p = index(userhost, '/')) == NULL) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			return;
+		}
+		spath_tail = strdup(p+1);
+		p[0] = '\0'; /* terminate userhost */
 
-	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
-		russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
-		exit(0);
+		relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
+		if (snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, spath_tail) < 0) {
+			russ_conn_fatal(conn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
+			return;
+		}
+		free(conn->req.spath);
+		conn->req.spath = strdup(new_spath);
+
+		redial_and_splice(conn);
+		break;
+	case RUSS_OPNUM_LIST:
+		if (russ_standard_answer_handler(conn) == 0) {
+			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
+		}
+		break;
+	case RUSS_OPNUM_HELP:
+		if (russ_standard_answer_handler(conn) == 0) {
+			svc_root_handler(conn);
+		} else {
+			russ_conn_close(conn);
+		}
+		break;		
+	default:
+		if (russ_standard_answer_handler(conn) == 0) {
+			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		}
 	}
-	free(conn->req.spath);
-	conn->req.spath = strdup(new_spath);
-	return -1;
 }
 
 /**
-* Patch conn->spath to use the 'next' id value.
+* Handler for the /next service.
+*
+* Depends on the a "next" counter which determines the next target
+* id to use.
 *
 * Convert:
 *	next/... -> <relay_addr>/<userhost>/...
 * where userhost is selected using a 'next' counter.
 *
 * @param conn		connection object
-* @return		0 on success; -1 on failure
 */
-int
-_next_patch(struct russ_conn *conn) {
+void
+svc_next_handler(struct russ_conn *conn) {
 	char	new_spath[RUSS_REQ_SPATH_MAX];
 	int	idx;
 
 	idx = hostslist.next;
 	if (snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &conn->req.spath[6]) < 0) {
 		russ_conn_fatal(conn, "error: spath is too large", RUSS_EXIT_FAILURE);
-		exit(0);
+		return;
 	}
 	free(conn->req.spath);
 	conn->req.spath = strdup(new_spath);
-	return _id_patch(conn);
+	svc_id_handler(conn);
 }
 
 /**
-* Patch conn->spath to use a random id value.
+* Handler for the /random service.
+*
+* Select a target id at random.
 *
 * Convert:
 *	random/... -> <relay_addr>/<userhost>/...
 * where userhost is selected at random from the list of targets.
 *
 * @param conn		connection object
-* @return		0 on success; -1 on failure
 */
-int
-_random_patch(struct russ_conn *conn) {
+void
+svc_random_handler(struct russ_conn *conn) {
 	char	new_spath[RUSS_REQ_SPATH_MAX];
 	int	idx;
 
@@ -301,120 +443,11 @@ _random_patch(struct russ_conn *conn) {
 	}
 	free(conn->req.spath);
 	conn->req.spath = strdup(new_spath);
-	return _id_patch(conn);
-}
-
-/*
-* Alternate answer handler for certain spaths.
-
-* The spaths: /id/, /host/, /first/, /next/, /net/, and /random/ are
-* treated specially before an accept is done. If none of the special
-* spaths are found, the default answer handler is called (for
-* further processing).
-*
-* @param self		connection object
-* @return		0 on success; -1 on failure
-*/
-
-int
-alt_answer_handler(struct russ_conn *self) {
-	struct russ_conn	*conn;
-	struct russ_req		*req;
-
-	/* ordered by expected use */
-	req = &(self->req);
-	if (strncmp(req->spath, "/id/", 4) == 0) {
-		_id_patch(self);
-	} else if (strncmp(req->spath, "/host/", 6) == 0) {
-		_host_patch(self);
-	} else if (strncmp(req->spath, "/first/", 7) == 0) {
-		_first_patch(self);
-	} else if (strncmp(req->spath, "/net/", 5) == 0) {
-		_net_patch(self);
-	} else if (strncmp(req->spath, "/next/", 6) == 0) {
-		_next_patch(self);
-	} else if (strncmp(req->spath, "/random/", 8) == 0) {
-		_random_patch(self);
-	} else {
-		return russ_standard_answer_handler(self);
-	}
-
-	/* dial next service and splice */
-	if ((switch_user(self) < 0)
-		|| ((conn = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL)) {
-		return -1;
-	}
-	return russ_conn_splice(self, conn);
-}
-
-/**
-* Service request only if it is for "/".
-*/
-void
-master_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	int		outfd;
-	int		i;
-
-	outfd = conn->fds[1];
-	req = &(conn->req);
-	if (strcmp(req->spath, "/count") == 0) {
-		russ_dprintf(outfd, "%d", hostslist.nhosts);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-	} else if ((strcmp(req->spath, "/first/") == 0)
-		|| (strcmp(req->spath, "/host/") == 0)
-		|| (strcmp(req->spath, "/id/") == 0)
-		|| (strcmp(req->spath, "/net/") == 0)
-		|| (strcmp(req->spath, "/next/") == 0)
-		|| (strcmp(req->spath, "/random/") == 0)) {
-		/* nothing */
-	} else {
-		switch (req->opnum) {
-		case RUSS_OPNUM_EXECUTE:
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			break;
-		case RUSS_OPNUM_HELP:
-	        	russ_dprintf(outfd, "%s", HELP);
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			break;
-		case RUSS_OPNUM_LIST:
-			if (strcmp(req->spath, "/") == 0) {
-				russ_dprintf(outfd, "first\nhost\nid\nnet\nnext\nrandom\n");
-				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			} else if (strcmp(req->spath, "/host") == 0) {
-				if (hostslist.nhosts == 0) {
-					russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-				} else {
-					for (i = 0; i < hostslist.nhosts; i++) {
-						russ_dprintf(outfd, "%s\n", hostslist.hosts[i]);
-					}
-					russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-				}
-			} else if (strcmp(req->spath, "/id") == 0) {
-				if (hostslist.nhosts == 0) {
-					russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-				} else {
-					for (i = 0; i < hostslist.nhosts; i++) {
-						russ_dprintf(outfd, "%d\n", i);
-					}
-					russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-				}
-			} else if ((strcmp(req->spath, "/net") == 0)) {
-				//russ_conn_fatal(conn, RUSS_MSG_UNSPEC_SERVICE, RUSS_EXIT_SUCCESS);
-				russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
-			} else {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			}
-			break;
-		default:
-			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-		}
-	}
-	exit(0);
+	svc_id_handler(conn);
 }
 
 struct russ_conn *
-alt_accept_handler(struct russ_lis *self, russ_deadline deadline) {
+accept_handler(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_conn	*conn;
 
 	if ((conn = russ_lis_accept(self, deadline)) != NULL) {
@@ -424,6 +457,12 @@ alt_accept_handler(struct russ_lis *self, russ_deadline deadline) {
 	return conn;
 }
 
+/**
+* Load hosts list from file.
+*
+* @param filename	hosts filename
+* @return		0 on success; -1 on failure
+*/
 int
 load_hostsfile(char *filename) {
 	char	*line;
@@ -467,9 +506,9 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_lis	*lis;
+	struct russ_svc_node	*root, *node;
+	struct russ_svr		*svr;
 
-	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 
 	srandom(time(NULL));
@@ -493,14 +532,40 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+	if (((root = russ_svc_node_new("", svc_root_handler)) == NULL)
+		|| ((node = russ_svc_node_add(root, "count", svc_count_handler)) == NULL)
+//		|| ((node = russ_svc_node_add(root, "first", svc_first_handler)) == NULL)
+//		|| (russ_svc_node_set_virtual(node, 1) < 0)
+//		|| (russ_svc_node_set_auto_answer(node, 0) < 0)
+		|| ((node = russ_svc_node_add(root, "host", svc_host_handler)) == NULL)
+		|| (russ_svc_node_set_virtual(node, 1) < 0)
+		|| (russ_svc_node_set_auto_answer(node, 0) < 0)
+		|| ((node = russ_svc_node_add(root, "id", svc_id_handler)) == NULL)
+		|| (russ_svc_node_set_virtual(node, 1) < 0)
+		|| (russ_svc_node_set_auto_answer(node, 0) < 0)
+		|| ((node = russ_svc_node_add(root, "net", svc_net_handler)) == NULL)
+		|| (russ_svc_node_set_virtual(node, 1) < 0)
+		|| (russ_svc_node_set_auto_answer(node, 0) < 0)
+		|| ((node = russ_svc_node_add(root, "next", svc_next_handler)) == NULL)
+		|| (russ_svc_node_set_virtual(node, 1) < 0)
+		|| (russ_svc_node_set_auto_answer(node, 0) < 0)
+		|| ((node = russ_svc_node_add(root, "random", svc_random_handler)) == NULL)
+		|| (russ_svc_node_set_virtual(node, 1) < 0)
+		|| (russ_svc_node_set_auto_answer(node, 0) < 0)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
+		|| (russ_svr_set_accept_handler(svr, accept_handler) < 0)) {
+		fprintf(stderr, "error: cannot set up\n");
+		exit(1);
+	}
+
+	if (russ_svr_announce(svr,
+		russ_conf_get(conf, "server", "path", NULL),
 		russ_conf_getsint(conf, "server", "mode", 0600),
 		russ_conf_getint(conf, "server", "uid", getuid()),
-		russ_conf_getint(conf, "server", "gid", getgid()));
-	if (lis == NULL) {
+		russ_conf_getint(conf, "server", "gid", getgid())) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, alt_accept_handler, alt_answer_handler, master_handler);
-	exit(0);
+	russ_svr_loop(svr);
+	exit(0);	
 }
