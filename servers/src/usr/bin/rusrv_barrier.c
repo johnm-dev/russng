@@ -184,7 +184,7 @@ backend_master_handler(struct russ_conn *conn) {
 
 	errfd = conn->fds[2];
 	outfd = conn->fds[1];
-	switch (conn->req.op) {
+	switch (conn->req.opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		if (strcmp(conn->req.spath, "/wait") == 0) {
 			backend_add_waiter(conn);
@@ -344,6 +344,58 @@ char *FRONTEND_HELP =
 "    This can be overridden for the file mode, and with\n"
 "    sufficient privileges, the ownership can also be set.\n";
 
+unsigned long
+get_random(void) {
+	int		f;
+	unsigned long	v;
+
+	f = open("/dev/urandom", O_RDONLY);
+	read(f, &v, sizeof(v));
+	close(f);
+	return v;
+}
+
+int
+chdir_switch_user(struct russ_conn *conn) {
+	if ((chdir("/tmp") < 0)
+		|| (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0)) {
+		return -1;
+	}
+	return 0;
+}
+
+void
+svc_root_handler(struct russ_conn *conn) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_HELP:
+		russ_dprintf(conn->fds[1], FRONTEND_HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+}
+
+void
+svc_generate_handler(struct russ_conn *conn) {
+	char	hostname[1024];
+
+	if (chdir_switch_user(conn) < 0) {
+		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
+		exit(0);	
+	}
+
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_EXECUTE:
+		gethostname(hostname, sizeof(hostname));
+		russ_dprintf(conn->fds[1], "%s-%012d-%04ld", hostname, 0, get_random() % 10000);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+}
+
 /**
 * Start new barrier backend instance.
 *
@@ -359,6 +411,11 @@ svc_new_handler(struct russ_conn *conn) {
 	int	errfd, outfd;
 	int	argi;
 
+	if (chdir_switch_user(conn) < 0) {
+		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
+		exit(0);	
+	}
+
 	errfd = conn->fds[2];
 	outfd = conn->fds[1];
 
@@ -368,106 +425,56 @@ svc_new_handler(struct russ_conn *conn) {
 	count = 0;
 	timeout = 600;
 
-	/* parse args */
-	argv = conn->req.argv;
-	if ((argv == NULL) || (argv[0] == NULL) || (argv[1] == NULL)) {
-		goto error_bad_args;
-	} else {
-		saddr = strdup(argv[0]); /* dup in case conn gets closed/freed */
-		if (sscanf(argv[1], "%d", &count) < 0) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_EXECUTE:
+		/* parse args */
+		argv = conn->req.argv;
+		if ((argv == NULL) || (argv[0] == NULL) || (argv[1] == NULL)) {
 			goto error_bad_args;
-		}
-	}
-
-	for (argi = 2; argv[argi] != NULL; argi++) {
-		arg = argv[argi++];
-
-		if ((strcmp(arg, "-g") == 0)
-			&& (getuid() == 0)
-			&& (argv[argi] != NULL)
-			&& (sscanf(argv[argi], "%ld", &gid) >= 0)) {
-			argi++;
-		} else if ((strcmp(arg, "-m") == 0)
-			&& (argv[argi] != NULL)
-			&& (sscanf(argv[argi], "%ld", &mode) >= 0)) {
-			argi++;
-		} else if ((strcmp(arg, "-t") == 0)
-			&& (argv[argi] != NULL)
-			&& (sscanf(argv[argi], "%ld", &timeout) >= 0)) {
-			argi++;
-		} else if ((strcmp(arg, "-u") == 0)
-			&& (getuid() == 0)
-			&& (argv[argi] != NULL)
-			&& (sscanf(argv[argi], "%ld", &uid) >= 0)) {
-			argi++;
 		} else {
-			goto error_bad_args;
+			saddr = strdup(argv[0]); /* dup in case conn gets closed/freed */
+			if (sscanf(argv[1], "%d", &count) < 0) {
+				goto error_bad_args;
+			}
 		}
+
+		for (argi = 2; argv[argi] != NULL; argi++) {
+			arg = argv[argi++];
+
+			if ((strcmp(arg, "-g") == 0)
+				&& (getuid() == 0)
+				&& (argv[argi] != NULL)
+				&& (sscanf(argv[argi], "%ld", &gid) >= 0)) {
+				argi++;
+			} else if ((strcmp(arg, "-m") == 0)
+				&& (argv[argi] != NULL)
+				&& (sscanf(argv[argi], "%ld", &mode) >= 0)) {
+				argi++;
+			} else if ((strcmp(arg, "-t") == 0)
+				&& (argv[argi] != NULL)
+				&& (sscanf(argv[argi], "%ld", &timeout) >= 0)) {
+				argi++;
+			} else if ((strcmp(arg, "-u") == 0)
+				&& (getuid() == 0)
+				&& (argv[argi] != NULL)
+				&& (sscanf(argv[argi], "%ld", &uid) >= 0)) {
+				argi++;
+			} else {
+				goto error_bad_args;
+			}
+		}
+
+		backend_loop(conn, saddr, mode, uid, gid, count, timeout);
+		free(saddr);
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 
-	backend_loop(conn, saddr, mode, uid, gid, count, timeout);
-	free(saddr);
 	return;
 
 error_bad_args:
 	russ_conn_fatal(conn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
-}
-
-unsigned long
-get_random(void) {
-	int		f;
-	unsigned long	v;
-
-	f = open("/dev/urandom", O_RDONLY);
-	read(f, &v, sizeof(v));
-	close(f);
-	return v;
-}
-/**
-* Main request handler.
-*/
-void
-master_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	int		errfd, outfd;
-
-	req = &conn->req;
-	errfd = conn->fds[2];
-	outfd = conn->fds[1];
-
-	/* switch to user creds */
-
-	if ((chdir("/tmp") < 0)
-		|| (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0)) {
-		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-
-	if (req->opnum == RUSS_OPNUM_EXECUTE) {
-		if (strcmp(req->spath, "/generate") == 0) {
-			char	hostname[1024];
-
-			gethostname(hostname, sizeof(hostname));
-			russ_dprintf(outfd, "%s-%012d-%04ld", hostname, 0, get_random() % 10000);
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		} else if (strcmp(req->spath, "/new") == 0) {
-			svc_new_handler(conn);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
-	} else if (req->opnum == RUSS_OPNUM_HELP) {
-		russ_dprintf(outfd, "%s", FRONTEND_HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-	} else if (req->opnum == RUSS_OPNUM_LIST) {
-		if (strcmp(req->spath, "/") == 0) {
-			russ_dprintf(outfd, "generate\nnew\n");
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
-	} else {
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-	}
 }
 
 void
@@ -484,9 +491,9 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_lis	*lis;
+	struct russ_svc_node	*root;
+	struct russ_svr		*svr;
 
-	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN); /* no errors on failed writes */
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -497,14 +504,22 @@ main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+	if (((root = russ_svc_node_new("", svc_root_handler)) == NULL)
+		|| (russ_svc_node_add(root, "generate", svc_generate_handler) == NULL)
+		|| (russ_svc_node_add(root, "new", svc_new_handler) == NULL)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		fprintf(stderr, "error: cannot set up\n");
+		exit(1);
+	}
+
+	if (russ_svr_announce(svr,
+		russ_conf_get(conf, "server", "path", NULL),
 		russ_conf_getsint(conf, "server", "mode", 0600),
 		russ_conf_getint(conf, "server", "uid", getuid()),
-		russ_conf_getint(conf, "server", "gid", getgid()));
-	if (lis == NULL) {
+		russ_conf_getint(conf, "server", "gid", getgid())) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
-		exit(-1);
+		exit(1);
 	}
-	russ_lis_loop(lis, NULL, NULL, master_handler);
+	russ_svr_loop(svr);
 	exit(0);
 }
