@@ -49,11 +49,13 @@ char	*HELP =
 "    Execute command in a login configured environment. Attributes\n"
 "    are used to augment the environment prior to execution.\n"
 "\n"
+#if 0
 "reload\n"
 "    Reload login environment. Attributes are used to augment the\n"
 "    environment after the reload. Useful for when the settings for\n"
 "    a login environment have changed.\n"
 "\n"
+#endif
 "shutdown\n"
 "    Shut down server.\n"
 "\n"
@@ -111,97 +113,133 @@ close_fds(int low_fd, int hi_fd) {
 	}
 }
 
+/**
+* Set up a clean environment for programs to be execute in.
+*
+* @return		0 on success; -1 on failure
+*/
+int
+setup_clean_environment(void) {
+	fprintf(stderr, "error: setup_clean_environment() is NIY\n");
+	return -1;
+}
+
 void
-op_execute_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
+svc_root_handler(struct russ_conn *conn) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_HELP:
+		russ_dprintf(conn->fds[1], "%s", HELP);
+		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+	exit(0);
+}
+
+/**
+* Handler for the /exec service.
+*
+* Executes the command with args in a preloaded environment.
+*
+* @param conn		connection object
+*/
+void
+svc_exec_handler(struct russ_conn *conn) {
 	char		*shell, *lshell, *home;
 	int		argc, i;
 
-	req = &(conn->req);
+	switch(conn->req.opnum) {
+	case RUSS_OPNUM_EXECUTE:
+		/* move and close fds */
+		dup2(conn->fds[0], 0);
+		dup2(conn->fds[1], 1);
+		dup2(conn->fds[2], 2);
+		close(conn->fds[0]);
+		close(conn->fds[1]);
+		close(conn->fds[2]);
+		close_fds(3, 127);
 
-	/* select service */
-	if (strcmp(req->spath, "/exec") == 0) {
-		;
-	} else if (strcmp(req->spath, "/reload") == 0) {
+		/* augment and execute */
+		augment_env(conn->req.attrv);
+		execvp(conn->req.argv[0], conn->req.argv);
+
+		/* on error */
+		russ_conn_fatal(conn, "error: could not execute program", RUSS_EXIT_FAILURE);
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+	exit(0);
+}
+
+#if 0
+/**
+* Handler for the /reload service.
+*
+* TODO:
+* This is currently not implemented properly so that the new server
+* with reloaded environment is actually serving the socket.
+*
+* @param conn		connection object
+*/
+void
+svc_reload_handler(struct russ_conn *conn) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_EXECUTE:
 		if (fork() == 0) {
-			augment_env(req->attrv);
+			augment_env(conn->req.attrv);
 			close_fds(0, 127);
 			execv(gl_argv[0], gl_argv);
 		}
 		kill(getppid(), SIGTERM);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		return;
-	} else if (strcmp(req->spath, "/shutdown") == 0) {
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+	exit(0);
+}
+#endif
+
+/**
+* Handler for the /shutdown service.
+*
+* Shuts down the parent (server).
+*
+* @param conn		connection object
+*/
+void
+svc_shutdown_handler(struct russ_conn *conn) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_EXECUTE:
 		kill(getppid(), SIGTERM);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		return;
-	} else if (strcmp(req->spath, "/status") == 0) {
+		break;
+	default:
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+	exit(0);
+}
+
+/**
+* Handler for the /status service.
+*
+* An "ok" indicates that the server is running.
+*
+* @param conn		connection object
+*/
+void
+svc_status_handler(struct russ_conn *conn) {
+	switch (conn->req.opnum) {
+	case RUSS_OPNUM_EXECUTE:
 		russ_dprintf(conn->fds[1], "ok\n");
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		return;
-	} else {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		return;
-	}
-	
-	/* move and close fds */
-	dup2(conn->fds[0], 0);
-	dup2(conn->fds[1], 1);
-	dup2(conn->fds[2], 2);
-	close(conn->fds[0]);
-	close(conn->fds[1]);
-	close(conn->fds[2]);
-	close_fds(3, 127);
-
-	/* augment and execute */
-	augment_env(req->attrv);
-	execvp(req->argv[0], req->argv);
-
-	/* on error */
-	russ_conn_fatal(conn, "error: could not execute program", RUSS_EXIT_FAILURE);
-}
-
-void
-op_help_handler(struct russ_conn *conn) {
-	russ_dprintf(conn->fds[1], "%s", HELP);
-	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-}
-
-void
-op_list_handler(struct russ_conn *conn) {
-	if (strcmp(conn->req.spath, "/") == 0) {
-		russ_dprintf(conn->fds[1], "exec\nreload\nshutdown\nstatus\n");
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-	} else {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-	}
-}
-
-void
-master_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-
-	/* change uid/gid ASAP */
-	/* TODO: this may have to move to support job service */
-	if ((setgid(getgid()) < 0)
-		|| (setuid(getuid()) < 0)) {
-		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
-		return;
-	}
-
-	req = &(conn->req);
-	switch (req->opnum) {
-	case RUSS_OPNUM_HELP:
-		op_help_handler(conn);
 		break;
-	case RUSS_OPNUM_LIST:
-		op_list_handler(conn);
-		break;
-	case RUSS_OPNUM_EXECUTE:
-		op_execute_handler(conn);
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
+	exit(0);
 }
 
 void
@@ -215,9 +253,9 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_lis	*lis;
+	struct russ_svc_node	*root, *node;
+	struct russ_svr		*svr;
 
-	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 
 	/* dup argc and argv to globals for possible later reference */
@@ -234,14 +272,30 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
+	if (((root = russ_svc_node_new("", svc_root_handler)) == NULL)
+		|| ((node = russ_svc_node_add(root, "exec", svc_exec_handler)) == NULL)
+		//|| ((node = russ_svc_node_add(root, "reload", svc_reload_handler)) == NULL)
+		|| ((node = russ_svc_node_add(root, "shutdown", svc_shutdown_handler)) == NULL)
+		|| ((node = russ_svc_node_add(root, "status", svc_status_handler)) == NULL)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		fprintf(stderr, "error: cannot set up\n");
+		exit(1);
+	}
+
+	if (russ_svr_announce(svr,
+		russ_conf_get(conf, "server", "path", NULL),
 		russ_conf_getsint(conf, "server", "mode", 0600),
 		russ_conf_getint(conf, "server", "uid", getuid()),
-		russ_conf_getint(conf, "server", "gid", getgid()));
-	if (lis == NULL) {
+		russ_conf_getint(conf, "server", "gid", getgid())) == NULL) {
 		fprintf(stderr, "error: cannot announce service\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, NULL, NULL, master_handler);
+
+	/* TODO: implement setup_clean_environment() */
+	if (setup_clean_environment() < 0) {
+		exit(11);
+	}
+
+	russ_svr_loop(svr);
 	exit(0);
 }
