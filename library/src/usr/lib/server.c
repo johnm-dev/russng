@@ -1,5 +1,5 @@
 /*
-** lib/srv.c
+** lib/server.c
 */
 
 /*
