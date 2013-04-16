@@ -68,7 +68,11 @@ char	*HELP =
 "    Outputs environ entries to stdout.\n"
 "\n"
 "/request\n"
-"    Outputs the request information at the server stdout.\n";
+"    Outputs the request information at the server stdout.\n"
+"\n"
+"/whoami\n"
+"    Outputs uid/gid and euid/egid information of running server\n"
+"    (after user switch).\n";
 
 void
 svc_root_handler(struct russ_conn *conn) {
@@ -239,6 +243,13 @@ svc_request_handler(struct russ_conn *conn) {
 }
 
 void
+svc_whoami_handler(struct russ_conn *conn) {
+	russ_dprintf(conn->fds[1], "uid (%d) gid (%d)\n", getuid(), getgid());
+	russ_dprintf(conn->fds[1], "euid (%d) egid (%d)\n", geteuid(), getegid());
+	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+}
+
+void
 print_usage(char **argv) {
 	fprintf(stderr,
 "usage: rusrv_debug [<conf options>]\n"
@@ -268,7 +279,9 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_add(root, "echo", svc_echo_handler) == NULL)
 		|| (russ_svcnode_add(root, "env", svc_env_handler) == NULL)
 		|| (russ_svcnode_add(root, "request", svc_request_handler) == NULL)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		|| (russ_svcnode_add(root, "whoami", svc_whoami_handler) == NULL)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
+		|| (russ_svr_set_auto_switch_user(svr, 1) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
 	}
