@@ -183,6 +183,7 @@ russ_svr_new(struct russ_svc_node *root, int type) {
 	self->accept_handler = russ_standard_accept_handler;
 	self->accept_timeout = RUSS_SVR_TIMEOUT_ACCEPT;
 	self->await_timeout = RUSS_SVR_TIMEOUT_AWAIT;
+	self->auto_switch_user = 0;
 
 	return self;
 }
@@ -218,6 +219,22 @@ russ_svr_set_accept_handler(struct russ_svr *self, russ_accept_handler handler) 
 		return -1;
 	}
 	self->accept_handler = handler;
+	return 0;
+}
+
+/**
+* Set to perform (or not) auto switch user.
+*
+* If enabled, the server will automatically call russ_switch_user()
+* to change (forked) process uid/gid to that of credentials.
+*
+* @param self		russ server object
+* @param value		0 to disable; 1 to enable
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
+	self->auto_switch_user = value;
 	return 0;
 }
 
@@ -271,6 +288,14 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 
 	if ((node->auto_answer) && (russ_standard_answer_handler(conn) < 0)) {
 		goto cleanup;
+	}
+
+	/* auto switch user if requested */
+	if (self->auto_switch_user) {
+		if (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0) {
+			russ_conn_fatal(conn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+			goto cleanup;
+		}
 	}
 
 	/* virtual node */
