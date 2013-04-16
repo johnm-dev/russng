@@ -169,11 +169,11 @@ typedef void (*russ_req_handler)(struct russ_conn *);
 /**
 * Service node object.
 */
-struct russ_svc_node {
+struct russ_svcnode {
 	russ_svc_handler	handler;
 	char			*name;
-	struct russ_svc_node	*next;
-	struct russ_svc_node	*children;
+	struct russ_svcnode	*next;
+	struct russ_svcnode	*children;
 	int			auto_answer;
 	int			virtual;
 };
@@ -182,7 +182,7 @@ struct russ_svc_node {
 * Server object.
 */
 struct russ_svr {
-	struct russ_svc_node	*root;
+	struct russ_svcnode	*root;
 	int			type;
 	char			*saddr;
 	mode_t			mode;
@@ -255,19 +255,19 @@ int russ_unlink(char *);
 /* request.c */
 
 /* server.c */
-struct russ_svr *russ_svr_new(struct russ_svc_node *, int);
+struct russ_svr *russ_svr_new(struct russ_svcnode *, int);
 int russ_svr_set_accept_handler(struct russ_svr *, russ_accept_handler);
 struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid_t);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_auto_switch_user(struct russ_svr *, int);
 
 /* servicenodes.c */
-struct russ_svc_node *russ_svc_node_new(char *, russ_svc_handler);
-struct russ_svc_node *russ_svc_node_free(struct russ_svc_node *);
-struct russ_svc_node *russ_svc_node_add(struct russ_svc_node *, char *, russ_svc_handler);
-struct russ_svc_node *russ_svc_node_find(struct russ_svc_node *, char *);
-int russ_svc_node_set_auto_answer(struct russ_svc_node *, int);
-int russ_svc_node_set_virtual(struct russ_svc_node *, int);
+struct russ_svcnode *russ_svcnode_new(char *, russ_svc_handler);
+struct russ_svcnode *russ_svcnode_free(struct russ_svcnode *);
+struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, char *, russ_svc_handler);
+struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *);
+int russ_svcnode_set_auto_answer(struct russ_svcnode *, int);
+int russ_svcnode_set_virtual(struct russ_svcnode *, int);
 
 /* spath.c */
 int russ_spath_split(char *, char **, char **);

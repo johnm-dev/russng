@@ -355,7 +355,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svc_node	*root, *node;
+	struct russ_svcnode	*root, *node;
 	struct russ_svr		*svr;
 
 	signal(SIGPIPE, SIG_IGN);
@@ -368,10 +368,10 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (((root = russ_svc_node_new("", svc_root_handler)) == NULL)
-		|| ((node = russ_svc_node_add(root, "login", svc_login_shell_handler)) == NULL)
-		|| ((node = russ_svc_node_add(root, "shell", svc_login_shell_handler)) == NULL)
-		|| ((node = russ_svc_node_add(root, "simple", svc_simple_handler)) == NULL)
+	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "login", svc_login_shell_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "shell", svc_login_shell_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "simple", svc_simple_handler)) == NULL)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);

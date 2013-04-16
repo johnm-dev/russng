@@ -43,11 +43,11 @@
 * @param handler	service handler
 * @return		service node object
 */
-struct russ_svc_node *
-russ_svc_node_new(char *name, russ_svc_handler handler) {
-	struct russ_svc_node	*self;
+struct russ_svcnode *
+russ_svcnode_new(char *name, russ_svc_handler handler) {
+	struct russ_svcnode	*self;
 
-	if ((self = malloc(sizeof(struct russ_svc_node))) == NULL) {
+	if ((self = malloc(sizeof(struct russ_svcnode))) == NULL) {
 		return NULL;
 	}
 	if ((self->name = strdup(name)) == NULL) {
@@ -71,8 +71,8 @@ free_node:
 * @param self		service node object
 * @return		NULL
 */
-struct russ_svc_node *
-russ_svc_node_free(struct russ_svc_node *self) {
+struct russ_svcnode *
+russ_svcnode_free(struct russ_svcnode *self) {
 	if (self != NULL) {
 		free(self->name);
 		free(self);
@@ -88,10 +88,10 @@ russ_svc_node_free(struct russ_svc_node *self) {
 * @param handler	service handler
 * @return		child service node object; NULL on failure
 */
-struct russ_svc_node *
-russ_svc_node_add(struct russ_svc_node *self, char *name, russ_svc_handler handler) {
-	struct russ_svc_node	*curr, *last, *node;
-	int				cmp;
+struct russ_svcnode *
+russ_svcnode_add(struct russ_svcnode *self, char *name, russ_svc_handler handler) {
+	struct russ_svcnode	*curr, *last, *node;
+	int			cmp;
 
 	last = NULL;
 	curr = self->children;
@@ -105,7 +105,7 @@ russ_svc_node_add(struct russ_svc_node *self, char *name, russ_svc_handler handl
 		last = curr;
 		curr = curr->next;
 	}
-	if ((node = russ_svc_node_new(name, handler)) == NULL) {
+	if ((node = russ_svcnode_new(name, handler)) == NULL) {
 		return NULL;
 	}
 	if (last == NULL) {
@@ -126,9 +126,9 @@ russ_svc_node_add(struct russ_svc_node *self, char *name, russ_svc_handler handl
 * @param path		path to match (relative to self)
 * @return		matching service node object; NULL on failure
 */
-struct russ_svc_node *
-russ_svc_node_find(struct russ_svc_node *self, char *path) {
-	struct russ_svc_node	*node;
+struct russ_svcnode *
+russ_svcnode_find(struct russ_svcnode *self, char *path) {
+	struct russ_svcnode	*node;
 	char			*sep;
 	int			len, cmp;
 
@@ -146,7 +146,7 @@ russ_svc_node_find(struct russ_svc_node *self, char *path) {
 			break;
 		} else if ((cmp == 0) && (node->name[len] == '\0')) {
 			if (*sep != '\0') {
-				node = russ_svc_node_find(node, &path[len+1]);
+				node = russ_svcnode_find(node, &path[len+1]);
 			}
 			break;
 		}
@@ -155,13 +155,13 @@ russ_svc_node_find(struct russ_svc_node *self, char *path) {
 }
 
 int
-russ_svc_node_set_auto_answer(struct russ_svc_node *self, int value) {
+russ_svcnode_set_auto_answer(struct russ_svcnode *self, int value) {
 	self->auto_answer = value;
 	return 0;
 }
 
 int
-russ_svc_node_set_virtual(struct russ_svc_node *self, int value) {
+russ_svcnode_set_virtual(struct russ_svcnode *self, int value) {
 	self->virtual = value;
 	return 0;
 }
