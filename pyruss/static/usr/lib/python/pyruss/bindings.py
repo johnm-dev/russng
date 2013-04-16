@@ -67,6 +67,8 @@ RUSS_OPNUM_ID = 4
 RUSS_OPNUM_INFO = 5
 RUSS_OPNUM_LIST = 6
 
+RUSS_SVR_TIMEOUT_ACCEPT = (1<<31)-1 # INT32_MAX
+RUSS_SVR_TIMEOUT_AWAIT = 15000
 RUSS_SVR_TYPE_FORK = 1
 RUSS_SVR_TYPE_THREAD = 2
 
@@ -127,6 +129,8 @@ class russ_svr_Structure(ctypes.Structure):
         ("uid", ctypes.c_uint),
         ("gid", ctypes.c_uint),
         ("lis", ctypes.POINTER(russ_lis_Structure)),
+        ("accept_timeout", ctypes.c_int),
+        ("await_timeout", ctypes.c_int),
     ]
 
 # conn.c
