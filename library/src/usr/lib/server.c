@@ -37,7 +37,7 @@
 #include "russ.h"
 
 struct russ_svr *
-russ_svr_new(struct russ_svc_node *root, int type) {
+russ_svr_new(struct russ_svcnode *root, int type) {
 	struct russ_svr	*self;
 
 	if ((self = malloc(sizeof(struct russ_svr))) == NULL) {
@@ -125,7 +125,7 @@ russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
 void
 russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	struct russ_req		*req;
-	struct russ_svc_node	*node;
+	struct russ_svcnode	*node;
 
 	if (russ_conn_await_request(conn, russ_to_deadline(self->await_timeout)) < 0) {
 		/* failure */
@@ -146,7 +146,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 		goto cleanup;
 	}
 
-	if ((node = russ_svc_node_find(self->root, &(req->spath[1]))) == NULL) {
+	if ((node = russ_svcnode_find(self->root, &(req->spath[1]))) == NULL) {
 		/* TODO: how to handle this in general?
 		** for HELP, LIST, EXECUTE? other? under what conditions
 		** is there a stdout and exit fd?

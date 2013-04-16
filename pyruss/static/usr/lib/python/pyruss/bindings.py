@@ -110,19 +110,19 @@ class russ_conn_Structure(ctypes.Structure):
 
 SVC_HANDLER_FUNC = ctypes.CFUNCTYPE(None, ctypes.POINTER(russ_conn_Structure))
 
-class russ_svc_node_Structure(ctypes.Structure):
+class russ_svcnode_Structure(ctypes.Structure):
     pass
-russ_svc_node_Structure._fields_ = [
+russ_svcnode_Structure._fields_ = [
         ("handler", SVC_HANDLER_FUNC),
         ("name", ctypes.c_char_p),
-        ("next", ctypes.POINTER(russ_svc_node_Structure)),
-        ("children", ctypes.POINTER(russ_svc_node_Structure)),
+        ("next", ctypes.POINTER(russ_svcnode_Structure)),
+        ("children", ctypes.POINTER(russ_svcnode_Structure)),
         ("virtual", ctypes.c_int),
     ]
 
 class russ_svr_Structure(ctypes.Structure):
     _fields_ = [
-        ("root", ctypes.POINTER(russ_svc_node_Structure)),
+        ("root", ctypes.POINTER(russ_svcnode_Structure)),
         ("type", ctypes.c_int),
         ("saddr", ctypes.c_char_p),
         ("mode", ctypes.c_uint),
@@ -283,38 +283,38 @@ libruss.russ_unlink.argtypes = [
 libruss.russ_unlink.restype = ctypes.c_int
 
 # from server.c
-libruss.russ_svc_node_new.argtypes = [
+libruss.russ_svcnode_new.argtypes = [
     ctypes.c_char_p,
     SVC_HANDLER_FUNC,
 ]
-libruss.russ_svc_node_new.restype = ctypes.POINTER(russ_svc_node_Structure)
+libruss.russ_svcnode_new.restype = ctypes.POINTER(russ_svcnode_Structure)
 
-libruss.russ_svc_node_free.argtypes = [
-    ctypes.POINTER(russ_svc_node_Structure),
+libruss.russ_svcnode_free.argtypes = [
+    ctypes.POINTER(russ_svcnode_Structure),
 ]
-libruss.russ_svc_node_free.restype = ctypes.POINTER(russ_svc_node_Structure)
+libruss.russ_svcnode_free.restype = ctypes.POINTER(russ_svcnode_Structure)
 
-libruss.russ_svc_node_add.argtypes = [
-    ctypes.POINTER(russ_svc_node_Structure),
+libruss.russ_svcnode_add.argtypes = [
+    ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_char_p,
     SVC_HANDLER_FUNC,
 ]
-libruss.russ_svc_node_add.restype = ctypes.POINTER(russ_svc_node_Structure)
+libruss.russ_svcnode_add.restype = ctypes.POINTER(russ_svcnode_Structure)
 
-libruss.russ_svc_node_find.argtypes = [
-    ctypes.POINTER(russ_svc_node_Structure),
+libruss.russ_svcnode_find.argtypes = [
+    ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_char_p,
 ]
-libruss.russ_svc_node_find.restype = ctypes.POINTER(russ_svc_node_Structure)
+libruss.russ_svcnode_find.restype = ctypes.POINTER(russ_svcnode_Structure)
 
-libruss.russ_svc_node_set_virtual.argtypes = [
-    ctypes.POINTER(russ_svc_node_Structure),
+libruss.russ_svcnode_set_virtual.argtypes = [
+    ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_int,
 ]
-libruss.russ_svc_node_set_virtual.restype = ctypes.POINTER(russ_svc_node_Structure)
+libruss.russ_svcnode_set_virtual.restype = ctypes.POINTER(russ_svcnode_Structure)
 
 libruss.russ_svr_new.argtypes = [
-    ctypes.POINTER(russ_svc_node_Structure),
+    ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_int,
 ]
 libruss.russ_svr_new.restype = ctypes.POINTER(russ_svr_Structure)
