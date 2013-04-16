@@ -181,6 +181,8 @@ russ_svr_new(struct russ_svc_node *root, int type) {
 	self->gid = -1;
 	self->lis = NULL;
 	self->accept_handler = russ_standard_accept_handler;
+	self->accept_timeout = RUSS_SVR_ACCEPT_TIMEOUT;
+	self->await_timeout = RUSS_SVR_AWAIT_TIMEOUT;
 
 	return self;
 }
@@ -238,7 +240,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	struct russ_req		*req;
 	struct russ_svc_node	*node;
 
-	if (russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0) {
+	if (russ_conn_await_request(conn, russ_to_deadline(self->await_timeout)) < 0) {
 		/* failure */
 		goto cleanup;
 	}
@@ -316,7 +318,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	pid_t			pid;
 
 	while (1) {
-		if ((conn = self->accept_handler(self->lis, RUSS_DEADLINE_NEVER)) == NULL) {
+		if ((conn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
 			continue;
 		}

@@ -87,6 +87,9 @@
 #define RUSS_OPNUM_INFO		5
 #define RUSS_OPNUM_LIST		6
 
+#define RUSS_SVR_ACCEPT_TIMEOUT	INT_MAX
+#define RUSS_SVR_AWAIT_TIMEOUT	15000
+
 #define RUSS_SVR_TYPE_FORK	1
 #define RUSS_SVR_TYPE_THREAD	2
 
@@ -187,6 +190,8 @@ struct russ_svr {
 	gid_t			gid;
 	struct russ_lis		*lis;
 	russ_accept_handler	accept_handler;
+	int			accept_timeout;
+	int			await_timeout;
 };
 
 /* conn.c */
