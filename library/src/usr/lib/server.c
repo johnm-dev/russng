@@ -181,8 +181,8 @@ russ_svr_new(struct russ_svc_node *root, int type) {
 	self->gid = -1;
 	self->lis = NULL;
 	self->accept_handler = russ_standard_accept_handler;
-	self->accept_timeout = RUSS_SVR_ACCEPT_TIMEOUT;
-	self->await_timeout = RUSS_SVR_AWAIT_TIMEOUT;
+	self->accept_timeout = RUSS_SVR_TIMEOUT_ACCEPT;
+	self->await_timeout = RUSS_SVR_TIMEOUT_AWAIT;
 
 	return self;
 }
