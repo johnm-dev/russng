@@ -157,13 +157,13 @@ russ_svc_node_find(struct russ_svc_node *self, char *path) {
 int
 russ_svc_node_set_auto_answer(struct russ_svc_node *self, int value) {
 	self->auto_answer = value;
-	return 1;
+	return 0;
 }
 
 int
 russ_svc_node_set_virtual(struct russ_svc_node *self, int value) {
 	self->virtual = value;
-	return 1;
+	return 0;
 }
 
 struct russ_svr *
