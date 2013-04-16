@@ -131,6 +131,7 @@ class russ_svr_Structure(ctypes.Structure):
         ("lis", ctypes.POINTER(russ_lis_Structure)),
         ("accept_timeout", ctypes.c_int),
         ("await_timeout", ctypes.c_int),
+        ("auto_switch_user", ctypes.c_int),
     ]
 
 # conn.c
@@ -326,6 +327,12 @@ libruss.russ_svr_announce.argtypes = [
     ctypes.c_uint,
 ]
 libruss.russ_svr_announce.restype = ctypes.POINTER(russ_lis_Structure)
+
+libruss.russ_svr_set_auto_switch_user = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctype.c_int,
+]
+libruss.russ_svr_set_auto_switch_user.res_type = ctypes.c_int
 
 libruss.russ_svr_loop.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
