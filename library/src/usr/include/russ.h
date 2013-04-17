@@ -151,14 +151,6 @@ struct russ_fwd {
 	int		reason;		/**< reason forwarder returned */
 };
 
-/**
-* Context object for service handler.
-*/
-struct russ_svc_ctxt {
-	char	spath[RUSS_REQ_SPATH_MAX];
-};
-
-//typedef void (*russ_svc_handler)(struct russ_conn *, struct russ_svc_ctxt *);
 typedef void (*russ_svc_handler)(struct russ_conn *);
 typedef int64_t 	russ_deadline;
 
