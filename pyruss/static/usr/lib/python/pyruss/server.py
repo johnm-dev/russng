@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# pyruss/serverx.py
+# pyruss/server.py
 
 # license--start
 #
@@ -33,14 +33,15 @@ multiple python objects
 """
 
 #
-import pyruss
+from pyruss import libruss, SVC_HANDLER_FUNC
+from pyruss import ServerConn
 
 class ServiceHandler:
     def __init__(self, handler):
         self.handler = handler
 
-    def _handler(self, conn_ptr):
-        self.handler(ServerConn(conn_ptr))
+    def _handler(self, sess_ptr):
+        self.handler(Sess(sess_ptr))
 
 service_handlers = {}
 def get_service_handler(handler):
@@ -59,7 +60,7 @@ class ServiceNode:
     def new(cls, name, handler):
         _ptr = libruss.russ_svcnode_new(name, get_service_handler(handler))
         if _ptr == None:
-            raise Exception("could not create ServiceNodex")
+            raise Exception("could not create ServiceNode")
         return cls(_ptr)
 
     def free(self):
@@ -67,10 +68,10 @@ class ServiceNode:
         self._ptr = None
 
     def add(self, name, handler):
-        return ServiceNodex(libruss.russ_svcnode_add(self._ptr, name, get_service_handler(handler)))
+        return ServiceNode(libruss.russ_svcnode_add(self._ptr, name, get_service_handler(handler)))
 
     def find(self, path):
-        return ServiceNodex(libruss.russ_svcnode_find(self._ptr, path))
+        return ServiceNode(libruss.russ_svcnode_find(self._ptr, path))
 
     def set_virtual(self, value):
         libruss.russ_svcnode_set_virtual(self._ptr, value)
@@ -113,7 +114,7 @@ class Sess:
         self._ptr = None
 
     def get_conn(self):
-        return self._ptr.contents.conn and Conn(self._ptr.contents.conn) or None
+        return self._ptr.contents.conn and ServerConn(self._ptr.contents.conn) or None
 
     def get_svr(self):
         return self._ptr.contents.svr and Server(self._ptr.contents.svr) or None

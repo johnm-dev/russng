@@ -137,8 +137,8 @@ class russ_svr_Structure(ctypes.Structure):
     ]
 
 russ_sess_Structure._fields_ = [
-        ("svr", russ_svr_Structure),
-        ("conn", russ_conn_Structure),
+        ("svr", ctypes.POINTER(russ_svr_Structure)),
+        ("conn", ctypes.POINTER(russ_conn_Structure)),
         ("spath", ctypes.c_char*RUSS_REQ_SPATH_MAX),
     ]
 
@@ -336,11 +336,11 @@ libruss.russ_svr_announce.argtypes = [
 ]
 libruss.russ_svr_announce.restype = ctypes.POINTER(russ_lis_Structure)
 
-libruss.russ_svr_set_auto_switch_user = [
+libruss.russ_svr_set_auto_switch_user.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
-    ctype.c_int,
+    ctypes.c_int,
 ]
-libruss.russ_svr_set_auto_switch_user.res_type = ctypes.c_int
+libruss.russ_svr_set_auto_switch_user.restype = ctypes.c_int
 
 libruss.russ_svr_loop.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
