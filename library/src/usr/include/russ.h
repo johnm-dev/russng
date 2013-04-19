@@ -151,10 +151,10 @@ struct russ_fwd {
 	int		reason;		/**< reason forwarder returned */
 };
 
-typedef void (*russ_svc_handler)(struct russ_conn *);
 /* declare here, defined below */
 struct russ_sess;
 
+typedef void (*russ_svc_handler)(struct russ_sess *);
 typedef int64_t 	russ_deadline;
 
 typedef struct russ_conn *(*russ_accept_handler)(struct russ_lis *, russ_deadline);
