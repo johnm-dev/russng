@@ -365,7 +365,9 @@ chdir_switch_user(struct russ_conn *conn) {
 }
 
 void
-svc_root_handler(struct russ_conn *conn) {
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], FRONTEND_HELP);
@@ -378,7 +380,8 @@ svc_root_handler(struct russ_conn *conn) {
 
 void
 svc_generate_handler(struct russ_conn *conn) {
-	char	hostname[1024];
+	struct russ_conn	*conn = sess->conn;
+	char			hostname[1024];
 
 	if (chdir_switch_user(conn) < 0) {
 		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
@@ -402,14 +405,15 @@ svc_generate_handler(struct russ_conn *conn) {
 * @param conn		connection object
 */
 void
-svc_new_handler(struct russ_conn *conn) {
-	char	**argv, *arg;
-	long	mode, uid, gid;
-	long	timeout;
-	char	*saddr;
-	int	count;
-	int	errfd, outfd;
-	int	argi;
+svc_new_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			**argv, *arg;
+	long			mode, uid, gid;
+	long			timeout;
+	char			*saddr;
+	int			count;
+	int			errfd, outfd;
+	int			argi;
 
 	if (chdir_switch_user(conn) < 0) {
 		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);

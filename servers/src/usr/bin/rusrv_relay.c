@@ -344,10 +344,12 @@ _dial_for_ssl_key(struct russ_conn *conn, char *new_spath, char *section_name, c
 /**
 * Service handler for /debug .
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_debug_handler(struct russ_conn *conn) {
+svc_debug_handler(struct russ_conn *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	russ_dprintf(conn->fds[1], "nothing implemented yet\n");
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
@@ -355,12 +357,13 @@ svc_debug_handler(struct russ_conn *conn) {
 /**
 * Service handler for /dial .
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_dial_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	char		**section_names, **p;
+svc_dial_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req;
+	char			**section_names, **p;
 
 	req = &(conn->req);
 	if (req->opnum == RUSS_OPNUM_LIST) {
@@ -381,15 +384,16 @@ svc_dial_handler(struct russ_conn *conn) {
 /**
 * Service handler for /dial/<cluster>/<hostname>/* spaths.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_dial_cluster_host_handler(struct russ_conn *conn) {
-	struct russ_req	*req = NULL;
-	char		*cluster_name = NULL, *hostname = NULL, *method = NULL;
-	char		*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
-	char		section_name[256];
-	int		exit_status;
+svc_dial_cluster_host_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = NULL;
+	char			*cluster_name = NULL, *hostname = NULL, *method = NULL;
+	char			*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
+	char			section_name[256];
+	int			exit_status;
 
 	/* init */
 	req = &(conn->req);
@@ -423,22 +427,23 @@ free_vars:
 /**
 * Master handler which selects service handler.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-master_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	int		rv;
+master_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req;
+	int			rv;
 
 	req = &(conn->req);
 	if (strncmp(req->spath, "/dial/", 6) == 0) {
 		/* service /dial/ for any op */
-		svc_dial_cluster_host_handler(conn);
+		svc_dial_cluster_host_handler(sess);
 	} else {
 		switch (req->opnum) {
 		case RUSS_OPNUM_EXECUTE:
 			if (strcmp(req->spath, "/debug") == 0) {
-				svc_debug_handler(conn);
+				svc_debug_handler(sess);
 			} else {
 				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			}
@@ -452,7 +457,7 @@ master_handler(struct russ_conn *conn) {
 				russ_dprintf(conn->fds[1], "debug\ndial\n");
 				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			} else if (strcmp(req->spath, "/dial") == 0) {
-				svc_dial_handler(conn);
+				svc_dial_handler(sess);
 			} else {
 				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			}

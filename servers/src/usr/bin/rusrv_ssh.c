@@ -207,9 +207,10 @@ svc_net_handler(struct russ_conn *conn) {
 #endif
 
 void
-svc_root_handler(struct russ_conn *conn) {
-	char	*p, *new_spath, *userhost;
-	int	i;
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			*p, *new_spath, *userhost;
+	int			i;
 
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_HELP:

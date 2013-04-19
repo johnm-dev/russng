@@ -42,9 +42,10 @@ char			*HELP =
 "Echoes lines of input back.\n";
 
 void
-svc_root_handler(struct russ_conn *conn) {
-	char	buf[1024];
-	ssize_t	n;
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			buf[1024];
+	ssize_t			n;
 
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_HELP:

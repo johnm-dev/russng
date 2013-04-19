@@ -272,7 +272,9 @@ execute(struct russ_conn *conn, char *username, char *home, char *cmd, char **ar
 }
 
 void
-svc_root_handler(struct russ_conn *conn) {
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], "%s", HELP);
@@ -285,10 +287,11 @@ svc_root_handler(struct russ_conn *conn) {
 }
 
 void
-svc_login_shell_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	char		**argv;
-	char		*username, *shell, *lshell, *home;
+svc_login_shell_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req;
+	char			**argv;
+	char			*username, *shell, *lshell, *home;
 
 	req = &(conn->req);
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
@@ -325,9 +328,10 @@ svc_login_shell_handler(struct russ_conn *conn) {
 }
 
 void
-svc_simple_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	char		*username, *shell, *lshell, *home;
+svc_simple_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req;
+	char			*username, *shell, *lshell, *home;
 
 	if (get_user_info(getuid(), &username, &shell, &lshell, &home) < 0) {
 		russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);

@@ -75,7 +75,9 @@ char	*HELP =
 "    (after user switch).\n";
 
 void
-svc_root_handler(struct russ_conn *conn) {
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	if (conn->req.opnum == RUSS_OPNUM_HELP) {
 		russ_dprintf(conn->fds[1], HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
@@ -85,9 +87,10 @@ svc_root_handler(struct russ_conn *conn) {
 }
 
 void
-svc_chargen_handler(struct russ_conn *conn) {
-	char	buf[] = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
-	char	off;
+svc_chargen_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			buf[] = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
+	char			off;
 
 	off = 0;
 	while (russ_dprintf(conn->fds[1], "%.72s\n", &(buf[off])) > 0) {
@@ -101,17 +104,20 @@ svc_chargen_handler(struct russ_conn *conn) {
 }
 
 void
-svc_conn_handler(struct russ_conn *conn) {
+svc_conn_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	russ_dprintf(conn->fds[1], "uid (%d)\ngid (%d)\npid (%d)\n",
 		conn->creds.uid, conn->creds.gid, conn->creds.pid);
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 }
 
 void
-svc_daytime_handler(struct russ_conn *conn) {
-	char		buf[1024];
-	time_t		now;
-	struct tm	*now_tm;
+svc_daytime_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			buf[1024];
+	time_t			now;
+	struct tm		*now_tm;
 
 	now = time(NULL);
 	now_tm = localtime(&now);
@@ -138,13 +144,14 @@ gettimeofday_float(void) {
 }
 
 void
-svc_discard_handler(struct russ_conn *conn) {
-	struct timeval	tv;
-	double		t0, t1, last_t1;
-	char		*buf;
-	int		buf_size;
-	long		n, total;
-	int		perf = 0;
+svc_discard_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct timeval		tv;
+	double			t0, t1, last_t1;
+	char			*buf;
+	int			buf_size;
+	long			n, total;
+	int			perf = 0;
 
 	/* 8MB */
 	buf_size = 1<<23;
@@ -188,7 +195,8 @@ svc_discard_handler(struct russ_conn *conn) {
 }
 
 void
-svc_echo_handler(struct russ_conn *conn) {
+svc_echo_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
 	char	buf[1024];
 	ssize_t	n;
 
@@ -199,8 +207,9 @@ svc_echo_handler(struct russ_conn *conn) {
 }
 
 void
-svc_env_handler(struct russ_conn *conn) {
-	int	i;
+svc_env_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	int			i;
 
 	for (i = 0; environ[i] != NULL; i++) {
 		russ_dprintf(conn->fds[1], "%s\n", environ[i]);
@@ -209,10 +218,11 @@ svc_env_handler(struct russ_conn *conn) {
 }
 
 void
-svc_request_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	int		fd;
-	int		i;
+svc_request_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req;
+	int			fd;
+	int			i;
 
 	req = &(conn->req);
 	fd = conn->fds[1];
@@ -243,7 +253,9 @@ svc_request_handler(struct russ_conn *conn) {
 }
 
 void
-svc_whoami_handler(struct russ_conn *conn) {
+svc_whoami_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	russ_dprintf(conn->fds[1], "uid (%d) gid (%d)\n", getuid(), getgid());
 	russ_dprintf(conn->fds[1], "euid (%d) egid (%d)\n", geteuid(), getegid());
 	russ_conn_exit(conn, RUSS_EXIT_SUCCESS);

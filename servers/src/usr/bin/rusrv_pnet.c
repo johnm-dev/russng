@@ -113,10 +113,12 @@ redial_and_splice(struct russ_conn *conn) {
 *
 * Provides HELP.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_root_handler(struct russ_conn *conn) {
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], "%s", HELP);
@@ -132,10 +134,12 @@ svc_root_handler(struct russ_conn *conn) {
 *
 * Output the number of targets.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_count_handler(struct russ_conn *conn) {
+svc_count_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		russ_dprintf(conn->fds[1], "%d", hostslist.nhosts);
@@ -152,10 +156,12 @@ svc_count_handler(struct russ_conn *conn) {
 *	first/... -> <relay_addr>/<userhost>/...
 * where <userhost> is select because it answers.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_first_handler(struct russ_conn *conn) {
+svc_first_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	/* NIY */
 	exit(1);
 }
@@ -166,10 +172,11 @@ svc_first_handler(struct russ_conn *conn) {
 * Convert:
 *	host/<userhost>/... -> <relay_addr>/<userhost>/...
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_host_handler(struct russ_conn *conn) {
+svc_host_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
 	struct russ_req	*req;
 	char		*p, *spath_tail, *userhost, *relay_addr;
 	char		new_spath[RUSS_REQ_SPATH_MAX];
@@ -221,7 +228,7 @@ svc_host_handler(struct russ_conn *conn) {
 		break;
 	case RUSS_OPNUM_HELP:
 		if (russ_standard_answer_handler(conn) == 0) {
-			svc_root_handler(conn);
+			svc_root_handler(sess);
 		} else {
 			russ_conn_close(conn);
 		}
@@ -239,14 +246,15 @@ svc_host_handler(struct russ_conn *conn) {
 * Convert:
 *	id/<index>/... -> <relay_addr>/<userhost>/...
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_id_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	char		*p, *spath_tail, *s, *userhost, *relay_addr;
-	char		new_spath[RUSS_REQ_SPATH_MAX];
-	int		i, idx, wrap = 0;
+svc_id_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req;
+	char			*p, *spath_tail, *s, *userhost, *relay_addr;
+	char			new_spath[RUSS_REQ_SPATH_MAX];
+	int			i, idx, wrap = 0;
 
 	req = &(conn->req);
 	switch (req->opnum) {
@@ -309,7 +317,7 @@ svc_id_handler(struct russ_conn *conn) {
 		break;
 	case RUSS_OPNUM_HELP:
 		if (russ_standard_answer_handler(conn) == 0) {
-			svc_root_handler(conn);
+			svc_root_handler(sess);
 		} else {
 			russ_conn_close(conn);
 		}
@@ -327,13 +335,14 @@ svc_id_handler(struct russ_conn *conn) {
 * Convert:
 *	net/<userhost>/... -> <relay_addr>/<userhost>/...
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_net_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
-	char		*p, *spath_tail, *userhost, *relay_addr;
-	char		new_spath[RUSS_REQ_SPATH_MAX];
+svc_net_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req;
+	char			*p, *spath_tail, *userhost, *relay_addr;
+	char			new_spath[RUSS_REQ_SPATH_MAX];
 
 	req = &(conn->req);
 	switch (req->opnum) {
@@ -364,7 +373,7 @@ svc_net_handler(struct russ_conn *conn) {
 		break;
 	case RUSS_OPNUM_HELP:
 		if (russ_standard_answer_handler(conn) == 0) {
-			svc_root_handler(conn);
+			svc_root_handler(sess);
 		} else {
 			russ_conn_close(conn);
 		}
@@ -386,12 +395,13 @@ svc_net_handler(struct russ_conn *conn) {
 *	next/... -> <relay_addr>/<userhost>/...
 * where userhost is selected using a 'next' counter.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_next_handler(struct russ_conn *conn) {
-	char	new_spath[RUSS_REQ_SPATH_MAX];
-	int	idx;
+svc_next_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			new_spath[RUSS_REQ_SPATH_MAX];
+	int			idx;
 
 	idx = hostslist.next;
 	if (snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &conn->req.spath[6]) < 0) {
@@ -400,7 +410,7 @@ svc_next_handler(struct russ_conn *conn) {
 	}
 	free(conn->req.spath);
 	conn->req.spath = strdup(new_spath);
-	svc_id_handler(conn);
+	svc_id_handler(sess);
 }
 
 /**
@@ -412,12 +422,13 @@ svc_next_handler(struct russ_conn *conn) {
 *	random/... -> <relay_addr>/<userhost>/...
 * where userhost is selected at random from the list of targets.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_random_handler(struct russ_conn *conn) {
-	char	new_spath[RUSS_REQ_SPATH_MAX];
-	int	idx;
+svc_random_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			new_spath[RUSS_REQ_SPATH_MAX];
+	int			idx;
 
 	idx = (random()/(double)RAND_MAX)*hostslist.nhosts;
 	if (snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &conn->req.spath[8]) < 0) {
@@ -426,7 +437,7 @@ svc_random_handler(struct russ_conn *conn) {
 	}
 	free(conn->req.spath);
 	conn->req.spath = strdup(new_spath);
-	svc_id_handler(conn);
+	svc_id_handler(sess);
 }
 
 struct russ_conn *

@@ -71,8 +71,9 @@ alt_answer_handler(struct russ_conn *self) {
 * Service request only if it is for "/".
 */
 void
-master_handler(struct russ_conn *conn) {
-	struct russ_req	*req;
+master_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req;
 
 	req = &(conn->req);
 	if (strcmp(req->spath, "/") == 0) {

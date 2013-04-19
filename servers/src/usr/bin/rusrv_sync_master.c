@@ -29,11 +29,13 @@ int		nchildren = 0;
 /**
 * Request handler.
 *
-* @param conn	connection object
-* @return	0 on success, -1 on error
+* @param sess		session object
+* @return		0 on success, -1 on error
 */
 int
-req_handler(struct russ_conn *conn) {
+req_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	if (conn->req->opnum == RUSS_OPNUM_EXECUTE) {
 		/* serve the input from fd passed to client */
 		char	buf[1024];

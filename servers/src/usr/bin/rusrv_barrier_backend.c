@@ -138,11 +138,12 @@ print_service_usage(struct russ_conn *conn) {
 * @return	0 on success, -1 on error
 */
 int
-req_handler(struct russ_conn *conn) {
-	char	buf[2048];
-	time_t	due_time;
-	int	outfd;
-	int	i;
+req_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			buf[2048];
+	time_t			due_time;
+	int			outfd;
+	int			i;
 
 	outfd = conn->fds[1];
 	switch (conn->req.opnum) {

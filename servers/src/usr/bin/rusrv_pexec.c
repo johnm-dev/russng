@@ -125,7 +125,9 @@ setup_clean_environment(void) {
 }
 
 void
-svc_root_handler(struct russ_conn *conn) {
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], "%s", HELP);
@@ -142,12 +144,13 @@ svc_root_handler(struct russ_conn *conn) {
 *
 * Executes the command with args in a preloaded environment.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_exec_handler(struct russ_conn *conn) {
-	char		*shell, *lshell, *home;
-	int		argc, i;
+svc_exec_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	char			*shell, *lshell, *home;
+	int			argc, i;
 
 	switch(conn->req.opnum) {
 	case RUSS_OPNUM_EXECUTE:
@@ -181,10 +184,12 @@ svc_exec_handler(struct russ_conn *conn) {
 * This is currently not implemented properly so that the new server
 * with reloaded environment is actually serving the socket.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_reload_handler(struct russ_conn *conn) {
+svc_reload_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		if (fork() == 0) {
@@ -207,10 +212,12 @@ svc_reload_handler(struct russ_conn *conn) {
 *
 * Shuts down the parent (server).
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_shutdown_handler(struct russ_conn *conn) {
+svc_shutdown_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		kill(getppid(), SIGTERM);
@@ -227,10 +234,12 @@ svc_shutdown_handler(struct russ_conn *conn) {
 *
 * An "ok" indicates that the server is running.
 *
-* @param conn		connection object
+* @param sess		session object
 */
 void
-svc_status_handler(struct russ_conn *conn) {
+svc_status_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+
 	switch (conn->req.opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		russ_dprintf(conn->fds[1], "ok\n");
