@@ -101,3 +101,19 @@ class Serverx:
 
     def loop(self):
         libruss.russ_svr_loop(self._ptr)
+
+class Sess:
+    """Wrapper for russ_sess.
+    """
+
+    def __init__(self, _ptr):
+        self._ptr = _ptr
+
+    def __del__(self):
+        self._ptr = None
+
+    def get_conn(self):
+        return self._ptr.contents.conn and Conn(self._ptr.contents.conn) or None
+
+    def get_svr(self):
+        return self._ptr.contents.svr and Server(self._ptr.contents.svr) or None

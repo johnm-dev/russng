@@ -108,7 +108,9 @@ class russ_conn_Structure(ctypes.Structure):
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
     ]
 
-SVC_HANDLER_FUNC = ctypes.CFUNCTYPE(None, ctypes.POINTER(russ_conn_Structure))
+class russ_sess_Structure(ctypes.Structure):
+    pass
+SVC_HANDLER_FUNC = ctypes.CFUNCTYPE(None, ctypes.POINTER(russ_sess_Structure))
 
 class russ_svcnode_Structure(ctypes.Structure):
     pass
@@ -132,6 +134,12 @@ class russ_svr_Structure(ctypes.Structure):
         ("accept_timeout", ctypes.c_int),
         ("await_timeout", ctypes.c_int),
         ("auto_switch_user", ctypes.c_int),
+    ]
+
+russ_sess_Structure._fields_ = [
+        ("svr", russ_svr_Structure),
+        ("conn", russ_conn_Structure),
+        ("spath", ctypes.c_char*RUSS_REQ_SPATH_MAX),
     ]
 
 # conn.c
