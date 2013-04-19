@@ -124,6 +124,7 @@ russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
 */
 void
 russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
+	struct russ_sess	sess;
 	struct russ_req		*req;
 	struct russ_svcnode	*node;
 
@@ -168,6 +169,11 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 		}
 	}
 
+	/* prepare session object */
+	sess.conn = conn;
+	sess.svr = self;
+	sess.spath[0] = '\0';
+
 	/* virtual node */
 	if (node->virtual) {
 		goto call_node_handler;
@@ -191,7 +197,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 
 call_node_handler:
 	if (node->handler) {
-		node->handler(conn);
+		node->handler(&sess);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
