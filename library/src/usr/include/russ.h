@@ -152,6 +152,9 @@ struct russ_fwd {
 };
 
 typedef void (*russ_svc_handler)(struct russ_conn *);
+/* declare here, defined below */
+struct russ_sess;
+
 typedef int64_t 	russ_deadline;
 
 typedef struct russ_conn *(*russ_accept_handler)(struct russ_lis *, russ_deadline);
@@ -185,6 +188,15 @@ struct russ_svr {
 	int			accept_timeout;
 	int			await_timeout;
 	int			auto_switch_user;
+};
+
+/**
+* Session object
+*/
+struct russ_sess {
+	struct russ_svr		*svr;
+	struct russ_conn	*conn;
+	char			spath[RUSS_REQ_SPATH_MAX];
 };
 
 /* conn.c */
