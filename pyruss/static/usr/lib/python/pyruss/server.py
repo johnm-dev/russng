@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# pyruss/server.py
+# pyruss/serverx.py
 
 # license--start
 #
@@ -20,211 +20,84 @@
 #
 # license--end
 
-"""Server and support for RUSS-based services.
-"""
+"""Alternative server and support implementation to the russ library
+C API.
 
-# system imports
-try:
-    from ConfigParser import ConfigParser as _ConfigParser
-except:
-    from configparser import ConfigParser as _ConfigParser
-import os
-import sys
+Rules:
+* most objects simply wrap C "objects"; this means that C "objects"
+must be explicitly destroyed rather than automatically on the python
+side (e.g., via __del__)
+* 
+* be careful that C "objects" are not referenced multiple times via
+multiple python objects
+"""
 
 #
 import pyruss
 
-class ServiceNode:
-    """Used by ServiceTree in support of a hierarchy organized by
-    path components. Each node contains handler, type
-    information.
-    """
-
-    def __init__(self, handler=None, typ=None):
-        self.set(handler, typ)
-        self.children = {}
-
-    def set(self, handler, typ):
+class ServiceHandler:
+    def __init__(self, handler):
         self.handler = handler
-        self.typ = typ
 
-class ServiceContext:
-    """Provides context to service handler.
+    def _handler(self, conn_ptr):
+        self.handler(ServerConn(conn_ptr))
+
+service_handlers = {}
+def get_service_handler(handler):
+    if handler not in service_handlers:
+        service_handlers[handler] = SVC_HANDLER_FUNC(ServiceHandler(handler)._handler)
+    return service_handlers[handler]
+
+class ServiceNodex:
+    """Wrapper for russ_svcnode object and associated methods.
     """
 
-    def __init__(self):
-        self.spath = ""
+    def __init__(self, _ptr):
+        self._ptr = _ptr
 
-class ServiceTree:
-    """Provides a hierarchy of ServiceNode objects. Nodes in the
-    hierarchy can be added, removed, and searched for based on a
-    path. The ServiceTree provides a handler method matched by path
-    and op; no match falls back to the fallback_handler method. Each
-    of the handler methods may be overridden. The default
-    fallback_handler implementation supports the "list" operation
-    which returns a list of children for the path.
-    """
+    @classmethod
+    def new(cls, name, handler):
+        _ptr = libruss.russ_svcnode_new(name, get_service_handler(handler))
+        if _ptr == None:
+            raise Exception("could not create ServiceNodex")
+        return cls(_ptr)
 
-    def __init__(self):
-        self.root = ServiceNode()
+    def free(self):
+        libruss.russ_svcnode_free(self._ptr)
+        self._ptr = None
 
-    def add(self, path, handler, typ=None):
-        """Add service node to tree.
-        """
-        node = self.root
-        if path == "/":
-            node.set(handler, typ)
-        else:
-            comps = path.split("/")
-            for comp in comps[1:-1]:
-                next_node = node.children.get(comp)
-                if next_node == None:
-                    next_node = node.children[comp] = ServiceNode()
-                node = next_node
-            node.children[comps[-1]] = ServiceNode(handler, typ)
-
-    def _find(self, comps):
-        """Find node for path comps and return the comps for each
-        matched node starting at the root node. Since empty ("")
-        path components are ignored, path.split("/") can be passed
-        directly.
-        """
-        node = self.root
-        ncomps = []
-        for comp in comps:
-            if comp == "":
-                # don't change current node
-                continue
-            node2 = node.children.get(comp)
-            if node2 == None:
-                break
-            node = node2
-            ncomps.append(comp)
-        return node, ncomps
+    def add(self, name, handler):
+        return ServiceNodex(libruss.russ_svcnode_add(self._ptr, name, get_service_handler(handler)))
 
     def find(self, path):
-        """Find node for path and return matched path.
-        """
-        node = self.root
-        node, ncomps = self._find(path.split("/")[1:])
-        if ncomps:
-            npath = "/"+"/".join(ncomps)
-        else:
-            npath = ""
-        return node, npath
+        return ServiceNodex(libruss.russ_svcnode_find(self._ptr, path))
 
-    def find_children(self, path):
-        """Find node for path and return node's children.
-        """
-        node, _ = self._find(path.split("/")[1:])
-        if node:
-            return node.children
-        else:
-            return None
+    def set_virtual(self, value):
+        libruss.russ_svcnode_set_virtual(self._ptr, value)
 
-    def remove(self, path):
-        """Remove node from tree: handler if node has children,
-        otherwise whole node.
-        """
-        comps = path.split("/")
-        parent_node, _ = self._find(comps[1:-1])
-        try:
-            node = parent_node.children.get(comps[-1])
-            if len(node.children) == 0:
-                del parent_node[comps[-1]]
-            else:
-                node.handler = None
-                node.typ = None
-        except:
-            pass
-
-    def remove_all(self, path):
-        """Remove node and children from tree.
-        """
-        comps = path.split("/")
-        parent_node = self._find(comps[1:-1])
-        try:
-            del parent_node[comps[-1]]
-        except:
-            pass
-
-class Server:
-    """Server to handle requests and service them.
+class Serverx:
+    """Wrapper for russ_svr object and associated methods.
     """
 
-    def __init__(self, service_tree, server_type):
-        self.service_tree = service_tree
-        self.server_type = server_type
+    def __init__(self, _ptr):
+        self._ptr = _ptr
 
-        self.saddr = None
-        self.mode = None
-        self.uid = None
-        self.gid = None
-        self.lis = None
-
-    def __del__(self):
-        self.lis.close()
+    @classmethod
+    def new(cls, root, typ):
+        _ptr = libruss.russ_svr_new(root._ptr, typ)
+        if _ptr == None:
+            raise Exception("could not create Serverx")         
+        return cls(_ptr)
 
     def announce(self, saddr, mode, uid, gid):
-        """Announce service on filesystem.
-        """
-        self.saddr = saddr
-        self.mode = mode
-        self.uid = uid
-        self.gid = gid
-        self.lis = pyruss.announce(saddr, mode, uid, gid)
+        return libruss.russ_svr_announce(self._ptr, saddr, mode, uid, gid)
+
+    def free(self):
+        libruss.russ_svr_free(self._ptr)
+        self._ptr = None
 
     def handler(self, conn):
-        """Find service handler and invoke it.
-        
-        Special cases:
-        * opnum == RUSS_OPNUM_HELP - fallback to spath == "/" if available
-        * opnum == RUSS_OPNUM_LIST - list node.children if found
-        
-        Calling conn.exit() is left to the service handler. All
-        connection fds are closed before returning.
-        conn.exit(pyruss.RUSS_EXIT_FAILURE) is a fallback.
-
-        TODO: when req.spath is not found within the service tree,
-            node == None and no service is found. this needs to be
-            fixed so that a (leaf) node could service the request
-            based on a partial match of req.spath
-        """
-        req = conn.get_request()
-        ctxt = ServiceContext()
-        node, ctxt.spath = self.service_tree.find(req.spath)
-
-        # call standard_answer_handler() for now
-        conn.standard_answer_handler()
-
-        if req.opnum == pyruss.RUSS_OPNUM_LIST:
-            # default handling for "list"; list "children" at spath
-            if req.spath in ["/", ctxt.spath]:
-                os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
-                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            else:
-                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif req.opnum == pyruss.RUSS_OPNUM_HELP:
-            # default handling for "help"; use node spath == "/"
-            node, ctxt.spath = self.service_tree.find("/")
-            if req.spath in ["/", ctxt.spath]:
-                node.handler(conn, ctxt)
-                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            else:
-                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-        elif node.handler:
-            # service request from this tree for all other ops
-            node.handler(conn, ctxt)
-        else:
-            conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
-
-        # clean up
-        conn.exit(pyruss.RUSS_EXIT_FAILURE)
-        conn.close()
-        del conn
+        libruss.russ_svr_handler(self._ptr, conn)
 
     def loop(self):
-        if self.server_type == "fork":
-            self.lis.loop(self.handler)
-        elif self.server_type == "thread":
-            self.lis.loop_thread(self.handler)
+        libruss.russ_svr_loop(self._ptr)
