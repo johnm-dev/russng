@@ -20,8 +20,8 @@
 #
 # license--end
 
-"""Alternative server and support implementation to the russ library
-C API.
+"""New server and support implementation to the russ library C API.
+It is intentionally thin!
 
 Rules:
 * most objects simply wrap C "objects"; this means that C "objects"
@@ -48,7 +48,7 @@ def get_service_handler(handler):
         service_handlers[handler] = SVC_HANDLER_FUNC(ServiceHandler(handler)._handler)
     return service_handlers[handler]
 
-class ServiceNodex:
+class ServiceNode:
     """Wrapper for russ_svcnode object and associated methods.
     """
 
@@ -75,7 +75,7 @@ class ServiceNodex:
     def set_virtual(self, value):
         libruss.russ_svcnode_set_virtual(self._ptr, value)
 
-class Serverx:
+class Server:
     """Wrapper for russ_svr object and associated methods.
     """
 
