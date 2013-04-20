@@ -77,8 +77,9 @@ char	*HELP =
 void
 svc_root_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 
-	if (conn->req.opnum == RUSS_OPNUM_HELP) {
+	if (req->opnum == RUSS_OPNUM_HELP) {
 		russ_dprintf(conn->fds[1], HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 	} else {
@@ -159,8 +160,8 @@ svc_discard_handler(struct russ_sess *sess) {
 		russ_conn_fatal(conn, "error: cannot allocate buffer", RUSS_EXIT_FAILURE);
 		return;
 	}
-	if ((russ_sarray0_count(conn->req.argv, 2) >= 1)
-		&& (strcmp(conn->req.argv[0], "--perf") == 0)) {
+	if ((russ_sarray0_count(sess->req->argv, 2) >= 1)
+		&& (strcmp(sess->req->argv[0], "--perf") == 0)) {
 		perf = 1;
 	}
 	t0 = gettimeofday_float();
@@ -197,8 +198,8 @@ svc_discard_handler(struct russ_sess *sess) {
 void
 svc_echo_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	char	buf[1024];
-	ssize_t	n;
+	char			buf[1024];
+	ssize_t			n;
 
 	while ((n = russ_read(conn->fds[0], buf, sizeof(buf))) > 0) {
 		russ_writen(conn->fds[1], buf, n);
@@ -220,11 +221,10 @@ svc_env_handler(struct russ_sess *sess) {
 void
 svc_request_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req;
+	struct russ_req		*req = sess->req;
 	int			fd;
 	int			i;
 
-	req = &(conn->req);
 	fd = conn->fds[1];
 
 	russ_dprintf(fd, "protocol string (%s)\n", req->protocol_string);
