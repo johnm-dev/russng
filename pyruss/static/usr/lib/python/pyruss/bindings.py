@@ -103,7 +103,6 @@ class russ_conn_Structure(ctypes.Structure):
     _fields_ = [
         ("conn_type", ctypes.c_int),
         ("creds", russ_creds_Structure),
-        ("req", russ_req_Structure),
         ("sd", ctypes.c_int),
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
     ]
@@ -139,6 +138,7 @@ class russ_svr_Structure(ctypes.Structure):
 russ_sess_Structure._fields_ = [
         ("svr", ctypes.POINTER(russ_svr_Structure)),
         ("conn", ctypes.POINTER(russ_conn_Structure)),
+        ("req", ctypes.POINTER(russ_req_Structure)),
         ("spath", ctypes.c_char*RUSS_REQ_SPATH_MAX),
     ]
 
@@ -158,7 +158,7 @@ libruss.russ_conn_await_request.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     russ_deadline,
 ]
-libruss.russ_conn_await_request.restype = ctypes.c_int
+libruss.russ_conn_await_request.restype = ctypes.POINTER(russ_req_Structure)
 
 libruss.russ_conn_close.argtypes = [
     ctypes.c_void_p

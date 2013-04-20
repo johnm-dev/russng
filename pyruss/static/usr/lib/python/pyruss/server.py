@@ -34,7 +34,7 @@ multiple python objects
 
 #
 from pyruss import libruss, SVC_HANDLER_FUNC
-from pyruss import ServerConn
+from pyruss import Request, ServerConn
 
 class ServiceHandler:
     def __init__(self, handler):
@@ -118,3 +118,6 @@ class Sess:
 
     def get_svr(self):
         return self._ptr.contents.svr and Server(self._ptr.contents.svr) or None
+
+    def get_request(self):
+        return self._ptr.contents.req and Request(self._ptr.contents.req) or None

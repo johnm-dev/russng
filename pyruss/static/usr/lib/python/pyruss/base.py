@@ -99,6 +99,62 @@ def unlink(path):
     """
     return libruss.russ_unlink(path)
 
+class Request:
+    """Wrapper for russ_req object.
+    """
+
+    def __init__(self, _ptr):
+        self._ptr = _ptr
+
+    def __del__(self):
+        self._ptr = None
+
+    def get_args(self):
+        """Return a (copy) python list of args.
+        """
+        req_argv = self._ptr.contents.argv
+        args = []
+        if bool(req_argv):
+            i = 0
+            while 1:
+                s = req_argv[i]
+                i += 1
+                if s == None:
+                    break
+                args.append(s)
+        return  args
+
+    def get_attrs(self):
+        """Return a (copy) python dict of attrs.
+        """
+        req_attrs = self._ptr.contents.attrs
+        attrs = {}
+        if bool(req_attrv):
+            i = 0
+            while 1:
+                s = req_attrv[i]
+                i += 1
+                if s == None:
+                    break
+                try:
+                    k, v = s.split("=", 1)
+                    attrs[k] = v
+                except:
+                    pass
+        return attrs
+
+    def get_op(self):
+        return self._ptr.contents.op
+    op = property(get_op, None)
+
+    def get_opnum(self):
+        return self._ptr.contents.opnum
+    opnum = property(get_opnum, None)
+
+    def get_spath(self):
+        return self._ptr.contents.spath
+    spath = property(get_spath, None)
+
 class Conn:
     """Common (client, server) connection.
     """
@@ -125,39 +181,6 @@ class Conn:
 
     def get_fds(self):
         return [self._ptr.contents.fds[i] for i in range(RUSS_CONN_NFDS)]
-
-    def get_request(self):
-        return self._ptr.contents.req
-
-    def get_request_args(self):
-        req = self._ptr.contents.req
-        args = []
-        if bool(req.argv):
-            i = 0
-            while 1:
-                s = req.argv[i]
-                i += 1
-                if s == None:
-                    break
-                args.append(s)
-        return  args
-
-    def get_request_attrs(self):
-        req = self._ptr.contents.req
-        attrs = {}
-        if bool(req.attrv):
-            i = 0
-            while 1:
-                s = req.attrv[i]
-                i += 1
-                if s == None:
-                    break
-                try:
-                    k, v = s.split("=", 1)
-                    attrs[k] = v
-                except:
-                    pass
-        return attrs
 
     def get_sd(self):
         return self._ptr.contents.sd
