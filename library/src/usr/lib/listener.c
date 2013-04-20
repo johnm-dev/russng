@@ -113,7 +113,8 @@ russ_lis_accept(struct russ_lis *self, russ_deadline deadline) {
 	struct sockaddr_un	servaddr;
 	socklen_t		servaddr_len;
 
-	if ((self->sd < 0)
+	if ((self == NULL)
+		|| (self->sd < 0)
 		|| ((conn = russ_conn_new()) == NULL)) {
 		return NULL;
 	}
