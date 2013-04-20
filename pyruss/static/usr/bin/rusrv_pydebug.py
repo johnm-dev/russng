@@ -55,7 +55,7 @@ CHARGEN_CHARS = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]
 class ServiceTree:
 
     def __init__(self):
-        self.root = ServiceNode.new("/", self.svc_root)
+        self.root = ServiceNode.new("", self.svc_root)
         self.root.add("chargen", self.svc_chargen)
         self.root.add("conn", self.svc_conn)
         self.root.add("daytime", self.svc_daytime)
@@ -65,7 +65,7 @@ class ServiceTree:
 
     def svc_root(self, sess):
         conn = sess.get_conn()
-        req = conn.get_request()
+        req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_HELP:
             os.write(conn.get_fd(1), HELP)
             conn.exit(pyruss.RUSS_EXIT_SUCCESS)
@@ -73,7 +73,7 @@ class ServiceTree:
 
     def svc_chargen(self, sess):
         conn = sess.get_conn()
-        req = conn.get_request()
+        req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
             fd = conn.get_fd(1)
             off = 0
@@ -88,7 +88,7 @@ class ServiceTree:
 
     def svc_conn(self, sess):
         conn = sess.get_conn()
-        req = conn.get_request()
+        req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
             fd = conn.get_fd(1)
             try:
@@ -101,7 +101,7 @@ class ServiceTree:
 
     def svc_daytime(self, sess):
         conn = sess.get_conn()
-        req = conn.get_request()
+        req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
             fd = conn.get_fd(1)
             s = time.strftime("%A, %B %d, %Y %T-%Z", time.gmtime(time.time()))
@@ -111,7 +111,7 @@ class ServiceTree:
 
     def svc_echo(self, sess):
         conn = sess.get_conn()
-        req = conn.get_request()
+        req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
             infd = conn.get_fd(0)
             outfd = conn.get_fd(1)
@@ -125,7 +125,7 @@ class ServiceTree:
 
     def svc_env(self, sess):
         conn = sess.get_conn()
-        req = conn.get_request()
+        req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
             fd = conn.get_fd(1)
             for key, value in os.environ.items():
@@ -135,22 +135,21 @@ class ServiceTree:
 
     def svc_request(self, sess):
         conn = sess.get_conn()
-        req = conn.get_request()
+        req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
             fd = conn.get_fd(1)
-            req = conn.get_request()
             os.write(fd, "protocol string (%s)\n" % req.protocol_string)
             os.write(fd, "spath (%s)\n" % req.spath)
             os.write(fd, "op (%s)\n" % req.op)
 
-            attrs = conn.get_request_attrs()
+            attrs = req.get_attrs()
             if not attrs:
                 os.write(fd, "attrv (NULL)\n")
             else:
                 for i, (key, value) in enumerate(attrs):
                     os.write(fd, "attrv[%d] (%s=%s)\n" % (i, key, value))
 
-            args = conn.get_request_args()
+            args = req.get_args()
             if not args:
                 os.write(fd, "argv (NULL)\n")
             else:
