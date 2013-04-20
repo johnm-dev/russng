@@ -201,7 +201,7 @@ struct russ_sess {
 
 /* conn.c */
 int russ_conn_answer(struct russ_conn *, int, int *, int *);
-int russ_conn_await_request(struct russ_conn *, russ_deadline);
+struct russ_req *russ_conn_await_request(struct russ_conn *, russ_deadline);
 void russ_conn_close(struct russ_conn *);
 void russ_conn_close_fd(struct russ_conn *, int);
 int russ_conn_exit(struct russ_conn *, int);

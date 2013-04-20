@@ -62,15 +62,10 @@ russ_conn_new(void) {
 	conn->creds.pid = -1;
 	conn->creds.uid = -1;
 	conn->creds.gid = -1;
-	if (russ_req_init(&(conn->req), NULL, NULL, NULL, NULL, NULL) < 0) {
-		goto free_request;
-	}
 	conn->sd = -1;
 	russ_fds_init(conn->fds, RUSS_CONN_NFDS, -1);
 
 	return conn;
-free_request:
-	russ_req_free_members(&(conn->req));
 free_conn:
 	free(conn);
 	return NULL;
@@ -217,9 +212,9 @@ russ_conn_splice(struct russ_conn *self, struct russ_conn *dconn) {
 *
 * @param self		connection object
 * @param deadline	deadline to wait
-* @return		0 on success; -1 on error
+* @return		request object; NULL on failure
 */
-int
+struct russ_req *
 russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 	struct russ_req		*req;
 	char			buf[RUSS_REQ_BUF_MAX], *bp;
@@ -230,10 +225,15 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 	if ((russ_readn_deadline(self->sd, bp, 4, deadline) < 0)
 		|| ((bp = russ_dec_i(bp, &size)) == NULL)
 		|| (russ_readn_deadline(self->sd, bp, size, deadline) < 0)) {
-		return -1;
+		return NULL;
 	}
 
-	req = &(self->req);
+	if ((req = russ_req_new(NULL, NULL, NULL, NULL, NULL)) == NULL) {
+		/* TODO: what about the connection? */
+		return NULL;
+		goto free_request;
+	}
+
 	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
 		|| (strcmp(RUSS_REQ_PROTOCOL_STRING, req->protocol_string) != 0)
 		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
@@ -244,10 +244,10 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 		goto free_request;
 	}
 	req->opnum = russ_opnum_lookup(req->op);
-	return 0;
+	return req;
 free_request:
-	russ_req_free_members(&(self->req));
-	return -1;
+	russ_req_free(req);
+	return NULL;
 }
 
 /**
@@ -408,7 +408,6 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, russ_deadline deadline)
 */
 struct russ_conn *
 russ_conn_free(struct russ_conn *self) {
-	russ_req_free_members(&(self->req));
 	free(self);
 	return NULL;
 }
@@ -423,14 +422,13 @@ russ_conn_free(struct russ_conn *self) {
 * @return		0 on success; -1 on error
 */
 int
-russ_conn_send_request(struct russ_conn *self, russ_deadline deadline) {
-	struct russ_req		*req;
-	char			buf[RUSS_REQ_BUF_MAX], *bp, *bend;
+russ_conn_send_request(struct russ_conn *self, struct russ_req *req, russ_deadline deadline) {
+	char	buf[RUSS_REQ_BUF_MAX], *bp, *bend;
 
-	req = &(self->req);
 	bp = buf;
 	bend = buf+sizeof(buf);
-	if (((bp = russ_enc_i(bp, bend, 0)) == NULL)
+	if ((req == NULL)
+		|| ((bp = russ_enc_i(bp, bend, 0)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, req->protocol_string)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, req->spath)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, req->op)) == NULL)
@@ -486,18 +484,19 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 		goto close_conn;
 	}
 
-	if ((russ_req_init(&(conn->req), RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv) < 0)
-		|| (russ_conn_send_request(conn, deadline) < 0)
+	if (((req = russ_req_new(RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv)) == NULL)
+		|| (russ_conn_send_request(conn, req, deadline) < 0)
 		|| (russ_conn_recvfds(conn, deadline) < 0)) {
 		goto free_request;
 	}
 	free(saddr);
 	free(spath2);
 	russ_fds_close(&conn->sd, 1);	/* sd not needed anymore */
+	russ_req_free(req);
 	return conn;
 
 free_request:
-	russ_req_free_members(&(conn->req));
+	russ_req_free(req);
 close_conn:
 	russ_conn_close(conn);
 	free(conn);

@@ -29,23 +29,26 @@
 #include "russ_priv.h"
 
 /**
-* Initialize connection request.
+* Create new request.
 *
 * Note: All provided (non NULL) information is duplicated.
 *
-* @param self		request object
 * @param protocol_string
 *			russ protocol identification string
 * @param op		operation string
 * @param spath		service path
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
 * @param argv		NULL-terminated array of arguments
-* @return		0 on success; -1 on error
+* @return		request object on success; NULL on failure
 */
-int
-russ_req_init(struct russ_req *self, char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
-	int			i;
+struct russ_req *
+russ_req_new(char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
+	struct russ_req	*self;
+	int		i;
 
+	if ((self = malloc(sizeof(struct russ_req))) == NULL) {
+		return NULL;
+	}
 	self->protocol_string = NULL;
 	self->spath = NULL;
 	self->op = NULL;
@@ -56,38 +59,34 @@ russ_req_init(struct russ_req *self, char *protocol_string, char *op, char *spat
 	if (((protocol_string) && ((self->protocol_string = strdup(protocol_string)) == NULL))
 		|| ((op) && ((self->op = strdup(op)) == NULL))
 		|| ((spath) && ((self->spath = strdup(spath)) == NULL))) {
-		goto free_req_items;
+		goto free_request;
 	}
 	self->opnum = russ_opnum_lookup(op);
 	if (attrv) {
 		if ((self->attrv = russ_sarray0_dup(attrv, RUSS_REQ_ATTRS_MAX)) == NULL) {
-			goto free_req_items;
+			goto free_request;
 		}
 	}
 	if (argv) {
 		if ((self->argv = russ_sarray0_dup(argv, RUSS_REQ_ARGS_MAX)) == NULL) {
-			goto free_req_items;
+			goto free_request;
 		}
 	}
-	return 0;
+	return self;
 
-free_req_items:
-	russ_req_free_members(self);
-	return -1;
+free_request:
+	russ_req_free(self);
+	return NULL;
 }
 
 /**
-* Free allocated request members.
-*
-* All allocations done in russ_req_init() are freed and members
-* set to NULL.
-*
-* Note: The request itself is not freed.
+* Free request object.
 *
 * @param self		request object
+* @return		NULL
 */
-void
-russ_req_free_members(struct russ_req *self) {
+struct russ_req *
+russ_req_free(struct russ_req *self) {
 	int			i;
 
 	free(self->protocol_string);
@@ -105,5 +104,5 @@ russ_req_free_members(struct russ_req *self) {
 	    }
 	    free(self->argv);
 	}
-	russ_req_init(self, NULL, NULL, NULL, NULL, NULL);
+	return NULL;
 }

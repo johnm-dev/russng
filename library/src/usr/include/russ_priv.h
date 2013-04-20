@@ -47,7 +47,7 @@ struct russ_op_table {
 
 /* conn.c */
 struct russ_conn *russ_conn_new(void);
-int russ_conn_send_request(struct russ_conn *, russ_deadline);
+int russ_conn_send_request(struct russ_conn *, struct russ_req *, russ_deadline);
 
 /* encdec.c */
 char *russ_dec_H(char *, uint16_t *);
@@ -81,8 +81,8 @@ int russ_connect(int sd, struct sockaddr *, socklen_t, russ_deadline);
 int russ_poll(struct pollfd *, int, russ_deadline);
 
 /* request.c */
-int russ_req_init(struct russ_req *, char *, char *, char *, char **, char **);
-void russ_req_free_members(struct russ_req *);
+struct russ_req *russ_req_new(char *, char *, char *, char **, char **);
+struct russ_req *russ_req_free(struct russ_req *);
 
 /* socket.c */
 int russ_get_creds(int, struct russ_creds *);
