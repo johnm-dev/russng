@@ -86,8 +86,8 @@ class Server:
     @classmethod
     def new(cls, root, typ):
         _ptr = libruss.russ_svr_new(root._ptr, typ)
-        if _ptr == None:
-            raise Exception("could not create Serverx")         
+        if not bool(_ptr):
+            raise Exception("could not create Server")
         return cls(_ptr)
 
     def announce(self, saddr, mode, uid, gid):
