@@ -116,7 +116,9 @@ escape_special(char *s) {
 }
 
 void
-execute(struct russ_conn *conn, char *userhost, char *new_spath) {
+execute(struct russ_sess *sess, char *userhost, char *new_spath) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 	char	*args[1024];
 	int	nargs;
 	int	i, status, pid;
@@ -134,20 +136,20 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 	args[nargs++] = "LogLevel=QUIET";
 	args[nargs++] = userhost;
 	args[nargs++] = RUDIAL_EXEC;
-	if ((conn->req.attrv != NULL) && (conn->req.attrv[0] != NULL)) {
-		for (i = 0; conn->req.attrv[i] != NULL; i++) {
+	if ((req->attrv != NULL) && (req->attrv[0] != NULL)) {
+		for (i = 0; req->attrv[i] != NULL; i++) {
 			args[nargs++] = "-a";
-			if ((args[nargs++] = escape_special(conn->req.attrv[i])) == NULL) {
+			if ((args[nargs++] = escape_special(req->attrv[i])) == NULL) {
 				russ_conn_fatal(conn, "error: out of memory", RUSS_EXIT_FAILURE);
 				exit(0);
 			}
 		}
 	}
-	args[nargs++] = conn->req.op;
+	args[nargs++] = req->op;
 	args[nargs++] = new_spath;
-	if ((conn->req.argv != NULL) && (conn->req.argv[0] != NULL)) {
-		for (i = 0; conn->req.argv[i] != NULL; i++) {
-			if ((args[nargs++] = escape_special(conn->req.argv[i])) == NULL) {
+	if ((req->argv != NULL) && (req->argv[0] != NULL)) {
+		for (i = 0; req->argv[i] != NULL; i++) {
+			if ((args[nargs++] = escape_special(req->argv[i])) == NULL) {
 				russ_conn_fatal(conn, "error: out of memory", RUSS_EXIT_FAILURE);
 				exit(0);
 			}
@@ -189,12 +191,14 @@ execute(struct russ_conn *conn, char *userhost, char *new_spath) {
 
 #if 0
 void
-svc_net_handler(struct russ_conn *conn) {
+svc_net_handler(struct russ_sess *sess) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 	char	*p, *new_spath, *userhost;
 	int	i;
 
 	/* extract and validate user@host and new_spath */
-	userhost = &conn->req.spath[5];
+	userhost = &(req->spath[5]);
 	if ((p = index(userhost, '/')) == NULL) {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
@@ -202,24 +206,25 @@ svc_net_handler(struct russ_conn *conn) {
 	new_spath = strdup(p);
 	p[0] = '\0'; /* terminate userhost */
 
-	execute(conn, userhost, new_spath);
+	execute(sess, userhost, new_spath);
 }
 #endif
 
 void
 svc_root_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 	char			*p, *new_spath, *userhost;
 	int			i;
 
-	switch (conn->req.opnum) {
+	switch (req->opnum) {
 	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], "%s", HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		break;
 	case RUSS_OPNUM_EXECUTE:
 		/* extract and validate user@host and new_spath */
-		userhost = &conn->req.spath[1];
+		userhost = &(req->spath[1]);
 		if ((p = index(userhost, '/')) == NULL) {
 			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			exit(0);
@@ -227,7 +232,7 @@ svc_root_handler(struct russ_sess *sess) {
 		new_spath = strdup(p);
 		p[0] = '\0'; /* terminate userhost */
 
-		execute(conn, userhost, new_spath);
+		execute(sess, userhost, new_spath);
 		break;
 	case RUSS_OPNUM_LIST:
 		russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_FAILURE);
