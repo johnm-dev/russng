@@ -86,10 +86,9 @@ svc_debug_handler(struct russ_sess *sess) {
 void
 svc_dial_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req;
+	struct russ_req		*req = sess->req;
 	char			**section_names, **p;
 
-	req = &(conn->req);
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		if ((section_names = russ_conf_sections(conf)) == NULL) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
@@ -171,21 +170,19 @@ connect_remote(char *hostname, int port) {
 /**
 * Encode dial information into buffer.
 *
-* @param conn		connection object
+* @param req		request object
 * @param buf		buffer
 * @param buf_size	size of buffer
 * @return		# of bytes encoded; -1 on failure
 */
 int
-enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) {
-	struct russ_req	*req;
+enc_dial_info(struct russ_req *req, char *new_spath, char *buf, int buf_size) {
 	char		*bp, *bend;
 
-	req = &(conn->req);
 	bp = buf;
 	bend = buf+buf_size;
 	if (((bp = russ_enc_I(bp, bend, 0)) == NULL)
-		|| ((bp = russ_enc_I(bp, bend, req->op)) == NULL)
+		|| ((bp = russ_enc_s(bp, bend, req->op)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, new_spath)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->argv)) == NULL)) {
@@ -200,7 +197,7 @@ fprintf(stderr, "dial psize (%d)\n", (int)(bp-buf-4));
 /**
 * Dial remote host.
 *
-* @param conn			connection object
+* @param sess			session object
 * @param new_spath		spath to pass to remote
 * @param section_name		conf section name with info
 * @param cluster_name		cluster name taken from spath
@@ -208,12 +205,14 @@ fprintf(stderr, "dial psize (%d)\n", (int)(bp-buf-4));
 * @retrun			0 on success; -1 on failure
 */
 static int
-__dial_remote(struct russ_conn *conn, char *new_spath, char *section_name, char *cluster_name, char *hostname) {
-	char	*buf;
-	int	buf_size;
-	int	port;
-	int	sd = -1;
-	int	n;
+__dial_remote(struct russ_sess *sess, char *new_spath, char *section_name, char *cluster_name, char *hostname) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
+	char			*buf;
+	int			buf_size;
+	int			port;
+	int			sd = -1;
+	int			n;
 
 	/* prep */
 	if ((conn->creds.gid == 0)
@@ -239,7 +238,7 @@ __dial_remote(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	}
 
 	/* send dial information */
-	if (((n = enc_dial_info(conn, new_spath, buf, buf_size)) < 0)
+	if (((n = enc_dial_info(req, new_spath, buf, buf_size)) < 0)
 		|| (fprintf(stderr, "enc_dial_info n (%d)\n", n) < 0)
 		|| ((n = russ_writen(sd, buf, n)) < 0)) {
 		goto free_vars;
@@ -264,14 +263,13 @@ free_vars:
 void
 svc_dial_cluster_host_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req = NULL;
+	struct russ_req		*req = sess->req;
 	char			*cluster_name = NULL, *hostname = NULL, *method = NULL;
 	char			*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
 	char			section_name[256];
 	int			exit_status;
 
 	/* init */
-	req = &(conn->req);
 	p0 = req->spath+6;
 	if (((p1 = strchr(p0, '/')) == NULL)
 		|| ((p2 = strchr(p1+1, '/')) == NULL)
@@ -285,7 +283,7 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 		|| ((method = russ_conf_get(conf, section_name, "method", NULL)) == NULL)) {
 		goto free_vars;
 	}
-	exit_status = __dial_remote(conn, new_spath, section_name, cluster_name, hostname);
+	exit_status = __dial_remote(sess, new_spath, section_name, cluster_name, hostname);
 	russ_conn_exit(conn, exit_status);
 
 free_vars:
@@ -302,10 +300,10 @@ free_vars:
 */
 void
 master_handler(struct russ_sess *sess) {
-	struct russ_req	*req;
-	int		rv;
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
+	int			rv;
 
-	req = &(conn->req);
 	if (strncmp(req->spath, "/dial/", 6) == 0) {
 		/* service /dial/ for any op */
 		svc_dial_cluster_host_handler(sess);
