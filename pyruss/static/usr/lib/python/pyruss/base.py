@@ -127,7 +127,7 @@ class Request:
     def get_attrs(self):
         """Return a (copy) python dict of attrs.
         """
-        req_attrs = self._ptr.contents.attrs
+        req_attrv = self._ptr.contents.attrv
         attrs = {}
         if bool(req_attrv):
             i = 0
