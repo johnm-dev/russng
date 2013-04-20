@@ -171,6 +171,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	sess.conn = conn;
 	sess.svr = self;
 	sess.spath[0] = '\0';
+	sess.req = req;
 
 	/* virtual node */
 	if (node->virtual) {
