@@ -75,7 +75,7 @@ master_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
 	struct russ_req		*req;
 
-	req = &(conn->req);
+	req = sess->req;
 	if (strcmp(req->spath, "/") == 0) {
 		switch (req->opnum) {
 		case RUSS_OPNUM_HELP:
