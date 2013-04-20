@@ -211,20 +211,18 @@ fprintf(stderr, "rv (%d) in_chans[0] (%d) out_chans[0] (%d) conn->fds[0] (%d) re
 /**
 * Encode dial information into buffer.
 *
-* @param conn		connection object
+* @param req		request object
 * @param buf		buffer
 * @param buf_size	size of buffer
 * @return		# of bytes encoded; -1 on failure
 */
 int
-enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) {
-	struct russ_req	*req;
+enc_dial_info(struct russ_req *req, char *new_spath, char *buf, int buf_size) {
 	char		*bp, *bend;
 
-	req = &(conn->req);
 	bend = buf+buf_size;
 	bp = buf+4;
-	if (((bp = russ_enc_I(bp, bend, req->op)) == NULL)
+	if (((bp = russ_enc_s(bp, bend, req->op)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, new_spath)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->argv)) == NULL)) {
@@ -238,7 +236,7 @@ enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) 
 /**
 * Dial relays using ssh method.
 *
-* @param conn		connection object
+* @param sess		session object
 * @param section_name	conf section name
 * @param cluster_name	cluster name
 * @param hostname	hostname
@@ -246,14 +244,16 @@ enc_dial_info(struct russ_conn *conn, char *new_spath, char *buf, int buf_size) 
 * @return		0 on success; -1 on failure
 */
 int
-_dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char *cluster_name, char *hostname) {
-	ssh_session	ssh_sess = NULL;
-	ssh_channel	ssh_chan = NULL;
-	int		ssh_state;
-	char		*subsystem_path = NULL;
-	char		*buf;
-	int		buf_size, nbytes;
-	int		exit_status = -1;
+_dial_for_ssh(struct russ_sess *sess, char *new_spath, char *section_name, char *cluster_name, char *hostname) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
+	ssh_session		ssh_sess = NULL;
+	ssh_channel		ssh_chan = NULL;
+	int			ssh_state;
+	char			*subsystem_path = NULL;
+	char			*buf;
+	int			buf_size, nbytes;
+	int			exit_status = -1;
 
 	/* prep */
 	if ((conn->creds.gid == 0)
@@ -307,7 +307,7 @@ _dial_for_ssh(struct russ_conn *conn, char *new_spath, char *section_name, char 
 	}
 
 	/* send dial information */
-	if (((nbytes = enc_dial_info(conn, new_spath, buf, buf_size)) < 0)
+	if (((nbytes = enc_dial_info(req, new_spath, buf, buf_size)) < 0)
 		|| ((nbytes = ssh_channel_write(ssh_chan, buf, nbytes)) < 0)) {
 		goto free_vars;
 	}
@@ -329,7 +329,7 @@ free_vars:
 /**
 * Dial relays service using ssl-key method.
 *
-* @param conn		connection object
+* @param sess		session object
 * @param section_name	conf section name
 * @param cluster_name	cluster name
 * @param hostname	hostname
@@ -337,7 +337,7 @@ free_vars:
 * @return		0 on success; -1 on failure
 */
 int
-_dial_for_ssl_key(struct russ_conn *conn, char *new_spath, char *section_name, char *cluster_name, char *hostname) {
+_dial_for_ssl_key(struct russ_sess *sess, char *new_spath, char *section_name, char *cluster_name, char *hostname) {
 	return -1;
 }
 
@@ -362,10 +362,9 @@ svc_debug_handler(struct russ_conn *sess) {
 void
 svc_dial_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req;
+	struct russ_req		*req = sess->req;
 	char			**section_names, **p;
 
-	req = &(conn->req);
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		if ((section_names = russ_conf_sections(conf)) == NULL) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
@@ -389,14 +388,13 @@ svc_dial_handler(struct russ_sess *sess) {
 void
 svc_dial_cluster_host_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req = NULL;
+	struct russ_req		*req = sess->req;
 	char			*cluster_name = NULL, *hostname = NULL, *method = NULL;
 	char			*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
 	char			section_name[256];
 	int			exit_status;
 
 	/* init */
-	req = &(conn->req);
 	p0 = req->spath+6;
 	if (((p1 = strchr(p0, '/')) == NULL)
 		|| ((p2 = strchr(p1+1, '/')) == NULL)
@@ -411,9 +409,9 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 		goto free_vars;
 	}
 	if (strcmp(method, "ssh") == 0) {
-		exit_status = _dial_for_ssh(conn, new_spath, section_name, cluster_name, hostname);
+		exit_status = _dial_for_ssh(sess, new_spath, section_name, cluster_name, hostname);
 	} else if (strcmp(method, "ssl-key") == 0) {
-		exit_status = _dial_for_ssl_key(conn, new_spath, section_name, cluster_name, hostname);
+		exit_status = _dial_for_ssl_key(sess, new_spath, section_name, cluster_name, hostname);
 	}
 	russ_conn_exit(conn, exit_status);
 
@@ -432,10 +430,9 @@ free_vars:
 void
 master_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req;
+	struct russ_req		*req = sess->req;
 	int			rv;
 
-	req = &(conn->req);
 	if (strncmp(req->spath, "/dial/", 6) == 0) {
 		/* service /dial/ for any op */
 		svc_dial_cluster_host_handler(sess);
