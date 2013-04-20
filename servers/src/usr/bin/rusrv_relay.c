@@ -480,7 +480,6 @@ int
 main(int argc, char **argv) {
 	struct russ_lis	*lis;
 
-	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
