@@ -184,14 +184,13 @@ get_cg_path(char **attrv) {
 }
 
 void
-execute(struct russ_conn *conn, char *username, char *home, char *cmd, char **argv, char **envp) {
-	struct russ_req	*req;
-	FILE		*f;
-	char		*cg_path, cg_tasks_path[1024];
-	pid_t		pid;
-	int		status;
-
-	req = &(conn->req);
+execute(struct russ_sess *sess, char *username, char *home, char *cmd, char **argv, char **envp) {
+	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
+	FILE			*f;
+	char			*cg_path, cg_tasks_path[1024];
+	pid_t			pid;
+	int			status;
 
 #ifdef USE_PAM
 	if (setup_by_pam("rusrv_exec", username) < 0) {
@@ -274,8 +273,9 @@ execute(struct russ_conn *conn, char *username, char *home, char *cmd, char **ar
 void
 svc_root_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 
-	switch (conn->req.opnum) {
+	switch (req->opnum) {
 	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], "%s", HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
@@ -289,11 +289,10 @@ svc_root_handler(struct russ_sess *sess) {
 void
 svc_login_shell_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req;
+	struct russ_req		*req = sess->req;
 	char			**argv;
 	char			*username, *shell, *lshell, *home;
 
-	req = &(conn->req);
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		if (req->argv[0] == NULL) {
 			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
@@ -319,7 +318,7 @@ svc_login_shell_handler(struct russ_sess *sess) {
 			argv[0] = lshell;
 		}
 
-		execute(conn, username, home, shell, argv, req->attrv);
+		execute(sess, username, home, shell, argv, req->attrv);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
@@ -330,7 +329,7 @@ svc_login_shell_handler(struct russ_sess *sess) {
 void
 svc_simple_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req;
+	struct russ_req		*req = sess->req;
 	char			*username, *shell, *lshell, *home;
 
 	if (get_user_info(getuid(), &username, &shell, &lshell, &home) < 0) {
@@ -338,9 +337,8 @@ svc_simple_handler(struct russ_sess *sess) {
 		return;
 	}
 
-	req = &(conn->req);
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
-		execute(conn, username, "/", req->argv[0], req->argv, req->attrv);
+		execute(sess, username, "/", req->argv[0], req->argv, req->attrv);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}

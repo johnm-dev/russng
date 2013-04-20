@@ -47,7 +47,7 @@ svc_root_handler(struct russ_sess *sess) {
 	char			buf[1024];
 	ssize_t			n;
 
-	switch (conn->req.opnum) {
+	switch (sess->req->opnum) {
 	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
