@@ -131,7 +131,6 @@ struct russ_req {
 struct russ_conn {
 	int			conn_type;	/**< client or server */
 	struct russ_creds	creds;		/**< credentials */
-	struct russ_req		req;		/**< request */
 	int			sd;		/**< socket descriptor */
 	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
 };
@@ -196,6 +195,7 @@ struct russ_svr {
 struct russ_sess {
 	struct russ_svr		*svr;
 	struct russ_conn	*conn;
+	struct russ_req		*req;
 	char			spath[RUSS_REQ_SPATH_MAX];
 };
 
