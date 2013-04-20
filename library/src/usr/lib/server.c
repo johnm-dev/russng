@@ -34,7 +34,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "russ.h"
+#include "russ_priv.h"
 
 struct russ_svr *
 russ_svr_new(struct russ_svcnode *root, int type) {
@@ -128,12 +128,10 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	struct russ_req		*req;
 	struct russ_svcnode	*node;
 
-	if (russ_conn_await_request(conn, russ_to_deadline(self->await_timeout)) < 0) {
+	if ((req = russ_conn_await_request(conn, russ_to_deadline(self->await_timeout))) == NULL) {
 		/* failure */
 		goto cleanup;
 	}
-
-	req = &(conn->req);
 
 	/* validate opnum */
 	if (req->opnum == RUSS_OPNUM_NOT_SET) {
@@ -203,7 +201,10 @@ call_node_handler:
 	}
 
 cleanup:
-	/* clean up */
+	/* clean up: on error and fallthrough on success */
+	if (req != NULL) {
+		req = russ_req_free(req);
+	}
 	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 	russ_conn_close(conn);
 }
