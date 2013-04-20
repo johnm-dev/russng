@@ -127,8 +127,9 @@ setup_clean_environment(void) {
 void
 svc_root_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 
-	switch (conn->req.opnum) {
+	switch (req->opnum) {
 	case RUSS_OPNUM_HELP:
 		russ_dprintf(conn->fds[1], "%s", HELP);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
@@ -149,10 +150,11 @@ svc_root_handler(struct russ_sess *sess) {
 void
 svc_exec_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 	char			*shell, *lshell, *home;
 	int			argc, i;
 
-	switch(conn->req.opnum) {
+	switch(req->opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		/* move and close fds */
 		dup2(conn->fds[0], 0);
@@ -164,8 +166,8 @@ svc_exec_handler(struct russ_sess *sess) {
 		close_fds(3, 127);
 
 		/* augment and execute */
-		augment_env(conn->req.attrv);
-		execvp(conn->req.argv[0], conn->req.argv);
+		augment_env(req->attrv);
+		execvp(req->argv[0], req->argv);
 
 		/* on error */
 		russ_conn_fatal(conn, "error: could not execute program", RUSS_EXIT_FAILURE);
@@ -189,11 +191,12 @@ svc_exec_handler(struct russ_sess *sess) {
 void
 svc_reload_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 
-	switch (conn->req.opnum) {
+	switch (req->opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		if (fork() == 0) {
-			augment_env(conn->req.attrv);
+			augment_env(req->attrv);
 			close_fds(0, 127);
 			execv(gl_argv[0], gl_argv);
 		}
@@ -217,8 +220,9 @@ svc_reload_handler(struct russ_sess *sess) {
 void
 svc_shutdown_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 
-	switch (conn->req.opnum) {
+	switch (req->opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		kill(getppid(), SIGTERM);
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
@@ -239,8 +243,9 @@ svc_shutdown_handler(struct russ_sess *sess) {
 void
 svc_status_handler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
+	struct russ_req		*req = sess->req;
 
-	switch (conn->req.opnum) {
+	switch (req->opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		russ_dprintf(conn->fds[1], "ok\n");
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
