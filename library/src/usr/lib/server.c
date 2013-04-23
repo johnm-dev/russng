@@ -309,7 +309,7 @@ russ_svr_loop_thread(struct russ_svr *self) {
 				russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
 				russ_conn_free(conn);
 			}
-			fprint(stderr, "error: cannot accept connection\n");
+			fprintf(stderr, "error: cannot accept connection\n");
 			continue;
 		}
 		data->svr = self;
