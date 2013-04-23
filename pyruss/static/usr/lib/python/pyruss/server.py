@@ -90,6 +90,10 @@ class Server:
             raise Exception("could not create Server")
         return cls(_ptr)
 
+    def accept(self, deadline):
+        conn_ptr = libruss.russ_svr_accept(self._ptr, deadline)
+        return bool(conn_ptr) and ServerConn(conn_ptr) or None
+
     def announce(self, saddr, mode, uid, gid):
         lis_ptr = libruss.russ_svr_announce(self._ptr, saddr, mode, uid, gid)
         return bool(lis_ptr) and Listener(lis_ptr) or None
