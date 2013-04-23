@@ -107,7 +107,7 @@ class Server:
         self._ptr = None
 
     def handler(self, conn):
-        libruss.russ_svr_handler(self._ptr, conn)
+        libruss.russ_svr_handler(self._ptr, conn._ptr)
 
     def loop(self):
         libruss.russ_svr_loop(self._ptr)
