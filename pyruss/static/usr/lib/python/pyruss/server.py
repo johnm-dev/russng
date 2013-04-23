@@ -120,7 +120,7 @@ class Server:
             conn.free()
 
         while True:
-            conn = self.accept(self._ptr.contents.lis, self._ptr.contents.accept_timeout)
+            conn = self.accept(self._ptr.contents.accept_timeout)
             if not conn:
                 sys.stderr.write("error: cannot accept connection\n")
                 continue
@@ -129,7 +129,6 @@ class Server:
                 th.start()
             else:
                 sys.stderr.write("error: cannot spawn thread\n")
-
 
 class Sess:
     """Wrapper for russ_sess.
