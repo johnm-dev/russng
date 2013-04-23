@@ -260,9 +260,9 @@ int russ_unlink(char *);
 
 /* server.c */
 struct russ_svr *russ_svr_new(struct russ_svcnode *, int);
-int russ_svr_set_accept_handler(struct russ_svr *, russ_accept_handler);
 struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid_t);
 void russ_svr_loop(struct russ_svr *);
+int russ_svr_set_accept_handler(struct russ_svr *, russ_accept_handler);
 int russ_svr_set_auto_switch_user(struct russ_svr *, int);
 
 /* servicenodes.c */
