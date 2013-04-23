@@ -58,6 +58,19 @@ russ_svr_new(struct russ_svcnode *root, int type) {
 	return self;
 }
 
+/**
+* Accept connection from server listen socket.
+*
+* Wrapper for calling registered accept handler.
+*
+* @param self		server object
+* @param deadline	deadline to complete operation
+*/
+struct russ_conn *
+russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
+	return self->accept_handler(self->lis, deadline);
+}
+
 struct russ_lis *
 russ_svr_announce(struct russ_svr *self, char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	if ((self->saddr = strdup(saddr)) == NULL) {

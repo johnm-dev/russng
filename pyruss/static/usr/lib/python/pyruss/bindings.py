@@ -327,6 +327,12 @@ libruss.russ_svr_new.argtypes = [
 ]
 libruss.russ_svr_new.restype = ctypes.POINTER(russ_svr_Structure)
 
+libruss.russ_svr_accept.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    russ_deadline,
+]
+libruss.russ_svr_accept.restype = ctypes.POINTER(russ_conn_Structure)
+
 libruss.russ_svr_announce.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
     ctypes.c_char_p,
