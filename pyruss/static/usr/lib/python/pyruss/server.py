@@ -115,7 +115,9 @@ class Server:
     def loop_thread(self):
         def helper(svr, conn):
             self.handler(conn)
-            pass
+            # failsafe exit info (if not provided)
+            conn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE)
+            conn.free()
 
         while True:
             conn = self.accept(self._ptr.contents.lis, self._ptr.contents.accept_timeout)
