@@ -245,6 +245,68 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	}
 }
 
+struct helper_data {
+	struct russ_svr		*svr;
+	struct russ_conn 	*conn;
+};
+
+/**
+* Helper for threaded servers.
+*
+* Takes care of calling the russ_svr_handler, failsafe exit, and
+* freeing objects as needed.
+*
+* @param data		helper_data object
+*/
+static void
+*russ_svr_handler_helper(void *data) {
+	struct russ_svr		*svr = ((struct helper_data *)data)->svr;
+	struct russ_conn	*conn = ((struct helper_data *)data)->conn;
+
+	russ_svr_handler(svr, conn);
+
+	/* failsafe exit info (if not provided) */
+	russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+
+	/* free objects */
+	conn = russ_conn_free(conn);
+	free(data);
+	data = NULL;
+
+	pthread_exit(NULL);
+}
+
+/**
+* Server loop for threaded servers.
+*
+* Calls helper to simplify argument passing, object creation (data
+* and conn here) and freeing (in helper) and closing (in helper).
+*
+* @param self		server object
+*/
+void
+russ_svr_loop_thread(struct russ_svr *self) {
+	struct russ_conn	*conn;
+	struct helper_data	*data;
+
+	while (1) {
+		if (((conn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL)
+			|| ((data = malloc(sizeof(struct helper_data))) != NULL)) {
+			if (conn) {
+				russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+				russ_conn_free(conn);
+			}
+			fprint(stderr, "error: cannot accept connection\n");
+			continue;
+		}
+		data->svr = self;
+		data->conn = conn;
+		if (pthread_create(NULL, NULL, russ_svr_handler_helper, data) < 0) {
+			fprintf(stderr, "error: cannot spawn thread\n");
+		}
+	}
+}
+
 /**
 * Dispatches to specific server loop by server type.
 *
@@ -255,6 +317,6 @@ russ_svr_loop(struct russ_svr *self) {
 	if (self->type == RUSS_SVR_TYPE_FORK) {
 		russ_svr_loop_fork(self);
 	} else if (self->type == RUSS_SVR_TYPE_THREAD) {
-		;
+		russ_svr_loop_thread(self);
 	}
 }
