@@ -32,6 +32,10 @@ side (e.g., via __del__)
 multiple python objects
 """
 
+# system imports
+import sys
+import threading
+
 #
 from pyruss import libruss, SVC_HANDLER_FUNC
 from pyruss import Listener, Request, ServerConn
@@ -107,6 +111,23 @@ class Server:
 
     def loop(self):
         libruss.russ_svr_loop(self._ptr)
+
+    def loop_thread(self):
+        def helper(svr, conn):
+            self.handler(conn)
+            pass
+
+        while True:
+            conn = self.accept(self._ptr.contents.lis, self._ptr.contents.accept_timeout)
+            if not conn:
+                sys.stderr.write("error: cannot accept connection\n")
+                continue
+            th = threading.Thread(target=helper, args=(self, conn))
+            if th:
+                th.start()
+            else:
+                sys.stderr.write("error: cannot spawn thread\n")
+
 
 class Sess:
     """Wrapper for russ_sess.
