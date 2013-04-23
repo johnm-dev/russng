@@ -37,6 +37,7 @@ import sys
 import threading
 
 #
+import pyruss
 from pyruss import libruss, SVC_HANDLER_FUNC
 from pyruss import Listener, Request, ServerConn
 
@@ -116,7 +117,7 @@ class Server:
         def helper(svr, conn):
             self.handler(conn)
             # failsafe exit info (if not provided)
-            conn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE)
+            conn.fatal(pyruss.RUSS_MSG_NO_EXIT, pyruss.RUSS_EXIT_SYS_FAILURE)
             conn.free()
 
         while True:
