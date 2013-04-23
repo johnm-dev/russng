@@ -342,6 +342,12 @@ libruss.russ_svr_announce.argtypes = [
 ]
 libruss.russ_svr_announce.restype = ctypes.POINTER(russ_lis_Structure)
 
+libruss.russ_svr_handler.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctypes.POINTER(russ_conn_Structure),
+]
+libruss.russ_svr_handler.restype = None
+
 libruss.russ_svr_set_auto_switch_user.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
     ctypes.c_int,
