@@ -199,6 +199,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 			russ_dprintf(conn->fds[1], "%s\n", node->name);
 		}
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		goto cleanup;
 		break;
 	case RUSS_OPNUM_HELP:
 		node = self->root;
