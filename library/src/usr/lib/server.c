@@ -209,7 +209,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	}
 
 call_node_handler:
-	if (node->handler) {
+	if ((node) && (node->handler)) {
 		node->handler(&sess);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
