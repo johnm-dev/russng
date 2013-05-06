@@ -33,6 +33,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #include "russ_priv.h"
 
@@ -232,7 +233,8 @@ cleanup:
 void
 russ_svr_loop_fork(struct russ_svr *self) {
 	struct russ_conn	*conn;
-	pid_t			pid;
+	pid_t			pid, wpid;
+	int			wst;
 
 	while (1) {
 		if ((conn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL) {
@@ -255,7 +257,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 		}
 		russ_conn_close(conn);
 		conn = russ_conn_free(conn);
-		waitpid(pid, 0);
+		wpid = waitpid(pid, &wst, 0);
 	}
 }
 
