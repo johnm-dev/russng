@@ -69,7 +69,7 @@ def dialv(deadline, op, saddr, attrs, args):
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
     conn_ptr = libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv)
-    return bool(conn_ptr) and ClientConn(conn_ptr) or None
+    return bool(conn_ptr) and ClientConn(conn_ptr, True) or None
 
 dial = dialv
 
@@ -157,13 +157,19 @@ class Request:
 
 class Conn:
     """Common (client, server) connection.
+
+    If a connection is owned, then it will be freed by the
+    destructor. This is typically appropriate only for ClientConn
+    objects.
     """
 
-    def __init__(self, _ptr):
+    def __init__(self, _ptr, owned=False):
         self._ptr = _ptr
+        self.owned = owned
 
     def __del__(self):
-        #libruss.russ_conn_free(self._ptr)
+        if self.owned:
+            libruss.russ_conn_free(self._ptr)            
         self._ptr = None
 
     def close(self):
