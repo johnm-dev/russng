@@ -307,7 +307,7 @@ svc_login_shell_handler(struct russ_sess *sess) {
 			return;
 		}
 
-		if (get_user_info(getuid(), &username, &shell, &lshell, &home) < 0) {
+		if (get_user_info(conn->creds.uid, &username, &shell, &lshell, &home) < 0) {
 			russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
 			return;
 		}
@@ -335,7 +335,7 @@ svc_simple_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 	char			*username, *shell, *lshell, *home;
 
-	if (get_user_info(getuid(), &username, &shell, &lshell, &home) < 0) {
+	if (get_user_info(conn->creds.uid, &username, &shell, &lshell, &home) < 0) {
 		russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
 		return;
 	}
