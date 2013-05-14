@@ -108,7 +108,6 @@ free_strings:
 	return -1;
 }
 
-#ifdef USE_PAM
 /**
 * Set according to pam service settings.
 *
@@ -119,6 +118,7 @@ free_strings:
 * @param username	user name
 * @return		0 for success; -1 for failure
 */
+#ifdef USE_PAM
 int
 setup_by_pam(char *service_name, char *username) {
 	pam_handle_t	*pamh;
@@ -153,6 +153,11 @@ setup_by_pam(char *service_name, char *username) {
 shutdown_pam:
 	pam_end(pamh, 0);
 	return -1;
+}
+#else
+int
+setup_by_pam(char *service_name, char *username) {
+	return 0;
 }
 #endif /* USE_PAM */
 
@@ -192,12 +197,10 @@ execute(struct russ_sess *sess, char *username, char *home, char *cmd, char **ar
 	pid_t			pid;
 	int			status;
 
-#ifdef USE_PAM
 	if (setup_by_pam("rusrv_exec", username) < 0) {
 		russ_conn_fatal(conn, "error: could not set up for user", RUSS_EXIT_FAILURE);
 		return;
 	}
-#endif
 
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
