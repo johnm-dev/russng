@@ -154,9 +154,9 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 }
 
 /**
-* Accept request and close socket.
+* Answer request and close socket.
 *
-* @param self		answered connection object
+* @param self		accepted connection object
 * @param nfds		number of elements in cfds (and sfds) array
 * @param cfds		array of descriptors to send to client
 * @param sfds		array of descriptors for server side
