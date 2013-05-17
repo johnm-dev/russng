@@ -78,6 +78,9 @@ class ServiceNode:
     def find(self, path):
         return ServiceNode(libruss.russ_svcnode_find(self._ptr, path))
 
+    def set_auto_answer(self, value):
+        return libruss.russ_svcnode_set_auto_answer(self._ptr, value)
+
     def set_virtual(self, value):
         libruss.russ_svcnode_set_virtual(self._ptr, value)
 
