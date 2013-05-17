@@ -249,6 +249,7 @@ void russ_lis_loop(struct russ_lis *, russ_accept_handler, russ_answer_handler, 
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);
+int russ_misc_str_count(char *, char *);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
 const char *russ_op_lookup(russ_opnum);

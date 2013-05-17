@@ -114,6 +114,27 @@ russ_sarray0_free(char **arr) {
 }
 
 /**
+* Count the number of substrings in the string.
+*
+* @param s		string
+* @param ss		substring
+* @return		# of instances found
+*/
+int
+russ_misc_str_count(char *s, char *ss) {
+	int	ss_len, n;
+
+	ss_len = strlen(ss);
+	for (n = 0; s != NULL; n++) {
+		if ((s = strstr(s, ss)) == NULL) {
+			break;
+		}
+		s += ss_len;
+	}
+	return n;
+}
+
+/**
 * fprintf-like for descriptor instead of FILE *.
 *
 * @param fd		descriptor
