@@ -82,7 +82,7 @@ class ServiceNode:
         return libruss.russ_svcnode_set_auto_answer(self._ptr, value)
 
     def set_virtual(self, value):
-        libruss.russ_svcnode_set_virtual(self._ptr, value)
+        return libruss.russ_svcnode_set_virtual(self._ptr, value)
 
 class Server:
     """Wrapper for russ_svr object and associated methods.
