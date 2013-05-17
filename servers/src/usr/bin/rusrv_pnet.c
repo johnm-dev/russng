@@ -185,8 +185,30 @@ svc_host_handler(struct russ_sess *sess) {
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	int			i;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
+	if (russ_misc_str_count(req->spath, "/") < 3) {
+		/* local */
+		if (russ_standard_answer_handler(conn) < 0) {
+			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+		} else {
+			switch (req->opnum) {
+			case RUSS_OPNUM_LIST:
+				if (hostslist.nhosts == 0) {
+					russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+				} else {
+					for (i = 0; i < hostslist.nhosts; i++) {
+						russ_dprintf(conn->fds[1], "%s\n", hostslist.hosts[i]);
+					}
+					russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+				}
+				break;
+			case RUSS_OPNUM_HELP:
+				svc_root_handler(sess);
+				break;
+			default:
+				russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+			}
+		}
+	} else {
 		/* extract and validate user@host and new_spath */
 		userhost = &(req->spath[6]);
 		if ((p = index(userhost, '/')) == NULL) {
@@ -215,30 +237,6 @@ svc_host_handler(struct russ_sess *sess) {
 		req->spath = strdup(new_spath);
 
 		redial_and_splice(sess);
-		break;
-	case RUSS_OPNUM_LIST:
-		if (russ_standard_answer_handler(conn) < 0) {
-			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
-		} else if (hostslist.nhosts == 0) {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		} else {
-			for (i = 0; i < hostslist.nhosts; i++) {
-				russ_dprintf(conn->fds[1], "%s\n", hostslist.hosts[i]);
-			}
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		}
-		break;
-	case RUSS_OPNUM_HELP:
-		if (russ_standard_answer_handler(conn) == 0) {
-			svc_root_handler(sess);
-		} else {
-			russ_conn_close(conn);
-		}
-		break;
-	default:
-		if (russ_standard_answer_handler(conn) == 0) {
-			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-		}
 	}
 }
 
@@ -258,8 +256,30 @@ svc_id_handler(struct russ_sess *sess) {
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	int			i, idx, wrap = 0;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
+	if (russ_misc_str_count(req->spath, "/") < 3) {
+		/* local */
+		if (russ_standard_answer_handler(conn) < 0) {
+			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+		} else {
+			switch (req->opnum) {
+			case RUSS_OPNUM_LIST:
+				if (hostslist.nhosts == 0) {
+					russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+				} else {
+					for (i = 0; i < hostslist.nhosts; i++) {
+						russ_dprintf(conn->fds[1], "%d\n", i);
+					}
+					russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+				}
+				break;
+			case RUSS_OPNUM_HELP:
+				svc_root_handler(sess);
+				break;
+			default:
+				russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+			}
+		}
+	} else {
 		/* extract and validate user@host and new_spath */
 		s = &(req->spath[4]);
 		if ((p = index(s, '/')) == NULL) {
@@ -303,30 +323,6 @@ svc_id_handler(struct russ_sess *sess) {
 		req->spath = strdup(new_spath);
 
 		redial_and_splice(sess);
-		break;
-	case RUSS_OPNUM_LIST:
-		if (russ_standard_answer_handler(conn) < 0) {
-			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
-		} else if (hostslist.nhosts == 0) {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		} else {
-			for (i = 0; i < hostslist.nhosts; i++) {
-				russ_dprintf(conn->fds[1], "%d\n", i);
-			}
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		}
-		break;
-	case RUSS_OPNUM_HELP:
-		if (russ_standard_answer_handler(conn) == 0) {
-			svc_root_handler(sess);
-		} else {
-			russ_conn_close(conn);
-		}
-		break;
-	default:
-		if (russ_standard_answer_handler(conn) == 0) {
-			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-		}
 	}
 }
 
@@ -345,8 +341,23 @@ svc_net_handler(struct russ_sess *sess) {
 	char			*p, *spath_tail, *userhost, *relay_addr;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
+	if (russ_misc_str_count(req->spath, "/") < 3) {
+		/* local */
+		if (russ_standard_answer_handler(conn) < 0) {
+			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+		} else {
+			switch (req->opnum) {
+			case RUSS_OPNUM_LIST:
+				russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
+				break;
+			case RUSS_OPNUM_HELP:
+				svc_root_handler(sess);
+				break;		
+			default:
+				russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+			}
+		}
+	} else {
 		/* extract and validate user@host and new_spath */
 		userhost = &(req->spath[5]);
 		if ((p = index(userhost, '/')) == NULL) {
@@ -365,23 +376,6 @@ svc_net_handler(struct russ_sess *sess) {
 		req->spath = strdup(new_spath);
 
 		redial_and_splice(sess);
-		break;
-	case RUSS_OPNUM_LIST:
-		if (russ_standard_answer_handler(conn) == 0) {
-			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_SUCCESS);
-		}
-		break;
-	case RUSS_OPNUM_HELP:
-		if (russ_standard_answer_handler(conn) == 0) {
-			svc_root_handler(sess);
-		} else {
-			russ_conn_close(conn);
-		}
-		break;		
-	default:
-		if (russ_standard_answer_handler(conn) == 0) {
-			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-		}
 	}
 }
 
