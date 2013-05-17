@@ -217,12 +217,22 @@ svc_root_handler(struct russ_sess *sess) {
 	char			*p, *new_spath, *userhost;
 	int			i;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_HELP:
-		russ_dprintf(conn->fds[1], "%s", HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		break;
-	case RUSS_OPNUM_EXECUTE:
+	if (russ_misc_str_count(req->spath, "/") < 2) {
+		/* local */
+		switch (req->opnum) {
+		case RUSS_OPNUM_HELP:
+			russ_dprintf(conn->fds[1], "%s", HELP);
+			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			break;
+		case RUSS_OPNUM_LIST:
+			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_FAILURE);
+			break;
+		default:
+			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		}
+	} else {
+		/* forward request over ssh */
+		
 		/* extract and validate user@host and new_spath */
 		userhost = &(req->spath[1]);
 		if ((p = index(userhost, '/')) == NULL) {
@@ -231,14 +241,7 @@ svc_root_handler(struct russ_sess *sess) {
 		}
 		new_spath = strdup(p);
 		p[0] = '\0'; /* terminate userhost */
-
 		execute(sess, userhost, new_spath);
-		break;
-	case RUSS_OPNUM_LIST:
-		russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_FAILURE);
-		break;
-	default:
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
 }
 
