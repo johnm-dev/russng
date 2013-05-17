@@ -134,6 +134,9 @@ class Server:
             else:
                 sys.stderr.write("error: cannot spawn thread\n")
 
+    def set_auto_switch_user(self, value):
+        return libruss.russ_svr_set_auto_switch_user(self._ptr, value)
+
 class Sess:
     """Wrapper for russ_sess.
     """
