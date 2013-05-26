@@ -159,7 +159,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 		goto cleanup;
 	}
 
-	if ((node = russ_svcnode_find(self->root, &(req->spath[1]))) == NULL) {
+	if ((node = russ_svcnode_find(self->root, &(req->spath[1]), sess.spath, sizeof(sess.spath))) == NULL) {
 		/* TODO: how to handle this in general?
 		** for HELP, LIST, EXECUTE? other? under what conditions
 		** is there a stdout and exit fd?
