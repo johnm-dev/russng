@@ -219,6 +219,7 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 	struct russ_req		*req;
 	char			buf[RUSS_REQ_BUF_MAX], *bp;
 	int			alen, size;
+	char			*dummy;
 
 	/* get request size, load, and upack */
 	bp = buf;
@@ -234,8 +235,10 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 		goto free_request;
 	}
 
+	dummy = NULL;
 	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
 		|| (strcmp(RUSS_REQ_PROTOCOL_STRING, req->protocol_string) != 0)
+		|| ((bp = russ_dec_b(bp, &dummy)) == NULL)
 		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
 		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &(req->attrv), &alen)) == NULL)
@@ -243,9 +246,11 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 
 		goto free_request;
 	}
+	free(dummy);
 	req->opnum = russ_opnum_lookup(req->op);
 	return req;
 free_request:
+	free(dummy);
 	russ_req_free(req);
 	return NULL;
 }
@@ -430,6 +435,7 @@ russ_conn_send_request(struct russ_conn *self, struct russ_req *req, russ_deadli
 	if ((req == NULL)
 		|| ((bp = russ_enc_i(bp, bend, 0)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, req->protocol_string)) == NULL)
+		|| ((bp = russ_enc_b(bp, bend, NULL, 0)) == NULL) /* dummy */
 		|| ((bp = russ_enc_s(bp, bend, req->spath)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, req->op)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
