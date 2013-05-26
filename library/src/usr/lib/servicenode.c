@@ -124,10 +124,12 @@ russ_svcnode_add(struct russ_svcnode *self, char *name, russ_svc_handler handler
 *
 * @param self		service node object starting point
 * @param path		path to match (relative to self)
+* @param mpath		path matched
+* @param mpath_cap	size of mpath buffer
 * @return		matching service node object; NULL on failure
 */
 struct russ_svcnode *
-russ_svcnode_find(struct russ_svcnode *self, char *path) {
+russ_svcnode_find(struct russ_svcnode *self, char *path, char *mpath, int mpath_cap) {
 	struct russ_svcnode	*node;
 	char			*sep;
 	int			len, cmp;
@@ -142,11 +144,23 @@ russ_svcnode_find(struct russ_svcnode *self, char *path) {
 	len = sep-path;
 	for (node = self->children; node != NULL; node = node->next) {
 		if ((cmp = strncmp(node->name, path, len)) > 0) {
+			if (mpath != NULL) {
+				mpath[0] = '\0';
+			}
 			node = NULL;
 			break;
 		} else if ((cmp == 0) && (node->name[len] == '\0')) {
 			if (*sep != '\0') {
-				node = russ_svcnode_find(node, &path[len+1]);
+				if (mpath != NULL) {
+					if ((strncat(mpath, "/", mpath_cap) < 0)
+						|| (strncat(mpath, node->name, mpath_cap) < 0)) {
+						/* do not exceed mpath buffer */
+						mpath[0] = '\0';
+						node = NULL;
+						break;
+					}
+				}
+				node = russ_svcnode_find(node, &path[len+1], mpath, mpath_cap);
 			}
 			break;
 		}

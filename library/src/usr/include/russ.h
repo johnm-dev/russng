@@ -271,7 +271,7 @@ int russ_svr_set_auto_switch_user(struct russ_svr *, int);
 struct russ_svcnode *russ_svcnode_new(char *, russ_svc_handler);
 struct russ_svcnode *russ_svcnode_free(struct russ_svcnode *);
 struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, char *, russ_svc_handler);
-struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *);
+struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *, char *, int);
 int russ_svcnode_set_auto_answer(struct russ_svcnode *, int);
 int russ_svcnode_set_virtual(struct russ_svcnode *, int);
 
