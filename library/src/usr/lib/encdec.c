@@ -337,7 +337,7 @@ russ_enc_q(char *b, char *bend, int64_t v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_bytes(char *b, char *bend, char *v, int alen) {
+russ_enc_b(char *b, char *bend, char *v, int alen) {
 	if ((bend-b) < 4+alen) {
 		return NULL;
 	}
@@ -358,7 +358,7 @@ russ_enc_bytes(char *b, char *bend, char *v, int alen) {
 */
 char *
 russ_enc_s(char *b, char *bend, char *v) {
-	return russ_enc_bytes(b, bend, v, strlen(v)+1);
+	return russ_enc_b(b, bend, v, strlen(v)+1);
 }
 
 /**
