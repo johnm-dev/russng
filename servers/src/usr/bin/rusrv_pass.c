@@ -42,7 +42,7 @@ struct russ_conf	*conf = NULL;
 char	*HELP = 
 "Provides access to remote user@host using ssh.\n"
 "\n"
-"... <args>\n"
+"/... <args>\n"
 "    Connect to service ... and pass fds back.\n";
 
 /*

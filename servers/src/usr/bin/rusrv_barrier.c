@@ -74,22 +74,22 @@ struct barrier		*barrier = NULL;
 char *BACKEND_HELP =
 "Barrier service instance.\n"
 "\n"
-"cancel\n"
+"/cancel\n"
 "    Cancel barrier and release all waiters.\n"
 "\n"
-"count\n"
+"/count\n"
 "    Print number of waiters expected.\n"
 "\n"
-"tags\n"
+"/tags\n"
 "    Print tags of waiters.\n"
 "\n"
-"ttl\n"
+"/ttl\n"
 "    Print time-to-live remaining.\n"
 "\n"
-"wait [<tag>]\n"
+"/wait [<tag>]\n"
 "    Wait on barrier; register optional tag.\n"
 "\n"
-"wcount\n"
+"/wcount\n"
 "    Print # of waiters currently waiting.\n";
 
 /**
