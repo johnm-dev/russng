@@ -77,7 +77,7 @@ where start must be less than end, and step must be positive.
 
 Options:
 --debug
-	Enable debugging. Or set RUSS_DEBUG=1.
+	Enable debugging. Or set RURUN_DEBUG=1.
 --rurun <options>
 	Option arguments to pass to rurun. Enclose in quotes arguments
 	necessary.
@@ -100,7 +100,7 @@ while [ $# -gt 0 ]; do
 	case $1 in
 	--debug)
 		shift 1
-		export RUSS_DEBUG=1
+		export RURUN_DEBUG=1
 		;;
 	--rurun)
 		shift 1

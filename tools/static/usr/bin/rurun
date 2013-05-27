@@ -28,7 +28,7 @@ Launch a program on a pnet target. If a pnet server specified
 
 Options:
 --debug
-	Enable debugging. Or set RUSS_DEBUG=1.
+	Enable debugging. Or set RURUN_DEBUG=1.
 --exec=simple|shell|login
 	Use a given exec method. See also --simple, --shell,
 	--login. Defaults to \$RURUN_EXEC_METHOD or "${RURUN_EXEC_METHOD}".
@@ -61,7 +61,7 @@ while [ $# -gt 0 ]; do
 	case $1 in
 	--debug)
 		shift 1
-		export RUSS_DEBUG=1
+		export RURUN_DEBUG=1
 		;;
 	--exec)
 		shift 1
@@ -119,7 +119,7 @@ RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-id}
 RURUN_TAG_FORMAT=${RURUN_TAG_FORMAT-"jobs/\${RURUN_JOB_ID}-\${target}"}
 
 # debugging output
-if [ -n "${RUSS_DEBUG}" ]; then
+if [ -n "${RURUN_DEBUG}" ]; then
 	echo "-----"
 	echo "target (${target})"
 	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
@@ -151,7 +151,7 @@ if [ -n "${RURUN_PNET_ADDR}" ]; then
 		;;
 	esac
 else
-	if [ -n "${RUSS_DEBUG}" ]; then
+	if [ -n "${RURUN_DEBUG}" ]; then
 		echo "warning: RURUN_PNET_ADDR is not set" 1>&2
 	fi
 	path=""
@@ -166,7 +166,7 @@ if [ "${HYDRA_LAUNCHER}" = "ssh" ]; then
 fi
 
 # execute
-if [ -n "${RUSS_DEBUG}" ]; then
+if [ -n "${RURUN_DEBUG}" ]; then
 	echo exec ruexec ${attrs} "${path}" "$*"
 fi
 exec ruexec ${attrs} "${path}" "$*"
