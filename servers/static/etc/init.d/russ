@@ -14,27 +14,25 @@
 
 RUSS_RUN_DIR="/var/run/russ"
 
-start() {
+start_servers() {
 	mkdir -m 0755 -p "${RUSS_RUN_DIR}"
 	mkdir -m 0755 -p "${RUSS_RUN_DIR}/services"
 
-	# start servers
 	filenames=`(cd /etc/russ/init; ls * | grep -v README)`
 	for filename in ${filenames}; do
 		if ( /etc/russ/init/${filename} check ); then
-			echo -n "Starting server (${filename}) ... "
+			echo -n "${filename}: starting server ... "
 			/etc/russ/init/${filename} start
 			[ $? -eq 0 ] && echo "OK" || echo "FAILED"
 		fi
 	done
 }
 
-stop() {
-	# stop servers
+stop_servers() {
 	filenames=`(cd /etc/russ/init; ls * | grep -v README)`
 	for filename in ${filenames}; do
 		if ( /etc/russ/init/${filename} check ); then
-			echo -n "Stopping server (${filename}) ... "
+			echo -n "${filename}: stopping server ... "
 			/etc/russ/init/${filename} stop
 			[ $? -eq 0 ] && echo "OK" || echo "FAILED"
 		fi
@@ -42,13 +40,18 @@ stop() {
 }
 
 case "$1" in
+restart)
+	stop_servers
+	sleep 1
+	start_servers
+	;;
 start)
-	echo "Starting russ services"
-	start
+	echo "Starting standard russ servers"
+	start_servers
 	;;
 stop)
-	echo "Stopping russ services"
-	stop
+	echo "Stopping standard russ servers"
+	stop_servers
 	;;
 *)
 	echo "Usage: /etc/init.d/russ {start|stop}"
