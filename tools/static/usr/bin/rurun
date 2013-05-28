@@ -40,7 +40,8 @@ Options:
 	Use a given job id to generate RURUN_TAG_FORMAT. Defaults to
 	\$JOB_ID.
 --login	Use the exec/login launch.
---pnet	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
+--pnet <addr>
+	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
 --tag_format <string>
 	Use a given format string, which is evaluated, to determine
 	the cg_path value passed to the exec service. Defaults to
