@@ -39,6 +39,23 @@ function get_target_ids {
 		end=${endstep%%:*}
 		step=${endstep#*:}
 
+		# replace strings with integers
+		if [ "${start}" = "" ]; then
+			start=0
+		fi
+		if [ "${end}" = "" ]; then
+			# implicit use of RURUN_PNET_ADDR
+			end=`rurun --count`
+			if [ $? -ne 0 ]; then
+				echo "error: bad end" 1>&2
+				exit 1
+			fi
+		fi
+		if [ "${step}" = "" ]; then
+			step=1
+		fi
+
+		# validate
 		if [ "${start}" = "${head}" -a "${end}" = "${head}" ]; then
 			# single item
 			target_ids="${target_ids} ${start}"
@@ -46,15 +63,15 @@ function get_target_ids {
 			if [ "${step}" = "${endstep}" -a "${end}" = "${endstep}" ]; then
 				step=1
 			fi
-			# range
-			if [ "${start}" -gt "${end}" ]; then
-				echo "error: bad range (${start}${end})" 1>&2
+			# range (expect integers)
+			if [ ${start} -gt ${end} ]; then
+				echo "error: bad range (${start}:${end})" 1>&2
 				exit 1
-			elif [ "${step}" -le 0 ]; then
+			elif [ ${step} -le 0 ]; then
 				echo "error: bad step (${step})" 1>&2
 				exit 1
 			fi
-			while [ "${start}" -lt "${end}" ]; do
+			while [ ${start} -lt ${end} ]; do
 				target_ids="${target_ids} ${start}"
 				((start=start+step))
 			done
@@ -78,6 +95,8 @@ where start must be less than end, and step must be positive.
 Options:
 --debug
 	Enable debugging. Or set RURUN_DEBUG=1.
+--pnet <addr>
+	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
 --rurun <options>
 	Option arguments to pass to rurun. Enclose in quotes arguments
 	necessary.
@@ -101,6 +120,10 @@ while [ $# -gt 0 ]; do
 	--debug)
 		shift 1
 		export RURUN_DEBUG=1
+		;;
+	--pnet)
+		shift 1
+		export RURUN_PNET_ADDR=$1; shift 1
 		;;
 	--rurun)
 		shift 1
