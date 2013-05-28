@@ -21,10 +21,14 @@
 # license--end
 
 function print_usage {
-	echo "usage: ${PROG_NAME} [options] <target> <arg> ...
+	echo "\
+usage: ${PROG_NAME} [options] <target> <arg> ...
+       ${PROG_NAME} [--pnet <addr>] --count
 
 Launch a program on a pnet target. If a pnet server specified
 (command line or environment variable), the local host will be used.
+
+If --count is specified, then the number of pnet targets is printed.
 
 Options:
 --debug
@@ -59,6 +63,15 @@ fi
 
 while [ $# -gt 0 ]; do
 	case $1 in
+	--count)
+		shift 1
+		count=`ruexec ${RURUN_PNET_ADDR}/count`
+		ev=$?
+		if [ ${ev} -eq 0 ]; then
+			echo ${count}
+		fi
+		exit ${ev}
+		;;
 	--debug)
 		shift 1
 		export RURUN_DEBUG=1
