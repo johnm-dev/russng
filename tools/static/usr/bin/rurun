@@ -40,6 +40,7 @@ Options:
 	Use a given job id to generate RURUN_TAG_FORMAT. Defaults to
 	\$JOB_ID.
 --login	Use the exec/login launch.
+--notag	Do not generate a tag. Use when not targetting cgroups.
 --pnet <addr>
 	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
 --tag_format <string>
