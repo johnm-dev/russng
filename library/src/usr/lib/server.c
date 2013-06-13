@@ -239,6 +239,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	while (1) {
 		if ((conn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
+			sleep(1);
 			continue;
 		}
 		if ((pid = fork()) == 0) {
