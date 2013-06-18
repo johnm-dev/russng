@@ -1,0 +1,60 @@
+.TH RUSS "7" "" "russ 2.1" ""
+.SH NAME
+russ \- Service-oriented servers, tools, and library
+
+.SH DESCRIPTION
+.PP
+russ is a set of programs, servers, and library built around the
+design of hierarchically organized services with exec()-like
+semantics. That is, services are accesible using a /-separated
+path, a variable length list of arguments (like argv), and a
+variable length list of name=value settings (like envp). Once
+connectioned, communication between the client and server is
+carried out over standard streams (e.g., pipe) corresponding
+to stdin, stdout, stderr and possibly more. At termination,
+services return an exit value which may be waited on.
+
+.PP
+Servers provide a collection of services organized along the lines
+of, but not identical to, a filesystem: directories/folders and
+files. This allows for service organization and discoverability.
+Operations (help, list, execute) may be performed on each service.
+In the general case, the contents of "directories" can be listed;
+"directories" and "files" can be executed. Help can be obtained
+for available services.
+
+.PP
+Command line tools are available to "dial" the services.
+.B rudial
+is the general tool for accessing services. It allows for any
+kind of operation to be requested. Other tools like
+.B ruhelp
+,
+.B ruls
+, and
+.B ruexec
+are helpers which, for the most part, correspond to using
+.B rudial
+for the help, list, and execute operations.
+
+.PP
+Servers and tools may be developed using the russ library (C and
+Python APIs).
+
+.PP
+Refer to the individual manual pages for more information.
+
+.SH SEE ALSO
+rudial(1), ruexec(1), ruhelp(1), ruls(1)
+
+.SH AUTHOR
+Written by John Marshall.
+
+.SH "REPORTING BUGS"
+Report bugs to: <...>.
+
+.SH COPYRIGHT
+Copyright \(co 2013 John Marshall.
+.br
+Unless otherwise indicated, this software is available under the
+terms of the Apache License version 2.
