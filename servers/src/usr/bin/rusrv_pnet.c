@@ -37,7 +37,7 @@ extern char **environ;
 #include "russ.h"
 
 #define DEFAULT_RELAY_ADDR	"+/ssh"
-#define MAX_HOSTS		(1024)
+#define MAX_HOSTS		(32768)
 
 struct hostslist {
 	char	*hosts[MAX_HOSTS];
