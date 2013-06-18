@@ -70,7 +70,9 @@ char	*HELP =
 "    last entry (1 is the last entry). An index starting with :\n"
 "    loops around to continue the lookup.\n"
 "\n"
-"/net/... <args>\n"
+"/net/<user@host>/... <args>\n"
+"    Connect to service ... at unregistered target (i.e.,\n"
+"    user@host).\n"
 "\n"
 "/next/... <args>\n"
 "    Connect to the 'next' target selected from the hostsfile\n"
@@ -341,7 +343,7 @@ svc_net_handler(struct russ_sess *sess) {
 	char			*p, *spath_tail, *userhost, *relay_addr;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 
-	if (russ_misc_str_count(req->spath, "/") < 3) {
+	if (russ_misc_str_count(req->spath, "/") < 1) {
 		/* local */
 		if (russ_standard_answer_handler(conn) < 0) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
