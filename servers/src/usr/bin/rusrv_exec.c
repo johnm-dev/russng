@@ -188,12 +188,66 @@ get_cg_path(char **attrv) {
 	return NULL;
 }
 
+/**
+* Duplicate envp and enhance with LOGNAME, USER, and HOME.
+*
+* @param envp		initial env settings
+* @param username	user name
+* @param home		home path
+* @return		duplicated and enhanced envp; NULL on failure
+*/
+char **
+dup_envp_plus(char **envp, char *username, char *home) {
+	char	*_envp[1] = {NULL};
+	char	**envp2;
+	int	i, count;
+
+	/* count items (including NULL) */
+	if (envp == NULL) {
+		envp = _envp;
+	}
+	for (count = 0; envp[count] != NULL; count++);
+	count++;
+
+	/* allocate space (including for LOGNAME, USER, HOME) */
+	if (((envp2 = malloc(sizeof(char *)*(3+count))) == NULL)
+		|| (memset(envp2, 3+count, sizeof(char *)) == NULL)) {
+		goto free_envp2;
+	}
+	if (((envp2[0] = malloc(7+1+strlen(username)+1)) == NULL)
+		|| ((envp2[1] = malloc(4+1+strlen(username)+1)) == NULL)
+		|| ((envp2[2] = malloc(4+1+strlen(home)+1)) == NULL)) {
+		goto free_envp2_items;
+	}
+
+	/* set and copy members */
+	if ((sprintf(envp2[0], "LOGNAME=%s", username) < 0)
+		|| (sprintf(envp2[1], "USER=%s", username) < 0)
+		|| (sprintf(envp2[2], "HOME=%s", home) < 0)) {
+		goto free_envp2_items;
+	}
+	for (i = 0; i < count; i++) {
+		envp2[3+i] = envp[i];
+
+	}
+	return envp2;
+
+free_envp2_items:
+	free(envp2[0]);
+	free(envp2[1]);
+	free(envp2[2]);
+free_envp2:
+	free(envp2);
+	return NULL;
+}
+
 void
 execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd, char **argv, char **envp) {
 	struct russ_conn	*conn = sess->conn;
 	struct russ_req		*req = sess->req;
 	FILE			*f;
 	char			*cg_path, cg_tasks_path[1024];
+	char			**envp2;
 	pid_t			pid;
 	int			status;
 
@@ -239,6 +293,11 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 		fclose(f);
 	}
 
+	if ((envp2 = dup_envp_plus(envp, username, home)) == NULL) {
+		russ_conn_fatal(conn, "error: could not set up env", RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+
 	/* TODO: set minimal settings:
 	*	umask
 	*/
@@ -257,12 +316,7 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 		//}
 
 		chdir(cwd);
-		setenv("HOME", home, 1);
-		setenv("LOGNAME", username, 1);
-		setenv("USER", username, 1);
-		//setenv("SHELL", cmd);
-
-		execve(cmd, argv, envp);
+		execve(cmd, argv, envp2);
 
 		/* should not get here! */
 		russ_dprintf(conn->fds[2], "error: could not execute\n");
