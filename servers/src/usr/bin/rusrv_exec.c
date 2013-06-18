@@ -189,7 +189,7 @@ get_cg_path(char **attrv) {
 }
 
 void
-execute(struct russ_sess *sess, char *username, char *home, char *cmd, char **argv, char **envp) {
+execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd, char **argv, char **envp) {
 	struct russ_conn	*conn = sess->conn;
 	struct russ_req		*req = sess->req;
 	FILE			*f;
@@ -240,10 +240,9 @@ execute(struct russ_sess *sess, char *username, char *home, char *cmd, char **ar
 	}
 
 	/* TODO: set minimal settings:
-	*	cwd
 	*	umask
 	*/
-	chdir(home);
+	chdir("/");
 	umask(0);
 
 	/* execute */
@@ -257,6 +256,7 @@ execute(struct russ_sess *sess, char *username, char *home, char *cmd, char **ar
 			//close(i);
 		//}
 
+		chdir(cwd);
 		setenv("HOME", home, 1);
 		setenv("LOGNAME", username, 1);
 		setenv("USER", username, 1);
@@ -326,7 +326,7 @@ svc_login_shell_handler(struct russ_sess *sess) {
 			argv[0] = lshell;
 		}
 
-		execute(sess, username, home, shell, argv, req->attrv);
+		execute(sess, home, username, home, shell, argv, req->attrv);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
@@ -346,7 +346,7 @@ svc_simple_handler(struct russ_sess *sess) {
 	}
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
-		execute(sess, username, "/", req->argv[0], req->argv, req->attrv);
+		execute(sess, "/", username, home, req->argv[0], req->argv, req->attrv);
 	} else {
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
