@@ -125,6 +125,7 @@ russ_lis_accept(struct russ_lis *self, russ_deadline deadline) {
 		goto free_conn;
 	}
 	if (russ_get_creds(conn->sd, &(conn->creds)) < 0) {
+		fprintf(stderr, "warning: russ_get_creds() fails\n");
 		goto close_sd;
 	}
 	return conn;

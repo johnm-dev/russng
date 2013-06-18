@@ -240,7 +240,6 @@ execute(struct russ_sess *sess, char *username, char *home, char *cmd, char **ar
 	}
 
 	/* TODO: set minimal settings:
-	*	env (LOGNAME, USER, HOME)
 	*	cwd
 	*	umask
 	*/
@@ -257,6 +256,12 @@ execute(struct russ_sess *sess, char *username, char *home, char *cmd, char **ar
 		//for (i = 3; i < 128; i++) {
 			//close(i);
 		//}
+
+		setenv("HOME", home, 1);
+		setenv("LOGNAME", username, 1);
+		setenv("USER", username, 1);
+		//setenv("SHELL", cmd);
+
 		execve(cmd, argv, envp);
 
 		/* should not get here! */
