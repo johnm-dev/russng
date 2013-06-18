@@ -185,7 +185,7 @@ svc_host_handler(struct russ_sess *sess) {
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	int			i;
 
-	if (russ_misc_str_count(req->spath, "/") < 3) {
+	if (russ_misc_str_count(req->spath, "/") < 2) {
 		/* local */
 		if (russ_standard_answer_handler(conn) < 0) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
@@ -256,7 +256,7 @@ svc_id_handler(struct russ_sess *sess) {
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	int			i, idx, wrap = 0;
 
-	if (russ_misc_str_count(req->spath, "/") < 3) {
+	if (russ_misc_str_count(req->spath, "/") < 2) {
 		/* local */
 		if (russ_standard_answer_handler(conn) < 0) {
 			russ_conn_exit(conn, RUSS_EXIT_FAILURE);
