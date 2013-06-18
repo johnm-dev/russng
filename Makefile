@@ -10,6 +10,7 @@ HERE_DIR:=$(shell dirname $(HERE_FILE))
 
 all:
 	(cd library; $(MAKE))
+	(cd library; $(MAKE) doc)
 	(cd servers; $(MAKE))
 	(cd tools; $(MAKE))
 	(cd pyruss; $(MAKE))

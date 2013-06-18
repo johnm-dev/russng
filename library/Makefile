@@ -18,7 +18,7 @@ clean:
 doc:
 	if [ "`which doxygen`" = ""  ]; then \
 		echo "warning: doxygen not available to produce documentation"; \
-		exit 1; \
+		exit 0; \
 	else \
 		(doxygen doxygen.conf); \
 	fi
