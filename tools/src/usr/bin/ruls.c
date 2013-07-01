@@ -35,10 +35,10 @@
 void
 print_usage(char *prog_name) {
 	printf(
-"usage: ruls [-t|--timeout <seconds>] <addr>|<path>\n"
+"usage: ruls [-t|--timeout <seconds>] <spath>\n"
 "       ruls [-h|--help]\n"
 "\n"
-"List service(s) at <addr> or a directory entries at <path>.\n"
+"List service(s) at <spath> (may also be a directory path).\n"
 "Directory listings show service files, symlinks, and directories\n"
 "only. Directories are indicated by a trailing / and the ./ entry\n"
 "is always listed for a valid directory.\n"

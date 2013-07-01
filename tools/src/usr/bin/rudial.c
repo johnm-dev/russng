@@ -36,9 +36,9 @@ void
 print_usage(char *prog_name) {
 	if (strcmp(prog_name, "rudial") == 0) {
 		printf(
-"usage: rudial [<option>] <op> <addr> [<arg> ...]\n"
+"usage: rudial [<option>] <op> <spath> [<arg> ...]\n"
 "\n"
-"Dial service at <addr> to perform <op>. A service may support one\n"
+"Dial service at <spath> to perform <op>. A service may support one\n"
 "or more operations (e.g., execute, help, info, list).\n"
 "\n"
 "A successful dial will effectively connect the stdin, stdout, and\n"
@@ -50,21 +50,21 @@ print_usage(char *prog_name) {
 );
 	} else if (strcmp(prog_name, "ruexec") == 0) {
 		printf( 
-"usage: ruexec [<option>] <addr>\n"
+"usage: ruexec [<option>] <spath>\n"
 "\n"
-"Execute service at <addr>.\n"
+"Execute service at <spath>.\n"
 );
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
 		printf(
-"usage: ruhelp [-t|--timeout <seconds>] <addr>\n"
+"usage: ruhelp [-t|--timeout <seconds>] <spath>\n"
 "\n"
-"Get help for service at <addr>.\n"
+"Get help for service at <spath>.\n"
 );
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
 		printf(
-"usage: ruinfo [-t|--timeout <seconds>] <addr>\n"
+"usage: ruinfo [-t|--timeout <seconds>] <spath>\n"
 "\n"
-"Get information about service at <addr>\n"
+"Get information about service at <spath>\n"
 );
 	} else {
 		return;
