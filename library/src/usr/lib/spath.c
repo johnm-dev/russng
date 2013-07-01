@@ -184,7 +184,7 @@ russ_spath_resolve(char *spath) {
 /**
 * Find socket address from service path.
 *
-* @param spath	full service path
+* @param spath	service path
 * @return	socket address; NULL on failure
 */
 char *
@@ -216,7 +216,7 @@ russ_find_socket_addr(char *spath) {
 * spath may also be a service target and need to be resolved and
 * followed.
 *
-* @param spath		full service path
+* @param spath		service path
 * @param[out] saddr	socket address
 * @param[out] spath2	remaining service path
 * @return		0 on succes; -1 on failure

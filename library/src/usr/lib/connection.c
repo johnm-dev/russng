@@ -460,7 +460,7 @@ russ_conn_send_request(struct russ_conn *self, struct russ_req *req, russ_deadli
 *
 * @param deadline	deadline to complete operation
 * @param op		operation string
-* @param spath		full service path
+* @param spath		service path
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
 * @param argv		NULL-terminated array of arguments
 * @return		connection object; NULL on failure
@@ -519,7 +519,7 @@ free_saddr:
 *
 * @param deadline	deadline to complete operation
 * @param op		operation string
-* @param spath		full service path
+* @param spath		service path
 * @param attrv		array of attributes (as name=value strings)
 * @param ...		variable argument list of "char *" with NULL sentinel
 * @return		connection object, NULL on failure

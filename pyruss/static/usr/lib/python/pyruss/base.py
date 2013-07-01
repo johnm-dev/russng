@@ -58,7 +58,7 @@ def announce(path, mode, uid, gid):
     lis_ptr = libruss.russ_announce(path, mode, uid, gid)
     return bool(lis_ptr) and Listener(lis_ptr) or None
 
-def dialv(deadline, op, saddr, attrs, args):
+def dialv(deadline, op, spath, attrs, args):
     """Dial a service.
     """
     if attrs == None:
@@ -68,15 +68,15 @@ def dialv(deadline, op, saddr, attrs, args):
         args = []
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
-    conn_ptr = libruss.russ_dialv(deadline, op, saddr, c_attrs, c_argv)
+    conn_ptr = libruss.russ_dialv(deadline, op, spath, c_attrs, c_argv)
     return bool(conn_ptr) and ClientConn(conn_ptr, True) or None
 
 dial = dialv
 
-def execv(deadline, saddr, attrs, args):
+def execv(deadline, spath, attrs, args):
     """ruexec a service.
     """
-    return dialv(deadline, "execute", saddr, attrs, args)
+    return dialv(deadline, "execute", spath, attrs, args)
 
 def gettime():
     return libruss.russ_gettime()
