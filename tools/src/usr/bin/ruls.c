@@ -51,7 +51,7 @@ main(int argc, char **argv) {
 	struct russ_fwd		fwds[RUSS_CONN_NFDS];
 	struct stat		st;
 	char			*prog_name;
-	char			*addr;
+	char			*spath;
 	russ_deadline		deadline;
 	int			timeout;
 	int			exit_status;
@@ -66,7 +66,7 @@ main(int argc, char **argv) {
 			print_usage(prog_name);
 			exit(0);
 		}
-		addr = argv[1];
+		spath = argv[1];
 	} else if (argc == 4) {
 		if ((strcmp(argv[1], "-t") == 0) || (strcmp(argv[1], "--timeout") == 0)) {
 			if (sscanf(argv[2], "%d", (int *)&timeout) < 0) {
@@ -78,20 +78,20 @@ main(int argc, char **argv) {
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 		}
-		addr = argv[3];
+		spath = argv[3];
 	} else {
-		addr = ".";
+		spath = ".";
 	}
 
 	/* resolve before calling russ_list() */
-	addr = russ_spath_resolve(addr);
+	spath = russ_spath_resolve(spath);
 
 	/* TODO: clean up exit_status usage */
 
 	/* call russ_list() only if a socket file; otherwise list dir */
 	exit_status = 0;
-	if ((stat(addr, &st) < 0) || S_ISSOCK(st.st_mode)) {
-		conn = russ_list(deadline, addr);
+	if ((stat(spath, &st) < 0) || S_ISSOCK(st.st_mode)) {
+		conn = russ_list(deadline, spath);
 
 		if (conn == NULL) {
 			fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
@@ -127,7 +127,7 @@ main(int argc, char **argv) {
 		struct dirent	*dent;
 		char		path[RUSS_REQ_SPATH_MAX];
 
-		if ((dir = opendir(addr)) == NULL) {
+		if ((dir = opendir(spath)) == NULL) {
 			fprintf(stderr, "error: cannot open directory\n");
 			exit_status = 1;
 		} else {
@@ -135,7 +135,7 @@ main(int argc, char **argv) {
 				if (strcmp(dent->d_name, "..") == 0) {
 					continue;
 				}
-				if ((snprintf(path, sizeof(path), "%s/%s", addr, dent->d_name) < 0)
+				if ((snprintf(path, sizeof(path), "%s/%s", spath, dent->d_name) < 0)
 					|| (lstat(path, &st) < 0)) {
 					/* problem */
 					continue;

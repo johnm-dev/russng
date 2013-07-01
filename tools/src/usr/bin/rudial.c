@@ -89,7 +89,7 @@ main(int argc, char **argv) {
 	int			debug;
 	int			timeout;
 	char			*prog_name;
-	char			*addr;
+	char			*spath;
 	char			*op;
 	char			*arg;
 	char			*attrv[RUSS_REQ_ATTRS_MAX];
@@ -153,33 +153,33 @@ main(int argc, char **argv) {
 		}
 	}
 
-	/* [op], addr and args */
+	/* [op], spath and args */
 	if ((strcmp(prog_name, "rudial") == 0) || (strcmp(prog_name, "ruexec") == 0)) {
 		if ((strcmp(prog_name, "rudial") == 0) 
 			&& (argi+2 <= argc)) {
 			op = argv[argi++];
-			addr = argv[argi++];
-			conn = russ_dialv(deadline, op, addr, attrv, &(argv[argi]));
+			spath = argv[argi++];
+			conn = russ_dialv(deadline, op, spath, attrv, &(argv[argi]));
 		} else if ((strcmp(prog_name, "ruexec") == 0)
 			&& (argi+1 <= argc)) {
-			addr = argv[argi++];
-			conn = russ_execv(deadline, addr, attrv, &(argv[argi]));
+			spath = argv[argi++];
+			conn = russ_execv(deadline, spath, attrv, &(argv[argi]));
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(1);
 		}
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
 		if (argi < argc) {
-			addr = argv[argi];
-			conn = russ_help(deadline, addr);
+			spath = argv[argi];
+			conn = russ_help(deadline, spath);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(1);
 		}
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
 		if (argi < argc) {
-			addr = argv[argi];
-			conn = russ_info(deadline, addr);
+			spath = argv[argi];
+			conn = russ_info(deadline, spath);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(1);
