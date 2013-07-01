@@ -64,7 +64,7 @@ print_usage(char *prog_name) {
 		printf(
 "usage: ruinfo [-t|--timeout <seconds>] <spath>\n"
 "\n"
-"Get information about service at <spath>\n"
+"Get information about service at <spath>.\n"
 );
 	} else {
 		return;
@@ -74,10 +74,10 @@ print_usage(char *prog_name) {
 "\n"
 "Options:\n"
 "-a|--attr <name=vaue>\n" \
-"               pass a 'name=value' string to the service.\n"
+"    Pass a 'name=value' string to the service.\n"
 "\n"
 "-t|--timeout <seconds>\n" \
-"               allow a given amount of time to connect before\n"
+"    Allow a given amount of time to connect before aborting.\n"
 );
 }
 
