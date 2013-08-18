@@ -78,6 +78,7 @@ int russ_make_pipes(int, int *, int *);
 /* io.c */
 int russ_accept(int, struct sockaddr *, socklen_t *, russ_deadline);
 int russ_connect(int sd, struct sockaddr *, socklen_t, russ_deadline);
+int russ_connect_unix(char *, russ_deadline);
 int russ_poll(struct pollfd *, int, russ_deadline);
 
 /* request.c */

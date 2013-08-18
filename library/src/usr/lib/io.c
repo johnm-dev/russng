@@ -311,6 +311,64 @@ russ_connect(int sd, struct sockaddr *addr, socklen_t addrlen, russ_deadline dea
 }
 
 /**
+* Special connect() for AF_UNIX socket, SOCK_STREAM, with automatic
+* restart on EINTR, wait for EINPROGRESS, and retry on EAGAIN.
+*
+* @param path		path to socket file
+* @param deadline	deadline to complete operation
+* @return		socket descriptor; -1 on error
+*/
+int
+russ_connect_unix(char *path, russ_deadline deadline) {
+	struct sockaddr_un	servaddr;
+	socklen_t		addrlen;
+	struct pollfd		poll_fds[1];
+	int			flags, sd;
+
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sun_family = AF_UNIX;
+	strcpy(servaddr.sun_path, path);
+
+retry:
+	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		return -1;
+	}
+
+	/* set to non-blocking */
+	if (((flags = fcntl(sd, F_GETFL)) < 0)
+		|| (fcntl(sd, F_SETFL, flags|O_NONBLOCK) < 0)) {
+		goto cleanup;
+	}
+
+	if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+		if ((errno == EINTR) || (errno == EINPROGRESS) || (errno == EAGAIN)) {
+			poll_fds[0].fd = sd;
+			poll_fds[0].events = POLLIN;
+			if (russ_poll(poll_fds, 1, deadline) < 0) {
+				goto cleanup;
+			}
+			if (errno == EAGAIN) {
+				/* SUSv3: close and retry */
+				close(sd);
+				goto retry;
+			}
+		}
+	}
+
+	/* restore blocking */
+	if (fcntl(sd, F_SETFL, flags) < 0) {
+		goto cleanup;
+	}
+	return sd;
+
+cleanup:
+	if (sd < 0) {
+		close(sd);
+	}
+	return -1;
+}
+
+/**
 * poll() with automatic restart on EINTR.
 *
 * @param poll_fds	initialized pollfd structure

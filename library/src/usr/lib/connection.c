@@ -467,7 +467,6 @@ russ_conn_send_request(struct russ_conn *self, struct russ_req *req, russ_deadli
 */
 struct russ_conn *
 russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv) {
-	struct sockaddr_un	servaddr;
 	struct russ_conn	*conn;
 	struct russ_req		*req;
 	struct russ_target	*targ;
@@ -476,18 +475,9 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 	if (russ_spath_split(spath, &saddr, &spath2) < 0) {
 		return NULL;
 	}
-
-	/* steps to set up conn object */
 	if (((conn = russ_conn_new()) == NULL)
-		|| ((conn->sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)) {
+		|| ((conn->sd = russ_connect_unix(saddr, deadline)) < 0)) {
 		goto free_saddr;
-	}
-
-	bzero(&servaddr, sizeof(servaddr));
-	servaddr.sun_family = AF_UNIX;
-	strcpy(servaddr.sun_path, saddr);
-	if (russ_connect(conn->sd, (struct sockaddr *)&servaddr, sizeof(servaddr), deadline) < 0) {
-		goto close_conn;
 	}
 
 	if (((req = russ_req_new(RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv)) == NULL)
