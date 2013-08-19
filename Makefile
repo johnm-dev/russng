@@ -6,6 +6,9 @@
 HERE_FILE:="$(CURDIR)/$(strip $(MAKEFILE_LIST))"
 HERE_DIR:=$(shell dirname $(HERE_FILE))
 
+export RUSS_INCLUDE_DIR:=$(HERE_DIR)/library/src/usr/include
+export RUSS_LIB_DIR:=$(HERE_DIR)/library/src/usr/lib
+
 .PHONY:	doc install
 
 all:
