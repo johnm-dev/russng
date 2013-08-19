@@ -78,6 +78,10 @@ while [ $# -gt 0 ]; do
 		shift 1
 		export RURUN_DEBUG=1
 		;;
+	--dir)
+		shift 1
+		RURUN_PNET_DIR="$1"; shift 1
+		;;
 	--exec)
 		shift 1
 		RURUN_EXEC_METHOD=$1; shift 1
@@ -165,11 +169,19 @@ if [ -n "${RURUN_PNET_ADDR}" ]; then
 		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}"
 		;;
 	esac
+elif [ -n "${RURUN_PNET_DIR}" ]; then
+	case ${RURUN_TARGET_METHOD} in
+	id)
+		path="${RURUN_PNET_DIR}/${target}"
+		;;
+	*)
+		echo "error: unsupported target method (${RURUN_TARGET_METHOD})" 1>&2
+		exit 1
+		;;
+	esac
 else
-	if [ -n "${RURUN_DEBUG}" ]; then
-		echo "warning: RURUN_PNET_ADDR is not set" 1>&2
-	fi
-	path=""
+	echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_DIR are set" 1>&2
+	exit 1
 fi
 path="${path}/+/exec/${RURUN_EXEC_METHOD}"
 
