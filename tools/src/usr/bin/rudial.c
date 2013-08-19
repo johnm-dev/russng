@@ -75,7 +75,6 @@ print_usage(char *prog_name) {
 "Options:\n"
 "-a|--attr <name=vaue>\n" \
 "    Pass a 'name=value' string to the service.\n"
-"\n"
 "-t|--timeout <seconds>\n" \
 "    Allow a given amount of time to connect before aborting.\n"
 );
