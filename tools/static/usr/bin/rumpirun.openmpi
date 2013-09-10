@@ -24,6 +24,7 @@
 # RUMPIRUN_HOSTFILE (req)
 # RUMPIRUN_LAUNCHER (opt)
 # RUMPIRUN_MPIRUN (opt)
+# RUMPIRUN_ENV (opt)
 # RURUN_PNET_ADDR or RURUN_PNET_DIR (req)
 # RURUN_EXEC_METHOD (opt)
 # RURUN_TAG_FORMAT (opt)
@@ -36,6 +37,10 @@ unset PE_HOSTFILE
 export OMPI_MCA_orte_default_hostfile="${RUMPIRUN_HOSTFILE}"
 export OMPI_MCA_orte_rsh_agent=${RUMPIRUN_LAUNCHER}
 export OMPI_MCA_plm_rsh_disable_qrsh=1
+
+if [ -n "${RUMPIRUN_ENV}" ]; then
+	export RURUN_ENV="${RUMPIRUN_ENV}"
+fi
 
 RUMPIRUN_MPIRUN=`which ${RUMPIRUN_MPIRUN}`
 exec ${RUMPIRUN_MPIRUN} "${@}"

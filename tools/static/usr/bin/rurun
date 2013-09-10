@@ -31,6 +31,10 @@ Launch a program on a pnet target. If a pnet server specified
 If --count is specified, then the number of pnet targets is printed.
 
 Options:
+-a|--attr <name>=<value>
+	Provide attribute/environment variable settings. A
+	comma-separated list of environment variable names in
+	RURUN_ENV are also passed.
 --debug
 	Enable debugging. Or set RURUN_DEBUG=1.
 --exec=simple|shell|login
@@ -63,8 +67,21 @@ elif [ $# -lt 2 ]; then
 	exit 1
 fi
 
+
+# update attributes/env vars
+attrs=()
+if [ -n "${RURUN_ENV}" ]; then
+	for name in $(echo ${RURUN_ENV} | tr ',' ' '); do
+		attrs+=("-a" "${name}='$(printenv ${name})'")
+	done
+fi
+
 while [ $# -gt 0 ]; do
 	case $1 in
+	-a|--attr)
+		shift 1
+		attrs+=("-a" "$1"); shift 1
+		;;
 	--count)
 		shift 1
 		count=`ruexec ${RURUN_PNET_ADDR}/count`
@@ -152,7 +169,7 @@ fi
 if [ -n "${RURUN_TAG_FORMAT}" ]; then
 	cg_path=`eval echo "$RURUN_TAG_FORMAT"`
 	if [ -n "${cg_path}" ]; then
-		attrs="-a cg_path=${cg_path}"
+		attrs+=("-a" "cg_path=${cg_path}")
 	fi
 fi
 
@@ -194,6 +211,6 @@ fi
 
 # execute
 if [ -n "${RURUN_DEBUG}" ]; then
-	echo exec ruexec ${attrs} "${path}" "$*"
+	echo exec ruexec "${attrs[@]}" "${path}" "$*"
 fi
-exec ruexec ${attrs} "${path}" "$*"
+exec ruexec "${attrs[@]}" "${path}" "$*"
