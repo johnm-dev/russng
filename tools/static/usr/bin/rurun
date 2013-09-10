@@ -39,7 +39,8 @@ Options:
 	Enable debugging. Or set RURUN_DEBUG=1.
 --exec=simple|shell|login
 	Use a given exec method. See also --simple, --shell,
-	--login. Defaults to \$RURUN_EXEC_METHOD or "${RURUN_EXEC_METHOD}".
+	--login. Defaults to \$RURUN_EXEC_METHOD or
+	"${RURUN_EXEC_METHOD}".
 --job_id <job_id>
 	Use a given job id to generate RURUN_TAG_FORMAT. Defaults to
 	\$JOB_ID.
