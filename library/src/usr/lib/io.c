@@ -134,6 +134,11 @@ russ_readn_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 	ssize_t		n;
 	char		*bend;
 
+	/* catch fd<0 before calling into poll() */
+	if (fd < 0) {
+		return -1;
+	}
+
 	poll_fds[0].fd = fd;
 	poll_fds[0].events = POLLIN|POLLHUP;
 
@@ -220,6 +225,11 @@ russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 	ssize_t		n;
 	char		*bend;
 
+	/* catch fd<0 before calling into poll() */
+	if (fd < 0) {
+		return -1;
+	}
+
 	poll_fds[0].fd = fd;
 	poll_fds[0].events = POLLOUT|POLLHUP;
 
@@ -255,6 +265,13 @@ russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline dea
 	struct pollfd	poll_fds[1];
 	int		rv;
 
+#if 0
+	/* catch fd<0 before calling into poll() */
+	if (sd < 0) {
+		return -1;
+	}
+#endif
+
 	poll_fds[0].fd = sd;
 	poll_fds[0].events = POLLIN;
 	while (1) {
@@ -288,6 +305,11 @@ int
 russ_connect(int sd, struct sockaddr *addr, socklen_t addrlen, russ_deadline deadline) {
 	struct pollfd		poll_fds[1];
 	int			flags;
+
+	/* catch fd<0 before calling into poll() */
+	if (sd < 0) {
+		return -1;
+	}
 
 	/* save and set non-blocking */
 	if (((flags = fcntl(sd, F_GETFL)) < 0)
