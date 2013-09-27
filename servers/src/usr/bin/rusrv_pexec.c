@@ -109,7 +109,7 @@ close_fds(int low_fd, int hi_fd) {
 	int	i;
 
 	for (i = low_fd; i <= hi_fd; i++) {
-		close(i);
+		russ_close(i);
 	}
 }
 
@@ -160,9 +160,9 @@ svc_exec_handler(struct russ_sess *sess) {
 		dup2(conn->fds[0], 0);
 		dup2(conn->fds[1], 1);
 		dup2(conn->fds[2], 2);
-		close(conn->fds[0]);
-		close(conn->fds[1]);
-		close(conn->fds[2]);
+		russ_close(conn->fds[0]);
+		russ_close(conn->fds[1]);
+		russ_close(conn->fds[2]);
 		close_fds(3, 127);
 
 		/* augment and execute */

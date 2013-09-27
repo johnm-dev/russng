@@ -322,9 +322,9 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 		russ_dprintf(conn->fds[2], "error: could not execute\n");
 		exit(1);
 	}
-	close(conn->fds[0]);
-	close(conn->fds[1]);
-	close(conn->fds[2]);
+	russ_close(conn->fds[0]);
+	russ_close(conn->fds[1]);
+	russ_close(conn->fds[2]);
 	waitpid(pid, &status, 0);
 
 	russ_conn_exit(conn, WEXITSTATUS(status));

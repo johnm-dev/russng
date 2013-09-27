@@ -25,6 +25,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
+/* external */
+int russ_close(int);
+
 /**
 * Initialize descriptor array to value.
 *
@@ -53,7 +56,7 @@ russ_fds_close(int *self, int count) {
 
 	for (i = 0; i < count; i++) {
 		if (self[i] > -1) {
-			close(self[i]);
+			russ_close(self[i]);
 			self[i] = -1;
 		}
 	}

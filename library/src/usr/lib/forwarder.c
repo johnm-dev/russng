@@ -192,10 +192,10 @@ _forward_bytes2(void *_fwd) {
 	}
 	if ((fwd->close_fds) && (fwd->reason < 0)) {
 		if (fwd->close_fds & RUSS_FWD_CLOSE_IN) {
-			close(fwd->in_fd);
+			russ_close(fwd->in_fd);
 		}
 		if (fwd->close_fds & RUSS_FWD_CLOSE_OUT) {
-			close(fwd->out_fd);
+			russ_close(fwd->out_fd);
 		}
 	}
 }

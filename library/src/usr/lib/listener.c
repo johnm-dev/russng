@@ -94,7 +94,7 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	return lis;
 
 close_sd:
-	close(sd);
+	russ_close(sd);
 free_saddr:
 	free(saddr);
 	return NULL;

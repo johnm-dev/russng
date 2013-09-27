@@ -181,9 +181,9 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		execv(args[0], args);
 	}
 	/* close stdin/out/err; leave exitfd */
-	close(conn->fds[0]);
-	close(conn->fds[1]);
-	close(conn->fds[2]);
+	russ_close(conn->fds[0]);
+	russ_close(conn->fds[1]);
+	russ_close(conn->fds[2]);
 
 	/* wait for exit value, pass back, and close up */
 	waitpid(pid, &status, 0);
