@@ -233,6 +233,7 @@ struct russ_conn *russ_info(russ_deadline, char *);
 struct russ_conn *russ_list(russ_deadline, char *);
 
 /* io.c */
+int russ_close(int);
 ssize_t russ_read(int, char *, size_t);
 ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);

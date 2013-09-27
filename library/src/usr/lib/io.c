@@ -39,6 +39,22 @@
 #include "russ_priv.h"
 
 /**
+* Close fd with auto retry on EINTR.
+*
+* @param fd		descriptor
+* @return		0 on success; -1 or error
+*/
+int
+russ_close(int fd) {
+	while (close(fd) < 0) {
+		if (errno != EINTR) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+/**
 * Read bytes with auto retry on EINTR and EAGAIN.
 *
 * @param fd		descriptor
