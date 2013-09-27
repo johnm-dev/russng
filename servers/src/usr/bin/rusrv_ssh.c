@@ -169,23 +169,27 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	/* fix up fds and exec */
 	signal(SIGCHLD, SIG_DFL);
 	if ((pid = fork()) == 0) {
-		dup2(conn->fds[0], 0);
-		dup2(conn->fds[1], 1);
-		dup2(conn->fds[2], 2);
-		close(conn->fds[3]);
+		/* dup conn stdin/out/err fds to standard stdin/out/err */
+		if ((dup2(conn->fds[0], 0) < 0) ||
+			(dup2(conn->fds[1], 1) < 0) ||
+			(dup2(conn->fds[2], 2) < 0)) {
+			/* should not get here! */
+			russ_dprintf(conn->fds[2], "error: could not execute\n");
+			exit(1);
+		}
+		russ_conn_close(conn);
 		execv(args[0], args);
-
-		/* should not get here! */
-		russ_dprintf(conn->fds[2], "error: could not execute\n");
-		exit(1);
 	}
+	/* close stdin/out/err; leave exitfd */
 	close(conn->fds[0]);
 	close(conn->fds[1]);
 	close(conn->fds[2]);
-	waitpid(pid, &status, 0);
 
+	/* wait for exit value, pass back, and close up */
+	waitpid(pid, &status, 0);
 	russ_conn_exit(conn, WEXITSTATUS(status));
 	russ_conn_close(conn);
+
 	exit(0);
 }
 
