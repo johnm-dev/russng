@@ -157,25 +157,23 @@ svc_exec_handler(struct russ_sess *sess) {
 	switch(req->opnum) {
 	case RUSS_OPNUM_EXECUTE:
 		/* dup conn stdin/out/err fds to standard stdin/out/err */
-		if ((dup2(conn->fds[0], 0) < 0) ||
-			(dup2(conn->fds[1], 1) < 0) ||
-			(dup2(conn->fds[2], 2) < 0) {
-			/* should not get here! */
-			russ_dprintf(conn->fds[2], "error: could not execute\n");
-			exit(1);
+		if ((dup2(conn->fds[0], 0) >= 0) &&
+			(dup2(conn->fds[1], 1) >= 0) &&
+			(dup2(conn->fds[2], 2) >= 0) {
+
+			/* close conn stdin/out/err/exitfd and all others */
+			russ_close(conn->fds[0]);
+			russ_close(conn->fds[1]);
+			russ_close(conn->fds[2]);
+			russ_close(conn->fds[3]);
+			close_fds(3, 127);
+
+			/* augment and execute */
+			augment_env(req->attrv);
+			execvp(req->argv[0], req->argv);
 		}
-		/* close conn stdin/out/err/exitfd and all others */
-		russ_close(conn->fds[0]);
-		russ_close(conn->fds[1]);
-		russ_close(conn->fds[2]);
-		russ_close(conn->fds[3]);
-		close_fds(3, 127);
 
-		/* augment and execute */
-		augment_env(req->attrv);
-		execvp(req->argv[0], req->argv);
-
-		/* on error */
+		/* should not get here! */
 		russ_conn_fatal(conn, "error: could not execute program", RUSS_EXIT_FAILURE);
 		break;
 	default:
