@@ -180,7 +180,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		russ_conn_close(conn);
 		execv(args[0], args);
 	}
-	/* close stdin/out/err; leave exitfd */
+	/* close conn stdin/out/err; leave exitfd */
 	russ_close(conn->fds[0]);
 	russ_close(conn->fds[1]);
 	russ_close(conn->fds[2]);
