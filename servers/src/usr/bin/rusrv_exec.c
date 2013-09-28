@@ -123,21 +123,23 @@ int
 setup_by_pam(char *service_name, char *username) {
 	pam_handle_t	*pamh;
 	struct pam_conv	pamc;
+	int		rv;
 
 	pamc.conv = &misc_conv;
 	pamc.appdata_ptr = NULL;
 
-	if (pam_start(service_name, username, &pamc, &pamh) != PAM_SUCCESS) {
-		goto shutdown_pam;
+	if ((rv = pam_start(service_name, username, &pamc, &pamh)) != PAM_SUCCESS) {
+		goto pam_end;
 	}
 #if 0
-	if (pam_acct_mgmt(pamh, PAM_SILENT) != PAM_SUCCESS) {
-		goto shutdown_pam;
+	if (((rv = pam_acct_mgmt(pamh, PAM_SILENT)) != PAM_SUCCESS) {
+		goto pam_end;
 	}
 #endif
-	if ((pam_open_session(pamh, PAM_SILENT) != PAM_SUCCESS)
-		|| (pam_close_session(pamh, PAM_SILENT) != PAM_SUCCESS)) {
-		goto shutdown_pam;
+
+	if (((rv = pam_open_session(pamh, PAM_SILENT)) != PAM_SUCCESS)
+		|| ((rv = pam_close_session(pamh, PAM_SILENT)) != PAM_SUCCESS)) {
+		goto pam_end;
 	}
 
 #if 0
@@ -148,11 +150,9 @@ setup_by_pam(char *service_name, char *username) {
 }
 #endif
 
-	pam_end(pamh, 0);
-	return 0;
-shutdown_pam:
-	pam_end(pamh, 0);
-	return -1;
+pam_end:
+	pam_end(pamh, rv);
+	return (rv == PAM_SUCCESS ? 0: 1);
 }
 #else
 int
