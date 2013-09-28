@@ -33,7 +33,7 @@
 export RUMPIRUN_MPIRUN=${RUMPIRUN_MPIRUN:-mpirun}
 export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun}
 
-if [ -n "${RUMPIRUN_PNET_ADDR}" -o -n "${RUMPIRUN_PNET_DIR}" ]; then
+if [ -n "${RURUN_PNET_ADDR}" -o -n "${RURUN_PNET_DIR}" ]; then
 	# use rurun
 	unset PE_HOSTFILE
 	export HYDRA_BOOTSTRAP=rsh
