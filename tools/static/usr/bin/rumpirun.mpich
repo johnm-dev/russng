@@ -54,4 +54,9 @@ if [ -z "${RUMPIRUN_MPIRUN}" ]; then
 	exit 1
 fi
 
+st=`${RUMPIRUN_MPIRUN} --info 2>&1`
+if [ $? != 0 ]; then
+	echo "warning: cannot validate mpirun is from mpich" 1>&2
+fi
+
 exec ${RUMPIRUN_MPIRUN} -disable-hostname-propagation "${@}"

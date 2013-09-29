@@ -51,4 +51,9 @@ if [ -z "${RUMPIRUN_MPIRUN}" ]; then
 	exit 1
 fi
 
+st=`${RUMPIRUN_MPIRUN} -V 2>&1`
+if [ "${st#*Open MPI}" = "${st}" ]; then
+	echo "warning: cannot validate mpirun is from openmpi" 1>&2
+fi
+
 exec ${RUMPIRUN_MPIRUN} "${@}"
