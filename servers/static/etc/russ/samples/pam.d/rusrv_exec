@@ -1,13 +1,13 @@
 # pam configuration for the rusrv_exec service
 # (copy to /etc/pam.d/rusrv_exec)
 
-# environment variables (/etc/environment and
-# /etc/security/pam_env.conf); special case for /etc/default/locale
-auth       required     pam_env.so
-auth       required     pam_env.so envfile=/etc/default/locale
-
 # for all unix/linux
 @include common-session
+
+# environment variables (/etc/environment and
+# /etc/security/pam_env.conf); special case for /etc/default/locale
+session    required     pam_env.so
+session    required     pam_env.so readenv=1 envfile=/etc/default/locale
 
 # user limits (/etc/security/limits.conf)
 session    required     pam_limits.so
