@@ -46,4 +46,9 @@ if [ -n "${RUMPIRUN_ENV}" ]; then
 fi
 
 RUMPIRUN_MPIRUN=`which ${RUMPIRUN_MPIRUN}`
+if [ -z "${RUMPIRUN_MPIRUN}" ]; then
+	echo "error: cannot find mpirun" 1>&2
+	exit 1
+fi
+
 exec ${RUMPIRUN_MPIRUN} "${@}"

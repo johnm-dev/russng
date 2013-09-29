@@ -48,5 +48,10 @@ if [ -n "${RUMPIRUN_ENV}" ]; then
 	export RURUN_ENV="${RUMPIRUN_ENV}"
 fi
 
-RUMPIRUN_MPIRUN=`which ${RUMPIRUN_MPIRUN}`
+RUMPIRUN_MPIRUN=`which ${RUMPIRUN_MPIRUN} 2> /dev/null`
+if [ -z "${RUMPIRUN_MPIRUN}" ]; then
+	echo "error: cannot find mpirun" 1>&2
+	exit 1
+fi
+
 exec ${RUMPIRUN_MPIRUN} -disable-hostname-propagation "${@}"
