@@ -161,10 +161,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	}
 
 	if ((node = russ_svcnode_find(self->root, &(req->spath[1]), sess.spath, sizeof(sess.spath))) == NULL) {
-		/* TODO: how to handle this in general?
-		** for HELP, LIST, EXECUTE? other? under what conditions
-		** is there a stdout and exit fd?
-		*/
+		/* we need standard fds */
 		russ_standard_answer_handler(conn);
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		goto cleanup;
