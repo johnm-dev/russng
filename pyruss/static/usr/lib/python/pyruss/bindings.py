@@ -146,11 +146,8 @@ russ_sess_Structure._fields_ = [
 libruss.russ_conn_answer.argtypes = [
     ctypes.POINTER(russ_conn_Structure),
     ctypes.c_int,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    # TODO: how to handle passing fds?
-    #ctypes.c_int*4,
-    #ctypes.c_int*4,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_int),
 ]
 libruss.russ_conn_answer.restype = ctypes.c_int
 

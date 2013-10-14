@@ -223,9 +223,16 @@ class ServerConn(Conn):
     """
 
     def answer(self, nfds, cfds, sfds):
-        if 0:
-            # TODO: how to handle passing fds?
-            return libruss.russ_conn_answer(self._ptr, nfds, ctypes.POINTER(cfds), ctypes.POINTER(sfds))
+        if nfds:
+            _cfds = (ctypes.c_int*nfds)(*tuple(cfds))
+            _sfds = (ctypes.c_int*nfds)(*tuple(sfds))
+            rv = libruss.russ_conn_answer(self._ptr, nfds,
+                ctypes.cast(_cfds, ctypes.POINTER(ctypes.c_int)),
+                ctypes.cast(_sfds, ctypes.POINTER(ctypes.c_int)))
+            # update python side (in-place)
+            cfds[0:] = [fd for fd in _cfds]
+            sfds[0:] = [fd for fd in _sfds]
+            return rv
         else:
             return libruss.russ_conn_answer(self._ptr, 0, None, None)
 
