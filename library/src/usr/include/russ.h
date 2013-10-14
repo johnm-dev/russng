@@ -185,6 +185,7 @@ struct russ_svr {
 	struct russ_lis		*lis;
 	russ_accept_handler	accept_handler;
 	int			accept_timeout;
+	russ_answer_handler	answer_handler;
 	int			await_timeout;
 	int			auto_switch_user;
 };

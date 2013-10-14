@@ -53,6 +53,7 @@ russ_svr_new(struct russ_svcnode *root, int type) {
 	self->lis = NULL;
 	self->accept_handler = russ_standard_accept_handler;
 	self->accept_timeout = RUSS_SVR_TIMEOUT_ACCEPT;
+	self->answer_handler = russ_standard_answer_handler;
 	self->await_timeout = RUSS_SVR_TIMEOUT_AWAIT;
 	self->auto_switch_user = 0;
 
@@ -169,7 +170,8 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 		goto cleanup;
 	}
 
-	if ((node->auto_answer) && (russ_standard_answer_handler(conn) < 0)) {
+	if ((node->auto_answer)
+		&& ((self->answer_handler == NULL) || (self->answer_handler(conn) < 0))) {
 		goto cleanup;
 	}
 
