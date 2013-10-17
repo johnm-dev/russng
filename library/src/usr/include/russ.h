@@ -153,18 +153,18 @@ struct russ_fwd {
 /* declare here, defined below */
 struct russ_sess;
 
-typedef void (*russ_svc_handler)(struct russ_sess *);
-typedef int64_t 	russ_deadline;
+typedef void (*russ_svchandler)(struct russ_sess *);
+typedef int64_t russ_deadline;
 
-typedef struct russ_conn *(*russ_accept_handler)(struct russ_lis *, russ_deadline);
-typedef int (*russ_answer_handler)(struct russ_conn *);
-typedef void (*russ_req_handler)(struct russ_conn *);
+typedef struct russ_conn *(*russ_accepthandler)(struct russ_lis *, russ_deadline);
+typedef int (*russ_answerhandler)(struct russ_conn *);
+typedef void (*russ_reqhandler)(struct russ_conn *);
 
 /**
 * Service node object.
 */
 struct russ_svcnode {
-	russ_svc_handler	handler;
+	russ_svchandler		handler;
 	char			*name;
 	struct russ_svcnode	*next;
 	struct russ_svcnode	*children;
@@ -183,9 +183,9 @@ struct russ_svr {
 	uid_t			uid;
 	gid_t			gid;
 	struct russ_lis		*lis;
-	russ_accept_handler	accept_handler;
+	russ_accepthandler	accept_handler;
 	int			accept_timeout;
-	russ_answer_handler	answer_handler;
+	russ_answerhandler	answer_handler;
 	int			await_timeout;
 	int			auto_switch_user;
 };
@@ -247,7 +247,7 @@ struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_conn *russ_lis_accept(struct russ_lis *, russ_deadline);
 void russ_lis_close(struct russ_lis *);
 struct russ_lis *russ_lis_free(struct russ_lis *);
-void russ_lis_loop(struct russ_lis *, russ_accept_handler, russ_answer_handler, russ_req_handler);
+void russ_lis_loop(struct russ_lis *, russ_accepthandler, russ_answerhandler, russ_reqhandler);
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);
@@ -266,13 +266,13 @@ struct russ_svr *russ_svr_new(struct russ_svcnode *, int);
 struct russ_conn *russ_svr_accept(struct russ_svr *, russ_deadline);
 struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid_t);
 void russ_svr_loop(struct russ_svr *);
-int russ_svr_set_accept_handler(struct russ_svr *, russ_accept_handler);
+int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
 int russ_svr_set_auto_switch_user(struct russ_svr *, int);
 
 /* servicenodes.c */
-struct russ_svcnode *russ_svcnode_new(char *, russ_svc_handler);
+struct russ_svcnode *russ_svcnode_new(char *, russ_svchandler);
 struct russ_svcnode *russ_svcnode_free(struct russ_svcnode *);
-struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, char *, russ_svc_handler);
+struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, char *, russ_svchandler);
 struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *, char *, int);
 int russ_svcnode_set_auto_answer(struct russ_svcnode *, int);
 int russ_svcnode_set_virtual(struct russ_svcnode *, int);

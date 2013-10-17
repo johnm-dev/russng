@@ -25,7 +25,7 @@
 #ifndef RUSS_CONF_H
 #define RUSS_CONF_H
 
-struct russ_conf_item {
+struct russ_confitem {
 	char	*option;
 	char	*value;
 	union {
@@ -34,15 +34,15 @@ struct russ_conf_item {
 	};
 };
 
-struct russ_conf_section {
+struct russ_confsection {
 	char			*name;
-	struct russ_conf_item	**items;
+	struct russ_confitem	**items;
 	int			len, cap;
 };
 
 struct russ_conf {
-	struct russ_conf_section	**sections;
-	int				len, cap;
+	struct russ_confsection	**sections;
+	int			len, cap;
 };
 
 struct russ_conf *russ_conf_new(void);

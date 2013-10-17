@@ -99,7 +99,7 @@ free_saddr:
 * @return		0 on success; -1 on failure
 */
 int
-russ_svr_set_accept_handler(struct russ_svr *self, russ_accept_handler handler) {
+russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
 	if (handler == NULL) {
 		return -1;
 	}

@@ -184,8 +184,8 @@ russ_lis_free(struct russ_lis *self) {
 * @param req_handler	handler function to call on accepted
 */
 void
-russ_lis_loop(struct russ_lis *self, russ_accept_handler accept_handler,
-	russ_answer_handler answer_handler, russ_req_handler req_handler) {
+russ_lis_loop(struct russ_lis *self, russ_accepthandler accept_handler,
+	russ_answerhandler answer_handler, russ_reqhandler req_handler) {
 
 	struct russ_conn	*conn;
 
