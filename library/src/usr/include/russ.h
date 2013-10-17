@@ -52,18 +52,6 @@
 #define RUSS_EXIT_CALL_FAILURE	126
 #define RUSS_EXIT_SYS_FAILURE	127
 
-/* forwarder reasons */
-#define RUSS_FWD_CLOSE_IN	1
-#define RUSS_FWD_CLOSE_OUT	2
-#define RUSS_FWD_CLOSE_INOUT	RUSS_FWD_CLOSE_IN|RUSS_FWD_CLOSE_OUT
-
-#define RUSS_FWD_REASON_EOF	0
-#define RUSS_FWD_REASON_ERROR	-1
-#define RUSS_FWD_REASON_TIMEOUT	-2
-#define RUSS_FWD_REASON_COUNT	-3
-#define RUSS_FWD_REASON_IN_HUP	-4
-#define RUSS_FWD_REASON_OUT_HUP	-5
-
 /* common messages */
 #define RUSS_MSG_BAD_ARGS	"error: bad/missing arguments"
 #define RUSS_MSG_BAD_CONN_EVENT	"error: unexpected connection event"
@@ -135,21 +123,6 @@ struct russ_conn {
 	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
 };
 
-/**
-* Forwarder information.
-*/
-struct russ_fwd {
-	pthread_t	th;		/**< thread doing forwarding */
-	int		id;		/**< configurable id */
-	int		in_fd;		/**< input fd */
-	int		out_fd;		/**< output fd */
-	int		count;		/**< # of bytes to forward */
-	int		blocksize;	/**< max size of blocks at once */
-	int		how;		/**< 0 for normal read, 1 for readline */
-	int		close_fds;	/**< 1 to close fds before returning */
-	int		reason;		/**< reason forwarder returned */
-};
-
 /* declare here, defined below */
 struct russ_sess;
 
@@ -215,12 +188,6 @@ int russ_conn_wait(struct russ_conn *, int *, russ_deadline);
 
 struct russ_conn *russ_dialv(russ_deadline, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_deadline, char *, char *, char **, ...);
-
-/* forwarder */
-void russ_fwd_init(struct russ_fwd *, int, int, int, int, int, int, int);
-int russ_fwd_start(struct russ_fwd *);
-int russ_fwd_join(struct russ_fwd *);
-int russ_fwds_run(struct russ_fwd *, int);
 
 /* handlers.c */
 struct russ_conn *russ_standard_accept_handler(struct russ_lis *, russ_deadline);

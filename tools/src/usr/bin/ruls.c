@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include "russ.h"
+#include "russ_fwd.h"
 
 void
 print_usage(char *prog_name) {

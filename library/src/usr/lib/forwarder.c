@@ -31,6 +31,7 @@
 #include <time.h>
 
 #include "russ_priv.h"
+#include "russ_fwd.h"
 
 struct pipe_fds {
 	int in_fd, out_fd;
