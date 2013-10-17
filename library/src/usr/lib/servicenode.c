@@ -37,11 +37,11 @@
 #include "russ.h"
 
 /**
-* Create new service_ ode object.
+* Create new service node object.
 *
 * @param name		node name
 * @param handler	service handler
-* @return		service node object
+* @return		service node object; NULL on failure
 */
 struct russ_svcnode *
 russ_svcnode_new(char *name, russ_svchandler handler) {
