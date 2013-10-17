@@ -38,7 +38,7 @@ import threading
 
 #
 import pyruss
-from pyruss import libruss, SVC_HANDLER_FUNC
+from pyruss import libruss, SVCHANDLER_FUNC
 from pyruss import Listener, Request, ServerConn
 
 class ServiceHandler:
@@ -51,7 +51,7 @@ class ServiceHandler:
 service_handlers = {}
 def get_service_handler(handler):
     if handler not in service_handlers:
-        service_handlers[handler] = SVC_HANDLER_FUNC(ServiceHandler(handler)._handler)
+        service_handlers[handler] = SVCHANDLER_FUNC(ServiceHandler(handler)._handler)
     return service_handlers[handler]
 
 class ServiceNode:
