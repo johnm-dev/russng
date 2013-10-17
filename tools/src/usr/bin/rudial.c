@@ -31,7 +31,11 @@
 #include <sys/types.h>
 
 #include "russ.h"
+
+#define USE_RUSS_FWD
+#ifdef USE_RUSS_FWD
 #include "russ_fwd.h"
+#endif /* USE_RUSS_FWD */
 
 void
 print_usage(char *prog_name) {
@@ -84,7 +88,6 @@ print_usage(char *prog_name) {
 int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
-	struct russ_fwd		fwds[RUSS_CONN_NFDS];
 	russ_deadline		deadline;
 	int			debug;
 	int			timeout;
@@ -194,44 +197,49 @@ main(int argc, char **argv) {
 		exit(RUSS_EXIT_CALL_FAILURE);
 	}
 
-//fprintf(stderr, "STDIN OUT ERR (%d,%d,%d) fds (%d,%d,%d)\n", STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, conn->fds[0], conn->fds[1], conn->fds[2]);
-	/*
-	* initialize forwarders (handing off fds; but not closing)
-	* and start threads; STDERR_FILENO is not closed if
-	* debugging
-	*/
-	russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
-	russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
-	russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 65536, 0,
-		(debug ? RUSS_FWD_CLOSE_IN : RUSS_FWD_CLOSE_INOUT));
-	conn->fds[0] = -1;
-	conn->fds[1] = -1;
-	conn->fds[2] = -1;
-	if (russ_fwds_run(fwds, RUSS_CONN_STD_NFDS-1) < 0) {
-		fprintf(stderr, "error: could not forward bytes\n");
-		exit(1);
-	}
+#ifdef USE_RUSS_FWD
+	{
+		struct russ_fwd		fwds[RUSS_CONN_NFDS];
 
-	/* wait for exit */
-	if (debug) {
-		fprintf(stderr, "debug: waiting for connection exit\n");
-	}
-	if (russ_conn_wait(conn, &exit_status, -1) < 0) {
-		fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
-		exit_status = RUSS_EXIT_SYS_FAILURE;
-	}
-	if (debug) {
-		fprintf(stderr, "debug: exit_status (%d)\n", exit_status);
-	}
+		/*
+		* initialize forwarders (handing off fds; but not closing)
+		* and start threads; STDERR_FILENO is not closed if
+		* debugging
+		*/
+		russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
+		russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
+		russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 65536, 0,
+			(debug ? RUSS_FWD_CLOSE_IN : RUSS_FWD_CLOSE_INOUT));
+		conn->fds[0] = -1;
+		conn->fds[1] = -1;
+		conn->fds[2] = -1;
+		if (russ_fwds_run(fwds, RUSS_CONN_STD_NFDS-1) < 0) {
+			fprintf(stderr, "error: could not forward bytes\n");
+			exit(1);
+		}
 
-	russ_fwd_join(&(fwds[1]));
-	if (debug) {
-		fprintf(stderr, "debug: stdout forwarder joined\n");
+		/* wait for exit */
+		if (debug) {
+			fprintf(stderr, "debug: waiting for connection exit\n");
+		}
+		if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+			fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
+			exit_status = RUSS_EXIT_SYS_FAILURE;
+		}
+		if (debug) {
+			fprintf(stderr, "debug: exit_status (%d)\n", exit_status);
+		}
+
+		russ_fwd_join(&(fwds[1]));
+		if (debug) {
+			fprintf(stderr, "debug: stdout forwarder joined\n");
+		}
+		russ_fwd_join(&(fwds[2]));
+		if (debug) {
+			fprintf(stderr, "debug: stderr forwarder joined\n");
+		}
 	}
-	russ_fwd_join(&(fwds[2]));
-	if (debug) {
-		fprintf(stderr, "debug: stderr forwarder joined\n");
-	}
+#endif /* USE_RUSS_FWD */
 
 	russ_conn_close(conn);
 	conn = russ_conn_free(conn);

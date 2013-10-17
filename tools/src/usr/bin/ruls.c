@@ -31,7 +31,11 @@
 #include <sys/types.h>
 
 #include "russ.h"
+
+#define USE_RUSS_FWD
+#ifdef USE_RUSS_FWD
 #include "russ_fwd.h"
+#endif /* USE_RUSS_FWD */
 
 void
 print_usage(char *prog_name) {
@@ -49,7 +53,6 @@ print_usage(char *prog_name) {
 int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
-	struct russ_fwd		fwds[RUSS_CONN_NFDS];
 	struct stat		st;
 	char			*prog_name;
 	char			*spath;
@@ -99,27 +102,32 @@ main(int argc, char **argv) {
 			exit(RUSS_EXIT_CALL_FAILURE);
 		}
 
-		/*
-		** initialize forwarders (handing off fds; but not
-		** closing) and start threads
-		*/
-		russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0, 1);
-		russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 16384, 0, 1);
-		russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 16384, 0, 1);
-		conn->fds[0] = -1;
-		conn->fds[1] = -1;
-		conn->fds[2] = -1;
-		if (russ_fwds_run(fwds, RUSS_CONN_STD_NFDS-1) < 0) {
-			fprintf(stderr, "error: could not forward bytes\n");
-			exit(RUSS_EXIT_SYS_FAILURE);
-		}
+#ifdef USE_RUSS_FWD
+		{
+			struct russ_fwd		fwds[RUSS_CONN_NFDS];
+			/*
+			** initialize forwarders (handing off fds; but not
+			** closing) and start threads
+			*/
+			russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 16384, 0, 1);
+			russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 16384, 0, 1);
+			russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 16384, 0, 1);
+			conn->fds[0] = -1;
+			conn->fds[1] = -1;
+			conn->fds[2] = -1;
+			if (russ_fwds_run(fwds, RUSS_CONN_STD_NFDS-1) < 0) {
+				fprintf(stderr, "error: could not forward bytes\n");
+				exit(RUSS_EXIT_SYS_FAILURE);
+			}
 
-		/* wait for exit */
-		if (russ_conn_wait(conn, &exit_status, -1) < 0) {
-			fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
-			exit_status = RUSS_EXIT_SYS_FAILURE;
+			/* wait for exit */
+			if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
+				exit_status = RUSS_EXIT_SYS_FAILURE;
+			}
+			russ_fwd_join(&(fwds[1]));
 		}
-		russ_fwd_join(&(fwds[1]));
+#endif /* USE_RUSS_FWD */
 
 		russ_conn_close(conn);
 		conn = russ_conn_free(conn);
