@@ -125,7 +125,7 @@ russ_dec_b(char *b, char **bp) {
 	int	count;
 
 	if (((b = russ_dec_I(b, &count)) == NULL)
-		|| ((*bp = malloc(count)) == NULL)) {
+		|| ((*bp = russ_malloc(count)) == NULL)) {
 		return NULL;
 	}
 	memcpy(*bp, b, count);
@@ -161,9 +161,9 @@ _dec_sarray0(char *b, char ***v, int *alen, int append_null) {
 	b = russ_dec_I(b, alen);
 	if (*alen > 0) {
 		if (append_null) {
-			array = malloc(sizeof(char *)*(*alen+1));
+			array = russ_malloc(sizeof(char *)*(*alen+1));
 		} else {
-			array = malloc(sizeof(char *)*(*alen));
+			array = russ_malloc(sizeof(char *)*(*alen));
 		}
 		if (array == NULL) {
 			return NULL;
