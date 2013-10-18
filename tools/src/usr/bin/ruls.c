@@ -30,12 +30,17 @@
 #include <string.h>
 #include <sys/types.h>
 
+#define USE_RUSS_FWD
+
 #include "russ.h"
 
-#define USE_RUSS_FWD
 #ifdef USE_RUSS_FWD
 #include "russ_fwd.h"
 #endif /* USE_RUSS_FWD */
+
+#ifdef USE_RUSS_RELAY
+#include "russ_relay.h"
+#endif /* USE_RUSS_RELAY */
 
 void
 print_usage(char *prog_name) {
@@ -128,6 +133,31 @@ main(int argc, char **argv) {
 			russ_fwd_join(&(fwds[1]));
 		}
 #endif /* USE_RUSS_FWD */
+
+#ifdef USE_RUSS_RELAY
+		{
+			struct russ_relay	*relay;
+
+			relay = russ_relay_new(3*2);
+			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, RELAY_BUFSIZE, 1, conn->fds[0], RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, RELAY_BUFSIZE, 1, conn->fds[1], RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, RELAY_BUFSIZE, 0, conn->fds[2], RELAY_BUFSIZE, 1);
+
+			conn->fds[0] = -1;
+			conn->fds[1] = -1;
+			conn->fds[2] = -1;
+			russ_relay_serve(relay, -1);
+
+			/* wait for exit */
+			if (debug) {
+				fprintf(stderr, "debug: waiting for connection exit\n");
+			}
+			if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
+				exit_status = RUSS_EXIT_SYS_FAILURE;
+			}
+		}
+#endif /* USE_RUSS_RELAY */
 
 		russ_conn_close(conn);
 		conn = russ_conn_free(conn);
