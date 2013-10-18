@@ -137,9 +137,9 @@ main(int argc, char **argv) {
 			struct russ_relay	*relay;
 
 			relay = russ_relay_new(3*2);
-			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, RELAY_BUFSIZE, 1, conn->fds[0], RELAY_BUFSIZE, 1);
-			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, RELAY_BUFSIZE, 1, conn->fds[1], RELAY_BUFSIZE, 1);
-			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, RELAY_BUFSIZE, 0, conn->fds[2], RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, RUSS_RELAY_BUFSIZE, 1, conn->fds[0], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, RUSS_RELAY_BUFSIZE, 1, conn->fds[1], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, RUSS_RELAY_BUFSIZE, 0, conn->fds[2], RUSS_RELAY_BUFSIZE, 1);
 
 			conn->fds[0] = -1;
 			conn->fds[1] = -1;
