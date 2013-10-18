@@ -128,7 +128,9 @@ russ_dec_b(char *b, char **bp) {
 		|| ((*bp = russ_malloc(count)) == NULL)) {
 		return NULL;
 	}
-	memcpy(*bp, b, count);
+	if (count > 0) {
+		memcpy(*bp, b, count);	
+	}
 	return b+count;
 }
 
@@ -342,7 +344,9 @@ russ_enc_b(char *b, char *bend, char *v, int alen) {
 		return NULL;
 	}
 	b = russ_enc_I(b, bend, alen);
-	memcpy(b, v, alen);
+	if (alen > 0) {
+		memcpy(b, v, alen);
+	}
 	return b+alen;
 }
 
