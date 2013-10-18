@@ -124,7 +124,7 @@ char *
 russ_dec_b(char *b, char **bp) {
 	int	count;
 
-	if (((b = russ_dec_I(b, &count)) == NULL)
+	if (((b = russ_dec_i(b, &count)) == NULL)
 		|| ((*bp = russ_malloc(count)) == NULL)) {
 		return NULL;
 	}
@@ -160,7 +160,7 @@ _dec_sarray0(char *b, char ***v, int *alen, int append_null) {
 	char	**array, *s;
 	int	_bcount, i;
 
-	b = russ_dec_I(b, alen);
+	b = russ_dec_i(b, alen);
 	if (*alen > 0) {
 		if (append_null) {
 			array = russ_malloc(sizeof(char *)*(*alen+1));
@@ -343,7 +343,7 @@ russ_enc_b(char *b, char *bend, char *v, int alen) {
 	if ((bend-b) < 4+alen) {
 		return NULL;
 	}
-	b = russ_enc_I(b, bend, alen);
+	b = russ_enc_i(b, bend, alen);
 	if (alen > 0) {
 		memcpy(b, v, alen);
 	}
@@ -380,7 +380,7 @@ char *
 russ_enc_sarrayn(char *b, char *bend, char **v, int alen) {
 	int	i;
 
-	if ((b = russ_enc_I(b, bend, alen)) == NULL) {
+	if ((b = russ_enc_i(b, bend, alen)) == NULL) {
 		return NULL;
 	}
 	for (i = 0; i < alen; i++) {

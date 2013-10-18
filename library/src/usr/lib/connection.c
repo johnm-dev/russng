@@ -292,7 +292,7 @@ russ_conn_exit(struct russ_conn *self, int exit_status) {
 	}
 	bp = buf;
 	bend = bp+sizeof(buf);
-	if (((bp = russ_enc_I(bp, bend, exit_status)) == NULL)
+	if (((bp = russ_enc_i(bp, bend, exit_status)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, exit_string)) == NULL)) {
 		// error?
 		return -1;
@@ -390,7 +390,7 @@ russ_conn_wait(struct russ_conn *self, int *exit_status, russ_deadline deadline)
 					/* serious error; close fd? */
 					return -1;
 				}
-				russ_dec_I(buf, &_exit_status);
+				russ_dec_i(buf, &_exit_status);
 				if (exit_status != NULL) {
 					*exit_status = _exit_status;
 				}
