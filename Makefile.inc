@@ -20,6 +20,7 @@ endif
 ifeq ($(UNAME_SYSTEM),Linux)
 	#CC=arm-linux-gnueabi-gcc
 	CC=gcc
+	CFLAGS_RELAY=-DUSE_RUSS_RELAY
 	CFLAGS=-DLINUX -g -DUSE_PAM $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	LDFLAGS_STATIC=-Wl,-Bstatic
