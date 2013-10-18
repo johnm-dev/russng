@@ -221,6 +221,7 @@ int russ_dprintf(int, char *, ...);
 int russ_misc_str_count(char *, char *);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
+void *russ_malloc(size_t);
 const char *russ_op_lookup(russ_opnum);
 russ_opnum russ_opnum_lookup(char *);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);

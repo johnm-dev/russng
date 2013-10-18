@@ -161,6 +161,19 @@ russ_dprintf(int fd, char *format, ...) {
 }
 
 /**
+* Wrapper for malloc to support 0-sized malloc requests
+* (see AIX malloc()).
+*
+* @param size		number of bytes
+* @return		pointer to allocated memory
+*/
+void *
+russ_malloc(size_t size) {
+	size = (size == 0) ? 1 : size;
+	return malloc(size);
+}
+
+/**
 * Look up an operation string and return an op value corresponding
 * to it.
 *
