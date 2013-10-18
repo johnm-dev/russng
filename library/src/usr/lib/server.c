@@ -76,7 +76,7 @@ russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
 struct russ_lis *
 russ_svr_announce(struct russ_svr *self, char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	if ((self->saddr = strdup(saddr)) == NULL) {
-		return;
+		return NULL;
 	}
 	self->mode = mode;
 	self->uid = uid;
