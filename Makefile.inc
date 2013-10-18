@@ -4,10 +4,12 @@
 
 UNAME_SYSTEM=$(shell uname -s)
 
+CFLAGS_RELAY=-DUSE_RUSS_FWD
+
 ifeq ($(UNAME_SYSTEM),AIX)
 	# OBJECT_MODE should be set externally
 	CC=xlc_r
-	CFLAGS=-DAIX -g
+	CFLAGS=-DAIX -g $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -bstatic
 	LDFLAGS_STATIC=-bstatic
 	LIBS_PLAT=-lbsd
@@ -18,7 +20,7 @@ endif
 ifeq ($(UNAME_SYSTEM),Linux)
 	#CC=arm-linux-gnueabi-gcc
 	CC=gcc
-	CFLAGS=-DLINUX -g -DUSE_PAM
+	CFLAGS=-DLINUX -g -DUSE_PAM $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	LDFLAGS_STATIC=-Wl,-Bstatic
 	LDFLAGS_DYNAMIC=-Wl,-Bdynamic
@@ -28,7 +30,7 @@ endif
 
 ifeq ($(UNAME_SYSTEM),FreeBSD)
 	CC=gcc
-	CFLAGS=-DFREEBSD -g
+	CFLAGS=-DFREEBSD -g $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	LDFLAGS_STATIC=-Wl,-Bstatic
 	LDFLAGS_DYNAMIC=-Wl,-Bdynamic

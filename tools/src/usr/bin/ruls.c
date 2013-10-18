@@ -30,8 +30,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define USE_RUSS_FWD
-
 #include "russ.h"
 
 #ifdef USE_RUSS_FWD
