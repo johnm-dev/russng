@@ -243,6 +243,8 @@ russ_svr_loop_fork(struct russ_svr *self) {
 		}
 		if ((pid = fork()) == 0) {
 			setsid();
+			signal(SIGHUP, SIG_IGN);
+
 			russ_lis_close(self->lis);
 			self->lis = russ_lis_free(self->lis);
 			if (fork() == 0) {
