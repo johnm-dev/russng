@@ -38,6 +38,10 @@ libruss = ctypes.cdll.LoadLibrary("libruss.so")
 # russ.h
 RUSS_CONN_NFDS = 32
 RUSS_CONN_STD_NFDS = 4
+RUSS_CONN_FD_STDIN = 0
+RUSS_CONN_FD_STDOUT = 1
+RUSS_CONN_FD_STDERR = 2
+RUSS_CONN_FD_EXIT = 3
 
 RUSS_DEADLINE_NEVER = (1<<63)-1 # INT64_MAX
 
