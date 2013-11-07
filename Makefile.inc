@@ -27,6 +27,16 @@ ifeq ($(UNAME_SYSTEM),Darwin)
 	MAKE=gmake
 endif
 
+ifeq ($(UNAME_SYSTEM),FreeBSD)
+	CC=gcc
+	CFLAGS_RELAY=-DUSE_RUSS_RELAY
+	CFLAGS=-DFREEBSD -g $(CFLAGS_RELAY)
+	CFLAGS_STATIC=$(CFLAGS) -static
+	LDFLAGS_STATIC=-Wl,-Bstatic
+	LDFLAGS_DYNAMIC=-Wl,-Bdynamic
+	MAKE=gmake
+endif
+
 ifeq ($(UNAME_SYSTEM),Linux)
 	#CC=arm-linux-gnueabi-gcc
 	CC=gcc
@@ -37,14 +47,4 @@ ifeq ($(UNAME_SYSTEM),Linux)
 	LDFLAGS_DYNAMIC=-Wl,-Bdynamic
 	LIBS_PLAT=-lrt -lpam -lpam_misc
 	MAKE=make
-endif
-
-ifeq ($(UNAME_SYSTEM),FreeBSD)
-	CC=gcc
-	CFLAGS_RELAY=-DUSE_RUSS_RELAY
-	CFLAGS=-DFREEBSD -g $(CFLAGS_RELAY)
-	CFLAGS_STATIC=$(CFLAGS) -static
-	LDFLAGS_STATIC=-Wl,-Bstatic
-	LDFLAGS_DYNAMIC=-Wl,-Bdynamic
-	MAKE=gmake
 endif
