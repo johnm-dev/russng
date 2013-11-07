@@ -17,6 +17,16 @@ ifeq ($(UNAME_SYSTEM),AIX)
 	MAKE=gmake
 endif
 
+ifeq ($(UNAME_SYSTEM),Darwin)
+	CC=gcc
+	CFLAGS_RELAY=-DUSE_RUSS_RELAY
+	CFLAGS=-DFREEBSD -g $(CFLAGS_RELAY)
+	CFLAGS_STATIC=$(CFLAGS) -static
+	LDFLAGS_STATIC=-static
+	LDFLAGS_DYNAMIC=-dynamic
+	MAKE=gmake
+endif
+
 ifeq ($(UNAME_SYSTEM),Linux)
 	#CC=arm-linux-gnueabi-gcc
 	CC=gcc
