@@ -5,12 +5,12 @@
 
 include ../../../../Makefile.inc
 
-SRCS=conf.c connection.c encdec.c fd.c forwarder.c handlers.c \
+SRCS=buffer.c conf.c connection.c encdec.c fd.c forwarder.c handlers.c \
 	helpers.c io.c listener.c misc.c request.c socket.c spath.c \
-	time.c server.c servicenode.c relay.c
-OBJS=conf.o connection.o encdec.o fd.o forwarder.o handlers.o \
+	time.c server.c servicenode.c relay.c experimental.c
+OBJS=buffer.o conf.o connection.o encdec.o fd.o forwarder.o handlers.o \
 	helpers.o io.o listener.o misc.o request.o socket.o spath.o \
-	time.o server.o servicenode.o relay.o
+	time.o server.o servicenode.o relay.o experimental.o
 LIBS=$(LIBS_PLAT)
 
 all: libruss.a libruss.so

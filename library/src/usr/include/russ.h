@@ -118,6 +118,16 @@ struct russ_req {
 };
 
 /**
+* Buffer object.
+*/
+struct russ_buf {
+	char	*data;
+	int	cap;
+	int	len;
+	int	off;
+};
+
+/**
 * Connection object. Shared by client and server.
 */
 struct russ_conn {
@@ -176,6 +186,11 @@ struct russ_sess {
 	struct russ_req		*req;
 	char			spath[RUSS_REQ_SPATH_MAX];
 };
+
+/* buffer.c */
+int russ_buf_init(struct russ_buf *, char *, int, int);
+struct russ_buf *russ_buf_new(int);
+struct russ_buf *russ_buf_free(struct russ_buf *);
 
 /* conn.c */
 int russ_conn_answer(struct russ_conn *, int, int *, int *);
