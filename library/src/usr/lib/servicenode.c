@@ -34,7 +34,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "russ.h"
+#include "russ_priv.h"
 
 /**
 * Create new service node object.

@@ -25,7 +25,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include "russ.h"
+#include "russ_priv.h"
 
 /*
 * Convert variadic argument list of "char *" to argv array.

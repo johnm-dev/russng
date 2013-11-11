@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 
-#include <russ.h>
+#include <russ_priv.h>
 
 /**
 * Initialize a russ_buf with new data.
