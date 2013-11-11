@@ -27,7 +27,6 @@
 #include <stdlib.h>
 
 #include <russ.h>
-#include <russ_relay.h>
 
 #define POLLHEN	(POLLHUP|POLLERR|POLLNVAL)
 

@@ -36,10 +36,6 @@
 #include "russ_fwd.h"
 #endif /* USE_RUSS_FWD */
 
-#ifdef USE_RUSS_RELAY
-#include "russ_relay.h"
-#endif /* USE_RUSS_RELAY */
-
 void
 print_usage(char *prog_name) {
 	if (strcmp(prog_name, "rudial") == 0) {

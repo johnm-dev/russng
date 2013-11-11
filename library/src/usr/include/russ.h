@@ -66,6 +66,12 @@
 #define RUSS_MSG_NO_SWITCH_USER	"error: cannot switch user"
 #define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
 
+/* relay */
+#define RUSS_RELAY_BUFSIZE	(2<<15)
+#define RUSS_RELAYDIR_WE	0x1
+#define RUSS_RELAYDIR_EW	0x2
+#define RUSS_RELAYDIR_BI	RUSS_RELAYDIR_WE|RUSS_RELAYDIR_EW
+
 #define RUSS_REQ_ARGS_MAX	1024
 #define RUSS_REQ_ATTRS_MAX	1024
 #define RUSS_REQ_SPATH_MAX	8192
@@ -146,6 +152,21 @@ typedef int64_t russ_deadline;
 typedef struct russ_conn *(*russ_accepthandler)(struct russ_lis *, russ_deadline);
 typedef int (*russ_answerhandler)(struct russ_conn *);
 typedef void (*russ_reqhandler)(struct russ_conn *);
+
+/**
+* Relay and relaydata objects.
+*/
+struct russ_relaydata {
+	int		fd;		/**< associated fd */
+	struct russ_buf	*rbuf;		/**< output russ_buf */
+	int		auto_close;	/**< close on HEN */
+};
+
+struct russ_relay {
+	int			nfds;
+	struct pollfd		*pollfds;
+	struct russ_relaydata	**rdatas;
+};
 
 /**
 * Service node object.
@@ -245,6 +266,14 @@ const char *russ_op_lookup(russ_opnum);
 russ_opnum russ_opnum_lookup(char *);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
+
+/* relay.c */
+struct russ_relay *russ_relay_new(int);
+struct russ_relay *russ_relay_free(struct russ_relay *);
+int russ_relay_add(struct russ_relay *, int, int, int, int, int, int, int);
+int russ_relay_remove(struct russ_relay *, int);
+int russ_relay_poll(struct russ_relay *, int);
+int russ_relay_serve(struct russ_relay *, int);
 
 /* request.c */
 
