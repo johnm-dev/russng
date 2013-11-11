@@ -81,6 +81,14 @@ russ_deadline = ctypes.c_int64
 russ_opnum = ctypes.c_uint32
 
 # data type descriptions
+class russ_buf_Structure(ctypes.Structure):
+    _fields_ = [
+        ("data", ctypes.c_void_p),
+        ("cap", ctypes.c_int),
+        ("len", ctypes.c_int),
+        ("off", ctypes.c_int),
+    ]
+
 class russ_creds_Structure(ctypes.Structure):
     _fields_ = [
         ("pid", ctypes.c_long),
@@ -145,6 +153,25 @@ russ_sess_Structure._fields_ = [
         ("req", ctypes.POINTER(russ_req_Structure)),
         ("spath", ctypes.c_char*RUSS_REQ_SPATH_MAX),
     ]
+
+# buffer.c
+libruss.russ_buf_init.argtypes = [
+    ctypes.POINTER(russ_buf_Structure),
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_int,
+]
+libruss.russ_buf_init.restype = ctypes.c_int
+
+libruss.russ_buf_new.argtypes = [
+    ctypes.c_int,
+]
+libruss.russ_buf_new.restype = ctypes.POINTER(russ_buf_Structure)
+
+libruss.russ_buf_free.argtypes = [
+    ctypes.POINTER(russ_buf_Structure),
+]
+libruss.russ_buf_free.restype = ctypes.POINTER(russ_buf_Structure)
 
 # conn.c
 libruss.russ_conn_answer.argtypes = [
