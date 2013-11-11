@@ -48,6 +48,16 @@ def list_of_strings_to_c_string_array(l):
         else:
             c_strings[i] = ctypes.create_string_buffer(s).value
     return c_strings
+
+def convert_dial_attrs_args(attrs, args):
+    if attrs == None:
+        attrs = {}
+    attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
+    if args == None:
+        args = []
+    c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
+    c_argv = list_of_strings_to_c_string_array(list(args)+[None])
+    return c_attrs, c_argv
         
 #
 # Application-facing functions, classes, and more
@@ -61,13 +71,7 @@ def announce(path, mode, uid, gid):
 def dialv(deadline, op, spath, attrs, args):
     """Dial a service.
     """
-    if attrs == None:
-        attrs = {}
-    attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
-    if args == None:
-        args = []
-    c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
-    c_argv = list_of_strings_to_c_string_array(list(args)+[None])
+    c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
     conn_ptr = libruss.russ_dialv(deadline, op, spath, c_attrs, c_argv)
     return bool(conn_ptr) and ClientConn(conn_ptr, True) or None
 
