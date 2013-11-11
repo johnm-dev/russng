@@ -74,7 +74,6 @@ russ_relaydata_init(struct russ_relaydata *self, int fd, struct russ_buf *rbuf, 
 struct russ_relay *
 russ_relay_new(int n) {
 	struct russ_relay	*self;
-	struct russ_relaydata	*rdata;
 	int			i;
 
 	if ((self = malloc(sizeof(struct russ_relay))) == NULL) {
@@ -141,7 +140,6 @@ russ_relay_add(struct russ_relay *self, int dir,
 	int fd0, int bufsize0, int auto_close0,
 	int fd1, int bufsize1, int auto_close1) {
 	struct russ_relaydata	*rdatas[2] = {NULL, NULL};
-	int			idxs[2];
 	int			i;
 
 	if (((rdatas[0] = russ_relaydata_new(fd0, bufsize0, auto_close0)) == NULL)
@@ -181,7 +179,6 @@ free_rdatas:
 */
 int
 russ_relay_remove(struct russ_relay *self, int fd) {
-	int	idx;
 	int	i;
 
 	for (i = 0; i < self->nfds; i++) {
@@ -224,13 +221,12 @@ russ_relay_serve(struct russ_relay *self, int timeout) {
 	struct pollfd		*pollfds, *pollfd, *opollfd;
 	struct russ_relaydata	**rdatas;
 	struct russ_buf		*rbuf, *orbuf;
-	char			*buf;
-	int			idx, oidx;
+	int			oidx;
 	int			fd, ofd;
 	int			events, revents;
-	int			cnt, nevents, nfds, repoll;
+	int			cnt, nevents, nfds;
 	int			i;
-	
+
 	nfds = self->nfds;
 	pollfds = self->pollfds;
 	rdatas = self->rdatas;
