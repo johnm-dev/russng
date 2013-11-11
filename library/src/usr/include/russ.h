@@ -66,17 +66,6 @@
 #define RUSS_MSG_NO_SWITCH_USER	"error: cannot switch user"
 #define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
 
-/* relay */
-#define RUSS_RELAY_BUFSIZE	(2<<15)
-#define RUSS_RELAYDIR_WE	0x1
-#define RUSS_RELAYDIR_EW	0x2
-#define RUSS_RELAYDIR_BI	RUSS_RELAYDIR_WE|RUSS_RELAYDIR_EW
-
-#define RUSS_REQ_ARGS_MAX	1024
-#define RUSS_REQ_ATTRS_MAX	1024
-#define RUSS_REQ_SPATH_MAX	8192
-#define RUSS_REQ_PROTOCOL_STRING	"0009"
-
 #define RUSS_OPNUM_NOT_SET	0
 #define RUSS_OPNUM_EXTENSION	1
 #define RUSS_OPNUM_EXECUTE	2
@@ -85,15 +74,37 @@
 #define RUSS_OPNUM_INFO		5
 #define RUSS_OPNUM_LIST		6
 
+/* relay */
+#define RUSS_RELAY_BUFSIZE	(2<<15)
+#define RUSS_RELAYDIR_WE	0x1
+#define RUSS_RELAYDIR_EW	0x2
+#define RUSS_RELAYDIR_BI	RUSS_RELAYDIR_WE|RUSS_RELAYDIR_EW
+
+/* request */
+#define RUSS_REQ_ARGS_MAX	1024
+#define RUSS_REQ_ATTRS_MAX	1024
+#define RUSS_REQ_SPATH_MAX	8192
+#define RUSS_REQ_PROTOCOL_STRING	"0009"
+
+/* svr */
 #define RUSS_SVR_TIMEOUT_ACCEPT	INT_MAX
 #define RUSS_SVR_TIMEOUT_AWAIT	15000
-
 #define RUSS_SVR_TYPE_FORK	1
 #define RUSS_SVR_TYPE_THREAD	2
 
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
 typedef uint32_t	russ_opnum;
+
+/**
+* Buffer object.
+*/
+struct russ_buf {
+	char	*data;
+	int	cap;
+	int	len;
+	int	off;
+};
 
 /**
 * Client credentials object. Obtained from connection.
@@ -121,16 +132,6 @@ struct russ_req {
 	char		*spath;		/**< service path */
 	char		**attrv;	/**< NULL-terminated array of attributes (as name=value strings) */
 	char		**argv;		/**< NULL-terminated array of args */
-};
-
-/**
-* Buffer object.
-*/
-struct russ_buf {
-	char	*data;
-	int	cap;
-	int	len;
-	int	off;
 };
 
 /**
