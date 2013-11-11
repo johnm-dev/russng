@@ -234,6 +234,8 @@ struct russ_conn *russ_standard_accept_handler(struct russ_lis *, russ_deadline)
 int russ_standard_answer_handler(struct russ_conn *);
 
 /* helpers.c */
+int russ_dialv_wait(russ_deadline, char *, char *, char **, char **, int *);
+int russ_dialv_wait_inouterr(russ_deadline, char *, char *, char **, char **, int *, struct russ_buf **);
 struct russ_conn *russ_execv(russ_deadline, char *, char **, char **);
 struct russ_conn *russ_execl(russ_deadline, char *, char **, ...);
 struct russ_conn *russ_help(russ_deadline, char *);
