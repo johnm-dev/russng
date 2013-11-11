@@ -31,13 +31,38 @@
 
 #define POLLHEN	(POLLHUP|POLLERR|POLLNVAL)
 
-static void
-russ_relaydata_init(struct russ_relaydata *self, int fd, char *buf, int bufsize, int auto_close) {
+static struct russ_relaydata *
+russ_relaydata_free(struct russ_relaydata *self) {
+	if (self) {
+		russ_buf_free(self->rbuf);
+		free(self);
+	}
+	return NULL;
+}
+
+static struct russ_relaydata *
+russ_relaydata_new(int fd, int bufsize, int auto_close) {
+	struct russ_relaydata	*self;
+
+	if ((self = malloc(sizeof(struct russ_relaydata))) == NULL) {
+		return NULL;
+	}
+	if ((self->rbuf = russ_buf_new(bufsize)) == NULL) {
+		goto free_relaydata;
+	}
 	self->fd = fd;
-	self->buf = buf;
-	self->bufsize = bufsize;
-	self->bufcnt = 0;
-	self->bufoff = 0;
+	self->auto_close = auto_close;
+	return self;
+
+free_relaydata:
+	russ_relaydata_free(self);
+	return NULL;
+}
+
+static void
+russ_relaydata_init(struct russ_relaydata *self, int fd, struct russ_buf *rbuf, int auto_close) {
+	self->fd = fd;
+	self->rbuf = rbuf;
 	self->auto_close = auto_close;
 }
 
@@ -50,47 +75,50 @@ russ_relaydata_init(struct russ_relaydata *self, int fd, char *buf, int bufsize,
 struct russ_relay *
 russ_relay_new(int n) {
 	struct russ_relay	*self;
-	struct russ_relaydata	*data;
+	struct russ_relaydata	*rdata;
 	int			i;
 
-	if ((self = malloc(sizeof(struct russ_relay *))) == NULL) {
+	if ((self = malloc(sizeof(struct russ_relay))) == NULL) {
 		return NULL;
 	}
 	self->nfds = n;
 	self->pollfds = NULL;
-	self->datas = NULL;
+	self->rdatas = NULL;
 
 	if (((self->pollfds = malloc(sizeof(struct pollfd)*n)) == NULL)
-		|| ((self->datas = malloc(sizeof(struct russ_relaydata)*n)) == NULL)) {
+		|| ((self->rdatas = malloc(sizeof(struct russ_relaydata *)*n)) == NULL)) {
 		goto free_relay;
 	}
 
 	for (i = 0; i < n; i++) {
 		self->pollfds[i].fd = -1;
 		self->pollfds[i].events = 0;
-		russ_relaydata_init(&self->datas[i], -1, NULL, 0, 0);
+		self->rdatas[i] = NULL;
 	}
 
 	return self;
 
 free_relay:
-	free(self->pollfds);
-	free(self->datas);
-	free(self);
+	russ_relay_free(self);
 	return NULL;
 }
 
 /**
-* Destroy relay object.
+* Free relay object.
 *
 * @param self		relay object
 * @return		NULL
 */
 struct russ_relay *
-russ_relay_destroy(struct russ_relay *self) {
+russ_relay_free(struct russ_relay *self) {
+	int	i;
+
 	if (self) {
 		free(self->pollfds);
-		free(self->datas);
+		for (i = 0; i < self->nfds; i++) {
+			russ_relaydata_free(self->rdatas[i]);
+		}
+		free(self->rdatas);
 		free(self);
 	}
 	return NULL;
@@ -113,35 +141,35 @@ int
 russ_relay_add(struct russ_relay *self, int dir,
 	int fd0, int bufsize0, int auto_close0,
 	int fd1, int bufsize1, int auto_close1) {
-	char	*bufs[2] = {NULL, NULL};
-	int	idxs[2];
-	int	i;
+	struct russ_relaydata	*rdatas[2] = {NULL, NULL};
+	int			idxs[2];
+	int			i;
 
-	if (((bufs[0] = malloc(bufsize0)) == NULL)
-		|| ((bufs[1] = malloc(bufsize1)) == NULL)) {
-		goto free_bufs;
+	if (((rdatas[0] = russ_relaydata_new(fd0, bufsize0, auto_close0)) == NULL)
+		|| ((rdatas[1] = russ_relaydata_new(fd1, bufsize1, auto_close1)) == NULL)) {
+		goto free_rdatas;
 	}
 
 	for (i = 0; i < self->nfds; i += 2) {
-		if (self->datas[i].fd == -1) {
+		if (self->rdatas[i] == NULL) {
 			self->pollfds[i].fd = fd0;
 			self->pollfds[i].events = (dir & RUSS_RELAYDIR_WE) ? POLLIN : 0;
-			russ_relaydata_init(&self->datas[i], fd0, bufs[0], bufsize0, auto_close0);
+			self->rdatas[i] = rdatas[0];
 
 			self->pollfds[i+1].fd = fd1;
 			self->pollfds[i+1].events = (dir & RUSS_RELAYDIR_EW) ? POLLIN : 0;
-			russ_relaydata_init(&self->datas[i+1], fd1, bufs[1], bufsize1, auto_close1);
+			self->rdatas[i+1] = rdatas[1];
 			break;
 		}
 	}
 	if (i == self->nfds) {
-		goto free_bufs;
+		goto free_rdatas;
 	}
 	return 0;
 
-free_bufs:
-	free(bufs[0]);
-	free(bufs[1]);
+free_rdatas:
+	russ_relaydata_free(rdatas[0]);
+	russ_relaydata_free(rdatas[1]);
 	return -1;
 }
 
@@ -158,13 +186,12 @@ russ_relay_remove(struct russ_relay *self, int fd) {
 	int	i;
 
 	for (i = 0; i < self->nfds; i++) {
-		if (self->datas[i].fd == fd) {
-			if (self->datas[i].auto_close) {
-				russ_close(self->datas[i].fd);
+		if ((self->rdatas[i]) && (self->rdatas[i]->fd == fd)) {
+			if (self->rdatas[i]->auto_close) {
+				russ_close(self->rdatas[i]->fd);
 			}
 			self->pollfds[i].fd = -1;
-			free(self->datas[i].buf);
-			russ_relaydata_init(&self->datas[i], -1, NULL, 0, 0);
+			self->rdatas[i] = russ_relaydata_free(self->rdatas[i]);
 			break;
 		}
 	}
@@ -196,16 +223,18 @@ russ_relay_poll(struct russ_relay *self, int timeout) {
 int
 russ_relay_serve(struct russ_relay *self, int timeout) {
 	struct pollfd		*pollfds, *pollfd, *opollfd;
-	struct russ_relaydata	*datas, *data, *odata;
+	struct russ_relaydata	**rdatas;
+	struct russ_buf		*rbuf, *orbuf;
 	char			*buf;
 	int			idx, oidx;
-	int			fd, events, revents;
+	int			fd, ofd;
+	int			events, revents;
 	int			cnt, nevents, nfds, repoll;
 	int			i;
 	
 	nfds = self->nfds;
 	pollfds = self->pollfds;
-	datas = self->datas;
+	rdatas = self->rdatas;
 
 	while (nfds) {
 //usleep(500000);
@@ -219,51 +248,54 @@ russ_relay_serve(struct russ_relay *self, int timeout) {
 		}
 
 		for (i = 0; nevents && (i < self->nfds); i++) {
+			if ((pollfds[i].fd < 0) || (pollfds[i].revents == 0)) {
+				continue;
+			}
+
+			/* set aliases */
 			pollfd = &pollfds[i];
 			fd = pollfd->fd;
 			events = pollfd->events;
 			revents = pollfd->revents;
-			if ((fd < 0) || (revents == 0)) {
-				continue;
-			}
 
 			oidx = (i & 0x1) ? i-1 : i+1;
-			data = &datas[i];
-			opollfd = &pollfds[oidx];
-			odata = &datas[oidx];
+			ofd = rdatas[oidx]->fd;
+			opollfd = &pollfds[oidx];			
 
 			if (revents & POLLIN) {
-				if ((cnt = russ_read(fd, odata->buf, odata->bufsize)) <= 0) {
+				orbuf = rdatas[oidx]->rbuf;
+				if ((cnt = russ_read(fd, orbuf->data, orbuf->cap)) <= 0) {
 					/* EOF or error; unrecoverable */
 					goto disable_relay;
 				}
-				odata->bufcnt = cnt;
-				odata->bufoff = 0;
+				orbuf->len = cnt;
+				orbuf->off = 0;
 
 				/* flip */
 				pollfd->events &= ~POLLIN;
 				opollfd->events |= POLLOUT;
-				opollfd->fd = odata->fd;
+				opollfd->fd = ofd;
 				if (pollfds[oidx].revents & POLLHEN) {
 					/* altered events; jump to next fd pair */
 					i = ((i/2)+1)*2;
 				}
 				//break;
 			} else if (revents & POLLOUT) {
-				if ((cnt = russ_write(fd, data->buf+data->bufoff, data->bufcnt)) < 0) {
+				rbuf = rdatas[i]->rbuf;
+				if ((cnt = russ_write(fd, rbuf->data+rbuf->off, rbuf->len)) < 0) {
 					/* error; unrecoverable */
 					goto disable_relay;
 				}
-				data->bufoff += cnt;
-				if (data->bufoff == data->bufcnt) {
+				rbuf->off += cnt;
+				if (rbuf->off == rbuf->len) {
 					/* buffer written, reset */
-					data->bufoff = 0;
-					data->bufcnt = 0;
+					rbuf->off = 0;
+					rbuf->len = 0;
 
 					/* flip */
 					pollfd->events &= ~POLLOUT;
 					opollfd->events |= POLLIN;
-					opollfd->fd = odata->fd;
+					opollfd->fd = ofd;
 				}
 				if (pollfds[oidx].revents & POLLHEN) {
 					/* altered events; jump to next fd pair */
@@ -274,7 +306,7 @@ russ_relay_serve(struct russ_relay *self, int timeout) {
 				if (!(opollfd->events & POLLOUT)) {
 disable_relay:
 					russ_relay_remove(self, fd);
-					russ_relay_remove(self, odata->fd);
+					russ_relay_remove(self, ofd);
 					nfds -= 2;
 					break;
 				}
