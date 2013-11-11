@@ -127,12 +127,12 @@ russ_relay_free(struct russ_relay *self) {
 *
 * @param self		relay object
 * @param dir		relay direction
-* @param fda		an fd
-* @param bufsizea	outgoing buffer size for fda
-* @param auto_closea	auto close flag for fda
-* @param fdb		an fd
-* @param bufsizeb	outgoing buffer size for fdb
-* @param auto_closeb	auto close flag for fdb
+* @param fd0		an fd
+* @param bufsize0	outgoing buffer size for fd0
+* @param auto_close0	auto close flag for fd0
+* @param fd1		an fd
+* @param bufsize1	outgoing buffer size for fd1
+* @param auto_close1	auto close flag for fd1
 * @return		0 on success; -1 on error
 */
 int
