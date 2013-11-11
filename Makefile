@@ -17,6 +17,7 @@ all:
 	(cd servers; $(MAKE))
 	(cd tools; $(MAKE))
 	(cd pyruss; $(MAKE))
+	(cd tests; $(MAKE))
 	#(cd rbruss; $(MAKE))
 
 clean:
@@ -24,6 +25,7 @@ clean:
 	(cd servers; $(MAKE) clean)
 	(cd tools; $(MAKE) clean)
 	(cd pyruss; $(MAKE) clean)
+	(cd tests; $(MAKE) clean)
 	#(cd rbruss; $(MAKE) clean)
 
 doc:
