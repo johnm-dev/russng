@@ -77,6 +77,46 @@ def dialv(deadline, op, spath, attrs, args):
 
 dial = dialv
 
+def dialv_wait(deadline, op, spath, attrs, args):
+    c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
+    exit_status = ctypes.c_int()
+    rv = libruss.russ_dialv_wait(deadline, op, spath, c_attrs, c_argv, ctypes.byref(exit_status))
+    return rv, int(exit_status.value)
+
+def dialv_wait_inouterr(deadline, op, spath, attrs, args, stdin, stdout_size, stderr_size):
+    c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
+    exit_status = ctypes.c_int()
+
+    # create rbufs; exit on failure
+    rbufs = [
+        libruss.russ_buf_new(stdin and len(stdin) or 0),
+        libruss.russ_buf_new(stdout_size),
+        libruss.russ_buf_new(stderr_size),
+    ]
+    rbufs = [bool(rbuf) and rbuf or None for rbuf in rbufs]
+    if None in rbufs:
+        for i in xrange(3):
+            libruss.russ_buf_free(rbufs[i])
+        return -1, None, None, None
+
+    # copy stdin in
+    if stdin:
+        ctypes.memmove(rbufs[0].contents.data, ctypes.create_string_buffer(stdin), len(stdin))
+        rbufs[0].contents.len = len(stdin)
+
+    rv = libruss.russ_dialv_wait_inouterr3(deadline, op, spath, c_attrs, c_argv,
+        ctypes.byref(exit_status), rbufs[0], rbufs[1], rbufs[2])
+
+    # copy stdout and stderr out
+    stdout = ctypes.string_at(rbufs[1].contents.data, rbufs[1].contents.len)
+    stderr = ctypes.string_at(rbufs[2].contents.data, rbufs[2].contents.len)
+
+    # free rbufs
+    for i in xrange(3):
+        libruss.russ_buf_free(rbufs[i])
+
+    return rv, int(exit_status.value), stdout, stderr
+
 def execv(deadline, spath, attrs, args):
     """ruexec a service.
     """

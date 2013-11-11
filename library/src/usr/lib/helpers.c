@@ -172,6 +172,24 @@ close_fd:
 }
 
 /**
+* Temporary function to simplify pyruss binding for
+* russ_dialv_wait_inouterr()
+*
+* Note: this function should not be used from C.
+*/
+int
+russ_dialv_wait_inouterr3(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv,
+	int *exit_status, struct russ_buf *stdin, struct russ_buf *stdout, struct russ_buf *stderr) {
+	struct russ_buf	*rbufs[3];
+
+	rbufs[0] = stdin;
+	rbufs[1] = stdout;
+	rbufs[2] = stderr;
+
+	return russ_dialv_wait_inouterr(deadline, op, spath, attrv, argv, exit_status, rbufs);
+}
+
+/**
 * Wrapper for russ_dial with "execute" operation.
 *
 * @see russ_dialv()

@@ -266,6 +266,30 @@ libruss.russ_standard_answer_handler.argtypes = [
 ]
 libruss.russ_standard_answer_handler.restype = ctypes.c_int
 
+# helpers
+libruss.russ_dialv_wait.argtypes = [
+    russ_deadline,
+    ctypes.c_char_p,
+    ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_char_p),
+    ctypes.POINTER(ctypes.c_char_p),
+    ctypes.POINTER(ctypes.c_int),
+]
+libruss.russ_dialv_wait.restype = ctypes.c_int
+
+libruss.russ_dialv_wait_inouterr3.argtypes = [
+    russ_deadline,
+    ctypes.c_char_p,
+    ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_char_p),
+    ctypes.POINTER(ctypes.c_char_p),
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(russ_buf_Structure),
+    ctypes.POINTER(russ_buf_Structure),
+    ctypes.POINTER(russ_buf_Structure),
+]
+libruss.russ_dialv_wait_inouterr3.restype = ctypes.c_int
+
 # listener.c
 libruss.russ_announce.argtypes = [
     ctypes.c_char_p,
