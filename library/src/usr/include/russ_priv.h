@@ -47,7 +47,7 @@ struct russ_op_table {
 
 /* conn.c */
 struct russ_conn *russ_conn_new(void);
-int russ_conn_send_request(struct russ_conn *, struct russ_req *, russ_deadline);
+int russ_conn_send_request(struct russ_conn *, russ_deadline, struct russ_req *);
 
 /* encdec.c */
 char *russ_dec_H(char *, uint16_t *);

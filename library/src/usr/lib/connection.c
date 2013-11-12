@@ -424,10 +424,11 @@ russ_conn_free(struct russ_conn *self) {
 *
 * @param self		connection object
 * @param deadline	deadline to send
+* @param req		request object
 * @return		0 on success; -1 on error
 */
 int
-russ_conn_send_request(struct russ_conn *self, struct russ_req *req, russ_deadline deadline) {
+russ_conn_send_request(struct russ_conn *self, russ_deadline deadline, struct russ_req *req) {
 	char	buf[RUSS_REQ_BUF_MAX], *bp, *bend;
 
 	bp = buf;
@@ -481,7 +482,7 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 	}
 
 	if (((req = russ_req_new(RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv)) == NULL)
-		|| (russ_conn_send_request(conn, req, deadline) < 0)
+		|| (russ_conn_send_request(conn, deadline, req) < 0)
 		|| (russ_conn_recvfds(conn, deadline) < 0)) {
 		goto free_request;
 	}
