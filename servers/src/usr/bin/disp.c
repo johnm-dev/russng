@@ -70,7 +70,7 @@ reader_handler(void *arg) {
 
 	while (1) {
 //fprintf(stderr, "reader [%d,%d,%d]: waiting for data\n", self->id, self->datafd, self->rsigfd);
-		if (russ_poll(pollfds, 2, -1) < 0) {
+		if (russ_poll_deadline(-1, pollfds, 2) < 0) {
 //fprintf(stderr, "reader [%d,%d,%d]: errno (%d)\n", self->id, self->datafd, self->rsigfd, errno);
 			break;
 		}
@@ -93,7 +93,7 @@ reader_handler(void *arg) {
 		}
 //fprintf(stderr, "reader [%d,%d,%d]: waiting for ack\n", self->id, self->datafd, self->rsigfd);
 		/* wait for ack */
-		if ((russ_poll(pollfds, 1, -1) < 0)
+		if ((russ_poll_deadline(-1, pollfds, 1) < 0)
 			|| (pollfds[0].revents & POLLHEN)
 			|| (russ_readn(self->rsigfd, lbuf, 1) < 0)) {
 			break;
@@ -131,7 +131,7 @@ writer_handler(void *arg) {
 	while (1) {
 //fprintf(stderr, "writer [%d,%d,%d]: waiting for data\n", self->id, self->datafd, self->rsigfd);
 		/* wait for data */
-		if (russ_poll(pollfds, 2, -1) < 0) {
+		if (russ_poll_deadline(-1, pollfds, 2) < 0) {
 //fprintf(stderr, "writer [%d,%d,%d]: errno (%d)\n", self->id, self->datafd, self->rsigfd, errno);
 			break;
 		}

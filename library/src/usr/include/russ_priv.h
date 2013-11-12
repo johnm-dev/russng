@@ -76,10 +76,10 @@ void russ_fds_close(int *, int);
 int russ_make_pipes(int, int *, int *);
 
 /* io.c */
-int russ_accept(int, struct sockaddr *, socklen_t *, russ_deadline);
-int russ_connect(int sd, struct sockaddr *, socklen_t, russ_deadline);
-int russ_connect_unix(char *, russ_deadline);
-int russ_poll(struct pollfd *, int, russ_deadline);
+int russ_accept_deadline(russ_deadline, int, struct sockaddr *, socklen_t *);
+int russ_connect_deadline(russ_deadline, int sd, struct sockaddr *, socklen_t);
+int russ_connectunix_deadline(russ_deadline, char *);
+int russ_poll_deadline(russ_deadline, struct pollfd *, int);
 
 /* request.c */
 struct russ_req *russ_req_new(char *, char *, char *, char **, char **);

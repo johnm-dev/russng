@@ -137,14 +137,14 @@ russ_readn(int fd, char *b, size_t count) {
 /**
 * Guaranteed read. Return on success or unrecoverable error/EOF.
 *
+* @param deadline	deadline to complete operation
 * @param fd		descriptor
 * @param[out] b		buffer
 * @param count		# of bytes to read
-* @param deadline	deadline to complete operation
 * @return		# of bytes read; < count on error/EOF
 */
 ssize_t
-russ_readn_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
+russ_readn_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
 	struct pollfd	poll_fds[1];
 	int		rv, due_time;
 	ssize_t		n;
@@ -160,7 +160,7 @@ russ_readn_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 
 	bend = b+count;
 	while (b < bend) {
-		if ((rv = russ_poll(poll_fds, 1, deadline)) <= 0) {
+		if ((rv = russ_poll_deadline(deadline, poll_fds, 1)) <= 0) {
 			/* error or timeout */
 			break;
 		} else if (poll_fds[0].revents & POLLIN) {
@@ -228,14 +228,14 @@ russ_writen(int fd, char *b, size_t count) {
 * All bytes are written unless the deadline is reached or
 * unrecoverable error happens.
 *
+* @param deadline	deadline to complete call
 * @param fd		descriptor
 * @param b		buffer
 * @param count		# of bytes to write
-* @param deadline	deadline to complete call
 * @return		# of bytes written; < count on error
 */
 ssize_t
-russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
+russ_writen_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
 	struct pollfd	poll_fds[1];
 	int		rv, due_time;
 	ssize_t		n;
@@ -251,7 +251,7 @@ russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 
 	bend = b+count;
 	while (b < bend) {
-		if ((rv = russ_poll(poll_fds, 1, deadline)) <= 0) {
+		if ((rv = russ_poll_deadline(deadline, poll_fds, 1)) <= 0) {
 			/* error or timeout */
 			break;
 		} else if (poll_fds[0].revents & POLLOUT) {
@@ -277,7 +277,7 @@ russ_writen_deadline(int fd, char *b, size_t count, russ_deadline deadline) {
 * @return		value as returned from accept; -1 on failure
 */
 int
-russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline deadline) {
+russ_accept_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, socklen_t *addrlen) {
 	struct pollfd	poll_fds[1];
 	int		rv;
 
@@ -311,14 +311,14 @@ russ_accept(int sd, struct sockaddr *addr, socklen_t *addrlen, russ_deadline dea
 /**
 * connect() with automatic restart on EINTR.
 *
+* @param deadline	deadline to complete operation
 * @param sd		socket descriptor
 * @param addr		sockaddr structure
 * @param addrlen	sockaddr structure length
-* @param deadline	deadline to complete operation
 * @return		0 on success; -1 on error
 */
 int
-russ_connect(int sd, struct sockaddr *addr, socklen_t addrlen, russ_deadline deadline) {
+russ_connect_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, socklen_t addrlen) {
 	struct pollfd		poll_fds[1];
 	int			flags;
 
@@ -336,7 +336,7 @@ russ_connect(int sd, struct sockaddr *addr, socklen_t addrlen, russ_deadline dea
 		if ((errno == EINTR) || (errno == EINPROGRESS)) {
 			poll_fds[0].fd = sd;
 			poll_fds[0].events = POLLIN;
-			if (russ_poll(poll_fds, 1, deadline) < 0) {
+			if (russ_poll_deadline(deadline, poll_fds, 1) < 0) {
 				return -1;
 			}
 		}
@@ -352,12 +352,12 @@ russ_connect(int sd, struct sockaddr *addr, socklen_t addrlen, russ_deadline dea
 * Special connect() for AF_UNIX socket, SOCK_STREAM, with automatic
 * restart on EINTR, wait for EINPROGRESS, and retry on EAGAIN.
 *
-* @param path		path to socket file
 * @param deadline	deadline to complete operation
+* @param path		path to socket file
 * @return		socket descriptor; -1 on error
 */
 int
-russ_connect_unix(char *path, russ_deadline deadline) {
+russ_connectunix_deadline(russ_deadline deadline, char *path) {
 	struct sockaddr_un	servaddr;
 	socklen_t		addrlen;
 	struct pollfd		poll_fds[1];
@@ -382,7 +382,7 @@ retry:
 		if ((errno == EINTR) || (errno == EINPROGRESS) || (errno == EAGAIN)) {
 			poll_fds[0].fd = sd;
 			poll_fds[0].events = POLLIN;
-			if (russ_poll(poll_fds, 1, deadline) < 0) {
+			if (russ_poll_deadline(deadline, poll_fds, 1) < 0) {
 				goto cleanup;
 			}
 			if (errno == EAGAIN) {
@@ -409,13 +409,13 @@ cleanup:
 /**
 * poll() with automatic restart on EINTR.
 *
+* @param deadline	deadline to complete operation
 * @param poll_fds	initialized pollfd structure
 * @param nfds		# of descriptors in poll_fds
-* @param deadline	deadline to complete operation
 * @return		value as returned by system poll
 */
 int
-russ_poll(struct pollfd *poll_fds, int nfds, russ_deadline deadline) {
+russ_poll_deadline(russ_deadline deadline, struct pollfd *poll_fds, int nfds) {
 	int	rv;
 
 	while (1) {

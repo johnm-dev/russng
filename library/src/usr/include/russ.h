@@ -249,9 +249,9 @@ int russ_close(int);
 ssize_t russ_read(int, char *, size_t);
 ssize_t russ_readline(int, char *, size_t);
 ssize_t russ_readn(int, char *, size_t);
-ssize_t russ_readn_deadline(int, char *, size_t, russ_deadline);
+ssize_t russ_readn_deadline(russ_deadline, int, char *, size_t);
 ssize_t russ_writen(int, char *, size_t);
-ssize_t russ_writen_deadline(int, char *, size_t, russ_deadline);
+ssize_t russ_writen_deadline(russ_deadline, int, char *, size_t);
 
 /* listener.c */
 struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);

@@ -120,7 +120,7 @@ russ_lis_accept(struct russ_lis *self, russ_deadline deadline) {
 	}
 
 	servaddr_len = sizeof(struct sockaddr_un);
-	if ((conn->sd = russ_accept(self->sd, (struct sockaddr *)&servaddr, &servaddr_len, deadline)) < 0) {
+	if ((conn->sd = russ_accept_deadline(deadline, self->sd, (struct sockaddr *)&servaddr, &servaddr_len)) < 0) {
 		fprintf(stderr, "warning: russ_accept() fails with errno (%d)\n", errno);
 		goto free_conn;
 	}

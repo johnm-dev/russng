@@ -84,10 +84,10 @@ russ_conn_recvfds(struct russ_conn *self, russ_deadline deadline) {
 	int	nfds, i;
 
 	/* recv count of fds and fd statuses */
-	if ((russ_readn_deadline(self->sd, buf, 4, deadline) < 4)
+	if ((russ_readn_deadline(deadline, self->sd, buf, 4) < 4)
 		|| (russ_dec_i(buf, &nfds) == NULL)
 		|| (nfds > RUSS_CONN_NFDS)
-		|| (russ_readn_deadline(self->sd, buf, nfds, deadline) < nfds)) {
+		|| (russ_readn_deadline(deadline, self->sd, buf, nfds) < nfds)) {
 		return -1;
 	}
 
@@ -133,7 +133,7 @@ russ_conn_sendfds(struct russ_conn *self, int nfds, int *cfds, int *sfds) {
 		bp[i] = (char)(cfds[i] >= 0);
 	}
 	bp += nfds;
-	if (russ_writen_deadline(self->sd, buf, bp-buf, RUSS_DEADLINE_NEVER) < bp-buf) {
+	if (russ_writen_deadline(RUSS_DEADLINE_NEVER, self->sd, buf, bp-buf) < bp-buf) {
 		return -1;
 	}
 
@@ -223,9 +223,9 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 
 	/* get request size, load, and upack */
 	bp = buf;
-	if ((russ_readn_deadline(self->sd, bp, 4, deadline) < 0)
+	if ((russ_readn_deadline(deadline, self->sd, bp, 4) < 0)
 		|| ((bp = russ_dec_i(bp, &size)) == NULL)
-		|| (russ_readn_deadline(self->sd, bp, size, deadline) < 0)) {
+		|| (russ_readn_deadline(deadline, self->sd, bp, size) < 0)) {
 		return NULL;
 	}
 
@@ -446,7 +446,7 @@ russ_conn_send_request(struct russ_conn *self, struct russ_req *req, russ_deadli
 
 	/* patch size and send */
 	russ_enc_i(buf, bend, bp-buf-4);
-	if (russ_writen_deadline(self->sd, buf, bp-buf, deadline) < bp-buf) {
+	if (russ_writen_deadline(deadline, self->sd, buf, bp-buf) < bp-buf) {
 		return -1;
 	}
 	return 0;
@@ -476,7 +476,7 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 		return NULL;
 	}
 	if (((conn = russ_conn_new()) == NULL)
-		|| ((conn->sd = russ_connect_unix(saddr, deadline)) < 0)) {
+		|| ((conn->sd = russ_connectunix_deadline(deadline, saddr)) < 0)) {
 		goto free_saddr;
 	}
 

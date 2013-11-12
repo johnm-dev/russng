@@ -127,7 +127,7 @@ russ_dialv_wait_inouterr(russ_deadline deadline, char *op, char *spath, char **a
 	pollfds[3].events = POLLIN;
 	openfds = 4;
 
-	while ((openfds > 0) && ((rv = russ_poll(pollfds, 4, deadline)) >= 0)) {
+	while ((openfds > 0) && ((rv = russ_poll_deadline(deadline, pollfds, 4)) >= 0)) {
 		for (i = 0; i < 3; i++) {
 			if (pollfds[i].revents) {
 				fd = pollfds[i].fd;
