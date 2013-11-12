@@ -363,7 +363,7 @@ russ_conn_fatal(struct russ_conn *self, char *msg, int exit_status) {
 * @return		0 on success; on -1 general failure; -2 on exit fd closed; -3 on deadline expired
 */
 int
-russ_conn_wait(struct russ_conn *self, int *exit_status, russ_deadline deadline) {
+russ_conn_wait(struct russ_conn *self, russ_deadline deadline, int *exit_status) {
 	struct pollfd	poll_fds[1];
 	char		buf[1024];
 	int		rv, _exit_status;

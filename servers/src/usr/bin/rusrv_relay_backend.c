@@ -77,7 +77,7 @@ main(int argc, char **argv) {
 	}
 
 	/* wait for exit */
-	if (russ_conn_wait(conn, &exit_status, -1) != 0) {
+	if (russ_conn_wait(conn, -1, &exit_status) != 0) {
 		exit_status = RUSS_EXIT_SYS_FAILURE;
 	}
 	russ_fwd_join(&(fwds[1]));

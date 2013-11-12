@@ -240,8 +240,8 @@ libruss.russ_conn_splice.restype = ctypes.c_int
 
 libruss.russ_conn_wait.argstypes = [
     ctypes.POINTER(russ_conn_Structure),
-    ctypes.POINTER(ctypes.c_int),
     russ_deadline,
+    ctypes.POINTER(ctypes.c_int),
 ]
 libruss.russ_conn_wait.restype = ctypes.c_int
 

@@ -225,7 +225,7 @@ int russ_conn_fatal(struct russ_conn *, char *, int);
 struct russ_conn *russ_conn_free(struct russ_conn *);
 int russ_conn_sendfds(struct russ_conn *, int, int *, int *);
 int russ_conn_splice(struct russ_conn *, struct russ_conn *);
-int russ_conn_wait(struct russ_conn *, int *, russ_deadline);
+int russ_conn_wait(struct russ_conn *, russ_deadline, int *);
 
 struct russ_conn *russ_dialv(russ_deadline, char *, char *, char **, char **);
 struct russ_conn *russ_diall(russ_deadline, char *, char *, char **, ...);

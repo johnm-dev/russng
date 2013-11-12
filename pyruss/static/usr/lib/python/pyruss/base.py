@@ -251,7 +251,7 @@ class ClientConn(Conn):
 
     def wait(self, deadline):
         exit_status = ctypes.c_int()
-        return libruss.russ_conn_wait(self._ptr, ctypes.byref(exit_status), deadline), exit_status.value
+        return libruss.russ_conn_wait(self._ptr, deadline, ctypes.byref(exit_status)), exit_status.value
 
 class Credentials:
     """Connection credentials.

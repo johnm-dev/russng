@@ -221,7 +221,7 @@ main(int argc, char **argv) {
 		if (debug) {
 			fprintf(stderr, "debug: waiting for connection exit\n");
 		}
-		if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+		if (russ_conn_wait(conn, -1, &exit_status) < 0) {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 			exit_status = RUSS_EXIT_SYS_FAILURE;
 		}
@@ -258,7 +258,7 @@ main(int argc, char **argv) {
 		if (debug) {
 			fprintf(stderr, "debug: waiting for connection exit\n");
 		}
-		if (russ_conn_wait(conn, &exit_status, -1) < 0) {
+		if (russ_conn_wait(conn, -1, &exit_status) < 0) {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 			exit_status = RUSS_EXIT_SYS_FAILURE;
 		}

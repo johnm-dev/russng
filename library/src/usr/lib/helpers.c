@@ -163,7 +163,7 @@ close_fd:
 			}
 		}
 		if (pollfds[3].revents & POLLIN) {
-			russ_conn_wait(conn, exit_status, deadline);
+			russ_conn_wait(conn, deadline, exit_status);
 			openfds--;
 		}
 	}
