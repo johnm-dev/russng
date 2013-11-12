@@ -224,7 +224,7 @@ russ_execl(russ_deadline deadline, char *spath, char **attrv, ...) {
 /**
 * Wrapper for russ_dial with "help" operation.
 *
-* @param deadilne	deadline to complete operation
+* @param deadline	deadline to complete operation
 * @param spath		service path
 * @return		connection object
 */
