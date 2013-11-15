@@ -36,6 +36,7 @@ extern char **environ;
 #include "russ_conf.h"
 #include "russ.h"
 
+#define DEFAULT_DIAL_TIMEOUT	(30000)
 #define DEFAULT_RELAY_ADDR	"+/ssh"
 #define MAX_HOSTS		(32768)
 
@@ -102,7 +103,7 @@ redial_and_splice(struct russ_sess *sess) {
 	}
 
 	/* switch user, dial next service, and splice */
-	if (((conn2 = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL)
+	if (((conn2 = russ_dialv(russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req->op, req->spath, req->attrv, req->argv)) == NULL)
 		|| (russ_conn_splice(conn, conn2) < 0)) {
 		russ_conn_close(conn2);
 		russ_standard_answer_handler(conn);
