@@ -32,15 +32,6 @@
 
 #include "russ_priv.h"
 
-struct russ_optable russ_optable[] = {
-	{ "execute", RUSS_OPNUM_EXECUTE },
-	{ "list", RUSS_OPNUM_LIST },
-	{ "help", RUSS_OPNUM_HELP },
-	{ "id", RUSS_OPNUM_ID },
-	{ "info", RUSS_OPNUM_INFO },
-	{ NULL, RUSS_OPNUM_EXTENSION },
-};
-
 /**
 * Count elements of NULL-terminated string array (not including
 * NULL).
@@ -171,47 +162,6 @@ void *
 russ_malloc(size_t size) {
 	size = (size == 0) ? 1 : size;
 	return malloc(size);
-}
-
-/**
-* Look up an operation string and return an op value corresponding
-* to it.
-*
-* The standard operation strings are recognized as are integer
-* values up to the sizeof(russ_opnum) == sizeof(uint32_t).
-*
-* @param str		operation string
-* @return		op value; RUSS_OPNUM_EXTENSION if no match
-*/
-russ_opnum
-russ_optable_find_opnum(struct russ_optable *self, char *str) {
-	if (self == NULL) {
-		self = russ_optable;
-	}
-
-	if (str == NULL) {
-		return RUSS_OPNUM_NOT_SET;
-	}
-	/* RUSS_OPNUM_EXTENSION tests last to ensure match */
-	for (; ; self++) {
-		if ((self->num == RUSS_OPNUM_EXTENSION) || (strcmp(str, self->str) == 0)) {
-			return self->num;
-		}
-	}
-}
-
-const char *
-russ_optable_find_op(struct russ_optable *self, russ_opnum opnum) {
-	if (self == NULL) {
-		self = russ_optable;
-	}
-
-	for (; self->num != RUSS_OPNUM_NOT_SET; self++) {
-		if (self->num == opnum) {
-			break;
-		}
-	}
-	return self->str;
 }
 
 /**

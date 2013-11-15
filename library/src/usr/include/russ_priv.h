@@ -40,11 +40,6 @@
 
 #define RUSS_LISTEN_BACKLOG	1024
 
-struct russ_optable {
-	const char	*str;
-	russ_opnum	num;
-};
-
 /* conn.c */
 struct russ_conn *russ_conn_new(void);
 int russ_conn_send_request(struct russ_conn *, russ_deadline, struct russ_req *);
