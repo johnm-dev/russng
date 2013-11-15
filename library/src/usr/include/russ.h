@@ -266,8 +266,8 @@ int russ_misc_str_count(char *, char *);
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
 void *russ_malloc(size_t);
-const char *russ_op_lookup(russ_opnum);
-russ_opnum russ_opnum_lookup(char *);
+const char *russ_optable_find_op(struct russ_optable *, russ_opnum);
+russ_opnum russ_optable_find_opnum(struct russ_optable *, char *);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
 

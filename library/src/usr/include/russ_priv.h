@@ -40,7 +40,7 @@
 
 #define RUSS_LISTEN_BACKLOG	1024
 
-struct russ_op_table {
+struct russ_optable {
 	const char	*str;
 	russ_opnum	num;
 };

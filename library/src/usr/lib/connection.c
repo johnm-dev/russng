@@ -247,7 +247,7 @@ russ_conn_await_request(struct russ_conn *self, russ_deadline deadline) {
 		goto free_request;
 	}
 	free(dummy);
-	req->opnum = russ_opnum_lookup(req->op);
+	req->opnum = russ_optable_find_opnum(NULL, req->op);
 	return req;
 free_request:
 	free(dummy);

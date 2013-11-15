@@ -324,10 +324,11 @@ libruss.russ_lis_loop.argtypes = [
 libruss.russ_lis_loop.restype = None
 
 # misc.c
-libruss.russ_opnum_lookup.argtypes = [
+libruss.russ_optable_find_opnum.argtypes = [
+    ctypes.c_void_p,    # pass None for default
     ctypes.c_char_p,
 ]
-libruss.russ_opnum_lookup.restype = russ_opnum
+libruss.russ_optable_find_opnum.restype = russ_opnum
 
 libruss.russ_switch_user.argtypes = [
     ctypes.c_int,

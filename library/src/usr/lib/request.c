@@ -61,7 +61,7 @@ russ_req_new(char *protocol_string, char *op, char *spath, char **attrv, char **
 		|| ((spath) && ((self->spath = strdup(spath)) == NULL))) {
 		goto free_request;
 	}
-	self->opnum = russ_opnum_lookup(op);
+	self->opnum = russ_optable_find_opnum(NULL, op);
 	if (attrv) {
 		if ((self->attrv = russ_sarray0_dup(attrv, RUSS_REQ_ATTRS_MAX)) == NULL) {
 			goto free_request;

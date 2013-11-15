@@ -32,7 +32,7 @@
 
 #include "russ_priv.h"
 
-struct russ_op_table russ_op_table[] = {
+struct russ_optable russ_optable[] = {
 	{ "execute", RUSS_OPNUM_EXECUTE },
 	{ "list", RUSS_OPNUM_LIST },
 	{ "help", RUSS_OPNUM_HELP },
@@ -184,30 +184,34 @@ russ_malloc(size_t size) {
 * @return		op value; RUSS_OPNUM_EXTENSION if no match
 */
 russ_opnum
-russ_opnum_lookup(char *str) {
-	struct russ_op_table	*table;
+russ_optable_find_opnum(struct russ_optable *self, char *str) {
+	if (self == NULL) {
+		self = russ_optable;
+	}
 
 	if (str == NULL) {
 		return RUSS_OPNUM_NOT_SET;
 	}
 	/* RUSS_OPNUM_EXTENSION tests last to ensure match */
-	for (table = russ_op_table; ; table++) {
-		if ((table->num == RUSS_OPNUM_EXTENSION) || (strcmp(str, table->str) == 0)) {
-			return table->num;
+	for (; ; self++) {
+		if ((self->num == RUSS_OPNUM_EXTENSION) || (strcmp(str, self->str) == 0)) {
+			return self->num;
 		}
 	}
 }
 
 const char *
-russ_op_lookup(russ_opnum opnum) {
-	struct russ_op_table	*table;
+russ_optable_find_op(struct russ_optable *self, russ_opnum opnum) {
+	if (self == NULL) {
+		self = russ_optable;
+	}
 
-	for (table = russ_op_table; table->num != RUSS_OPNUM_NOT_SET; table++) {
-		if (table->num == opnum) {
+	for (; self->num != RUSS_OPNUM_NOT_SET; self++) {
+		if (self->num == opnum) {
 			break;
 		}
 	}
-	return table->str;
+	return self->str;
 }
 
 /**
