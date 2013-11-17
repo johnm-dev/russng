@@ -33,6 +33,9 @@
 
 #include "russ.h"
 
+#define BUFSIZE		(1<<15)
+#define BUFSIZE_MAX	(1<<20)
+
 #ifdef USE_RUSS_FWD
 #include "russ_fwd.h"
 #endif /* USE_RUSS_FWD */
@@ -123,6 +126,8 @@ print_usage(char *prog_name) {
 "Options:\n"
 "-a|--attr <name=vaue>\n" \
 "    Pass a 'name=value' string to the service.\n"
+"-b <bufsize>\n" \
+"    Set buffer size for reading/writing.\n"
 "-t|--timeout <seconds>\n" \
 "    Allow a given amount of time to connect before aborting.\n"
 );
@@ -139,13 +144,14 @@ main(int argc, char **argv) {
 	char			*op, *spath, *arg;
 	char			*attrv[RUSS_REQ_ATTRS_MAX];
 	int			argi, attrc;
-	int			exit_status;
+	int			bufsize, exit_status;
 
 	signal(SIGPIPE, SIG_IGN);
 
 	prog_name = basename(strdup(argv[0]));
 
 	/* initialize */
+	bufsize = BUFSIZE;
 	debug = 0;
 	deadline = RUSS_DEADLINE_NEVER;
 	argi = 1;
@@ -175,6 +181,14 @@ main(int argc, char **argv) {
 			}
 			attrv[attrc++] = arg;
 			attrv[attrc] = NULL;
+		} else if ((strcmp(arg, "-b") == 0) && (argi < argc)) {
+			arg = argv[argi++];
+			if ((sscanf(arg, "%d", (int *)&bufsize) < 0)
+				|| (bufsize <= 0)
+				|| (bufsize > BUFSIZE_MAX)) {
+				fprintf(stderr, "error: bad buffer size value\n");
+				exit(1);
+			}
 		} else if (strcmp(arg, "--debug") == 0) {
 			debug = 1;
 		} else if ((strcmp(arg, "-h") == 0) || (strcmp(arg, "--help") == 0)) {
@@ -253,9 +267,9 @@ main(int argc, char **argv) {
 			* and start threads; STDERR_FILENO is not closed if
 			* debugging
 			*/
-			russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
-			russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
-			russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 65536, 0,
+			russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, bufsize, 0, RUSS_FWD_CLOSE_INOUT);
+			russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, bufsize, 0, RUSS_FWD_CLOSE_INOUT);
+			russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, bufsize, 0,
 				(debug ? RUSS_FWD_CLOSE_IN : RUSS_FWD_CLOSE_INOUT));
 			conn->fds[0] = -1;
 			conn->fds[1] = -1;
@@ -293,9 +307,9 @@ main(int argc, char **argv) {
 			struct russ_relay	*relay;
 
 			relay = russ_relay_new(3*2);
-			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, RUSS_RELAY_BUFSIZE, 1, conn->fds[0], RUSS_RELAY_BUFSIZE, 1);
-			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, RUSS_RELAY_BUFSIZE, 1, conn->fds[1], RUSS_RELAY_BUFSIZE, 1);
-			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, RUSS_RELAY_BUFSIZE, 0, conn->fds[2], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, bufsize, 1, conn->fds[0], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, bufsize, 1, conn->fds[1], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, bufsize, 0, conn->fds[2], RUSS_RELAY_BUFSIZE, 1);
 
 			conn->fds[0] = -1;
 			conn->fds[1] = -1;
