@@ -197,6 +197,10 @@ main(int argc, char **argv) {
 	}
 
 	/* [op], spath and args */
+	if (argi == argc) {
+		fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
+		exit(1);
+	}
 	if ((strcmp(prog_name, "rudial") == 0) || (strcmp(prog_name, "ruexec") == 0)) {
 		if ((strcmp(prog_name, "rudial") == 0) 
 			&& (argi+2 <= argc)) {
@@ -211,27 +215,14 @@ main(int argc, char **argv) {
 			exit(1);
 		}
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
-		if (argi >= argc) {
-			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
-			exit(1);
-		}
 		op = "help";
 		spath = argv[argi++];
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
-		if (argi >= argc) {
-			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
-			exit(1);
-		}
 		op = "info";
 		spath = argv[argi++];
 	} else if (strcmp(prog_name, "ruls") == 0) {
-		if (argi >= argc) {
-			spath = ".";
-		} else {
-			op = "list";
-			spath = argv[argi++];
-		}
-		/* resolve before calling russ_dialv */
+		op = "list";
+		spath = argv[argi++];
 		spath = russ_spath_resolve(spath);
 	} else {
 		fprintf(stderr, "error: unknown program name\n");
