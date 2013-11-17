@@ -7,7 +7,7 @@ include ../../../../Makefile.inc
 
 # rt for clock_gettime()
 LIBS=-lruss -lpthread $(LIBS_PLAT)
-BINS=rudial ruls russ_resolve_spath
+BINS=rudial ruexec ruhelp ruinfo ruls russ_resolve_spath
 
 ifndef RUSS_INCLUDE_DIR
 	$(error "error: missing RUSS_INCLUDE_DIR")
@@ -27,17 +27,24 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)/usr/bin
 	(cp $(BINS) $(INSTALL_DIR)/usr/bin)
-	(cd $(INSTALL_DIR)/usr/bin; ln -fs rudial ruexec; ln -fs rudial ruhelp; ln -fs rudial ruinfo)
-	(cd $(INSTALL_DIR)/usr/bin; ln -fs rudial ruexec; ln -fs rudial ruhelp; ln -fs rudial ruinfo)
 
 rudial:	rudial.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rudial2:	rudial2.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
+ruexec: rudial.c
+	cp rudial ruexec
 
-ruls:	ruls.c
-	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
+ruhelp: rudial.c
+	cp rudial ruhelp
+
+ruinfo: rudial.c
+	cp rudial ruinfo
+
+ruls: rudial.c
+	cp rudial ruls
+
+#rudial2:	rudial2.c
+#	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 russ_resolve_spath:	russ_resolve_spath.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)

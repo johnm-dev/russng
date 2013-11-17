@@ -22,6 +22,7 @@
 # license--end
 */
 
+#include <dirent.h>
 #include <libgen.h>
 #include <pthread.h>
 #include <signal.h>
@@ -35,6 +36,38 @@
 #ifdef USE_RUSS_FWD
 #include "russ_fwd.h"
 #endif /* USE_RUSS_FWD */
+
+int
+print_dir_list(char *spath) {
+	struct stat		st;
+	DIR			*dir;
+	struct dirent		*dent;
+	char			path[RUSS_REQ_SPATH_MAX];
+
+	if ((dir = opendir(spath)) == NULL) {
+		fprintf(stderr, "error: cannot open directory\n");
+		return -1;
+	} else {
+		while ((dent = readdir(dir)) != NULL) {
+			if (strcmp(dent->d_name, "..") == 0) {
+				continue;
+			}
+			if ((snprintf(path, sizeof(path), "%s/%s", spath, dent->d_name) < 0)
+				|| (lstat(path, &st) < 0)) {
+				/* problem */
+				continue;
+			}
+			if (S_ISDIR(st.st_mode)) {
+				printf("%s/\n", dent->d_name);
+			} else if (S_ISSOCK(st.st_mode)
+				|| S_ISLNK(st.st_mode)) {
+				printf("%s\n", dent->d_name);
+			}
+		}
+		closedir(dir);
+	}
+	return 0;
+}
 
 void
 print_usage(char *prog_name) {
@@ -70,6 +103,17 @@ print_usage(char *prog_name) {
 "\n"
 "Get information about service at <spath>.\n"
 );
+	} else if (strcmp(prog_name, "ruls") == 0) {
+		printf(
+"usage: ruls [-t|--timeout <seconds>] <spath>\n"
+"       ruls [-h|--help]\n"
+"\n"
+"List service(s) at <spath> (may also be a directory path).\n"
+"Directory listings show service files, symlinks, and directories\n"
+"only. Directories are indicated by a trailing / and the ./ entry\n"
+"is always listed for a valid directory.\n"
+);
+
 	} else {
 		return;
 	}
@@ -87,6 +131,7 @@ print_usage(char *prog_name) {
 int
 main(int argc, char **argv) {
 	struct russ_conn	*conn;
+	struct stat		st;
 	russ_deadline		deadline;
 	int			debug;
 	int			timeout;
@@ -161,111 +206,128 @@ main(int argc, char **argv) {
 			&& (argi+2 <= argc)) {
 			op = argv[argi++];
 			spath = argv[argi++];
-			conn = russ_dialv(deadline, op, spath, attrv, &(argv[argi]));
 		} else if ((strcmp(prog_name, "ruexec") == 0)
 			&& (argi+1 <= argc)) {
+			op = "execute";
 			spath = argv[argi++];
-			conn = russ_execv(deadline, spath, attrv, &(argv[argi]));
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(1);
 		}
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
-		if (argi < argc) {
-			spath = argv[argi];
-			conn = russ_help(deadline, spath);
-		} else {
+		if (argi >= argc) {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(1);
 		}
+		op = "help";
+		spath = argv[argi++];
 	} else if (strcmp(prog_name, "ruinfo") == 0) {
-		if (argi < argc) {
-			spath = argv[argi];
-			conn = russ_info(deadline, spath);
-		} else {
+		if (argi >= argc) {
 			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
 			exit(1);
 		}
+		op = "info";
+		spath = argv[argi++];
+	} else if (strcmp(prog_name, "ruls") == 0) {
+		if (argi >= argc) {
+			spath = ".";
+		} else {
+			op = "list";
+			spath = argv[argi++];
+		}
+		/* resolve before calling russ_dialv */
+		spath = russ_spath_resolve(spath);
 	} else {
 		fprintf(stderr, "error: unknown program name\n");
 		exit(1);
 	}
 
-	if (conn == NULL) {
-		fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
-		exit(RUSS_EXIT_CALL_FAILURE);
-	}
+	exit_status = 0;
+	if ((strcmp(op, "list") == 0) && (stat(spath, &st) == 0) && (!S_ISSOCK(st.st_mode))) {
+		if (S_ISDIR(st.st_mode)) {
+			exit_status = (print_dir_list(spath) == 0) ? 0 : 1;
+		} else {
+			fprintf(stderr, "error: not a service or directory\n");
+			exit_status = 1;
+		}
+	} else {
+		conn = russ_dialv(deadline, op, spath, attrv, &(argv[argi]));
+		if (conn == NULL) {
+			fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
+			exit(RUSS_EXIT_CALL_FAILURE);
+		}
 
 #ifdef USE_RUSS_FWD
-	{
-		struct russ_fwd		fwds[RUSS_CONN_NFDS];
+		{
+			struct russ_fwd		fwds[RUSS_CONN_NFDS];
 
-		/*
-		* initialize forwarders (handing off fds; but not closing)
-		* and start threads; STDERR_FILENO is not closed if
-		* debugging
-		*/
-		russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
-		russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
-		russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 65536, 0,
-			(debug ? RUSS_FWD_CLOSE_IN : RUSS_FWD_CLOSE_INOUT));
-		conn->fds[0] = -1;
-		conn->fds[1] = -1;
-		conn->fds[2] = -1;
-		if (russ_fwds_run(fwds, RUSS_CONN_STD_NFDS-1) < 0) {
-			fprintf(stderr, "error: could not forward bytes\n");
-			exit(1);
-		}
+			/*
+			* initialize forwarders (handing off fds; but not closing)
+			* and start threads; STDERR_FILENO is not closed if
+			* debugging
+			*/
+			russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
+			russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, 65536, 0, RUSS_FWD_CLOSE_INOUT);
+			russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, 65536, 0,
+				(debug ? RUSS_FWD_CLOSE_IN : RUSS_FWD_CLOSE_INOUT));
+			conn->fds[0] = -1;
+			conn->fds[1] = -1;
+			conn->fds[2] = -1;
+			if (russ_fwds_run(fwds, RUSS_CONN_STD_NFDS-1) < 0) {
+				fprintf(stderr, "error: could not forward bytes\n");
+				exit(1);
+			}
 
-		/* wait for exit */
-		if (debug) {
-			fprintf(stderr, "debug: waiting for connection exit\n");
-		}
-		if (russ_conn_wait(conn, -1, &exit_status) < 0) {
-			fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
-			exit_status = RUSS_EXIT_SYS_FAILURE;
-		}
-		if (debug) {
-			fprintf(stderr, "debug: exit_status (%d)\n", exit_status);
-		}
+			/* wait for exit */
+			if (debug) {
+				fprintf(stderr, "debug: waiting for connection exit\n");
+			}
+			if (russ_conn_wait(conn, -1, &exit_status) < 0) {
+				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
+				exit_status = RUSS_EXIT_SYS_FAILURE;
+			}
+			if (debug) {
+				fprintf(stderr, "debug: exit_status (%d)\n", exit_status);
+			}
 
-		russ_fwd_join(&(fwds[1]));
-		if (debug) {
-			fprintf(stderr, "debug: stdout forwarder joined\n");
+			russ_fwd_join(&(fwds[1]));
+			if (debug) {
+				fprintf(stderr, "debug: stdout forwarder joined\n");
+			}
+			russ_fwd_join(&(fwds[2]));
+			if (debug) {
+				fprintf(stderr, "debug: stderr forwarder joined\n");
+			}
 		}
-		russ_fwd_join(&(fwds[2]));
-		if (debug) {
-			fprintf(stderr, "debug: stderr forwarder joined\n");
-		}
-	}
 #endif /* USE_RUSS_FWD */
 
 #ifdef USE_RUSS_RELAY
-	{
-		struct russ_relay	*relay;
+		{
+			struct russ_relay	*relay;
 
-		relay = russ_relay_new(3*2);
-		russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, RUSS_RELAY_BUFSIZE, 1, conn->fds[0], RUSS_RELAY_BUFSIZE, 1);
-		russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, RUSS_RELAY_BUFSIZE, 1, conn->fds[1], RUSS_RELAY_BUFSIZE, 1);
-		russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, RUSS_RELAY_BUFSIZE, 0, conn->fds[2], RUSS_RELAY_BUFSIZE, 1);
+			relay = russ_relay_new(3*2);
+			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, RUSS_RELAY_BUFSIZE, 1, conn->fds[0], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, RUSS_RELAY_BUFSIZE, 1, conn->fds[1], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, RUSS_RELAY_BUFSIZE, 0, conn->fds[2], RUSS_RELAY_BUFSIZE, 1);
 
-		conn->fds[0] = -1;
-		conn->fds[1] = -1;
-		conn->fds[2] = -1;
-		russ_relay_serve(relay, -1);
+			conn->fds[0] = -1;
+			conn->fds[1] = -1;
+			conn->fds[2] = -1;
+			russ_relay_serve(relay, -1);
 
-		/* wait for exit */
-		if (debug) {
-			fprintf(stderr, "debug: waiting for connection exit\n");
+			/* wait for exit */
+			if (debug) {
+				fprintf(stderr, "debug: waiting for connection exit\n");
+			}
+			if (russ_conn_wait(conn, -1, &exit_status) < 0) {
+				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
+				exit_status = RUSS_EXIT_SYS_FAILURE;
+			}
 		}
-		if (russ_conn_wait(conn, -1, &exit_status) < 0) {
-			fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
-			exit_status = RUSS_EXIT_SYS_FAILURE;
-		}
-	}
 #endif /* USE_RUSS_RELAY */
+		russ_conn_close(conn);
+		conn = russ_conn_free(conn);
+	}
 
-	russ_conn_close(conn);
-	conn = russ_conn_free(conn);
 	exit(exit_status);
 }
