@@ -31,16 +31,16 @@ install:
 rudial:	rudial.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-ruexec: rudial.c
+ruexec: rudial
 	cp rudial ruexec
 
-ruhelp: rudial.c
+ruhelp: rudial
 	cp rudial ruhelp
 
-ruinfo: rudial.c
+ruinfo: rudial
 	cp rudial ruinfo
 
-ruls: rudial.c
+ruls: rudial
 	cp rudial ruls
 
 #rudial2:	rudial2.c
