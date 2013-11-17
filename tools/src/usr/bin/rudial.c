@@ -136,13 +136,9 @@ main(int argc, char **argv) {
 	int			debug;
 	int			timeout;
 	char			*prog_name;
-	char			*spath;
-	char			*op;
-	char			*arg;
+	char			*op, *spath, *arg;
 	char			*attrv[RUSS_REQ_ATTRS_MAX];
-	int			argi;
-	int			attrc;
-	int			req_opt_mask;
+	int			argi, attrc;
 	int			exit_status;
 
 	signal(SIGPIPE, SIG_IGN);
