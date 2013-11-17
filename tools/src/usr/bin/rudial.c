@@ -108,7 +108,7 @@ print_usage(char *prog_name) {
 );
 	} else if (strcmp(prog_name, "ruls") == 0) {
 		printf(
-"usage: ruls [-t|--timeout <seconds>] <spath>\n"
+"usage: ruls [<option>] <spath>\n"
 "       ruls [-h|--help]\n"
 "\n"
 "List service(s) at <spath> (may also be a directory path).\n"
@@ -116,7 +116,6 @@ print_usage(char *prog_name) {
 "only. Directories are indicated by a trailing / and the ./ entry\n"
 "is always listed for a valid directory.\n"
 );
-
 	} else {
 		return;
 	}
