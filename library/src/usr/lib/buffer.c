@@ -27,10 +27,11 @@
 #include <russ_priv.h>
 
 /**
-* Initialize a russ_buf with new data.
+* Initialize a russ_buf object with new data. Optionally allocate
+* new space for data.
 *
 * @param self		russ_buf object
-* @param data		buffer data
+* @param data		buffer data (NULL to create)
 * @param cap		buffer capacity
 * @param len		# of valid bytes
 * @return		0 on success; -1 on failure
@@ -38,6 +39,9 @@
 int
 russ_buf_init(struct russ_buf *self, char *data, int cap, int len) {
 	if (self == NULL) {
+		return -1;
+	}
+	if ((data == NULL) && (cap > 0) && ((data = malloc(sizeof(char)*cap)) == NULL)) {
 		return -1;
 	}
 	free(self->data);
