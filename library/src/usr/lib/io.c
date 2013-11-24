@@ -402,7 +402,7 @@ retry:
 	return sd;
 
 cleanup:
-	if (sd < 0) {
+	if (sd >= 0) {
 		close(sd);
 	}
 	return -1;
