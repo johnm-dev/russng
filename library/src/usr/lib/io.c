@@ -145,7 +145,7 @@ russ_readn(int fd, char *b, size_t count) {
 */
 ssize_t
 russ_readn_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
-	struct pollfd	poll_fds[1];
+	struct pollfd	pollfds[1];
 	int		rv, due_time;
 	ssize_t		n;
 	char		*bend;
@@ -155,20 +155,20 @@ russ_readn_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
 		return -1;
 	}
 
-	poll_fds[0].fd = fd;
-	poll_fds[0].events = POLLIN|POLLHUP;
+	pollfds[0].fd = fd;
+	pollfds[0].events = POLLIN|POLLHUP;
 
 	bend = b+count;
 	while (b < bend) {
-		if ((rv = russ_poll_deadline(deadline, poll_fds, 1)) <= 0) {
+		if ((rv = russ_poll_deadline(deadline, pollfds, 1)) <= 0) {
 			/* error or timeout */
 			break;
-		} else if (poll_fds[0].revents & POLLIN) {
+		} else if (pollfds[0].revents & POLLIN) {
 			if ((n = russ_read(fd, b, bend-b)) <= 0) {
 				break;
 			}
 			b += n;
-		} else if (poll_fds[0].revents & POLLHUP) {
+		} else if (pollfds[0].revents & POLLHUP) {
 			break;
 		}
 	}
@@ -236,7 +236,7 @@ russ_writen(int fd, char *b, size_t count) {
 */
 ssize_t
 russ_writen_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
-	struct pollfd	poll_fds[1];
+	struct pollfd	pollfds[1];
 	int		rv, due_time;
 	ssize_t		n;
 	char		*bend;
@@ -246,20 +246,20 @@ russ_writen_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
 		return -1;
 	}
 
-	poll_fds[0].fd = fd;
-	poll_fds[0].events = POLLOUT|POLLHUP;
+	pollfds[0].fd = fd;
+	pollfds[0].events = POLLOUT|POLLHUP;
 
 	bend = b+count;
 	while (b < bend) {
-		if ((rv = russ_poll_deadline(deadline, poll_fds, 1)) <= 0) {
+		if ((rv = russ_poll_deadline(deadline, pollfds, 1)) <= 0) {
 			/* error or timeout */
 			break;
-		} else if (poll_fds[0].revents & POLLOUT) {
+		} else if (pollfds[0].revents & POLLOUT) {
 			if ((n = write(fd, b, bend-b)) < 0) {
 				break;
 			}
 			b += n;
-		} else if (poll_fds[0].revents & POLLHUP) {
+		} else if (pollfds[0].revents & POLLHUP) {
 			break;
 		}
 
@@ -278,7 +278,7 @@ russ_writen_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
 */
 int
 russ_accept_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, socklen_t *addrlen) {
-	struct pollfd	poll_fds[1];
+	struct pollfd	pollfds[1];
 	int		rv;
 
 #if 0
@@ -288,11 +288,11 @@ russ_accept_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, sock
 	}
 #endif
 
-	poll_fds[0].fd = sd;
-	poll_fds[0].events = POLLIN;
+	pollfds[0].fd = sd;
+	pollfds[0].events = POLLIN;
 	while (1) {
 #if 0
-		if ((rv = poll(poll_fds, 1, russ_to_timeout(deadline))) > 0) {
+		if ((rv = poll(pollfds, 1, russ_to_timeout(deadline))) > 0) {
 			return accept(sd, addr, addrlen);
 		} else if (rv == 0) {
 			errno = 0; /* reset */
@@ -319,7 +319,7 @@ russ_accept_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, sock
 */
 int
 russ_connect_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, socklen_t addrlen) {
-	struct pollfd		poll_fds[1];
+	struct pollfd		pollfds[1];
 	int			flags;
 
 	/* catch fd<0 before calling into poll() */
@@ -334,9 +334,9 @@ russ_connect_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, soc
 	}
 	if (connect(sd, addr, addrlen) < 0) {
 		if ((errno == EINTR) || (errno == EINPROGRESS)) {
-			poll_fds[0].fd = sd;
-			poll_fds[0].events = POLLIN;
-			if (russ_poll_deadline(deadline, poll_fds, 1) < 0) {
+			pollfds[0].fd = sd;
+			pollfds[0].events = POLLIN;
+			if (russ_poll_deadline(deadline, pollfds, 1) < 0) {
 				return -1;
 			}
 		}
@@ -360,7 +360,7 @@ int
 russ_connectunix_deadline(russ_deadline deadline, char *path) {
 	struct sockaddr_un	servaddr;
 	socklen_t		addrlen;
-	struct pollfd		poll_fds[1];
+	struct pollfd		pollfds[1];
 	int			flags, sd;
 
 	bzero(&servaddr, sizeof(servaddr));
@@ -380,9 +380,9 @@ retry:
 
 	if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
 		if ((errno == EINTR) || (errno == EINPROGRESS) || (errno == EAGAIN)) {
-			poll_fds[0].fd = sd;
-			poll_fds[0].events = POLLIN;
-			if (russ_poll_deadline(deadline, poll_fds, 1) < 0) {
+			pollfds[0].fd = sd;
+			pollfds[0].events = POLLIN;
+			if (russ_poll_deadline(deadline, pollfds, 1) < 0) {
 				goto cleanup;
 			}
 			if (errno == EAGAIN) {
@@ -412,23 +412,23 @@ cleanup:
 * poll() with automatic restart on EINTR.
 *
 * @param deadline	deadline to complete operation
-* @param poll_fds	initialized pollfd structure
-* @param nfds		# of descriptors in poll_fds
+* @param pollfds	array of pollfd
+* @param nfds		# of descriptors in pollfds
 * @return		value as returned by system poll
 */
 int
-russ_poll_deadline(russ_deadline deadline, struct pollfd *poll_fds, int nfds) {
+russ_poll_deadline(russ_deadline deadline, struct pollfd *pollfds, int nfds) {
 	int	rv;
 
 	while (1) {
 //fprintf(stderr, "russ_poll rv (%d) errno (%d)\n", rv, errno);
-		if (((rv = poll(poll_fds, nfds, russ_to_timeout(deadline))) >= 0)
+		if (((rv = poll(pollfds, nfds, russ_to_timeout(deadline))) >= 0)
 			|| (errno != EINTR)) {
 			/* data (>0), timeout (0), non-EINTR error */
 			break;
 		}
 	}
-//fprintf(stderr, "poll_fds (%d) nfds (%d) poll_timeout (%d)\n", poll_fds[0], nfds, poll_timeout);
+//fprintf(stderr, "pollfds (%d) nfds (%d) poll_timeout (%d)\n", pollfds[0], nfds, poll_timeout);
 //fprintf(stderr, "russ_poll rv (%d) errno (%d)\n", rv, errno);
 	return rv;
 }

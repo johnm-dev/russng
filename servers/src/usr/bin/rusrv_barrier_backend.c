@@ -238,7 +238,7 @@ main(int argc, char **argv) {
 	struct russ_lis		*lis;
 	struct russ_conn	*conn;
 	struct russ_req		*req;
-	struct pollfd		poll_fds[1];
+	struct pollfd		pollfds[1];
 	char			*saddr;
 	mode_t			mode;
 	uid_t			uid;
@@ -306,8 +306,8 @@ main(int argc, char **argv) {
 	}
 
 	/* listen for and process requests */
-	poll_fds[0].fd = lis->sd;
-	poll_fds[0].events = POLLIN;
+	pollfds[0].fd = lis->sd;
+	pollfds[0].events = POLLIN;
 	while (barrier->nitems < barrier->count) {
 		if (barrier->timeout == -1) {
 			poll_timeout = -1;
@@ -315,7 +315,7 @@ main(int argc, char **argv) {
 			poll_timeout = (barrier->due_time-time(NULL));
 			poll_timeout = MAX(0, poll_timeout)*1000;
 		}
-		rv = poll(poll_fds, 1, poll_timeout);
+		rv = poll(pollfds, 1, poll_timeout);
 		if (rv == 0) {
 			break;
 		} else if (rv < 0) {
@@ -323,7 +323,7 @@ main(int argc, char **argv) {
 				exit(-1);
 			};
 		} else {
-			if (poll_fds[0].revents && POLLIN) {
+			if (pollfds[0].revents && POLLIN) {
 				if ((conn = russ_lis_accept(lis, RUSS_TIMEOUT_NEVER)) == NULL) {
 					continue;
 				}

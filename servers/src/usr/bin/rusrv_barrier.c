@@ -256,7 +256,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 	struct russ_lis		*lis;
 	struct russ_conn	*bconn;
 	struct russ_req		*req;
-	struct pollfd		poll_fds[2];
+	struct pollfd		pollfds[2];
 	int			poll_timeout;
 	int			rv;
 	int			ferrfd, foutfd;
@@ -275,10 +275,10 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 	backend_add_waiter(fconn);
 
 	/* listen for and process requests */
-	poll_fds[0].fd = lis->sd;
-	poll_fds[0].events = POLLIN;
-	poll_fds[1].fd = fconn->fds[1];
-	poll_fds[1].events = POLLHUP;
+	pollfds[0].fd = lis->sd;
+	pollfds[0].events = POLLIN;
+	pollfds[1].fd = fconn->fds[1];
+	pollfds[1].events = POLLHUP;
 
 	while (barrier->nitems < barrier->count) {
 		if (barrier->timeout == -1) {
@@ -287,7 +287,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 			poll_timeout = (barrier->due_time-time(NULL));
 			poll_timeout = MAX(0, poll_timeout)*1000;
 		}
-		rv = poll(poll_fds, 2, poll_timeout);
+		rv = poll(pollfds, 2, poll_timeout);
 		if (rv == 0) {
 			backend_release_barrier('t');
 			goto cleanup_and_exit;
@@ -297,7 +297,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 				goto cleanup_and_exit;
 			};
 		} else {
-			if (poll_fds[0].revents & POLLIN) {
+			if (pollfds[0].revents & POLLIN) {
 				if ((bconn = russ_lis_accept(lis, RUSS_DEADLINE_NEVER)) == NULL) {
 					continue;
 				}
@@ -309,7 +309,7 @@ backend_loop(struct russ_conn *fconn, char *saddr, mode_t mode, uid_t uid, gid_t
 				}
 				backend_master_handler(bconn); /* exits if count reached */
 			}
-			if (poll_fds[1].revents & (POLLHUP|POLLNVAL|POLLERR)) {
+			if (pollfds[1].revents & (POLLHUP|POLLNVAL|POLLERR)) {
 				backend_release_barrier('c');
 				goto cleanup_and_exit;
 			}

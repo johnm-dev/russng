@@ -63,10 +63,19 @@ main(int argc, char **argv) {
 	/* print captured output */
 	printf("ev (%d)\n", ev);
 	printf("out: cap (%d) len (%d) off (%d)\n", rbufs[1]->cap, rbufs[1]->len, rbufs[1]->off);
-	printf("data\n----------\n%s\n----------\n", rbufs[1]->data);
+	printf("data\n----------\n");
+	if (rbufs[1]->len) {
+		printf("%s", rbufs[1]->data);
+	}
+	printf("----------\n");
+
 	printf("\n");
 	printf("err: cap (%d) len (%d) off (%d)\n", rbufs[2]->cap, rbufs[2]->len, rbufs[2]->off);
-	printf("data\n----------\n%s\n----------\n", rbufs[2]->data);
+	printf("data\n----------\n");
+	if (rbufs[2]->len) {
+		printf("%s", rbufs[2]->data);
+	}
+	printf("----------\n");
 
 	exit(0);
 }

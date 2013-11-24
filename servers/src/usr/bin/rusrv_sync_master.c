@@ -99,12 +99,12 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	poll_fds[0].fd = lis->sd;
-	poll_fds[0].events = POLLIN|POLLHUP|POLLNVAL;
+	pollfds[0].fd = lis->sd;
+	pollfds[0].events = POLLIN|POLLHUP|POLLNVAL;
 	poll_nfds = 1;
 
 	while (1) {
 		next_time = get_next_time(barriers);
-		poll(poll_fds, poll_nfds, 
+		poll(pollfds, poll_nfds, 
 	}
 }
