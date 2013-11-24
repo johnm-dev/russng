@@ -390,6 +390,8 @@ retry:
 				close(sd);
 				goto retry;
 			}
+		} else {
+			goto cleanup;
 		}
 	}
 
