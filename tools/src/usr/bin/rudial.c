@@ -40,6 +40,10 @@
 #include "russ_fwd.h"
 #endif /* USE_RUSS_FWD */
 
+#ifdef USE_RUSS_RELAY2
+#include "russ_relay2.h"
+#endif
+
 int
 print_dir_list(char *spath) {
 	struct stat		st;
@@ -325,6 +329,26 @@ main(int argc, char **argv) {
 			}
 		}
 #endif /* USE_RUSS_RELAY */
+
+#ifdef USE_RUSS_RELAY2
+		{
+			struct russ_relay2	*relay;
+			relay = russ_relay2_new(3);
+			russ_relay2_add(relay, STDIN_FILENO, conn->fds[0], bufsize, 1);
+			russ_relay2_add(relay, conn->fds[1], STDOUT_FILENO, bufsize, 1);
+			russ_relay2_add(relay, conn->fds[2], STDERR_FILENO, bufsize, 1);
+
+			conn->fds[0] = -1;
+			conn->fds[1] = -1;
+			conn->fds[2] = -1;
+			russ_relay2_serve(relay, -1, conn->fds[3]);
+			if (russ_conn_wait(conn, -1, &exit_status) < 0) {
+				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
+				exit_status = RUSS_EXIT_SYS_FAILURE;
+			}
+		}
+#endif /* USE_RUSS_RELAY2 */
+
 		russ_conn_close(conn);
 		conn = russ_conn_free(conn);
 	}
