@@ -138,7 +138,7 @@ print_usage(char *prog_name) {
 
 int
 main(int argc, char **argv) {
-	struct russ_conn	*conn;
+	struct russ_cconn	*cconn;
 	struct stat		st;
 	russ_deadline		deadline;
 	int			debug;
@@ -255,8 +255,8 @@ main(int argc, char **argv) {
 			exit_status = 1;
 		}
 	} else {
-		conn = russ_dialv(deadline, op, spath, attrv, &(argv[argi]));
-		if (conn == NULL) {
+		cconn = russ_dialv(deadline, op, spath, attrv, &(argv[argi]));
+		if (cconn == NULL) {
 			fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
 			exit(RUSS_EXIT_CALL_FAILURE);
 		}
@@ -270,13 +270,13 @@ main(int argc, char **argv) {
 			* and start threads; STDERR_FILENO is not closed if
 			* debugging
 			*/
-			russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, conn->fds[0], -1, bufsize, 0, RUSS_FWD_CLOSE_INOUT);
-			russ_fwd_init(&(fwds[1]), 0, conn->fds[1], STDOUT_FILENO, -1, bufsize, 0, RUSS_FWD_CLOSE_INOUT);
-			russ_fwd_init(&(fwds[2]), 0, conn->fds[2], STDERR_FILENO, -1, bufsize, 0,
+			russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, cconn->fds[0], -1, bufsize, 0, RUSS_FWD_CLOSE_INOUT);
+			russ_fwd_init(&(fwds[1]), 0, cconn->fds[1], STDOUT_FILENO, -1, bufsize, 0, RUSS_FWD_CLOSE_INOUT);
+			russ_fwd_init(&(fwds[2]), 0, cconn->fds[2], STDERR_FILENO, -1, bufsize, 0,
 				(debug ? RUSS_FWD_CLOSE_IN : RUSS_FWD_CLOSE_INOUT));
-			conn->fds[0] = -1;
-			conn->fds[1] = -1;
-			conn->fds[2] = -1;
+			cconn->fds[0] = -1;
+			cconn->fds[1] = -1;
+			cconn->fds[2] = -1;
 			if (russ_fwds_run(fwds, RUSS_CONN_STD_NFDS-1) < 0) {
 				fprintf(stderr, "error: could not forward bytes\n");
 				exit(1);
@@ -286,7 +286,7 @@ main(int argc, char **argv) {
 			if (debug) {
 				fprintf(stderr, "debug: waiting for connection exit\n");
 			}
-			if (russ_conn_wait(conn, -1, &exit_status) < 0) {
+			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 				exit_status = RUSS_EXIT_SYS_FAILURE;
 			}
@@ -310,20 +310,20 @@ main(int argc, char **argv) {
 			struct russ_relay	*relay;
 
 			relay = russ_relay_new(3*2);
-			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, bufsize, 1, conn->fds[0], RUSS_RELAY_BUFSIZE, 1);
-			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, bufsize, 1, conn->fds[1], RUSS_RELAY_BUFSIZE, 1);
-			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, bufsize, 0, conn->fds[2], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, bufsize, 1, cconn->fds[0], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, bufsize, 1, cconn->fds[1], RUSS_RELAY_BUFSIZE, 1);
+			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, bufsize, 0, cconn->fds[2], RUSS_RELAY_BUFSIZE, 1);
 
-			conn->fds[0] = -1;
-			conn->fds[1] = -1;
-			conn->fds[2] = -1;
+			cconn->fds[0] = -1;
+			cconn->fds[1] = -1;
+			cconn->fds[2] = -1;
 			russ_relay_serve(relay, -1);
 
 			/* wait for exit */
 			if (debug) {
 				fprintf(stderr, "debug: waiting for connection exit\n");
 			}
-			if (russ_conn_wait(conn, -1, &exit_status) < 0) {
+			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 				exit_status = RUSS_EXIT_SYS_FAILURE;
 			}
@@ -334,23 +334,23 @@ main(int argc, char **argv) {
 		{
 			struct russ_relay2	*relay;
 			relay = russ_relay2_new(3);
-			russ_relay2_add(relay, STDIN_FILENO, conn->fds[0], bufsize, 1);
-			russ_relay2_add(relay, conn->fds[1], STDOUT_FILENO, bufsize, 1);
-			russ_relay2_add(relay, conn->fds[2], STDERR_FILENO, bufsize, 1);
+			russ_relay2_add(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1);
+			russ_relay2_add(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 1);
+			russ_relay2_add(relay, cconn->fds[2], STDERR_FILENO, bufsize, 1);
 
-			conn->fds[0] = -1;
-			conn->fds[1] = -1;
-			conn->fds[2] = -1;
-			russ_relay2_serve(relay, -1, conn->fds[3]);
-			if (russ_conn_wait(conn, -1, &exit_status) < 0) {
+			cconn->fds[0] = -1;
+			cconn->fds[1] = -1;
+			cconn->fds[2] = -1;
+			russ_relay2_serve(relay, -1, cconn->fds[3]);
+			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 				exit_status = RUSS_EXIT_SYS_FAILURE;
 			}
 		}
 #endif /* USE_RUSS_RELAY2 */
 
-		russ_conn_close(conn);
-		conn = russ_conn_free(conn);
+		russ_cconn_close(cconn);
+		cconn = russ_cconn_free(cconn);
 	}
 
 	exit(exit_status);

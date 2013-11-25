@@ -43,23 +43,23 @@ char			*HELP =
 
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_conn	*conn = sess->conn;
+	struct russ_sconn	*sconn = sess->sconn;
 	char			buf[1024];
 	ssize_t			n;
 
 	switch (sess->req->opnum) {
 	case RUSS_OPNUM_HELP:
-		russ_dprintf(conn->fds[1], HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		russ_dprintf(sconn->fds[1], HELP);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		break;
 	case RUSS_OPNUM_EXECUTE:
 		/* serve the input from fd passed to client */
-		while ((n = russ_read(conn->fds[0], buf, sizeof(buf))) > 0) {
-			russ_writen(conn->fds[1], buf, n);
+		while ((n = russ_read(sconn->fds[0], buf, sizeof(buf))) > 0) {
+			russ_writen(sconn->fds[1], buf, n);
 		}
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 }
 

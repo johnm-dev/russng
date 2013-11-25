@@ -105,35 +105,37 @@ free_saddr:
 *
 * @param self		listener object
 * @param deadline	deadline to complete operation
-* @return		connection object with credentials (not fully established); NULL on failure
+* @return		new server connection object with
+*			credentials (not fully established); NULL on
+*			failure
 */
-struct russ_conn *
+struct russ_sconn *
 russ_lis_accept(struct russ_lis *self, russ_deadline deadline) {
-	struct russ_conn	*conn;
+	struct russ_sconn	*sconn;
 	struct sockaddr_un	servaddr;
 	socklen_t		servaddr_len;
 
 	if ((self == NULL)
 		|| (self->sd < 0)
-		|| ((conn = russ_conn_new()) == NULL)) {
+		|| ((sconn = russ_sconn_new()) == NULL)) {
 		return NULL;
 	}
 
 	servaddr_len = sizeof(struct sockaddr_un);
-	if ((conn->sd = russ_accept_deadline(deadline, self->sd, (struct sockaddr *)&servaddr, &servaddr_len)) < 0) {
+	if ((sconn->sd = russ_accept_deadline(deadline, self->sd, (struct sockaddr *)&servaddr, &servaddr_len)) < 0) {
 		fprintf(stderr, "warning: russ_accept() fails with errno (%d)\n", errno);
-		goto free_conn;
+		goto free_sconn;
 	}
-	if (russ_get_creds(conn->sd, &(conn->creds)) < 0) {
+	if (russ_get_creds(sconn->sd, &(sconn->creds)) < 0) {
 		fprintf(stderr, "warning: russ_get_creds() fails\n");
 		goto close_sd;
 	}
-	return conn;
+	return sconn;
 
 close_sd:
-	russ_fds_close(&conn->sd, 1);
-free_conn:
-	free(conn);
+	russ_fds_close(&sconn->sd, 1);
+free_sconn:
+	free(sconn);
 	return NULL;
 }
 
@@ -175,19 +177,19 @@ russ_lis_free(struct russ_lis *self) {
 * NULL.
 *
 * The request handler is responsible for servicing requests, closing
-* descriptors as appropriate and exiting (with russ_conn_exit()).
+* descriptors as appropriate and exiting (with russ_sconn_exit()).
 *
 * @param self		listener object
 * @param accept_handler	handler function to call on listener object
-* @param answer_handler	handler function to call new connection
-*			object (from accept)
+* @param answer_handler	handler function to call new server
+*			connection object (from accept)
 * @param req_handler	handler function to call on accepted
 */
 void
 russ_lis_loop(struct russ_lis *self, russ_accepthandler accept_handler,
 	russ_answerhandler answer_handler, russ_reqhandler req_handler) {
 
-	struct russ_conn	*conn;
+	struct russ_sconn	*sconn;
 
 	if (accept_handler == NULL) {
 		accept_handler = russ_standard_accept_handler;
@@ -197,7 +199,7 @@ russ_lis_loop(struct russ_lis *self, russ_accepthandler accept_handler,
 	}
 
 	while (1) {
-		if ((conn = accept_handler(self, RUSS_DEADLINE_NEVER)) == NULL) {
+		if ((sconn = accept_handler(self, RUSS_DEADLINE_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
@@ -205,16 +207,16 @@ russ_lis_loop(struct russ_lis *self, russ_accepthandler accept_handler,
 			setsid();
 			russ_lis_close(self);
 			self = russ_lis_free(self);
-			if ((russ_conn_await_request(conn, RUSS_DEADLINE_NEVER) < 0)
-				|| (answer_handler(conn) < 0)) {
+			if ((russ_sconn_await_request(sconn, RUSS_DEADLINE_NEVER) < 0)
+				|| (answer_handler(sconn) < 0)) {
 				exit(-1);
 			}
-			req_handler(conn);
-			russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
-			conn = russ_conn_free(conn);
+			req_handler(sconn);
+			russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+			sconn = russ_sconn_free(sconn);
 			exit(0);
 		}
-		russ_conn_close(conn);
-		conn = russ_conn_free(conn);
+		russ_sconn_close(sconn);
+		sconn = russ_sconn_free(sconn);
 	}
 }

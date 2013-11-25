@@ -33,9 +33,9 @@
 *
 * @param self		listener object
 * @param deadline	deadline to complete operation
-* @return		new connection object; NULL on failure
+* @return		new server connection object; NULL on failure
 */
-struct russ_conn *
+struct russ_sconn *
 russ_standard_accept_handler(struct russ_lis *self, russ_deadline deadline) {
 	return russ_lis_accept(self, deadline);
 }
@@ -44,11 +44,11 @@ russ_standard_accept_handler(struct russ_lis *self, russ_deadline deadline) {
 * Standard (default) answer handler which sets up standard fds and
 * answers the request.
 *
-* @param self		accepted connection object
+* @param self		accepted server connection object
 * @return		0 on success; -1 on failure
 */
 int
-russ_standard_answer_handler(struct russ_conn *self) {
+russ_standard_answer_handler(struct russ_sconn *self) {
 	int	cfds[RUSS_CONN_NFDS], sfds[RUSS_CONN_NFDS];
 	int	tmpfd;
 
@@ -63,7 +63,7 @@ russ_standard_answer_handler(struct russ_conn *self) {
 	cfds[0] = sfds[0];
 	sfds[0] = tmpfd;
 
-	if (russ_conn_answer(self, RUSS_CONN_STD_NFDS, cfds, sfds) < 0) {
+	if (russ_sconn_answer(self, RUSS_CONN_STD_NFDS, cfds, sfds) < 0) {
 		russ_fds_close(cfds, RUSS_CONN_STD_NFDS);
 		russ_fds_close(sfds, RUSS_CONN_STD_NFDS);
 		return -1;

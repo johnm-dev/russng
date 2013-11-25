@@ -243,7 +243,7 @@ free_envp2:
 
 void
 execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd, char **argv, char **envp) {
-	struct russ_conn	*conn = sess->conn;
+	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	FILE			*f;
 	char			*cg_path, cg_tasks_path[1024];
@@ -252,30 +252,30 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	int			status;
 
 	if (setup_by_pam("rusrv_exec", username) < 0) {
-		russ_conn_fatal(conn, "error: could not set up for user", RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, "error: could not set up for user", RUSS_EXIT_FAILURE);
 		return;
 	}
 
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
-	if (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0) {
-		russ_conn_fatal(conn, "error: cannot set up", RUSS_EXIT_FAILURE);
+	if (russ_switch_user(sconn->creds.uid, sconn->creds.gid, 0, NULL) < 0) {
+		russ_sconn_fatal(sconn, "error: cannot set up", RUSS_EXIT_FAILURE);
 		return;
 	}
 
 	/* find cg_path and set cg_tasks_path */
 	if ((cg_path = get_cg_path(req->attrv)) != NULL) {
 		if (cgroups_home == NULL) {
-			russ_conn_fatal(conn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
 			return;
 		} else if (strncmp(cg_path, "/", 1) != 0) {
 			/* absolutize relative path */
 			if (snprintf(cg_tasks_path, sizeof(cg_tasks_path), "%s/%s/tasks", cgroups_home, cg_path) < 0) {	
-				russ_conn_fatal(conn, "error: bad cgroup", RUSS_EXIT_FAILURE);
+				russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
 				return;
 			}
 		} else if (snprintf(cg_tasks_path, sizeof(cg_tasks_path), "%s/tasks", cg_path) < 0) {	
-			russ_conn_fatal(conn, "error: bad cgroup", RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
 			return;
 		}
 	}
@@ -287,14 +287,14 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 			if (f) {
 				fclose(f);
 			}
-			russ_conn_fatal(conn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		fclose(f);
 	}
 
 	if ((envp2 = dup_envp_plus(envp, username, home)) == NULL) {
-		russ_conn_fatal(conn, "error: could not set up env", RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, "error: could not set up env", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 
@@ -307,13 +307,13 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	/* execute */
 	signal(SIGCHLD, SIG_DFL);
 	if ((pid = fork()) == 0) {
-		/* dup conn stdin/out/err fds to standard stdin/out/err */
-		if ((dup2(conn->fds[0], 0) >= 0) &&
-			(dup2(conn->fds[1], 1) >= 0) &&
-			(dup2(conn->fds[2], 2) >= 0)) {
+		/* dup sconn stdin/out/err fds to standard stdin/out/err */
+		if ((dup2(sconn->fds[0], 0) >= 0) &&
+			(dup2(sconn->fds[1], 1) >= 0) &&
+			(dup2(sconn->fds[2], 2) >= 0)) {
 
 			chdir(cwd);
-			russ_conn_close(conn);
+			russ_sconn_close(sconn);
 			execve(cmd, argv, envp2);
 		}
 
@@ -321,55 +321,55 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 		russ_dprintf(2, "error: could not execute\n");
 		exit(1);
 	}
-	/* close conn stdin/out/err; leave exitfd */
-	russ_close(conn->fds[0]);
-	russ_close(conn->fds[1]);
-	russ_close(conn->fds[2]);
+	/* close sconn stdin/out/err; leave exitfd */
+	russ_close(sconn->fds[0]);
+	russ_close(sconn->fds[1]);
+	russ_close(sconn->fds[2]);
 
 	/* wait for exit value; pass back, and close up */
 	waitpid(pid, &status, 0);
-	russ_conn_exit(conn, WEXITSTATUS(status));
-	russ_conn_close(conn);
+	russ_sconn_exit(sconn, WEXITSTATUS(status));
+	russ_sconn_close(sconn);
 
 	exit(0);
 }
 
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_conn	*conn = sess->conn;
+	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 
 	switch (req->opnum) {
 	case RUSS_OPNUM_HELP:
-		russ_dprintf(conn->fds[1], "%s", HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		russ_dprintf(sconn->fds[1], "%s", HELP);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 	exit(0);
 }
 
 void
 svc_login_shell_handler(struct russ_sess *sess) {
-	struct russ_conn	*conn = sess->conn;
+	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	char			**argv;
 	char			*username, *shell, *lshell, *home;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		if (req->argv[0] == NULL) {
-			russ_conn_fatal(conn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
 			return;
 		}
 		/* argv[] = {shell, "-c", cmd, NULL} */
 		if ((argv = malloc(sizeof(char *)*4)) == NULL) {
-			russ_conn_fatal(conn, "error: could not run", RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, "error: could not run", RUSS_EXIT_FAILURE);
 			return;
 		}
 
-		if (get_user_info(conn->creds.uid, &username, &shell, &lshell, &home) < 0) {
-			russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
+		if (get_user_info(sconn->creds.uid, &username, &shell, &lshell, &home) < 0) {
+			russ_sconn_fatal(sconn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
 			return;
 		}
 
@@ -384,29 +384,29 @@ svc_login_shell_handler(struct russ_sess *sess) {
 
 		execute(sess, home, username, home, shell, argv, req->attrv);
 	} else {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
-	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+	russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
 	exit(0);
 }
 
 void
 svc_simple_handler(struct russ_sess *sess) {
-	struct russ_conn	*conn = sess->conn;
+	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	char			*username, *shell, *lshell, *home;
 
-	if (get_user_info(conn->creds.uid, &username, &shell, &lshell, &home) < 0) {
-		russ_conn_fatal(conn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
+	if (get_user_info(sconn->creds.uid, &username, &shell, &lshell, &home) < 0) {
+		russ_sconn_fatal(sconn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
 		return;
 	}
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		execute(sess, "/", username, home, req->argv[0], req->argv, req->attrv);
 	} else {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
-	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
+	russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
 	exit(0);
 }
 

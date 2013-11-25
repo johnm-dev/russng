@@ -68,7 +68,7 @@ russ_svr_new(struct russ_svcnode *root, int type) {
 * @param self		server object
 * @param deadline	deadline to complete operation
 */
-struct russ_conn *
+struct russ_sconn *
 russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
 	return self->accept_handler(self->lis, deadline);
 }
@@ -130,20 +130,20 @@ russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
 * opnum == RUSS_OPNUM_HELP - fallback to spath == "/" if available
 * opnum == RUSS_OPNUM_LIST - list node->children if found
 *
-* Service handlers are expected to call russ_conn_exit() before
+* Service handlers are expected to call russ_sconn_exit() before
 * returning. As a failsafe procedure, exit codes are sent back
 * if the exit fd is open, all connection fds are closed.
 *
 * @param self		server object
-* @param conn		connection object
+* @param sconn		server connection object
 */
 void
-russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
+russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	struct russ_sess	sess;
 	struct russ_req		*req;
 	struct russ_svcnode	*node;
 
-	if ((req = russ_conn_await_request(conn, russ_to_deadline(self->await_timeout))) == NULL) {
+	if ((req = russ_sconn_await_request(sconn, russ_to_deadline(self->await_timeout))) == NULL) {
 		/* failure */
 		goto cleanup;
 	}
@@ -151,7 +151,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	/* validate opnum */
 	if (req->opnum == RUSS_OPNUM_NOT_SET) {
 		/* invalid opnum */
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_SYS_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_SYS_FAILURE);
 		goto cleanup;
 	}
 	/* validate spath: must be absolute */
@@ -162,26 +162,26 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 
 	if ((node = russ_svcnode_find(self->root, &(req->spath[1]), sess.spath, sizeof(sess.spath))) == NULL) {
 		/* we need standard fds */
-		russ_standard_answer_handler(conn);
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_standard_answer_handler(sconn);
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		goto cleanup;
 	}
 
 	if ((node->auto_answer)
-		&& ((self->answer_handler == NULL) || (self->answer_handler(conn) < 0))) {
+		&& ((self->answer_handler == NULL) || (self->answer_handler(sconn) < 0))) {
 		goto cleanup;
 	}
 
 	/* auto switch user if requested */
 	if (self->auto_switch_user) {
-		if (russ_switch_user(conn->creds.uid, conn->creds.gid, 0, NULL) < 0) {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+		if (russ_switch_user(sconn->creds.uid, sconn->creds.gid, 0, NULL) < 0) {
+			russ_sconn_fatal(sconn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
 			goto cleanup;
 		}
 	}
 
 	/* prepare session object */
-	sess.conn = conn;
+	sess.sconn = sconn;
 	sess.svr = self;
 	sess.spath[0] = '\0';
 	sess.req = req;
@@ -196,9 +196,9 @@ russ_svr_handler(struct russ_svr *self, struct russ_conn *conn) {
 	case RUSS_OPNUM_LIST:
 		/* TODO: test against ctxt.spath */
 		for (node = node->children; node != NULL; node = node->next) {
-			russ_dprintf(conn->fds[1], "%s\n", node->name);
+			russ_dprintf(sconn->fds[1], "%s\n", node->name);
 		}
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		goto cleanup;
 		break;
 	case RUSS_OPNUM_HELP:
@@ -212,7 +212,7 @@ call_node_handler:
 	if ((node) && (node->handler)) {
 		node->handler(&sess);
 	} else {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 
 cleanup:
@@ -220,8 +220,8 @@ cleanup:
 	if (req != NULL) {
 		req = russ_req_free(req);
 	}
-	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
-	russ_conn_close(conn);
+	russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+	russ_sconn_close(sconn);
 }
 
 /**
@@ -231,12 +231,12 @@ cleanup:
 */
 void
 russ_svr_loop_fork(struct russ_svr *self) {
-	struct russ_conn	*conn;
+	struct russ_sconn	*sconn;
 	pid_t			pid, wpid;
 	int			wst;
 
 	while (1) {
-		if ((conn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL) {
+		if ((sconn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
 			sleep(1);
 			continue;
@@ -248,24 +248,24 @@ russ_svr_loop_fork(struct russ_svr *self) {
 			russ_lis_close(self->lis);
 			self->lis = russ_lis_free(self->lis);
 			if (fork() == 0) {
-				russ_svr_handler(self, conn);
+				russ_svr_handler(self, sconn);
 
 				/* failsafe exit info (if not provided) */
-				russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
-				conn = russ_conn_free(conn);
+				russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+				sconn = russ_sconn_free(sconn);
 				exit(0);
 			}
 			exit(0);
 		}
-		russ_conn_close(conn);
-		conn = russ_conn_free(conn);
+		russ_sconn_close(sconn);
+		sconn = russ_sconn_free(sconn);
 		wpid = waitpid(pid, &wst, 0);
 	}
 }
 
 struct helper_data {
 	struct russ_svr		*svr;
-	struct russ_conn 	*conn;
+	struct russ_sconn 	*sconn;
 };
 
 /**
@@ -279,15 +279,15 @@ struct helper_data {
 static void
 *russ_svr_handler_helper(void *data) {
 	struct russ_svr		*svr = ((struct helper_data *)data)->svr;
-	struct russ_conn	*conn = ((struct helper_data *)data)->conn;
+	struct russ_sconn	*sconn = ((struct helper_data *)data)->sconn;
 
-	russ_svr_handler(svr, conn);
+	russ_svr_handler(svr, sconn);
 
 	/* failsafe exit info (if not provided) */
-	russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+	russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
 
 	/* free objects */
-	conn = russ_conn_free(conn);
+	sconn = russ_sconn_free(sconn);
 	free(data);
 	data = NULL;
 
@@ -298,27 +298,27 @@ static void
 * Server loop for threaded servers.
 *
 * Calls helper to simplify argument passing, object creation (data
-* and conn here) and freeing (in helper) and closing (in helper).
+* and sconn here) and freeing (in helper) and closing (in helper).
 *
 * @param self		server object
 */
 void
 russ_svr_loop_thread(struct russ_svr *self) {
-	struct russ_conn	*conn;
+	struct russ_sconn	*sconn;
 	struct helper_data	*data;
 
 	while (1) {
-		if (((conn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL)
+		if (((sconn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL)
 			|| ((data = malloc(sizeof(struct helper_data))) != NULL)) {
-			if (conn) {
-				russ_conn_fatal(conn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
-				russ_conn_free(conn);
+			if (sconn) {
+				russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+				russ_sconn_free(sconn);
 			}
 			fprintf(stderr, "error: cannot accept connection\n");
 			continue;
 		}
 		data->svr = self;
-		data->conn = conn;
+		data->sconn = sconn;
 		if (pthread_create(NULL, NULL, russ_svr_handler_helper, data) < 0) {
 			fprintf(stderr, "error: cannot spawn thread\n");
 		}

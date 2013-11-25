@@ -61,16 +61,16 @@ clearenv(void) {
 #endif
 
 int
-switch_user(struct russ_conn *conn) {
+switch_user(struct russ_sconn *sconn) {
 	uid_t	uid;
 	gid_t	gid;
 
-	uid = conn->creds.uid;
-	gid = conn->creds.gid;
+	uid = sconn->creds.uid;
+	gid = sconn->creds.gid;
 
 #if 0
 	if (uid == 0) {
-		russ_conn_fatal(conn, "error: cannot run for root (uid of 0)", -1);
+		russ_sconn_fatal(sconn, "error: cannot run for root (uid of 0)", -1);
 		exit(0);
 	}
 #endif
@@ -78,13 +78,13 @@ switch_user(struct russ_conn *conn) {
 	/* set up env */
 	if ((chdir("/") < 0)
 		|| (clearenv() < 0)) {
-		russ_conn_fatal(conn, "error: cannot set environment", RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, "error: cannot set environment", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 
 	/* switch user */
 	if (russ_switch_user(uid, gid, 0, NULL) < 0) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	return 0;
@@ -117,13 +117,13 @@ escape_special(char *s) {
 
 void
 execute(struct russ_sess *sess, char *userhost, char *new_spath) {
-	struct russ_conn	*conn = sess->conn;
+	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	char	*args[1024];
 	int	nargs;
 	int	i, status, pid;
 
-	switch_user(conn);
+	switch_user(sconn);
 
 	/* build args array */
 	nargs = 0;
@@ -140,7 +140,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		for (i = 0; req->attrv[i] != NULL; i++) {
 			args[nargs++] = "-a";
 			if ((args[nargs++] = escape_special(req->attrv[i])) == NULL) {
-				russ_conn_fatal(conn, "error: out of memory", RUSS_EXIT_FAILURE);
+				russ_sconn_fatal(sconn, "error: out of memory", RUSS_EXIT_FAILURE);
 				exit(0);
 			}
 		}
@@ -150,7 +150,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	if ((req->argv != NULL) && (req->argv[0] != NULL)) {
 		for (i = 0; req->argv[i] != NULL; i++) {
 			if ((args[nargs++] = escape_special(req->argv[i])) == NULL) {
-				russ_conn_fatal(conn, "error: out of memory", RUSS_EXIT_FAILURE);
+				russ_sconn_fatal(sconn, "error: out of memory", RUSS_EXIT_FAILURE);
 				exit(0);
 			}
 		}
@@ -169,12 +169,12 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	/* fix up fds and exec */
 	signal(SIGCHLD, SIG_DFL);
 	if ((pid = fork()) == 0) {
-		/* dup conn stdin/out/err fds to standard stdin/out/err */
-		if ((dup2(conn->fds[0], 0) >= 0) &&
-			(dup2(conn->fds[1], 1) >= 0) &&
-			(dup2(conn->fds[2], 2) >= 0)) {
+		/* dup sconn stdin/out/err fds to standard stdin/out/err */
+		if ((dup2(sconn->fds[0], 0) >= 0) &&
+			(dup2(sconn->fds[1], 1) >= 0) &&
+			(dup2(sconn->fds[2], 2) >= 0)) {
 
-			russ_conn_close(conn);
+			russ_sconn_close(sconn);
 			execv(args[0], args);
 		}
 
@@ -182,15 +182,15 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		russ_dprintf(2, "error: could not execute\n");
 		exit(1);
 	}
-	/* close conn stdin/out/err; leave exitfd */
-	russ_close(conn->fds[0]);
-	russ_close(conn->fds[1]);
-	russ_close(conn->fds[2]);
+	/* close sconn stdin/out/err; leave exitfd */
+	russ_close(sconn->fds[0]);
+	russ_close(sconn->fds[1]);
+	russ_close(sconn->fds[2]);
 
 	/* wait for exit value, pass back, and close up */
 	waitpid(pid, &status, 0);
-	russ_conn_exit(conn, WEXITSTATUS(status));
-	russ_conn_close(conn);
+	russ_sconn_exit(sconn, WEXITSTATUS(status));
+	russ_sconn_close(sconn);
 
 	exit(0);
 }
@@ -198,7 +198,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 #if 0
 void
 svc_net_handler(struct russ_sess *sess) {
-	struct russ_conn	*conn = sess->conn;
+	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	char	*p, *new_spath, *userhost;
 	int	i;
@@ -206,7 +206,7 @@ svc_net_handler(struct russ_sess *sess) {
 	/* extract and validate user@host and new_spath */
 	userhost = &(req->spath[5]);
 	if ((p = index(userhost, '/')) == NULL) {
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	new_spath = strdup(p);
@@ -218,7 +218,7 @@ svc_net_handler(struct russ_sess *sess) {
 
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_conn	*conn = sess->conn;
+	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	char			*p, *new_spath, *userhost;
 	int			i;
@@ -227,14 +227,14 @@ svc_root_handler(struct russ_sess *sess) {
 		/* local */
 		switch (req->opnum) {
 		case RUSS_OPNUM_HELP:
-			russ_dprintf(conn->fds[1], "%s", HELP);
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
+			russ_dprintf(sconn->fds[1], "%s", HELP);
+			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 			break;
 		case RUSS_OPNUM_LIST:
-			russ_conn_fatal(conn, "error: unspecified service", RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, "error: unspecified service", RUSS_EXIT_FAILURE);
 			break;
 		default:
-			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 		}
 	} else {
 		/* forward request over ssh */
@@ -242,7 +242,7 @@ svc_root_handler(struct russ_sess *sess) {
 		/* extract and validate user@host and new_spath */
 		userhost = &(req->spath[1]);
 		if ((p = index(userhost, '/')) == NULL) {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		new_spath = strdup(p);

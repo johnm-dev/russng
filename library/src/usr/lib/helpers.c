@@ -107,23 +107,23 @@ russ_dialv_wait(russ_deadline deadline, char *op, char *spath, char **attrv, cha
 int
 russ_dialv_wait_inouterr(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv,
 	int *exit_status, struct russ_buf **rbufs) {
-	struct russ_conn	*conn;
+	struct russ_cconn	*cconn;
 	struct pollfd		pollfds[4];
 	char			*buf, dbuf[1<<16];
 	int			fd, openfds, rv;
 	int			i, n;
 
-	if ((conn = russ_dialv(deadline, op, spath, attrv, argv)) == NULL) {
+	if ((cconn = russ_dialv(deadline, op, spath, attrv, argv)) == NULL) {
 		return -1;
 	}
 
-	pollfds[0].fd = conn->fds[0];
+	pollfds[0].fd = cconn->fds[0];
 	pollfds[0].events = POLLOUT;
-	pollfds[1].fd = conn->fds[1];
+	pollfds[1].fd = cconn->fds[1];
 	pollfds[1].events = POLLIN;
-	pollfds[2].fd = conn->fds[2];
+	pollfds[2].fd = cconn->fds[2];
 	pollfds[2].events = POLLIN;
-	pollfds[3].fd = conn->fds[3];
+	pollfds[3].fd = cconn->fds[3];
 	pollfds[3].events = POLLIN;
 	openfds = 4;
 
@@ -156,18 +156,18 @@ russ_dialv_wait_inouterr(russ_deadline deadline, char *op, char *spath, char **a
 				} else if (pollfds[i].revents & POLLHEN) {
 close_fd:
 					russ_fds_close(&fd, 1);
-					conn->fds[i] = -1;
+					cconn->fds[i] = -1;
 					pollfds[i].fd = -1;
 					openfds--;
 				}
 			}
 		}
 		if (pollfds[3].revents & POLLIN) {
-			russ_conn_wait(conn, deadline, exit_status);
+			russ_cconn_wait(cconn, deadline, exit_status);
 			openfds--;
 		}
 	}
-	russ_conn_close(conn);
+	russ_cconn_close(cconn);
 	return 0;
 }
 
@@ -194,7 +194,7 @@ russ_dialv_wait_inouterr3(russ_deadline deadline, char *op, char *spath, char **
 *
 * @see russ_dialv()
 */
-struct russ_conn *
+struct russ_cconn *
 russ_execv(russ_deadline deadline, char *spath, char **attrv, char **argv) {
 	return russ_dialv(deadline, "execute", spath, attrv, argv);
 }
@@ -204,9 +204,9 @@ russ_execv(russ_deadline deadline, char *spath, char **attrv, char **argv) {
 *
 * @see russ_diall()
 */
-struct russ_conn *
+struct russ_cconn *
 russ_execl(russ_deadline deadline, char *spath, char **attrv, ...) {
-	struct russ_conn	*conn;
+	struct russ_cconn	*cconn;
 	va_list			ap;
 	char			**argv;
 	int			argc;
@@ -215,10 +215,10 @@ russ_execl(russ_deadline deadline, char *spath, char **attrv, ...) {
 	if ((argv = __russ_variadic_to_argv(&argc, ap, ap)) == NULL) {
 		return NULL;
 	}
-	conn = russ_dialv(deadline, "execute", spath, attrv, argv);
+	cconn = russ_dialv(deadline, "execute", spath, attrv, argv);
 	free(argv);
 
-	return conn;
+	return cconn;
 }
 
 /**
@@ -226,9 +226,9 @@ russ_execl(russ_deadline deadline, char *spath, char **attrv, ...) {
 *
 * @param deadline	deadline to complete operation
 * @param spath		service path
-* @return		connection object
+* @return		client connection object
 */
-struct russ_conn *
+struct russ_cconn *
 russ_help(russ_deadline deadline, char *spath) {
 	return russ_dialv(deadline, "help", spath, NULL, NULL);
 }
@@ -238,9 +238,9 @@ russ_help(russ_deadline deadline, char *spath) {
 *
 * @param deadline	deadline to complete operation
 * @param spath		service path
-* @return		connection object
+* @return		client connection object
 */
-struct russ_conn *
+struct russ_cconn *
 russ_info(russ_deadline deadline, char *spath) {
 	return russ_dialv(deadline, "info", spath, NULL, NULL);
 }
@@ -250,9 +250,9 @@ russ_info(russ_deadline deadline, char *spath) {
 *
 * @param deadline	deadline to complete operation
 * @param spath		service path
-* @return		connection object
+* @return		client connection object
 */
-struct russ_conn *
+struct russ_cconn *
 russ_list(russ_deadline deadline, char *spath) {
 	return russ_dialv(deadline, "list", spath, NULL, NULL);
 }
