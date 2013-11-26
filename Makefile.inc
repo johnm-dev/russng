@@ -4,7 +4,7 @@
 
 UNAME_SYSTEM=$(shell uname -s)
 
-CFLAGS_RELAY=-DUSE_RUSS_FWD
+CFLAGS_RELAY=-DUSE_RUSS_RELAY
 
 ifeq ($(UNAME_SYSTEM),AIX)
 	# OBJECT_MODE should be set externally

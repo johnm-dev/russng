@@ -36,10 +36,6 @@
 #define BUFSIZE		(1<<15)
 #define BUFSIZE_MAX	(1<<20)
 
-#ifdef USE_RUSS_FWD
-#include "russ_fwd.h"
-#endif /* USE_RUSS_FWD */
-
 #ifdef USE_RUSS_RELAY2
 #include "russ_relay2.h"
 #endif
@@ -260,75 +256,6 @@ main(int argc, char **argv) {
 			fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
 			exit(RUSS_EXIT_CALL_FAILURE);
 		}
-
-#ifdef USE_RUSS_FWD
-		{
-			struct russ_fwd		fwds[RUSS_CONN_NFDS];
-
-			/*
-			* initialize forwarders (handing off fds; but not closing)
-			* and start threads; STDERR_FILENO is not closed if
-			* debugging
-			*/
-			russ_fwd_init(&(fwds[0]), 0, STDIN_FILENO, cconn->fds[0], -1, bufsize, 0, RUSS_FWD_CLOSE_INOUT);
-			russ_fwd_init(&(fwds[1]), 0, cconn->fds[1], STDOUT_FILENO, -1, bufsize, 0, RUSS_FWD_CLOSE_INOUT);
-			russ_fwd_init(&(fwds[2]), 0, cconn->fds[2], STDERR_FILENO, -1, bufsize, 0,
-				(debug ? RUSS_FWD_CLOSE_IN : RUSS_FWD_CLOSE_INOUT));
-			cconn->fds[0] = -1;
-			cconn->fds[1] = -1;
-			cconn->fds[2] = -1;
-			if (russ_fwds_run(fwds, RUSS_CONN_STD_NFDS-1) < 0) {
-				fprintf(stderr, "error: could not forward bytes\n");
-				exit(1);
-			}
-
-			/* wait for exit */
-			if (debug) {
-				fprintf(stderr, "debug: waiting for connection exit\n");
-			}
-			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
-				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
-				exit_status = RUSS_EXIT_SYS_FAILURE;
-			}
-			if (debug) {
-				fprintf(stderr, "debug: exit_status (%d)\n", exit_status);
-			}
-
-			russ_fwd_join(&(fwds[1]));
-			if (debug) {
-				fprintf(stderr, "debug: stdout forwarder joined\n");
-			}
-			russ_fwd_join(&(fwds[2]));
-			if (debug) {
-				fprintf(stderr, "debug: stderr forwarder joined\n");
-			}
-		}
-#endif /* USE_RUSS_FWD */
-
-#ifdef USE_RUSS_RELAY
-		{
-			struct russ_relay	*relay;
-
-			relay = russ_relay_new(3*2);
-			russ_relay_add(relay, RUSS_RELAYDIR_WE, STDIN_FILENO, bufsize, 1, cconn->fds[0], RUSS_RELAY_BUFSIZE, 1);
-			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDOUT_FILENO, bufsize, 1, cconn->fds[1], RUSS_RELAY_BUFSIZE, 1);
-			russ_relay_add(relay, RUSS_RELAYDIR_EW, STDERR_FILENO, bufsize, 0, cconn->fds[2], RUSS_RELAY_BUFSIZE, 1);
-
-			cconn->fds[0] = -1;
-			cconn->fds[1] = -1;
-			cconn->fds[2] = -1;
-			russ_relay_serve(relay, -1);
-
-			/* wait for exit */
-			if (debug) {
-				fprintf(stderr, "debug: waiting for connection exit\n");
-			}
-			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
-				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
-				exit_status = RUSS_EXIT_SYS_FAILURE;
-			}
-		}
-#endif /* USE_RUSS_RELAY */
 
 #ifdef USE_RUSS_RELAY2
 		{

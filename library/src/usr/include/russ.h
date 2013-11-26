@@ -74,12 +74,6 @@
 #define RUSS_OPNUM_INFO		5
 #define RUSS_OPNUM_LIST		6
 
-/* relay */
-#define RUSS_RELAY_BUFSIZE	(2<<15)
-#define RUSS_RELAYDIR_WE	0x1
-#define RUSS_RELAYDIR_EW	0x2
-#define RUSS_RELAYDIR_BI	RUSS_RELAYDIR_WE|RUSS_RELAYDIR_EW
-
 /* request */
 #define RUSS_REQ_ARGS_MAX	1024
 #define RUSS_REQ_ATTRS_MAX	1024
@@ -165,21 +159,6 @@ typedef int64_t russ_deadline;
 typedef struct russ_sconn *(*russ_accepthandler)(struct russ_lis *, russ_deadline);
 typedef int (*russ_answerhandler)(struct russ_sconn *);
 typedef void (*russ_reqhandler)(struct russ_sconn *);
-
-/**
-* Relay and relaydata objects.
-*/
-struct russ_relaydata {
-	int		fd;		/**< associated fd */
-	struct russ_buf	*rbuf;		/**< output russ_buf */
-	int		auto_close;	/**< close on HEN */
-};
-
-struct russ_relay {
-	int			nfds;
-	struct pollfd		*pollfds;
-	struct russ_relaydata	**rdatas;
-};
 
 /**
 * Service node object.
@@ -277,14 +256,6 @@ int russ_unlink(char *);
 /* optable.c */
 const char *russ_optable_find_op(struct russ_optable *, russ_opnum);
 russ_opnum russ_optable_find_opnum(struct russ_optable *, char *);
-
-/* relay.c */
-struct russ_relay *russ_relay_new(int);
-struct russ_relay *russ_relay_free(struct russ_relay *);
-int russ_relay_add(struct russ_relay *, int, int, int, int, int, int, int);
-int russ_relay_remove(struct russ_relay *, int);
-int russ_relay_poll(struct russ_relay *, int);
-int russ_relay_serve(struct russ_relay *, int);
 
 /* request.c */
 
