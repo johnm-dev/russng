@@ -36,10 +36,6 @@
 #define BUFSIZE		(1<<15)
 #define BUFSIZE_MAX	(1<<20)
 
-#ifdef USE_RUSS_RELAY2
-#include "russ_relay2.h"
-#endif
-
 int
 print_dir_list(char *spath) {
 	struct stat		st;
@@ -257,9 +253,9 @@ main(int argc, char **argv) {
 			exit(RUSS_EXIT_CALL_FAILURE);
 		}
 
-#ifdef USE_RUSS_RELAY2
 		{
 			struct russ_relay2	*relay;
+			
 			relay = russ_relay2_new(3);
 			russ_relay2_add(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1);
 			russ_relay2_add(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 1);
@@ -274,7 +270,6 @@ main(int argc, char **argv) {
 				exit_status = RUSS_EXIT_SYS_FAILURE;
 			}
 		}
-#endif /* USE_RUSS_RELAY2 */
 
 		russ_cconn_close(cconn);
 		cconn = russ_cconn_free(cconn);

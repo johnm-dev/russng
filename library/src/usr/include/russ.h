@@ -200,6 +200,24 @@ struct russ_sess {
 	char			spath[RUSS_REQ_SPATH_MAX];
 };
 
+/**
+* Relay and support objects.
+*/
+struct russ_relay2stream {
+	int		rfd;		/**< read fd */
+	int		wfd;		/**< write fd */
+	struct russ_buf	*rbuf;		/**< output russ_buf */
+	int		auto_close;	/**< close on HEN */
+	int		bidir;		/**< flag as bidirectional fds */
+};
+
+struct russ_relay2 {
+	int				nstreams;
+	int				exit_fd;
+	struct russ_relay2stream	**streams;
+	struct pollfd			*pollfds;
+};
+
 /* buffer.c */
 int russ_buf_init(struct russ_buf *, char *, int, int);
 struct russ_buf *russ_buf_new(int);
@@ -256,6 +274,16 @@ int russ_unlink(char *);
 /* optable.c */
 const char *russ_optable_find_op(struct russ_optable *, russ_opnum);
 russ_opnum russ_optable_find_opnum(struct russ_optable *, char *);
+
+/* relay.c */
+struct russ_relay2 *russ_relay2_new(int);
+struct russ_relay2 *russ_relay2_free(struct russ_relay2 *);
+int russ_relay2_add(struct russ_relay2 *, int, int, int, int);
+int russ_relay2_add2(struct russ_relay2 *, int, int, int, int);
+int russ_relay2_find(struct russ_relay2 *, int, int);
+int russ_relay2_remove(struct russ_relay2 *, int, int);
+int russ_relay2_poll(struct russ_relay2 *, int);
+int russ_relay2_serve(struct russ_relay2 *, int, int);
 
 /* request.c */
 
