@@ -1,5 +1,5 @@
 /*
-** relay2.c
+** relay.c
 */
 
 /*
@@ -31,7 +31,7 @@
 #define POLLHEN	(POLLHUP|POLLERR|POLLNVAL)
 
 /**
-* Initialize existing relay2stream.
+* Initialize existing relaystream.
 *
 * Existing buffer is freed and a new one allocated.
 *
@@ -42,7 +42,7 @@
 * @return		0 on success; -1 on failure
 */
 int
-russ_relay2stream_init(struct russ_relay2stream *self, int rfd, int wfd, int bufsize, int auto_close) {
+russ_relaystream_init(struct russ_relaystream *self, int rfd, int wfd, int bufsize, int auto_close) {
 	struct russ_buf	*rbuf;
 
 	if ((self == NULL)
@@ -61,13 +61,13 @@ russ_relay2stream_init(struct russ_relay2stream *self, int rfd, int wfd, int buf
 }
 
 /**
-* Free relay2stream.
+* Free relaystream.
 *
-* @param self		relay2stream object
+* @param self		relaystream object
 * @return		NULL;
 */
-struct russ_relay2stream *
-russ_relay2stream_free(struct russ_relay2stream *self) {
+struct russ_relaystream *
+russ_relaystream_free(struct russ_relaystream *self) {
 	if (self) {
 		self->rbuf = russ_buf_free(self->rbuf);
 		free(self);
@@ -76,19 +76,19 @@ russ_relay2stream_free(struct russ_relay2stream *self) {
 }
 
 /**
-* Create relay2stream.
+* Create relaystream.
 *
 * @param rfd		read fd
 * @param wfd		write fd
 * @param bufsize	buffer size
 * @param auto_close	flag to automatically close
-* @return		relay2stream on success; NULL on failure
+* @return		relaystream on success; NULL on failure
 */
-struct russ_relay2stream *
-russ_relay2stream_new(int rfd, int wfd, int bufsize, int auto_close) {
-	struct russ_relay2stream	*self;
+struct russ_relaystream *
+russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close) {
+	struct russ_relaystream	*self;
 
-	if (((self = malloc(sizeof(struct russ_relay2stream))) == NULL)
+	if (((self = malloc(sizeof(struct russ_relaystream))) == NULL)
 		|| ((self->rbuf = russ_buf_new(bufsize)) == NULL)) {
 		free(self);
 		return NULL;
@@ -101,19 +101,19 @@ russ_relay2stream_new(int rfd, int wfd, int bufsize, int auto_close) {
 }
 
 /**
-* Free relay2 object.
+* Free relay object.
 *
-* @param self		relay2 object
+* @param self		relay object
 * @return		NULL
 */
-struct russ_relay2 *
-russ_relay2_free(struct russ_relay2 *self) {
+struct russ_relay *
+russ_relay_free(struct russ_relay *self) {
 	int	i;
 
 	if (self) {
 		free(self->pollfds);
 		for (i = 0; i < self->nstreams; i++) {
-			self->streams[i] = russ_relay2stream_free(self->streams[i]);
+			self->streams[i] = russ_relaystream_free(self->streams[i]);
 		}
 		free(self->streams);
 		free(self);
@@ -122,17 +122,17 @@ russ_relay2_free(struct russ_relay2 *self) {
 }
 
 /**
-* Create new relay2 object.
+* Create new relay object.
 *
-* @param n		number of relay2streams to support
-* @return		relay2 object; NULL on failure
+* @param n		number of relaystreams to support
+* @return		relay object; NULL on failure
 */
-struct russ_relay2 *
-russ_relay2_new(int n) {
-	struct russ_relay2	*self;
+struct russ_relay *
+russ_relay_new(int n) {
+	struct russ_relay	*self;
 	int			i;
 
-	if ((self = malloc(sizeof(struct russ_relay2))) == NULL) {
+	if ((self = malloc(sizeof(struct russ_relay))) == NULL) {
 		return NULL;
 	}
 
@@ -140,7 +140,7 @@ russ_relay2_new(int n) {
 	self->exit_fd = -1;
 	self->pollfds = NULL;
 
-	if (((self->streams = malloc(sizeof(struct russ_relay2stream *)*n)) == NULL)
+	if (((self->streams = malloc(sizeof(struct russ_relaystream *)*n)) == NULL)
 		|| ((self->pollfds = malloc(sizeof(struct pollfd)*(n+1))) == NULL)) {
 		goto free_relay;
 	}
@@ -156,7 +156,7 @@ russ_relay2_new(int n) {
 	return self;
 
 free_relay:
-	russ_relay2_free(self);
+	russ_relay_free(self);
 	return NULL;
 }
 
@@ -171,14 +171,14 @@ free_relay:
 * @return		index; -1 on error
 */
 int
-russ_relay2_add(struct russ_relay2 *self, int rfd, int wfd, int bufsize, int auto_close) {
+russ_relay_add(struct russ_relay *self, int rfd, int wfd, int bufsize, int auto_close) {
 	int	i;
 
 	for (i = 0; (i < self->nstreams) && (self->streams[i] != NULL); i++);
 	if (i == self->nstreams) {
 		return -1;
 	}
-	if ((self->streams[i] = russ_relay2stream_new(rfd, wfd, bufsize, auto_close)) == NULL) {
+	if ((self->streams[i] = russ_relaystream_new(rfd, wfd, bufsize, auto_close)) == NULL) {
 		return -1;
 	}
 	self->pollfds[i].fd = rfd;
@@ -188,9 +188,9 @@ russ_relay2_add(struct russ_relay2 *self, int rfd, int wfd, int bufsize, int aut
 }
 
 /**
-* Helper to russ_relay2_add() to add bidirectional relay.
+* Helper to russ_relay_add() to add bidirectional relay.
 *
-* @see russ_relay2_add()
+* @see russ_relay_add()
 *
 * @param self		relay object
 * @param fd0		an fd
@@ -200,12 +200,12 @@ russ_relay2_add(struct russ_relay2 *self, int rfd, int wfd, int bufsize, int aut
 * @return		0 on success; -1 or error
 */
 int
-russ_relay2_add2(struct russ_relay2 *self, int fd0, int fd1, int bufsize, int auto_close) {
+russ_relay_add2(struct russ_relay *self, int fd0, int fd1, int bufsize, int auto_close) {
 	int	i, j;
 
-	if (((i = russ_relay2_add(self, fd0, fd1, bufsize, auto_close)) < 0)
-		|| ((j = russ_relay2_add(self, fd1, fd0, bufsize, auto_close)) < 0)) {
-		russ_relay2_remove(self, fd0, fd1);
+	if (((i = russ_relay_add(self, fd0, fd1, bufsize, auto_close)) < 0)
+		|| ((j = russ_relay_add(self, fd1, fd0, bufsize, auto_close)) < 0)) {
+		russ_relay_remove(self, fd0, fd1);
 		return -1;
 	}
 	self->streams[i]->bidir = 1;
@@ -214,15 +214,15 @@ russ_relay2_add2(struct russ_relay2 *self, int fd0, int fd1, int bufsize, int au
 }
 
 /**
-* Find relay2stream and return index.
+* Find relaystream and return index.
 *
 * @param self		relay object
 * @param rfd		read fd
 * @param wfd		write fd
-* @return		index of relay2stream; -1 on failure
+* @return		index of relaystream; -1 on failure
 */
 int
-russ_relay2_find(struct russ_relay2 *self, int rfd, int wfd) {
+russ_relay_find(struct russ_relay *self, int rfd, int wfd) {
 	int	i;
 
 	for (i = 0; i < self->nstreams; i++) {
@@ -236,21 +236,21 @@ russ_relay2_find(struct russ_relay2 *self, int rfd, int wfd) {
 /**
 * Remove fd pair.
 *
-* @param self		relay2 object
+* @param self		relay object
 * @param rfd		read fd
 * @param wfd		write fd
 * @return		0 on success; -1 on error
 */
 int
-russ_relay2_remove(struct russ_relay2 *self, int rfd, int wfd) {
+russ_relay_remove(struct russ_relay *self, int rfd, int wfd) {
 	int	i, j;
 
-	if ((i = russ_relay2_find(self, rfd, wfd)) < 0) {
+	if ((i = russ_relay_find(self, rfd, wfd)) < 0) {
 		return -1;
 	}
 	close(rfd);
 	close(wfd);
-	self->streams[i] = russ_relay2stream_free(self->streams[i]);
+	self->streams[i] = russ_relaystream_free(self->streams[i]);
 	self->pollfds[i].fd = -1;
 	self->pollfds[i].events = 0;
 	return 0;
@@ -264,7 +264,7 @@ russ_relay2_remove(struct russ_relay2 *self, int rfd, int wfd) {
 * @return		number of fds with events; -1 on error
 */
 int
-russ_relay2_poll(struct russ_relay2 *self, int timeout) {
+russ_relay_poll(struct russ_relay *self, int timeout) {
 	return poll(self->pollfds, self->nstreams+1, timeout);
 }
 
@@ -276,10 +276,10 @@ russ_relay2_poll(struct russ_relay2 *self, int timeout) {
 * @retrun		0 on success; -1 on error
 */
 int
-russ_relay2_serve(struct russ_relay2 *self, int timeout, int exit_fd) {
+russ_relay_serve(struct russ_relay *self, int timeout, int exit_fd) {
 	struct pollfd		*pollfds, *pollfd;
 	struct russ_buf		*rbuf;
-	struct russ_relay2stream	*stream, **streams;
+	struct russ_relaystream	*stream, **streams;
 	int			events, nevents, revents;
 	int			exited, fd;
 	int			nactive, nstreams;
@@ -297,7 +297,7 @@ russ_relay2_serve(struct russ_relay2 *self, int timeout, int exit_fd) {
 	while (nactive) {
 //usleep(500000);
 //usleep(100000);
-		if ((nevents = russ_relay2_poll(self, timeout)) < 1) {
+		if ((nevents = russ_relay_poll(self, timeout)) < 1) {
 			break;
 		}
 		if (nevents == 0) {
@@ -347,7 +347,7 @@ russ_relay2_serve(struct russ_relay2 *self, int timeout, int exit_fd) {
 				}
 			} else if (revents & POLLHEN) {
 disable_stream:
-				russ_relay2_remove(self, stream->rfd, stream->wfd);
+				russ_relay_remove(self, stream->rfd, stream->wfd);
 				nactive--;
 			}
 			nevents--;
@@ -364,7 +364,7 @@ disable_stream:
 			}
 			for (i = 0; i < nstreams; i++) {
 				if ((pollfds[i].fd >= 0) && (pollfds[i].events & POLLIN)) {
-					russ_relay2_remove(self, streams[i]->rfd, streams[i]->wfd);
+					russ_relay_remove(self, streams[i]->rfd, streams[i]->wfd);
 					nactive--;
 				}
 			}

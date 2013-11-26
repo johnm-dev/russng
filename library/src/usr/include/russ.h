@@ -203,7 +203,7 @@ struct russ_sess {
 /**
 * Relay and support objects.
 */
-struct russ_relay2stream {
+struct russ_relaystream {
 	int		rfd;		/**< read fd */
 	int		wfd;		/**< write fd */
 	struct russ_buf	*rbuf;		/**< output russ_buf */
@@ -211,10 +211,10 @@ struct russ_relay2stream {
 	int		bidir;		/**< flag as bidirectional fds */
 };
 
-struct russ_relay2 {
+struct russ_relay {
 	int				nstreams;
 	int				exit_fd;
-	struct russ_relay2stream	**streams;
+	struct russ_relaystream	**streams;
 	struct pollfd			*pollfds;
 };
 
@@ -276,14 +276,14 @@ const char *russ_optable_find_op(struct russ_optable *, russ_opnum);
 russ_opnum russ_optable_find_opnum(struct russ_optable *, char *);
 
 /* relay.c */
-struct russ_relay2 *russ_relay2_new(int);
-struct russ_relay2 *russ_relay2_free(struct russ_relay2 *);
-int russ_relay2_add(struct russ_relay2 *, int, int, int, int);
-int russ_relay2_add2(struct russ_relay2 *, int, int, int, int);
-int russ_relay2_find(struct russ_relay2 *, int, int);
-int russ_relay2_remove(struct russ_relay2 *, int, int);
-int russ_relay2_poll(struct russ_relay2 *, int);
-int russ_relay2_serve(struct russ_relay2 *, int, int);
+struct russ_relay *russ_relay_new(int);
+struct russ_relay *russ_relay_free(struct russ_relay *);
+int russ_relay_add(struct russ_relay *, int, int, int, int);
+int russ_relay_add2(struct russ_relay *, int, int, int, int);
+int russ_relay_find(struct russ_relay *, int, int);
+int russ_relay_remove(struct russ_relay *, int, int);
+int russ_relay_poll(struct russ_relay *, int);
+int russ_relay_serve(struct russ_relay *, int, int);
 
 /* request.c */
 

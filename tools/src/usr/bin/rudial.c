@@ -254,17 +254,17 @@ main(int argc, char **argv) {
 		}
 
 		{
-			struct russ_relay2	*relay;
+			struct russ_relay	*relay;
 			
-			relay = russ_relay2_new(3);
-			russ_relay2_add(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1);
-			russ_relay2_add(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 1);
-			russ_relay2_add(relay, cconn->fds[2], STDERR_FILENO, bufsize, 1);
+			relay = russ_relay_new(3);
+			russ_relay_add(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1);
+			russ_relay_add(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 1);
+			russ_relay_add(relay, cconn->fds[2], STDERR_FILENO, bufsize, 1);
 
 			cconn->fds[0] = -1;
 			cconn->fds[1] = -1;
 			cconn->fds[2] = -1;
-			russ_relay2_serve(relay, -1, cconn->fds[3]);
+			russ_relay_serve(relay, -1, cconn->fds[3]);
 			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 				exit_status = RUSS_EXIT_SYS_FAILURE;
