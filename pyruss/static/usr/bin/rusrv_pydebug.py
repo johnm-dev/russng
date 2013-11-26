@@ -64,18 +64,18 @@ class ServiceTree:
         self.root.add("request", self.svc_request)
 
     def svc_root(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_HELP:
-            os.write(conn.get_fd(1), HELP)
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            os.write(sconn.get_fd(1), HELP)
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
     def svc_chargen(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
-            fd = conn.get_fd(1)
+            fd = sconn.get_fd(1)
             off = 0
             while True:
                 os.write(fd, CHARGEN_CHARS[off:off+72]+"\n")
@@ -83,61 +83,61 @@ class ServiceTree:
                 if off > 94:
                     off = 0
                 time.sleep(0.1)
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
     def svc_conn(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
-            fd = conn.get_fd(1)
+            fd = sconn.get_fd(1)
             try:
-                creds = conn.get_creds()
+                creds = sconn.get_creds()
                 os.write(fd, "uid (%s)\ngid (%s)\npid (%d)\n" % (creds.uid, creds.gid, creds.pid))
-                conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-                conn.close()
+                sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+                sconn.close()
             except:
                 traceback.print_exc()
 
     def svc_daytime(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
-            fd = conn.get_fd(1)
+            fd = sconn.get_fd(1)
             s = time.strftime("%A, %B %d, %Y %T-%Z", time.gmtime(time.time()))
             os.write(fd, s+"\n")
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
     def svc_echo(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
-            infd = conn.get_fd(0)
-            outfd = conn.get_fd(1)
+            infd = sconn.get_fd(0)
+            outfd = sconn.get_fd(1)
             while True:
                 s = os.read(infd, 128)
                 if s == "":
                     break
                 os.write(outfd, s)
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
     def svc_env(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
-            fd = conn.get_fd(1)
+            fd = sconn.get_fd(1)
             for key, value in os.environ.items():
                 os.write(fd, "%s=%s\n" % (key, value))
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
     def svc_request(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
-            fd = conn.get_fd(1)
+            fd = sconn.get_fd(1)
             os.write(fd, "protocol string (%s)\n" % req.protocol_string)
             os.write(fd, "spath (%s)\n" % req.spath)
             os.write(fd, "op (%s)\n" % req.op)
@@ -156,8 +156,8 @@ class ServiceTree:
                 for i, value in enumerate(args):
                     os.write(fd, "argv[%d] (%s)\n" % (i, value))
 
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
 if __name__ == "__main__":
     global config, logger

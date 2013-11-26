@@ -99,8 +99,8 @@ class Server:
         return cls(_ptr)
 
     def accept(self, deadline):
-        conn_ptr = libruss.russ_svr_accept(self._ptr, deadline)
-        return bool(conn_ptr) and ServerConn(conn_ptr) or None
+        sconn_ptr = libruss.russ_svr_accept(self._ptr, deadline)
+        return bool(sconn_ptr) and ServerConn(sconn_ptr) or None
 
     def announce(self, saddr, mode, uid, gid):
         lis_ptr = libruss.russ_svr_announce(self._ptr, saddr, mode, uid, gid)
@@ -110,25 +110,25 @@ class Server:
         libruss.russ_svr_free(self._ptr)
         self._ptr = None
 
-    def handler(self, conn):
-        libruss.russ_svr_handler(self._ptr, conn._ptr)
+    def handler(self, sconn):
+        libruss.russ_svr_handler(self._ptr, sconn._ptr)
 
     def loop(self):
         libruss.russ_svr_loop(self._ptr)
 
     def loop_thread(self):
-        def helper(svr, conn):
-            self.handler(conn)
+        def helper(svr, sconn):
+            self.handler(sconn)
             # failsafe exit info (if not provided)
-            conn.fatal(pyruss.RUSS_MSG_NO_EXIT, pyruss.RUSS_EXIT_SYS_FAILURE)
-            conn.free()
+            sconn.fatal(pyruss.RUSS_MSG_NO_EXIT, pyruss.RUSS_EXIT_SYS_FAILURE)
+            sconn.free()
 
         while True:
-            conn = self.accept(self._ptr.contents.accept_timeout)
-            if not conn:
+            sconn = self.accept(self._ptr.contents.accept_timeout)
+            if not sconn:
                 sys.stderr.write("error: cannot accept connection\n")
                 continue
-            th = threading.Thread(target=helper, args=(self, conn))
+            th = threading.Thread(target=helper, args=(self, sconn))
             if th:
                 th.start()
             else:
@@ -147,8 +147,8 @@ class Sess:
     def __del__(self):
         self._ptr = None
 
-    def get_conn(self):
-        return self._ptr.contents.conn and ServerConn(self._ptr.contents.conn) or None
+    def get_sconn(self):
+        return self._ptr.contents.sconn and ServerConn(self._ptr.contents.sconn) or None
 
     def get_svr(self):
         return self._ptr.contents.svr and Server(self._ptr.contents.svr) or None

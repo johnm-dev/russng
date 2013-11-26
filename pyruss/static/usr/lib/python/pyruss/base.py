@@ -72,8 +72,8 @@ def dialv(deadline, op, spath, attrs, args):
     """Dial a service.
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
-    conn_ptr = libruss.russ_dialv(deadline, op, spath, c_attrs, c_argv)
-    return bool(conn_ptr) and ClientConn(conn_ptr, True) or None
+    cconn_ptr = libruss.russ_dialv(deadline, op, spath, c_attrs, c_argv)
+    return bool(cconn_ptr) and ClientConn(cconn_ptr, True) or None
 
 dial = dialv
 
@@ -211,25 +211,6 @@ class Conn:
         self._ptr = _ptr
         self.owned = owned
 
-    def __del__(self):
-        if self.owned:
-            libruss.russ_conn_free(self._ptr)            
-        self._ptr = None
-
-    def close(self):
-        libruss.russ_conn_close(self._ptr)
-
-    def close_fd(self, i):
-        return libruss.russ_conn_close_fd(self._ptr, i)
-
-    def free(self):
-        libruss.russ_conn_free(self._ptr)
-        self._ptr = None
-
-    def get_creds(self):
-        creds = self._ptr.contents.creds
-        return Credentials(creds.uid, creds.gid, creds.pid)
-
     def get_fd(self, i):
         return self._ptr.contents.fds[i]
 
@@ -242,16 +223,28 @@ class Conn:
     def set_fd(self, i, value):
         self._ptr.contents.fds[i] = value
         
-    def splice(self, dconn):
-        return libruss.russ_conn_splice(self._ptr, dconn._ptr)
-
 class ClientConn(Conn):
     """Client connection.
     """
 
+    def __del__(self):
+        if self.owned:
+            libruss.russ_cconn_free(self._ptr)            
+        self._ptr = None
+
+    def close(self):
+        libruss.russ_cconn_close(self._ptr)
+
+    def close_fd(self, i):
+        return libruss.russ_cconn_close_fd(self._ptr, i)
+
+    def free(self):
+        libruss.russ_cconn_free(self._ptr)
+        self._ptr = None
+
     def wait(self, deadline):
         exit_status = ctypes.c_int()
-        return libruss.russ_conn_wait(self._ptr, deadline, ctypes.byref(exit_status)), exit_status.value
+        return libruss.russ_cconn_wait(self._ptr, deadline, ctypes.byref(exit_status)), exit_status.value
 
 class Credentials:
     """Connection credentials.
@@ -266,11 +259,33 @@ class ServerConn(Conn):
     """Server connection.
     """
 
+    def __del__(self):
+        if self.owned:
+            libruss.russ_sconn_free(self._ptr)            
+        self._ptr = None
+
+    def close(self):
+        libruss.russ_sconn_close(self._ptr)
+
+    def close_fd(self, i):
+        return libruss.russ_sconn_close_fd(self._ptr, i)
+
+    def free(self):
+        libruss.russ_sconn_free(self._ptr)
+        self._ptr = None
+
+    def get_creds(self):
+        creds = self._ptr.contents.creds
+        return Credentials(creds.uid, creds.gid, creds.pid)
+
+    def splice(self, cconn):
+        return libruss.russ_sconn_splice(self._ptr, cconn._ptr)
+
     def answer(self, nfds, cfds, sfds):
         if nfds:
             _cfds = (ctypes.c_int*nfds)(*tuple(cfds))
             _sfds = (ctypes.c_int*nfds)(*tuple(sfds))
-            rv = libruss.russ_conn_answer(self._ptr, nfds,
+            rv = libruss.russ_sconn_answer(self._ptr, nfds,
                 ctypes.cast(_cfds, ctypes.POINTER(ctypes.c_int)),
                 ctypes.cast(_sfds, ctypes.POINTER(ctypes.c_int)))
             # update python side (in-place)
@@ -278,19 +293,19 @@ class ServerConn(Conn):
             sfds[0:] = [fd for fd in _sfds]
             return rv
         else:
-            return libruss.russ_conn_answer(self._ptr, 0, None, None)
+            return libruss.russ_sconn_answer(self._ptr, 0, None, None)
 
     def await_request(self, deadline):
-        return libruss.russ_conn_await_request(self._ptr, deadline)
+        return libruss.russ_sconn_await_request(self._ptr, deadline)
 
     def exit(self, exit_status):
-        return libruss.russ_conn_exit(self._ptr, exit_status)
+        return libruss.russ_sconn_exit(self._ptr, exit_status)
 
     def exits(self, msg, exit_status):
-        return libruss.russ_conn_exits(self._ptr, msg, exit_status)
+        return libruss.russ_sconn_exits(self._ptr, msg, exit_status)
 
     def fatal(self, msg, exit_status):
-        return libruss.russ_conn_fatal(self._ptr, msg, exit_status)
+        return libruss.russ_sconn_fatal(self._ptr, msg, exit_status)
 
     def standard_answer_handler(self):
         return libruss.russ_standard_answer_handler(self._ptr)
@@ -306,10 +321,10 @@ class Listener:
 
     def accept(self, deadline):
         try:
-            conn_ptr = libruss.russ_lis_accept(self._ptr, deadline)
+            sconn_ptr = libruss.russ_lis_accept(self._ptr, deadline)
         except:
             traceback.print_exc()
-        return bool(conn_ptr) and ServerConn(conn_ptr) or None
+        return bool(sconn_ptr) and ServerConn(sconn_ptr) or None
 
     def close(self):
         libruss.russ_lis_close(self._ptr)
@@ -325,8 +340,8 @@ class Listener:
         """
         while self.get_sd() >= 0:
             try:
-                conn = self.accept(RUSS_DEADLINE_NEVER)
-                if conn == None:
+                sconn = self.accept(RUSS_DEADLINE_NEVER)
+                if sconn == None:
                     sys.stderr.write("error: cannot accept connection\n")
                     continue
 
@@ -336,22 +351,22 @@ class Listener:
                     os.setsid()
                     self.close()
                     if os.fork() == 0:
-                        if conn.await_request(RUSS_DEADLINE_NEVER) < 0:
-                            conn.close()
+                        if sconn.await_request(RUSS_DEADLINE_NEVER) < 0:
+                            sconn.close()
                             sys.exit(1)
                         try:
-                            handler(conn)
+                            handler(sconn)
                         except:
                             pass
                         try:
-                            if conn:
-                                conn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
-                                conn.close()
+                            if sconn:
+                                sconn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
+                                sconn.close()
                         except:
                             pass
                     sys.exit(0)
-                conn.close()
-                del conn
+                sconn.close()
+                del sconn
                 os.waitpid(pid, 0)
             except SystemExit:
                 raise
@@ -362,28 +377,28 @@ class Listener:
     def loop_thread(self, handler):
         """Thread-based loop.
         """
-        def pre_handler_thread(conn, handler):
-            if conn.await_request(RUSS_DEADLINE_NEVER) < 0:
+        def pre_handler_thread(sconn, handler):
+            if sconn.await_request(RUSS_DEADLINE_NEVER) < 0:
                 return
             try:
-                handler(conn)
+                handler(sconn)
             except:
                 pass
             try:
-                if conn:
-                    conn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
-                    conn.close()
+                if sconn:
+                    sconn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
+                    sconn.close()
             except:
                 pass
 
         while True:
             try:
-                conn = self.accept(RUSS_DEADLINE_NEVER)
-                if conn == None:
+                sconn = self.accept(RUSS_DEADLINE_NEVER)
+                if sconn == None:
                     sys.stderr.write("error: cannot accept connection\n")
                     continue
                 # no limiting of thread count
-                Thread(target=pre_handler_thread, args=(conn, req_handler)).start()
+                Thread(target=pre_handler_thread, args=(sconn, req_handler)).start()
             except SystemExit:
                 raise
             except:

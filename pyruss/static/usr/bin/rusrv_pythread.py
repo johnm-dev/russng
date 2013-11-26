@@ -47,32 +47,32 @@ class ServiceTree:
         self.root.add("sleep", self.svc_sleep)
 
     def svc_root(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_HELP:
-            os.write(conn.get_fd(1), HELP)
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            os.write(sconn.get_fd(1), HELP)
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
     def svc_echo(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
-            infd = conn.get_fd(0)
-            outfd = conn.get_fd(1)
+            infd = sconn.get_fd(0)
+            outfd = sconn.get_fd(1)
             while True:
                 s = os.read(infd, 128)
                 if s == "":
                     break
                 os.write(outfd, s)
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
     def svc_sleep(self, sess):
-        conn = sess.get_conn()
+        sconn = sess.get_sconn()
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
-            fd = conn.get_fd(1)
+            fd = sconn.get_fd(1)
             os.write(fd, "active threads (%s)\n" % threading.active_count())
             os.write(fd, "current thread (%s)\n" % threading.current_thread)
             os.write(fd, "pid (%s)\n" % os.getpid())
@@ -84,8 +84,8 @@ class ServiceTree:
                 secs = 0
             time.sleep(secs)
 
-            conn.exit(pyruss.RUSS_EXIT_SUCCESS)
-            conn.close()
+            sconn.exit(pyruss.RUSS_EXIT_SUCCESS)
+            sconn.close()
 
 if __name__ == "__main__":
     global config, logger
