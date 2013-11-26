@@ -195,6 +195,10 @@ class Request:
         return self._ptr.contents.opnum
     opnum = property(get_opnum, None)
 
+    def get_protocol_string(self):
+        return self._ptr.contents.protocol_string
+    protocol_string = property(get_protocol_string, None)
+
     def get_spath(self):
         return self._ptr.contents.spath
     spath = property(get_spath, None)
