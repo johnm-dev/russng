@@ -288,7 +288,7 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 /**
 * Helper routine to write error message and exit status.
 *
-* An error message is sent to the connection error fd (with a
+* An error message is sent to the connection exit fd (with a
 * trailing newline) and the exit_status over the exit fd. If the
 * exit fd is already closed, then no message is written or exit
 * status sent.
