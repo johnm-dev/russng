@@ -5,14 +5,14 @@
 
 include ../../../../Makefile.inc
 
-SRCS=buffer.c conf.c cconn.c encdec.c fd.c handlers.c \
-	helpers.c io.c listener.c misc.c optable.c request.c sconn.c \
-	socket.c spath.c \
-	time.c server.c servicenode.c experimental.c relay.c
-OBJS=buffer.o conf.o cconn.o encdec.o fd.o handlers.o \
-	helpers.o io.o listener.o misc.o optable.o request.o sconn.o \
-	socket.o spath.o \
-	time.o server.o servicenode.o experimental.o relay.o
+SRCS=buf.c cconn.c conf.c encdec.c fd.c handlers.c \
+	helpers.c io.c lis.c misc.c optable.c relay.c req.c \
+	sconn.c socket.c spath.c svcnode.c svr.c time.c \
+	experimental.c
+OBJS=buf.o cconn.o conf.o encdec.o fd.o handlers.o \
+	helpers.o io.o lis.o misc.o optable.o relay.o req.o \
+	sconn.o socket.o spath.o svcnode.o svr.o time.o \
+	experimental.o
 LIBS=$(LIBS_PLAT)
 
 all: libruss.a libruss.so

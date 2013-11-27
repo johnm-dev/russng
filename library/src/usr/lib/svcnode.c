@@ -1,5 +1,5 @@
 /*
-** lib/servicenode.c
+** lib/svcnode.c
 */
 
 /*
