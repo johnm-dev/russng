@@ -13,6 +13,9 @@ ifeq ($(UNAME_SYSTEM),AIX)
 	CFLAGS_STATIC=$(CFLAGS) -bstatic
 	LDFLAGS_STATIC=-bstatic
 	LIBS_PLAT=-lbsd
+	LIBS=$(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) $(LIBS_PLAT)
+	LIBS_PTHREAD=$(RUSS_LIB_DIR)/libruss-pthread.a $(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) -lpthread $(LIBS_PLAT)
+
 	PYTHON=python2.6
 	MAKE=gmake
 endif
@@ -23,6 +26,9 @@ ifeq ($(UNAME_SYSTEM),Darwin)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	LDFLAGS_STATIC=-static
 	LDFLAGS_DYNAMIC=-dynamic
+	LIBS=$(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) $(LIBS_PLAT)
+	LIBS_PTHREAD=$(RUSS_LIB_DIR)/libruss-pthread.a $(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) -lpthread $(LIBS_PLAT)
+
 	MAKE=gmake
 endif
 
@@ -32,6 +38,9 @@ ifeq ($(UNAME_SYSTEM),FreeBSD)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	LDFLAGS_STATIC=-Wl,-Bstatic
 	LDFLAGS_DYNAMIC=-Wl,-Bdynamic
+	LIBS=$(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) $(LIBS_PLAT)
+	LIBS_PTHREAD=$(RUSS_LIB_DIR)/libruss-pthread.a $(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) -lpthread $(LIBS_PLAT)
+
 	MAKE=gmake
 endif
 
@@ -43,5 +52,8 @@ ifeq ($(UNAME_SYSTEM),Linux)
 	LDFLAGS_STATIC=-Wl,-Bstatic
 	LDFLAGS_DYNAMIC=-Wl,-Bdynamic
 	LIBS_PLAT=-lrt -lpam -lpam_misc
+	LIBS=$(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) $(LIBS_PLAT)
+	LIBS_PTHREAD=$(RUSS_LIB_DIR)/libruss-pthread.a $(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) -lpthread $(LIBS_PLAT)
+
 	MAKE=make
 endif
