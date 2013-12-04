@@ -3,7 +3,7 @@
 #
 # expect INSTALL_DIR
 
-include ../../../../Makefile.inc
+include ../../../../../Makefile.inc
 
 # rt for clock_gettime
 LIBS=$(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) $(LIBS_PLAT)
