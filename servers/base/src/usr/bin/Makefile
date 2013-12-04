@@ -1,5 +1,5 @@
 #
-# Makefile
+# servers/base/src/usr/bin/Makefile
 #
 # expect INSTALL_DIR
 
@@ -9,9 +9,6 @@ include ../../../../../Makefile.inc
 LIBS=$(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) $(LIBS_PLAT)
 LIBS_PTHREAD=$(RUSS_LIB_DIR)/libruss-pthread.a $(RUSS_LIB_DIR)/libruss.a $(LDFLAGS_DYNAMIC) -lpthread $(LIBS_PLAT)
 
-#BINS=rusrv_barrier rusrv_debug rusrv_echo rusrv_exec rusrv_pass \
-	#rusrv_pexec rusrv_pnet rusrv_relay rusrv_relay_backend \
-	#rusrv_srelay rusrv_srelay_backend rusrv_ssh
 BINS=rusrv_debug rusrv_echo rusrv_exec \
 	rusrv_pnet \
 	rusrv_ssh
