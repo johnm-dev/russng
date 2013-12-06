@@ -503,7 +503,7 @@ russ_conf_get(struct russ_conf *self, char *section_name, char *option, char *dv
 			return strdup(dvalue);
 		}
 	}
-	return item->value;
+	return strdup(item->value);
 }
 
 /**
