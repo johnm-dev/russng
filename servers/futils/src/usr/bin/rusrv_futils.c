@@ -41,10 +41,6 @@
 #include "russ_conf.h"
 #include "russ.h"
 
-#define ABS(a)		((a < 0) ? -a : a)
-#define MAX(a,b)	((a > b) ? a : b)
-#define MIN(a,b)	((a < b) ? a : b)
-
 struct russ_conf	*conf = NULL;
 char	*default_argv[] = {"-", NULL};
 
@@ -63,9 +59,16 @@ char			*HELP =
 "/md5sum [<file> [...]]\n"
 "    Print MD5 (128-bit) checksum.\n"
 "\n"
-"/read [-p <pos>[:<last>]] [<file>]\n"
-"    Output the file. Use -p to specify position at which to\n"
-"    start read up to, but not including, <last> byte.\n"
+"/read [<options>] [<file>]\n"
+"    Output the contents of file. Optionally, a range may be\n"
+"    specified from <start> upto, but not including, <end>.\n"
+"    Ranges start at index 0.\n"
+"\n"
+"    Options:\n"
+"    -c <start>[:<end>]\n"
+"                   print bytes from the range <start> upto <end>-1\n"
+"    -n <start>[:<end>]\n"
+"                   print lines from the range <start> upto <end>-1\n"
 "\n"
 "/tail\n"
 "    Output the last part of files.\n"
@@ -85,42 +88,33 @@ char			*HELP =
 "    -l             print the newline counts\n"
 "    -w             print the word counts\n"
 "\n"
-"/write [-p <pos>:[<last>]] [<file>]\n"
-"    Write input to file. Use -p to specify position at which to\n"
-"    write (0 - start, -1 - end), up to but not including <last>\n"
-"    byte.\n"
+"/write [-s <str>] <file>\n"
+"    Write to a file. If -s is specified, then <str> will be written\n"
+"    to the named file. Otherwise, input will be read from stdin.\n"
 "\n"
-"In all cases, if <file> is not given or is '-', input will be read\n"
-"from stdin.\n"
+"In all cases except write, if <file> is not given or is '-', input\n"
+"will be read from stdin.\n"
 "\n";
 
-void
-svc_root_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	char			buf[1024];
-	ssize_t			n;
-
-	switch (sess->req->opnum) {
-	case RUSS_OPNUM_HELP:
-		russ_dprintf(sconn->fds[1], HELP);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-	}
-}
-
+/**
+* Parse argument list for -c and -n options. Used by head and tail
+* for byte and line settings
+*
+* @param argv		argument list
+* @param copt		1 if specified; 0 by default
+* @param cval		long int value if -c specified
+* @param nopt		2 if +<nval>; 1 if specified but not
+*			+<nval>; 0 by default
+* @param nval		long in value if -n specified
+* @return		pointer to next argument in argument list
+*/
 char **
 parse_copt_nopt(char **argv, int *copt, long *cval, int *nopt, long *nval) {
 	if (argv) {
 		for (; *argv; argv++) {
-fprintf(stderr, "*argv (%s)\n", *argv);
 			if (strcmp(*argv, "-c") == 0) {
-fprintf(stderr, "argv++ (%p) (%s)\n", argv+1, argv[1]);
 				if ((*(++argv) == NULL)
 					|| (sscanf(*argv, "%ld", cval) < 0)) {
-fprintf(stderr, "cval (%ld)\n", *cval);
-fprintf(stderr, "argv[0] (%s)\n", argv[0]);
 					return NULL;
 				}
 				if (*argv[0] == '+') {
@@ -146,11 +140,20 @@ fprintf(stderr, "argv[0] (%s)\n", argv[0]);
 	return argv;
 }
 
+/**
+* Find nth byte in file stream starting at the beginning.
+*
+* @param f		file object
+* @param ch		byte to match
+* @param cnt		# of ch to match
+* @return		index in file of nth match
+*/
 long
 find_nth(FILE *f, char ch, long cnt) {
 	char	buf[4096];
 	int	i, n;
 
+	fseek(f, 0, SEEK_SET);
 	while (cnt > 0) {
 		if ((n = fread(buf, 1, sizeof(buf), f)) < 0) {
 			break;
@@ -169,6 +172,15 @@ done:
 	return ftell(f);
 }
 
+/**
+* Find nth byte in file file starting at the end.
+*
+* @param f		file object
+* @param ch		byte to match
+* @param cnt		# of ch to match
+* @param ignore_last	non-zero if last ch matches
+* @return		index in file of nth match (from end)
+*/
 long
 find_nth_rev(FILE *f, char ch, long cnt, int ignore_last) {
 	char	buf[4096];
@@ -206,6 +218,17 @@ done:
 	return lastpos;
 }
 
+/**
+* Copy range of bytes from file object to fd. Optionally add a
+* newline.
+*
+* @param fd		descriptor to write to
+* @param f		file object to read from
+* @param spos		starting byte position
+* @param epos		ending byte position (not included)
+* @param addnl		non-zero to add newline
+* @return		0 on success; -1 on failure
+*/
 int
 print_range(int fd, FILE *f, long spos, long epos, int addnl) {
 	char	buf[4096+1];
@@ -236,6 +259,14 @@ print_range(int fd, FILE *f, long spos, long epos, int addnl) {
 	return 0;
 }
 
+/**
+* Copy lines from file to fd from current position.
+*
+* @param fd		descriptor to write to
+* @param f		file object to read from
+* @param cnt		# of lines to copy
+* @return		0 on success; -1 on failure
+*/
 int
 print_next_lines(int fd, FILE *f, int cnt) {
 	char	buf[4096+1];
@@ -261,6 +292,27 @@ print_next_lines(int fd, FILE *f, int cnt) {
 	return 0;
 }
 
+void
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	char			buf[1024];
+	ssize_t			n;
+
+	switch (sess->req->opnum) {
+	case RUSS_OPNUM_HELP:
+		russ_dprintf(sconn->fds[1], HELP);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		break;
+	default:
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+}
+
+/**
+* Print the "head" of a file a-la the head program.
+*
+* @param sess		session object
+*/
 void
 svc_head_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
@@ -296,8 +348,7 @@ svc_head_handler(struct russ_sess *sess) {
 			} else {
 				if (nval < 0) {
 					/* find pos of last newline */
-					cval = find_nth_rev(f, '\n', ABS(nval), 1);
-fprintf(stderr, "cval (%ld)\n", cval);
+					cval = find_nth_rev(f, '\n', RUSS__ABS(nval), 1);
 					print_range(sconn->fds[1], f, 0, cval, 1);
 				} else {
 
@@ -315,6 +366,11 @@ fprintf(stderr, "cval (%ld)\n", cval);
 }
 
 #ifdef OPENSSL
+/**
+* Calculate and print md5 checksum of one or more files.
+*
+* @param sess		session object
+*/
 void
 svc_md5sum_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
@@ -364,6 +420,11 @@ svc_md5sum_handler(struct russ_sess *sess) {
 }
 #endif /* OPENSSL */
 
+/**
+* Read and print contents of file to stdout.
+*
+* @param sess		session object
+*/
 void
 svc_read_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
@@ -380,6 +441,11 @@ svc_read_handler(struct russ_sess *sess) {
 	exit(0);
 }
 
+/**
+* Print "tail" of file a-la the tail program.
+*
+* @param sess		session object
+*/
 void
 svc_tail_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
@@ -410,18 +476,18 @@ svc_tail_handler(struct russ_sess *sess) {
 				if (copt == 1) {
 					/* relative to end */
 					fseek(f, 0L, SEEK_END);
-					cval = ftell(f)-ABS(cval);
+					cval = ftell(f)-RUSS__ABS(cval);
 				}
 				print_range(sconn->fds[1], f, cval, ftell(f), 0);
 			} else {
 				if (nopt == 1) {
 					/* find pos of last newline */
-					cval = find_nth_rev(f, '\n', ABS(nval), 1);
+					cval = find_nth_rev(f, '\n', RUSS__ABS(nval), 1);
 					cval = (cval == 0) ? 0 : cval+1;
 					fseek(f, 0L, SEEK_END);
 					print_range(sconn->fds[1], f, cval, ftell(f), 1);
 				} else {
-					cval = find_nth(f, '\n', MAX(nval-1, 0));
+					cval = find_nth(f, '\n', RUSS__MAX(nval-1, 0));
 					cval = (cval == 0) ? 0 : cval+1;
 					fseek(f, 0L, SEEK_END);
 					/* don't add nl */
@@ -438,6 +504,11 @@ svc_tail_handler(struct russ_sess *sess) {
 	exit(0);
 }
 
+/**
+* Count and print byte, word, and line counts.
+*
+* @param sess		session object
+*/
 void
 svc_wc_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
@@ -454,18 +525,75 @@ svc_wc_handler(struct russ_sess *sess) {
 	exit(0);
 }
 
+/**
+* Write bytes from stdin or string argument.
+*
+* @param sess		session object
+*/
 void
 svc_write_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
+	int			fd;
+	char			**argv;
+	char			*filename, *s;
 
 	switch (req->opnum) {
 	case RUSS_OPNUM_EXECUTE:
-		russ_dprintf(sconn->fds[1], "%s", HELP);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		argv = req->argv;
+		if (argv == NULL) {
+			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			goto done;
+		}
+		filename = NULL;
+		s = NULL;
+		if (strcmp(*argv, "-s") == 0) {
+			argv++;
+			if (*argv == NULL) {
+				russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+				goto done;
+			}
+			s = *argv;
+			argv++;
+		}
+		if ((*argv == NULL) || (*(argv+1))) {
+			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			goto done;
+		}
+		filename = *argv;
+
+		/* use fd instead of FILE because we're using russ_write */
+		if ((fd = open(filename, O_WRONLY)) < 0) {
+			russ_sconn_fatal(sconn, "error: could not open file", RUSS_EXIT_FAILURE);
+			goto done;
+		}
+		if (s != NULL) {
+			if (russ_write(fd, s) < 0) {
+				russ_sconn_fatal(sconn, "error: could not write to file", RUSS_EXIT_FAILURE);
+				goto done;
+			}
+		} else {
+			char	buf[4096];
+			int	n;
+
+			while (1) {
+				if ((n = russ_read(sconn->fds[0], buf, sizeof(buf))) < 0) {
+					russ_sconn_fatal(sconn, "error: could not read input", RUSS_EXIT_FAILURE);
+				} else if (n == 0) {
+					break;
+				}
+				if (russ_write(fd, buf, n) < n) {
+					russ_sconn_fatal(sconn, "error: could not write to file", RUSS_EXIT_FAILURE);
+				}
+			}
+		}
 		break;
 	default:
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+done:
+	if (fd) {
+		close(fd);
 	}
 	exit(0);
 }
