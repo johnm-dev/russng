@@ -41,6 +41,10 @@
 #define dprintf(...)
 #endif
 
+#define RUSS__ABS( a )		(( (a) < 0) ? -(a) : (a))
+#define RUSS__MIN( a,b )	(( (a) < (b) ) ? (a) : (b))
+#define RUSS__MAX( a,b )	(( (a) > (b) ) ? (a) : (b))
+
 #define RUSS_CONN_NFDS		32
 #define RUSS_CONN_STD_NFDS	4
 #define RUSS_CONN_FD_STDIN	0
