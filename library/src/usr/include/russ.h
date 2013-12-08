@@ -32,6 +32,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <russ_conf.h>
+
 /*
 #define DEBUG
 */

@@ -25,6 +25,8 @@
 #ifndef RUSS_CONF_H
 #define RUSS_CONF_H
 
+#include <stdio.h>
+
 struct russ_confitem {
 	char	*option;
 	char	*value;
