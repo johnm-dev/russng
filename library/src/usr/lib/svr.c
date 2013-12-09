@@ -37,6 +37,10 @@
 
 #include "russ_priv.h"
 
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX	64
+#endif /* HOST_NAME_MAX */
+
 struct russ_svr *
 russ_svr_new(struct russ_svcnode *root, int type) {
 	struct russ_svr	*self;
