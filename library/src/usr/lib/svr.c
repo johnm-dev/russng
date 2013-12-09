@@ -46,6 +46,8 @@ russ_svr_new(struct russ_svcnode *root, int type) {
 	}
 	self->root = root;
 	self->type = type;
+	self->mpid = getpid();
+	self->ctime = russ_gettime();
 	self->saddr = NULL;
 	self->mode = 0;
 	self->uid = -1;
@@ -205,6 +207,21 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		node = self->root;
 		/* TODO: test against ctxt.spath */
 		/* fall through */
+		break;
+	case RUSS_OPNUM_INFO:
+		if (sconn->creds.uid == getuid()) {
+			char	hostname[HOST_NAME_MAX];
+
+			gethostname(hostname, sizeof(hostname));
+			russ_dprintf(sconn->fds[1], "hostname=%s\n", hostname);
+			russ_dprintf(sconn->fds[1], "saddr=%s\n", self->saddr);
+			russ_dprintf(sconn->fds[1], "mpid=%d\n", self->mpid);
+			russ_dprintf(sconn->fds[1], "ctime=%ld\n", self->ctime);
+			russ_dprintf(sconn->fds[1], "pid=%d\n", getpid());
+			russ_dprintf(sconn->fds[1], "time=%ld\n", russ_gettime());
+		}
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		goto cleanup;
 		break;
 	}
 

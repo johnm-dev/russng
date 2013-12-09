@@ -184,6 +184,8 @@ struct russ_svcnode {
 struct russ_svr {
 	struct russ_svcnode	*root;
 	int			type;
+	pid_t			mpid;
+	long			ctime;
 	char			*saddr;
 	mode_t			mode;
 	uid_t			uid;
