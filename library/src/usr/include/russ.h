@@ -322,6 +322,7 @@ struct russ_svcnode *russ_svcnode_free(struct russ_svcnode *);
 struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, char *, russ_svchandler);
 struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *, char *, int);
 int russ_svcnode_set_auto_answer(struct russ_svcnode *, int);
+int russ_svcnode_set_handler(struct russ_svcnode *, russ_svchandler);
 int russ_svcnode_set_virtual(struct russ_svcnode *, int);
 
 /* spath.c */
