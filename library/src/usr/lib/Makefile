@@ -7,13 +7,13 @@ include ../../../../Makefile.inc
 
 SRCS=buf.c cconn.c conf.c encdec.c fd.c handlers.c \
 	helpers.c io.c lis.c misc.c optable.c relay.c req.c \
-	sconn.c socket.c spath.c svcnode.c svr.c time.c \
-	experimental.c
+	sconn.c socket.c spath.c svcnode.c svr.c time.c
+	#experimental.c
 SRCS_PTHREAD=svr-pthread.c
 OBJS=buf.o cconn.o conf.o encdec.o fd.o handlers.o \
 	helpers.o io.o lis.o misc.o optable.o relay.o req.o \
-	sconn.o socket.o spath.o svcnode.o svr.o time.o \
-	experimental.o
+	sconn.o socket.o spath.o svcnode.o svr.o time.o
+	#experimental.o
 OBJS_PTHREAD=svr-pthread.o
 LIBS=$(LIBS_PLAT)
 
