@@ -183,7 +183,7 @@ russ_svcnode_set_auto_answer(struct russ_svcnode *self, int value) {
 }
 
 int
-russ_svcnode_set_handler(struct russ_svcnode *self, russ_svchandler *handler) {
+russ_svcnode_set_handler(struct russ_svcnode *self, russ_svchandler handler) {
 	if (self == NULL) {
 		return -1;
 	}
