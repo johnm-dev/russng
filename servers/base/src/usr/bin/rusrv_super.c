@@ -38,13 +38,12 @@ extern char **environ;
 
 #include <russ.h>
 
+#define DEFAULT_DIAL_TIMEOUT	15000
+
 /* global */
 struct russ_conf	*conf = NULL;
 char			*confdir = NULL, *trackdir = NULL;
-
-#define DEFAULT_DIAL_TIMEOUT	15000
-
-char	*HELP = 
+char			*HELP = 
 "Super server.\n";
 
 /**

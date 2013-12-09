@@ -40,7 +40,7 @@ extern char **environ;
 #include <russ.h>
 
 struct russ_conf	*conf = NULL;
-char	*HELP = 
+char			*HELP = 
 "Provides services useful for debugging. Unless otherwise stated,\n"
 "stdin, stdout, and stderr all refer to the file descriptor triple\n"
 "that is returned from a russ_dial call.\n"

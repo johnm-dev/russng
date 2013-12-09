@@ -42,8 +42,7 @@
 
 char			*cgroups_home;
 struct russ_conf	*conf = NULL;
-
-char	*HELP =
+char			*HELP =
 "Execute a command/program.\n"
 "\n"
 "/login <cmd>\n"

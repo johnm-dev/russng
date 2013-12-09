@@ -35,6 +35,9 @@ extern char **environ;
 
 #include <russ.h>
 
+#define SSH_EXEC	"/usr/bin/ssh"
+#define RUDIAL_EXEC	"/usr/bin/rudial"
+
 /* global */
 struct russ_conf	*conf = NULL;
 char			*HELP = 
@@ -42,9 +45,6 @@ char			*HELP =
 "\n"
 "/[<user>@]<host>[:<port>]/... <args>\n"
 "    Connect to service ... at <user>@<host>:<port> using ssh.\n";
-
-#define SSH_EXEC	"/usr/bin/ssh"
-#define RUDIAL_EXEC	"/usr/bin/rudial"
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
 /*

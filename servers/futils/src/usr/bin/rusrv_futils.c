@@ -41,8 +41,7 @@
 #include <russ.h>
 
 struct russ_conf	*conf = NULL;
-char	*default_argv[] = {"-", NULL};
-
+char			*default_argv[] = {"-", NULL};
 char			*HELP =
 "A collection of file utilities.\n"
 "\n"
