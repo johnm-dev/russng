@@ -119,17 +119,7 @@ redial_and_splice(struct russ_sess *sess) {
 */
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-
-	switch (req->opnum) {
-	case RUSS_OPNUM_HELP:
-		russ_dprintf(sconn->fds[1], "%s", HELP);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-	}
+	/* auto handling in svr */
 }
 
 /**
@@ -545,7 +535,8 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
-		|| (russ_svr_set_accepthandler(svr, accept_handler) < 0)) {
+		|| (russ_svr_set_accepthandler(svr, accept_handler) < 0)
+		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
 	}

@@ -48,8 +48,7 @@ svc_root_handler(struct russ_sess *sess) {
 
 	switch (sess->req->opnum) {
 	case RUSS_OPNUM_HELP:
-		russ_dprintf(sconn->fds[1], HELP);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		/* auto handling in svr */
 		break;
 	case RUSS_OPNUM_EXECUTE:
 		/* serve the input from fd passed to client */
@@ -86,7 +85,8 @@ main(int argc, char **argv) {
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
 		|| (russ_svcnode_set_virtual(root, 1) < 0)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
+		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
 	}

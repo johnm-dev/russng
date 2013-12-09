@@ -363,16 +363,7 @@ chdir_switch_user(struct russ_conn *conn) {
 
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_conn	*conn = sess->conn;
-
-	switch (conn->req.opnum) {
-	case RUSS_OPNUM_HELP:
-		russ_dprintf(conn->fds[1], FRONTEND_HELP);
-		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-	}
+	/* auto handling by svr */
 }
 
 void
@@ -508,7 +499,8 @@ main(int argc, char **argv) {
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
 		|| (russ_svcnode_add(root, "generate", svc_generate_handler) == NULL)
 		|| (russ_svcnode_add(root, "new", svc_new_handler) == NULL)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
+		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
 	}

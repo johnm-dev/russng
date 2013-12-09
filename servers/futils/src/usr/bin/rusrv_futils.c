@@ -291,18 +291,7 @@ print_next_lines(int fd, FILE *f, int cnt) {
 
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	char			buf[1024];
-	ssize_t			n;
-
-	switch (sess->req->opnum) {
-	case RUSS_OPNUM_HELP:
-		russ_dprintf(sconn->fds[1], HELP);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-	}
+	/* auto handling in svr */
 }
 
 /**
@@ -667,7 +656,8 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_add(root, "wc", svc_wc_handler) == NULL)
 		|| (russ_svcnode_add(root, "write", svc_write_handler) == NULL)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
-		|| (russ_svr_set_auto_switch_user(svr, 1) < 0)) {
+		|| (russ_svr_set_auto_switch_user(svr, 1) < 0)
+		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
 	}
