@@ -512,10 +512,50 @@ void
 svc_wc_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
+	FILE			*f;
+	char			**argv;
+	char			*filename, **filenames;
+	int			ch, nwords, nlines;
+	long			nbytes, lastwhite;
 
 	switch (req->opnum) {
 	case RUSS_OPNUM_EXECUTE:
-		russ_dprintf(sconn->fds[1], "%s", HELP);
+		argv = req->argv;
+		filenames = ((argv == NULL) || (argv[0] == NULL)) \
+			? (char **)default_argv \
+			: req->argv;
+		for (filename = *filenames; *filenames; filename = *(++filenames)) {
+			if ((f = fopen(filename, "r")) == NULL) {
+				continue;
+			}
+			nbytes = 0;
+			nwords = 0;
+			nlines = 0;
+			lastwhite = -1;
+			for (ch = fgetc(f); ch != EOF; ch = fgetc(f)) {
+				nbytes++;
+				switch (ch) {
+				case ' ':
+				case '\t':
+					lastwhite = nbytes;
+					break;
+				case '\n':
+					nlines++;
+					lastwhite = nbytes;
+					break;
+				default:
+					if (lastwhite == nbytes-1) {
+						nwords++;
+					}
+					break;
+				}
+			}
+			if ((lastwhite != -1) && (lastwhite == nbytes-1)) {
+				nwords++;
+			}
+			russ_dprintf(sconn->fds[1], "%d %d %ld %s\n", nlines, nwords, nbytes, filename);
+			fclose(f);
+		}
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		break;
 	default:
