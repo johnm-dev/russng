@@ -93,8 +93,7 @@ char			*HELP =
 "    to the named file. Otherwise, input will be read from stdin.\n"
 "\n"
 "In all cases except write, if <file> is not given or is '-', input\n"
-"will be read from stdin.\n"
-"\n";
+"will be read from stdin.\n";
 
 /**
 * Parse argument list for -c and -n options. Used by head and tail
