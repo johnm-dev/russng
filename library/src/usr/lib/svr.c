@@ -78,6 +78,9 @@ russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
 
 struct russ_lis *
 russ_svr_announce(struct russ_svr *self, char *saddr, mode_t mode, uid_t uid, gid_t gid) {
+	if (self == NULL) {
+		return -1;
+	}
 	if ((self->saddr = strdup(saddr)) == NULL) {
 		return NULL;
 	}
@@ -103,6 +106,9 @@ free_saddr:
 */
 int
 russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
+	if (self == NULL) {
+		return -1;
+	}
 	if (handler == NULL) {
 		return -1;
 	}
@@ -122,6 +128,9 @@ russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
 */
 int
 russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
+	if (self == NULL) {
+		return -1;
+	}
 	self->auto_switch_user = value;
 	return 0;
 }
@@ -135,6 +144,9 @@ russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
 */
 int
 russ_svr_set_help(struct russ_svr *self, char *help) {
+	if (self == NULL) {
+		return -1;
+	}
 	if ((self->help = strdup(help)) == NULL) {
 		return -1;
 	}
@@ -160,6 +172,10 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	struct russ_sess	sess;
 	struct russ_req		*req;
 	struct russ_svcnode	*node;
+
+	if (self == NULL) {
+		return;
+	}
 
 	if ((req = russ_sconn_await_request(sconn, russ_to_deadline(self->await_timeout))) == NULL) {
 		/* failure */
@@ -274,6 +290,10 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	pid_t			pid, wpid;
 	int			wst;
 
+	if (self == NULL) {
+		return;
+	}
+
 	while (1) {
 		if ((sconn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
@@ -309,6 +329,10 @@ russ_svr_loop_fork(struct russ_svr *self) {
 */
 void
 russ_svr_loop(struct russ_svr *self) {
+	if (self == NULL) {
+		return;
+	}
+
 	if (self->type == RUSS_SVR_TYPE_FORK) {
 		russ_svr_loop_fork(self);
 	} else if (self->type == RUSS_SVR_TYPE_THREAD) {

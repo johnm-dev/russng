@@ -93,6 +93,9 @@ russ_svcnode_add(struct russ_svcnode *self, char *name, russ_svchandler handler)
 	struct russ_svcnode	*curr, *last, *node;
 	int			cmp;
 
+	if (self == NULL) {
+		return NULL;
+	}
 	last = NULL;
 	curr = self->children;
 	while (curr != NULL) {
@@ -134,10 +137,12 @@ russ_svcnode_find(struct russ_svcnode *self, char *path, char *mpath, int mpath_
 	char			*sep;
 	int			len, cmp;
 
+	if (self == NULL) {
+		return NULL;
+	}
 	if ((self->virtual) || (strcmp(path, "") == 0)) {
 		return self;
 	}
-
 	if ((sep = strchr(path, '/')) == NULL) {
 		sep = strchr(path, '\0');
 	}
@@ -170,6 +175,9 @@ russ_svcnode_find(struct russ_svcnode *self, char *path, char *mpath, int mpath_
 
 int
 russ_svcnode_set_auto_answer(struct russ_svcnode *self, int value) {
+	if (self == NULL) {
+		return -1;
+	}
 	self->auto_answer = value;
 	return 0;
 }
@@ -185,6 +193,9 @@ russ_svcnode_set_handler(struct russ_svcnode *self, russ_svchandler *handler) {
 
 int
 russ_svcnode_set_virtual(struct russ_svcnode *self, int value) {
+	if (self == NULL) {
+		return -1;
+	}
 	self->virtual = value;
 	return 0;
 }
