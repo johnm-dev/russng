@@ -58,6 +58,7 @@ russ_svr_new(struct russ_svcnode *root, int type) {
 	self->answer_handler = russ_standard_answer_handler;
 	self->await_timeout = RUSS_SVR_TIMEOUT_AWAIT;
 	self->auto_switch_user = 0;
+	self->help = NULL;
 
 	return self;
 }
@@ -122,6 +123,21 @@ russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
 int
 russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
 	self->auto_switch_user = value;
+	return 0;
+}
+
+/**
+* Set (make copy) the server help string.
+*
+* @param self		server object
+* @param help		help string
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_help(struct russ_svr *self, char *help) {
+	if ((self->help = strdup(help)) == NULL) {
+		return -1;
+	}
 	return 0;
 }
 
@@ -204,7 +220,13 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		goto cleanup;
 		break;
 	case RUSS_OPNUM_HELP:
-		node = self->root;
+		if (self->help != NULL) {
+			russ_dprintf(sconn->fds[1], self->help);
+			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+			goto cleanup;
+		} else {
+			node = self->root;
+		}
 		/* TODO: test against ctxt.spath */
 		/* fall through */
 		break;

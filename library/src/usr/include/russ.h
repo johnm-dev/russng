@@ -196,6 +196,7 @@ struct russ_svr {
 	russ_answerhandler	answer_handler;
 	int			await_timeout;
 	int			auto_switch_user;
+	char			*help;
 };
 
 /**
@@ -313,6 +314,7 @@ struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
 int russ_svr_set_auto_switch_user(struct russ_svr *, int);
+int russ_svr_set_help(struct russ_svr *, char *);
 
 /* servicenodes.c */
 struct russ_svcnode *russ_svcnode_new(char *, russ_svchandler);
