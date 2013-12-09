@@ -518,7 +518,7 @@ svc_wc_handler(struct russ_sess *sess) {
 			nbytes = 0;
 			nwords = 0;
 			nlines = 0;
-			lastwhite = -1;
+			lastwhite = 0;
 			for (ch = fgetc(f); ch != EOF; ch = fgetc(f)) {
 				nbytes++;
 				switch (ch) {
