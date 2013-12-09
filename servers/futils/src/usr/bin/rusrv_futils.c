@@ -38,8 +38,7 @@
 #include <openssl/md5.h>
 #endif
 
-#include "russ_conf.h"
-#include "russ.h"
+#include <russ.h>
 
 struct russ_conf	*conf = NULL;
 char	*default_argv[] = {"-", NULL};

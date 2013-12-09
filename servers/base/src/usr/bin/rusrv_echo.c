@@ -34,8 +34,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "russ_conf.h"
-#include "russ.h"
+#include <russ.h>
 
 struct russ_conf	*conf = NULL;
 char			*HELP =

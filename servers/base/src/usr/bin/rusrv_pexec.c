@@ -32,8 +32,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#include "russ_conf.h"
-#include "russ.h"
+#include <russ.h>
 
 /* globals */
 int			gl_argc;

@@ -43,8 +43,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#include "russ_conf.h"
-#include "russ.h"
+#include <russ.h>
 
 #define MAX( a,b ) (((a) > (b)) ? (a) : (b))
 

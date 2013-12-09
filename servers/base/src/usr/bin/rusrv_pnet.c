@@ -33,8 +33,7 @@
 
 extern char **environ;
 
-#include "russ_conf.h"
-#include "russ.h"
+#include <russ.h>
 
 #define DEFAULT_DIAL_TIMEOUT	(30000)
 #define DEFAULT_RELAY_ADDR	"+/ssh"

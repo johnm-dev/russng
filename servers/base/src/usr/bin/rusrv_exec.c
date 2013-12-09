@@ -38,8 +38,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "russ_conf.h"
-#include "russ.h"
+#include <russ.h>
 
 char			*cgroups_home;
 struct russ_conf	*conf = NULL;

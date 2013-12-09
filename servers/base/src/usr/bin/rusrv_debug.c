@@ -37,8 +37,7 @@
 
 extern char **environ;
 
-#include "russ_conf.h"
-#include "russ.h"
+#include <russ.h>
 
 struct russ_conf	*conf = NULL;
 char	*HELP = 

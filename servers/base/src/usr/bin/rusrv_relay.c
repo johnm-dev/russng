@@ -40,8 +40,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "russ_conf.h"
-#include "russ_priv.h"
+#include <russ_priv.h>
 
 /* use different function names for v0.4 */
 #if LIBSSH_VERSION_MAJOR == 0 && LIBSSH_VERSION_MINOR == 4
