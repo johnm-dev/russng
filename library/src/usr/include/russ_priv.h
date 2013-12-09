@@ -33,10 +33,7 @@
 
 #include "russ.h"
 
-#define MAX( a,b ) (((a) > (b)) ? (a) : (b))
-
 #define RUSS_REQ_BUF_MAX	262144
-
 #define RUSS_LISTEN_BACKLOG	1024
 
 /* conn.c */

@@ -41,8 +41,6 @@
 
 #include "russ.h"
 
-#define MAX( a,b ) (((a) > (b)) ? (a) : (b))
-
 struct barrier_item {
 	struct russ_conn	*conn;
 	char			*tag;
@@ -313,7 +311,7 @@ main(int argc, char **argv) {
 			poll_timeout = -1;
 		} else {
 			poll_timeout = (barrier->due_time-time(NULL));
-			poll_timeout = MAX(0, poll_timeout)*1000;
+			poll_timeout = RUSS__MAX(0, poll_timeout)*1000;
 		}
 		rv = poll(pollfds, 1, poll_timeout);
 		if (rv == 0) {
