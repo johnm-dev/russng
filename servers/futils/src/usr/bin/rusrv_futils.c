@@ -627,7 +627,7 @@ done:
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_echo [<conf options>]\n"
+"usage: rusrv_futils [<conf options>]\n"
 "\n"
 "Russ-based file utilities server.\n"
 );
