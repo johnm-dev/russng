@@ -40,18 +40,20 @@
 
 #include <russ.h>
 
+#define CONTAINER_TYPE_NONE	0
 #define CONTAINER_TYPE_CGROUP	1
 #define CONTAINER_TYPE_JOBID	2
 
 struct container {
 	int	type;
 	/* values */
-	char	*path;
+	char	path[4096];
 	long	id;
 };
 
 char			*cgroups_home;
 struct russ_conf	*conf = NULL;
+struct container	cont;
 char			*HELP =
 "Execute a command/program.\n"
 "\n"
@@ -254,9 +256,7 @@ void
 execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd, char **argv, char **envp) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
-	struct container	cont;
 	FILE			*f;
-	char			cg_tasks_path[1024];
 	char			**envp2;
 	pid_t			pid;
 	int			status;
@@ -273,26 +273,12 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 		return;
 	}
 
-	/* find cg_path and set cg_tasks_path */
-	if ((cont.path = get_cg_path(req->attrv)) != NULL) {
-		cont.type = CONTAINER_TYPE_CGROUP;
-		if (cgroups_home == NULL) {
-			russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
-			return;
-		}
-		if (strncmp(cont.path, "/", 1) == 0) {
-			/* not relative */
-			free(cgroups_home);
-			cgroups_home = "";
-		}
-		cg_tasks_path[sizeof(cg_tasks_path)-1] = '\0';
-		if (snprintf(cg_tasks_path, sizeof(cg_tasks_path)-1, "%s/%s/tasks", cgroups_home, cont.path) < 0) {
-			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
-			return;
-		}
-
+	switch (cont.type) {
+	case CONTAINER_TYPE_NONE:
+		break;
+	case CONTAINER_TYPE_CGROUP:
 		/* migrate self process to cgroup (affects child, too) */
-		if (((f = fopen(cg_tasks_path, "w")) ==  NULL)
+		if (((f = fopen(cont.path, "w")) ==  NULL)
 			|| (fprintf(f, "%d", getpid()) < 0)) {
 			if (f) {
 				fclose(f);
@@ -301,7 +287,12 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 			exit(0);
 		}
 		fclose(f);
+		break;
+	default:
+		russ_sconn_fatal(sconn, "error: unknown container type", RUSS_EXIT_FAILURE);
+		return;
 	}
+
 
 	if ((envp2 = dup_envp_plus(envp, username, home)) == NULL) {
 		russ_sconn_fatal(sconn, "error: could not set up env", RUSS_EXIT_FAILURE);
@@ -410,6 +401,95 @@ svc_simple_handler(struct russ_sess *sess) {
 }
 
 void
+svc_cgroup_path_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+	char			*cg_path;
+	char			*next_spath;
+	int			len;
+
+	/* for spath of /cgroup/* */
+	if (russ_misc_str_count(req->spath, "/") < 2) {
+		switch (req->opnum) {
+		case RUSS_OPNUM_LIST:
+			/* TODO: better if it comes from svcnode tree */
+			russ_dprintf(sconn->fds[1], "login\nshell\nsimple\n");
+			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+			break;
+		case RUSS_OPNUM_EXECUTE:
+			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			break;
+		default:
+			russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		}
+		return;
+	}
+
+	/* find cg_path and set cg_tasks_path */
+	if ((cg_path = get_cg_path(req->attrv)) == NULL) {
+		russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
+		goto free_exit;
+	} else {
+		cont.type = CONTAINER_TYPE_CGROUP;
+		if (cgroups_home == NULL) {
+			russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
+			goto free_exit;
+		}
+		if (strncmp(cg_path, "/", 1) == 0) {
+			/* not relative */
+			free(cgroups_home);
+			cgroups_home = "";
+		}
+		if ((len = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroups_home, cg_path) < 0)
+			|| (len > sizeof(cont.path))) {
+			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
+			goto free_exit;
+		}
+	}
+
+	/* patch spath and forward to "next" handler */
+	if ((next_spath = strdup(req->spath+7)) == NULL) {
+		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+		goto free_exit;
+	}
+	free(req->spath); /* assumes dynamic allocation */
+	req->spath = next_spath;
+
+	if ((strcmp(next_spath, "/shell") == 0) || (strcmp(next_spath, "/login") == 0)) {
+		svc_login_shell_handler(sess);
+	} else if (strcmp(next_spath, "/simple") == 0) {
+		svc_simple_handler(sess);
+	} else {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+
+free_exit:
+	free(cg_path);
+}
+
+void
+svc_cgroup_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+
+	if (strcmp(req->spath, "/cgroup") != 0) {
+		svc_cgroup_path_handler(sess);
+	} else {
+		switch (req->opnum) {
+		case RUSS_OPNUM_LIST:
+			russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_FAILURE);
+			break;
+		case RUSS_OPNUM_EXECUTE:
+			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			break;
+		default:
+			russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+			break;
+		}
+	}
+}
+
+void
 print_usage(char **argv) {
 	fprintf(stderr,
 "usage: rusrv_exec [<conf options>]\n"
@@ -434,6 +514,8 @@ main(int argc, char **argv) {
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "cgroup", svc_cgroup_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| ((node = russ_svcnode_add(root, "login", svc_login_shell_handler)) == NULL)
 		|| ((node = russ_svcnode_add(root, "shell", svc_login_shell_handler)) == NULL)
 		|| ((node = russ_svcnode_add(root, "simple", svc_simple_handler)) == NULL)
@@ -443,7 +525,10 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
+	/* container info initialization */
+	cont.type = CONTAINER_TYPE_NONE;
 	cgroups_home = russ_conf_get(conf, "job", "cgroups_home", NULL);
+
 	if (russ_svr_announce(svr,
 		russ_conf_get(conf, "server", "path", NULL),
 		russ_conf_getsint(conf, "server", "mode", 0600),
