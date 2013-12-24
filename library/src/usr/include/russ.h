@@ -70,6 +70,7 @@
 #define RUSS_MSG_NO_EXIT	"error: no exit status"
 #define RUSS_MSG_NO_SERVICE	"error: no service"
 #define RUSS_MSG_NO_SWITCH_USER	"error: cannot switch user"
+#define RUSS_MSG_NO_LIST	"error: list not available"
 #define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
 
 #define RUSS_OPNUM_NOT_SET	0
