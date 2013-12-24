@@ -40,6 +40,16 @@
 
 #include <russ.h>
 
+#define CONTAINER_TYPE_CGROUP	1
+#define CONTAINER_TYPE_JOBID	2
+
+struct container {
+	int	type;
+	/* values */
+	char	*path;
+	long	id;
+};
+
 char			*cgroups_home;
 struct russ_conf	*conf = NULL;
 char			*HELP =
@@ -171,15 +181,16 @@ squote_string(char *s) {
 }
 
 /*
-* Find "cg_path" in connection attrv list and return the value part
-* (i.e., string after the "cg_path=").
+* Find "cg_path" in connection attrv list and return a copy of the
+* value part (i.e., string after the "cg_path=") which must be
+* freed by caller.
 */
 char *
 get_cg_path(char **attrv) {
 	if (attrv) {
 		for (; *attrv != NULL; attrv++) {
 			if (strncmp(*attrv, "cg_path=", 8) == 0) {
-				return &((*attrv)[8]);
+				return strdup(&((*attrv)[8]));
 			}
 		}
 	}
@@ -243,8 +254,9 @@ void
 execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd, char **argv, char **envp) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
+	struct container	cont;
 	FILE			*f;
-	char			*cg_path, cg_tasks_path[1024];
+	char			cg_tasks_path[1024];
 	char			**envp2;
 	pid_t			pid;
 	int			status;
@@ -262,23 +274,23 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	}
 
 	/* find cg_path and set cg_tasks_path */
-	if ((cg_path = get_cg_path(req->attrv)) != NULL) {
+	if ((cont.path = get_cg_path(req->attrv)) != NULL) {
+		cont.type = CONTAINER_TYPE_CGROUP;
 		if (cgroups_home == NULL) {
 			russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
 			return;
-		} else if (strncmp(cg_path, "/", 1) != 0) {
-			/* absolutize relative path */
-			if (snprintf(cg_tasks_path, sizeof(cg_tasks_path), "%s/%s/tasks", cgroups_home, cg_path) < 0) {	
-				russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
-				return;
-			}
-		} else if (snprintf(cg_tasks_path, sizeof(cg_tasks_path), "%s/tasks", cg_path) < 0) {	
+		}
+		if (strncmp(cont.path, "/", 1) == 0) {
+			/* not relative */
+			free(cgroups_home);
+			cgroups_home = "";
+		}
+		cg_tasks_path[sizeof(cg_tasks_path)-1] = '\0';
+		if (snprintf(cg_tasks_path, sizeof(cg_tasks_path)-1, "%s/%s/tasks", cgroups_home, cont.path) < 0) {
 			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
 			return;
 		}
-	}
 
-	if (cgroups_home && cg_path) {
 		/* migrate self process to cgroup (affects child, too) */
 		if (((f = fopen(cg_tasks_path, "w")) ==  NULL)
 			|| (fprintf(f, "%d", getpid()) < 0)) {
