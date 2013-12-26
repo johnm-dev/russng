@@ -275,8 +275,6 @@ void russ_lis_loop(struct russ_lis *, russ_accepthandler, russ_answerhandler, ru
 /* misc.c */
 int russ_dprintf(int, char *, ...);
 int russ_misc_str_count(char *, char *);
-int russ_sarray0_count(char **, int);
-char **russ_sarray0_dup(char **, int);
 void *russ_malloc(size_t);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
@@ -296,6 +294,10 @@ int russ_relay_poll(struct russ_relay *, int);
 int russ_relay_serve(struct russ_relay *, int, int);
 
 /* request.c */
+
+/* sarray0.c */
+int russ_sarray0_count(char **, int);
+char **russ_sarray0_dup(char **, int);
 
 /* sconn.c */
 struct russ_sconn *russ_sconn_free(struct russ_sconn *);
