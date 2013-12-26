@@ -22,8 +22,28 @@
 # license--end
 */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/**
+* Free NULL-terminated string array.
+*
+* @param arr		NULL-terminated string array
+* @return		NULL
+*/
+char **
+russ_sarray0_free(char **arr) {
+	char	**p;
+
+	if (arr) {
+		for (p = arr; *p != NULL; p++) {
+			free(*p);
+		}
+		free(arr);
+	}
+	return NULL;
+}
 
 /**
 * Count elements of NULL-terminated string array (not including
@@ -66,7 +86,7 @@ russ_sarray0_dup(char **arr, int max_cnt) {
 		return NULL;
 	}
 	for (i = 0; i < cnt; i++) {
-		if (arri] == NULL) {
+		if (arr[i] == NULL) {
 			dst[i] = NULL;
 		} else if ((dst[i] = strdup(arr[i])) == NULL) {
 			goto free_dst;
@@ -81,20 +101,128 @@ free_dst:
 }
 
 /**
-* Free NULL-terminated string array.
+* Find element matching string.
 *
-* @param arr		NULL-terminated string array
-* @return		NULL
+* @param arr		string array
+* @param s		string
+* @return		index into array; -1 if not found
 */
-char **
-russ_sarray0_free(char **arr) {
-	char	**p;
+int
+russ_sarray0_find(char **arr, char *s) {
+	int	i;
 
-	if (arr) {
-		for (p = arr; *p != NULL; p++) {
-			free(*p);
-		}
-		free(arr);
+	if ((arr == NULL) || (s == NULL)) {
+		return -1;
 	}
-	return NULL;
+	for (i = 0; arr[i] != NULL; i++) {
+		if (strcmp(arr[i], s) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+/**
+* Find element starting with a prefix.
+*
+* @param arr		string array
+* @param prefix		string
+* @return		index into array; -1 if not found
+*/
+int
+russ_sarray0_find_prefix(char **arr, char *prefix) {
+	int	len;
+	int	i;
+
+	if ((arr == NULL) || (prefix == NULL)) {
+		return -1;
+	}
+	len = strlen(prefix);
+	for (i = 0; arr[i] != NULL; i++) {
+		if (strncmp(arr[i], prefix, len) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+/**
+* Remove element at index; or, move elements above index to
+* positions one less than they are at.
+*
+* The underlying array size does not change.
+*
+* @param arr		string array
+* @param index		index of element to remove
+* @return		0 on success; -1 on failure
+*/
+int
+russ_sarray0_remove(char **arr, int index) {
+	int	i;
+
+	if (arr == NULL) {
+		return -1;
+	}
+	for (i = 0; i <= index; i++) {
+		if (arr[i] == NULL) {
+			return -1;
+		}
+	}
+	for (; arr[i] != NULL; i++) {
+		arr[i] = arr[i+1];
+	}
+	return 0;
+}
+
+/**
+* Update array element at index or add.
+*
+* If string array is NULL, then a new array may be allocated and
+* returned.
+*
+* @param arrp[inout]	pointer to string array (array may be NULL)
+* @param index		index of element to update
+* @param s		new string
+* @return		0 on success; -1 on failure
+*/
+int
+russ_sarray0_update(char ***arrp, int index, char *s) {
+	char	**arr;
+	int	len;
+	int	i;
+
+	arr = *arrp;
+	if ((s == NULL) || ((s = strdup(s)) == NULL)) {
+		return -1;
+	}
+	if (index >= 0) {
+		/* check if index within range (before NULL) */
+		if (arr == NULL) {
+			goto free_s;
+		}
+		for (i = 0; i <= index; i++) {
+			if (arr[i] == NULL) {
+				goto free_s;
+			}
+		}
+		i = index;
+	} else {
+		/* resize; set NULL */
+		i = 0;
+		if (arr != NULL) {
+			for (i = 0; arr[i] != NULL; i++);
+		}
+		if ((arr = realloc(arr, sizeof(char *)*(i+2))) == NULL) {
+			goto free_s;
+		}
+		arr[i+1] = NULL;
+		*arrp = arr;
+	}
+	/* set */
+	free(arr[i]);
+	arr[i] = s;
+	return 0;
+free_s:
+	free(s);
+	return -1;
 }
