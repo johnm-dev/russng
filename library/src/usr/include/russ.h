@@ -298,6 +298,7 @@ int russ_relay_serve(struct russ_relay *, int, int);
 /* sarray0.c */
 int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
+char **russ_sarray0_free(char **);
 
 /* sconn.c */
 struct russ_sconn *russ_sconn_free(struct russ_sconn *);

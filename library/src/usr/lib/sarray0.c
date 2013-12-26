@@ -84,8 +84,9 @@ free_dst:
 * Free NULL-terminated string array.
 *
 * @param arr		NULL-terminated string array
+* @return		NULL
 */
-void
+char **
 russ_sarray0_free(char **arr) {
 	char	**p;
 
@@ -95,4 +96,5 @@ russ_sarray0_free(char **arr) {
 		}
 		free(arr);
 	}
+	return NULL;
 }
