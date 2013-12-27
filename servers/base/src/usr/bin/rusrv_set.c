@@ -40,17 +40,17 @@
 
 struct russ_conf	*conf = NULL;
 char			*HELP =
-"Set/modify attributes and positional arguments in dial request.\n"
-"Multiple settings can be made by separating them by the spath\n"
-"separator (/). The period (.) is used to indicate no more\n"
-"settings to make.\n"
+"Intermediate service to set/modify attributes and positional\n"
+"arguments in dial request. Multiple settings can be made by\n"
+"separating them by the spath separator (/). The period (.) is used\n"
+"to indicate no more settings to make.\n"
 "\n"
-"/index=value/.../.\n"
+"/index=value/..././...\n"
 "    Set positional argument 'index' to 'value'. There must be a\n"
 "    at the index position. An index of -1 will append the value to\n"
 "    the argument list (i.e., argv).\n"
 "\n"
-"/name=value/.../.\n"
+"/name=value/..././...\n"
 "    Set attribute 'name' to 'value'. An existing name assignment in\n"
 "    the attribute list (i.e., attrv) will be overwritten. Otherwise\n"
 "    a new entry of 'name=value' will be added.\n";
