@@ -233,11 +233,13 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	switch (req->opnum) {
 	case RUSS_OPNUM_LIST:
 		/* TODO: test against ctxt.spath */
-		for (node = node->children; node != NULL; node = node->next) {
-			russ_dprintf(sconn->fds[1], "%s\n", node->name);
+		if ((node->children != NULL) && (!node->children->wildcard)) {
+			for (node = node->children; node != NULL; node = node->next) {
+				russ_dprintf(sconn->fds[1], "%s\n", node->name);
+			}
+			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+			goto cleanup;
 		}
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		goto cleanup;
 		break;
 	case RUSS_OPNUM_HELP:
 		if (self->help != NULL) {
