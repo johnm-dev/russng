@@ -82,35 +82,6 @@ char			*HELP =
 "    list.\n";
 
 /**
-* Dial a service and splice its client connection fds into the given
-* server connection fds. The real and effective uid/gid are also
-* set.
-*
-* @param sess		session object
-*/
-void
-redial_and_splice(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;	
-	struct russ_cconn	*cconn;
-
-	/* switch user */
-	if (russ_switch_user(sconn->creds.uid, sconn->creds.gid, 0, NULL) < 0) {
-		russ_standard_answer_handler(sconn);
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-
-	/* switch user, dial next service, and splice */
-	if (((cconn = russ_dialv(russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req->op, req->spath, req->attrv, req->argv)) == NULL)
-		|| (russ_sconn_splice(sconn, cconn) < 0)) {
-		russ_cconn_close(cconn);
-		russ_standard_answer_handler(sconn);
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-	}
-}
-
-/**
 * Handler for the / service.
 *
 * Provides HELP.
@@ -228,7 +199,7 @@ svc_host_handler(struct russ_sess *sess) {
 		free(req->spath);
 		req->spath = strdup(new_spath);
 
-		redial_and_splice(sess);
+		russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 	}
 }
 
@@ -314,7 +285,7 @@ svc_id_handler(struct russ_sess *sess) {
 		free(req->spath);
 		req->spath = strdup(new_spath);
 
-		redial_and_splice(sess);
+		russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 	}
 }
 
@@ -367,7 +338,7 @@ svc_net_handler(struct russ_sess *sess) {
 		free(req->spath);
 		req->spath = strdup(new_spath);
 
-		redial_and_splice(sess);
+		russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 	}
 }
 
