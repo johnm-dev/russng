@@ -327,3 +327,34 @@ russ_sconn_fatal(struct russ_sconn *self, char *msg, int exit_status) {
 	russ_sconn_close(self);
 	return ev;
 }
+
+/**
+* Dial a service and splice its client connection fds into the given
+* server connection fds. The real and effective uid/gid are also
+* set.
+*
+* @param self		server connection object
+* @param req		request object
+* @return		0 on success; -1 on failure
+*/
+int
+russ_sconn_redial_and_splice(struct russ_sconn *self, russ_deadline deadline, struct russ_req *req) {
+	struct russ_cconn	*cconn;
+
+	/* switch user */
+	if (russ_switch_user(self->creds.uid, self->creds.gid, 0, NULL) < 0) {
+		russ_standard_answer_handler(self);
+		russ_sconn_fatal(self, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+		return -1;
+	}
+
+	/* switch user, dial next service, and splice */
+	if (((cconn = russ_dialv(deadline, req->op, req->spath, req->attrv, req->argv)) == NULL)
+		|| (russ_sconn_splice(self, cconn) < 0)) {
+		russ_cconn_close(cconn);
+		russ_standard_answer_handler(self);
+		russ_sconn_fatal(self, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		return -1;
+	}
+	return 0;
+}

@@ -312,6 +312,7 @@ struct russ_req *russ_sconn_await_request(struct russ_sconn *, russ_deadline);
 int russ_sconn_exit(struct russ_sconn *, int);
 int russ_sconn_exits(struct russ_sconn *, char *, int);
 int russ_sconn_fatal(struct russ_sconn *, char *, int);
+int russ_sconn_redial_and_splice(struct russ_sconn *, russ_deadline, struct russ_req *);
 int russ_sconn_sendfds(struct russ_sconn *, int, int *, int *);
 int russ_sconn_splice(struct russ_sconn *, struct russ_cconn *);
 
