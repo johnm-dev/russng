@@ -104,6 +104,18 @@ void
 svc_root_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
+
+	if (req->opnum == RUSS_OPNUM_LIST) {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+	} else {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	}
+}
+
+void
+svc_root_value_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 	int			attrsz, argvsz;
 	char			*spath = NULL, *p0 = NULL, *p1 = NULL;
 	ssize_t			n;
@@ -120,7 +132,11 @@ svc_root_handler(struct russ_sess *sess) {
 		}
 		if (strcmp(p0, "/.") == 0) {
 			/* end marker */
-			*p1 = '/';
+			if (p1 == NULL) {
+				p1 = "/";
+			} else {
+				*p1 = '/';
+			}
 			free(req->spath);
 			req->spath = p1;
 			break;
@@ -136,25 +152,14 @@ svc_root_handler(struct russ_sess *sess) {
 		p0 = p1;
 	} while (p1 != NULL);
 
-	switch (sess->req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
-		if (p1 == NULL) {
-			if (russ_standard_answer_handler(sconn) == 0) {
-				russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-				break;
-			}
-		} else {
-			/* forward to next service */
-			russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
-			exit(0);
+	/* forward to next service (if possible) */
+	if (p1 == NULL) {
+		if (russ_standard_answer_handler(sconn) == 0) {
+			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		}
-		break;
-	default:
-		if (p1 == NULL) {
-			/* TODO: handle non-"execute" ops */
-			exit(0);
-			russ_svr_handler(sess);
-		}
+	} else {
+		russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
+		exit(0);
 	}
 
 	free(spath);
@@ -178,7 +183,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root;
+	struct russ_svcnode	*root, *node;
 	struct russ_svr		*svr;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -190,8 +195,10 @@ main(int argc, char **argv) {
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| (russ_svcnode_set_virtual(root, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(root, 0) < 0)
+		|| ((node = russ_svcnode_add(root, "*", svc_root_value_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
+		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
 		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
