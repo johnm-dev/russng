@@ -341,7 +341,7 @@ svc_root_handler(struct russ_sess *sess) {
 }
 
 void
-svc_login_shell_handler(struct russ_sess *sess) {
+svc_loginshell_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	char			**argv;
@@ -518,6 +518,8 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| ((node = russ_svcnode_add(root, "login", svc_login_shell_handler)) == NULL)
 		|| ((node = russ_svcnode_add(root, "shell", svc_login_shell_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "login", svc_loginshell_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "shell", svc_loginshell_handler)) == NULL)
 		|| ((node = russ_svcnode_add(root, "simple", svc_simple_handler)) == NULL)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
 		|| (russ_svr_set_help(svr, HELP) < 0)) {
