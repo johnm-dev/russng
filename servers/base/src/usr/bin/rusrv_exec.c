@@ -57,6 +57,14 @@ struct container	cont;
 char			*HELP =
 "Execute a command/program.\n"
 "\n"
+"/cgroup/<cgname>/login\n"
+"/cgroup/<cgname>/shell\n"
+"/cgroup/<cgname>/simple\n"
+"    Execute using login, shell, or simple methods within a cgroup\n"
+"    container. cgname is used to identify the cgroup to use if\n"
+"    a cg_path attribute is not specified (in which case the cgname\n"
+"    value is ignored). Note: cgname cannot contain / characters."
+"\n"
 "/login <cmd>\n"
 "    Execute a shell command string with a configured login shell.\n"
 "\n"
@@ -66,12 +74,10 @@ char			*HELP =
 "/simple <path> [<arg> ...]\n"
 "    Execute a program with arguments directly (no shell).\n"
 "\n"
-"To specify a cgroup in which to execute, set the cg_path attribute\n"
-"to an absolute path or a path relative to the cgroups home (i.e.,\n"
-"mount point).\n"
-"\n"
 "All services use the given attribute settings to configure the\n"
-"environment and are applied before shell settings.\n";
+"environment and are applied before shell settings. For security\n"
+"reasons, some attributes are not passed to the environment (e.g.,\n"
+"LD_PRELOAD).\n";
 
 /*
 * Given a uid, return username, shell path, shell path with - prefix
@@ -404,59 +410,57 @@ void
 svc_cgroup_path_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
-	char			*cg_path;
-	char			*next_spath;
+
+	;
+}
+
+void
+svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+	char			*cg_path = NULL;
+	char			*next_spath = NULL;
 	int			len;
 
-	/* for spath of /cgroup/* */
-	if (russ_misc_str_count(req->spath, "/") < 2) {
-		switch (req->opnum) {
-		case RUSS_OPNUM_LIST:
-			/* TODO: better if it comes from svcnode tree */
-			russ_dprintf(sconn->fds[1], "login\nshell\nsimple\n");
-			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-			break;
-		case RUSS_OPNUM_EXECUTE:
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			break;
-		default:
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-		}
-		return;
-	}
-
-	/* find cg_path and set cg_tasks_path */
+	/* find cg_path */
 	if ((cg_path = get_cg_path(req->attrv)) == NULL) {
-		russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
-		goto free_exit;
-	} else {
-		cont.type = CONTAINER_TYPE_CGROUP;
-		if (cgroups_home == NULL) {
-			russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
-			goto free_exit;
-		}
-		if (strncmp(cg_path, "/", 1) == 0) {
-			/* not relative */
-			free(cgroups_home);
-			cgroups_home = "";
-		}
-		if ((len = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroups_home, cg_path) < 0)
-			|| (len > sizeof(cont.path))) {
+		cg_path = strchr(req->spath+1, '/')+1;
+		if ((cg_path = strndup(cg_path, strchr(cg_path, '/')-cg_path)) == NULL) {
 			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
 			goto free_exit;
 		}
 	}
 
-	/* patch spath and forward to "next" handler */
-	if ((next_spath = strdup(req->spath+7)) == NULL) {
-		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+	/* create container object */
+	cont.type = CONTAINER_TYPE_CGROUP;
+	if (cgroups_home == NULL) {
+		russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
 		goto free_exit;
+	}
+	if (strncmp(cg_path, "/", 1) == 0) {
+		/* not relative */
+		free(cgroups_home);
+		cgroups_home = "";
+	}
+	if ((len = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroups_home, cg_path) < 0)
+		|| (len > sizeof(cont.path))) {
+		russ_sconn_fatal(sconn, "error: cgroup path too long", RUSS_EXIT_FAILURE);
+		goto free_exit;
+	}
+
+	/* patch request spath */
+	if (((next_spath = strchr(req->spath+1, '/')) == NULL)
+		|| ((next_spath = strchr(next_spath+1, '/')) == NULL)
+		|| ((next_spath = strdup(next_spath)) == NULL)) {
+		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+		return;
 	}
 	free(req->spath); /* assumes dynamic allocation */
 	req->spath = next_spath;
 
+	/* forward to "next" handler */
 	if ((strcmp(next_spath, "/shell") == 0) || (strcmp(next_spath, "/login") == 0)) {
-		svc_login_shell_handler(sess);
+		svc_loginshell_handler(sess);
 	} else if (strcmp(next_spath, "/simple") == 0) {
 		svc_simple_handler(sess);
 	} else {
@@ -464,6 +468,7 @@ svc_cgroup_path_handler(struct russ_sess *sess) {
 	}
 
 free_exit:
+	free(next_spath);
 	free(cg_path);
 }
 
@@ -472,20 +477,10 @@ svc_cgroup_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 
-	if (strcmp(req->spath, "/cgroup") != 0) {
-		svc_cgroup_path_handler(sess);
+	if (req->opnum == RUSS_OPNUM_LIST) {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
 	} else {
-		switch (req->opnum) {
-		case RUSS_OPNUM_LIST:
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_FAILURE);
-			break;
-		case RUSS_OPNUM_EXECUTE:
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			break;
-		default:
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-			break;
-		}
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 }
 
@@ -515,9 +510,11 @@ main(int argc, char **argv) {
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
 		|| ((node = russ_svcnode_add(root, "cgroup", svc_cgroup_handler)) == NULL)
-		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| ((node = russ_svcnode_add(root, "login", svc_login_shell_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "shell", svc_login_shell_handler)) == NULL)
+		|| ((node = russ_svcnode_add(node, "*", svc_cgroup_path_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| (russ_svcnode_add(node, "login", svc_cgroup_path_loginshellsimple_handler) == NULL)
+		|| (russ_svcnode_add(node, "shell", svc_cgroup_path_loginshellsimple_handler) == NULL)
+		|| (russ_svcnode_add(node, "simple", svc_cgroup_path_loginshellsimple_handler) == NULL)
 		|| ((node = russ_svcnode_add(root, "login", svc_loginshell_handler)) == NULL)
 		|| ((node = russ_svcnode_add(root, "shell", svc_loginshell_handler)) == NULL)
 		|| ((node = russ_svcnode_add(root, "simple", svc_simple_handler)) == NULL)
