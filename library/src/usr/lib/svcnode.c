@@ -59,6 +59,7 @@ russ_svcnode_new(char *name, russ_svchandler handler) {
 
 	self->auto_answer = 1;
 	self->virtual = 0;
+	self->wildcard = 0;
 	return self;
 free_node:
 	free(self);
@@ -125,6 +126,8 @@ russ_svcnode_add(struct russ_svcnode *self, char *name, russ_svchandler handler)
 /**
 * Find node matching path starting at a node.
 *
+* A wildcard svcnode always matches.
+*
 * @param self		service node object starting point
 * @param path		path to match (relative to self)
 * @param mpath		path matched
@@ -148,13 +151,13 @@ russ_svcnode_find(struct russ_svcnode *self, char *path, char *mpath, int mpath_
 	}
 	len = sep-path;
 	for (node = self->children; node != NULL; node = node->next) {
-		if ((cmp = strncmp(node->name, path, len)) > 0) {
+		if ((!node->wildcard) && ((cmp = strncmp(node->name, path, len)) > 0)) {
 			if (mpath != NULL) {
 				mpath[0] = '\0';
 			}
 			node = NULL;
 			break;
-		} else if ((cmp == 0) && (node->name[len] == '\0')) {
+		} else if (node->wildcard || ((cmp == 0) && (node->name[len] == '\0'))) {
 			if (*sep != '\0') {
 				if (mpath != NULL) {
 					if ((strncat(mpath, "/", mpath_cap) < 0)
@@ -197,5 +200,14 @@ russ_svcnode_set_virtual(struct russ_svcnode *self, int value) {
 		return -1;
 	}
 	self->virtual = value;
+	return 0;
+}
+
+int
+russ_svcnode_set_wildcard(struct russ_svcnode *self, int value) {
+	if (self == NULL) {
+		return -1;
+	}
+	self->wildcard = value;
 	return 0;
 }

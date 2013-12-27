@@ -177,6 +177,7 @@ struct russ_svcnode {
 	struct russ_svcnode	*children;
 	int			auto_answer;
 	int			virtual;
+	int			wildcard;
 };
 
 /**
