@@ -63,18 +63,36 @@ russ_misc_str_count(char *s, char *ss) {
 */
 int
 russ_dprintf(int fd, char *format, ...) {
-	char	buf[4096];
-	int	n;
 	va_list	ap;
+	char	_buf[8192];
+	char	*buf;
+	int	n, bufsz;
 
-	/* TODO: use realloc to handle any size output */
-	va_start(ap, format);
-	n = vsnprintf(buf, sizeof(buf), format, ap);
-	va_end(ap);
-	if (n >= 0) {
-		if (russ_writen(fd, buf, n) < n) {
-			return -1;
+	buf = _buf;
+	bufsz = sizeof(_buf);
+	while (1) {
+		va_start(ap, format);
+		n = vsnprintf(buf, bufsz, format, ap);
+		va_end(ap);
+		if (n < 0) {
+			goto free_buf;
+		} else if (n < bufsz) {
+			break;
 		}
+
+		/* allocate */
+		bufsz = n+1; /* include \0 */
+		if ((buf = malloc(bufsz)) == NULL) {
+			goto free_buf;
+		}
+	}
+	if (russ_writen(fd, buf, n) < n) {
+		n = -1;
+	}
+	/* fallthrough */
+free_buf:
+	if (buf != _buf) {
+		free(buf);
 	}
 	return n;
 }
