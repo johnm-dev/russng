@@ -107,8 +107,7 @@ svc_root_handler(struct russ_sess *sess) {
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
-	} else {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
 }
 
@@ -121,7 +120,7 @@ svc_root_value_handler(struct russ_sess *sess) {
 	ssize_t			n;
 
 	if ((spath = strdup(req->spath)) == NULL) {
-		goto failed;
+		goto failed_update;
 	}
 
 	/* extract settings; look for /., update req->spath */
@@ -143,7 +142,7 @@ svc_root_value_handler(struct russ_sess *sess) {
 		}
 		if (req->opnum == RUSS_OPNUM_EXECUTE) {
 			if (update_attrv_argv(req, p0+1) < 0) {
-				goto failed;
+				goto failed_update;
 			}
 		}
 		if (p1 != NULL) {
@@ -153,18 +152,15 @@ svc_root_value_handler(struct russ_sess *sess) {
 	} while (p1 != NULL);
 
 	/* forward to next service (if possible) */
-	if (p1 == NULL) {
-		if (russ_standard_answer_handler(sconn) == 0) {
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
-	} else {
+	if (p1 != NULL) {
 		russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 		exit(0);
 	}
-
 	free(spath);
-	exit(0);
-failed:
+	russ_standard_answer_handler(sconn);
+	return;
+
+failed_update:
 	free(spath);
 	if (russ_standard_answer_handler(sconn) == 0) {
 		russ_sconn_fatal(sconn, "error: could not set attribute/argument", RUSS_EXIT_FAILURE);
