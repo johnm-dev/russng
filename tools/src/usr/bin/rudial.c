@@ -42,6 +42,7 @@ print_dir_list(char *spath) {
 	DIR			*dir;
 	struct dirent		*dent;
 	char			path[RUSS_REQ_SPATH_MAX];
+	int			n;
 
 	if ((dir = opendir(spath)) == NULL) {
 		fprintf(stderr, "error: cannot open directory\n");
@@ -51,7 +52,8 @@ print_dir_list(char *spath) {
 			if (strcmp(dent->d_name, "..") == 0) {
 				continue;
 			}
-			if ((snprintf(path, sizeof(path), "%s/%s", spath, dent->d_name) < 0)
+			if (((n = snprintf(path, sizeof(path), "%s/%s", spath, dent->d_name)) < 0)
+				|| (n >= sizeof(path))
 				|| (lstat(path, &st) < 0)) {
 				/* problem */
 				continue;

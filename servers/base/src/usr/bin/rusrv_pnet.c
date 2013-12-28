@@ -225,7 +225,7 @@ svc_host_userhost_other_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	char			*relay_addr, *tail = NULL, *userhost = NULL;
-	int			i, snlen;
+	int			i, n;
 
 	if ((userhost = get_valid_userhost(req->spath)) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
@@ -236,8 +236,8 @@ svc_host_userhost_other_handler(struct russ_sess *sess) {
 
 	/* set up new spath */
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if ((snlen = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail) < 0)
-		|| (snlen >= sizeof(new_spath))) {
+	if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
+		|| (n >= sizeof(new_spath))) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		return;
 	}
@@ -319,7 +319,7 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	char			*relay_addr, *tail = NULL, *userhost = NULL;
-	int			i, idx, wrap = 0;
+	int			i, idx, n, wrap = 0;
 
 	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
@@ -340,7 +340,8 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	/* set up new spath */
 	userhost = hostslist.hosts[idx];
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (snprintf(new_spath, sizeof(new_spath)-1, "%s/%s/%s", relay_addr, userhost, tail) < 0) {
+	if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
+		|| (n >= sizeof(new_spath))) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		return;
 	}
@@ -404,6 +405,7 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	char			*relay_addr, *tail = NULL, *userhost = NULL;
+	int			n;
 
 	if ((userhost = get_userhost(req->spath)) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
@@ -414,7 +416,8 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 
 	/* set up new spath */
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (snprintf(new_spath, sizeof(new_spath)-1, "%s/%s/%s", relay_addr, userhost, tail) < 0) {
+	if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
+		|| (n >= sizeof(new_spath))) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		return;
 	}
@@ -441,10 +444,11 @@ svc_next_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
-	int			idx;
+	int			idx, n;
 
 	idx = hostslist.next;
-	if (snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[6])) < 0) {
+	if (((n = snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[6]))) < 0)
+		|| (n >= sizeof(new_spath))) {
 		russ_sconn_fatal(sconn, "error: spath is too large", RUSS_EXIT_FAILURE);
 		return;
 	}
@@ -469,10 +473,11 @@ svc_random_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
-	int			idx;
+	int			idx, n;
 
 	idx = (random()/(double)RAND_MAX)*hostslist.nhosts;
-	if (snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[8])) < 0) {
+	if (((n = snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[8]))) < 0)
+		|| (n >= sizeof(new_spath))) {
 		russ_sconn_fatal(sconn, "error: spath is too large", RUSS_EXIT_FAILURE);
 		exit(0);
 	}

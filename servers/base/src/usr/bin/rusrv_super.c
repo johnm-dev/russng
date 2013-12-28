@@ -116,15 +116,19 @@ error:
 int
 stop_server(char *svrname) {
 	char		pidpath[PATH_MAX], sockpath[PATH_MAX];
-	int		pid;
+	int		n, pid;
 
 	if (!russ_conf_has_section(conf, svrname)) {
-		pidpath[sizeof(pidpath)-1] = '\0';
-		snprintf(pidpath, sizeof(pidpath)-1, "%s/.pid.%s", trackdir, svrname+1);
+		if (((n = snprintf(pidpath, sizeof(pidpath)-1, "%s/.pid.%s", trackdir, svrname+1)) < 0)
+			|| (n >= sizeof(pidpath))) {
+			return -1;
+		}
 		pid = get_pid(pidpath);
 		if ((pid >= 0) && (kill(pid, 0) == 0)) {
-			sockpath[sizeof(sockpath)-1] = '\0';
-			snprintf(sockpath, sizeof(sockpath)-1, "%s%s", trackdir, svrname);
+			if (((n = snprintf(sockpath, sizeof(sockpath)-1, "%s%s", trackdir, svrname)) < 0)
+				|| (n >= sizeof(sockpath))) {
+				return -1;
+			}
 			remove(pidpath);
 			remove(sockpath);
 			kill(pid, SIGTERM);
@@ -172,6 +176,7 @@ clean_trackdir(void) {
 	DIR		*dirp;
 	struct dirent	*dire;
 	char		svrname[RUSS_REQ_SPATH_MAX];
+	int		n;
 
 	if ((dirp = opendir(trackdir)) == NULL) {
 		return -1;
@@ -181,9 +186,10 @@ clean_trackdir(void) {
 			/* ignore ., .., and hidden files */
 			continue;
 		}
-		snprintf(svrname, sizeof(svrname), "/%s", dire->d_name);
-		if (stop_server(svrname) < 0) {
-			// failed; what to do?
+		if (((n = snprintf(svrname, sizeof(svrname), "/%s", dire->d_name)) < 0)
+			|| (n >= sizeof(svrname))
+			|| (stop_server(svrname) < 0)) {
+			// bufsize problem or failed; what to do?
 			fprintf(stderr, "warning: failed to stop server (%s)\n", svrname);
 		}
 	}
@@ -298,10 +304,10 @@ match_svrname(char *spath) {
 char *
 russ_spath_reprefix(char *spath, char *oldpref, char *newpref) {
 	char	buf[RUSS_REQ_SPATH_MAX];
-	int	sz;
+	int	n;
 
-	sz = snprintf(buf, sizeof(buf), "%s/%s", newpref, &spath[strlen(oldpref)]);
-	if ((sz < 0) || (sz >= sizeof(buf))) {
+	if (((n = snprintf(buf, sizeof(buf), "%s/%s", newpref, &spath[strlen(oldpref)])) < 0)
+		|| (n >= sizeof(buf))) {
 		return NULL;
 	}
 	return strdup(buf);
@@ -402,7 +408,7 @@ svc_root_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 	char			*svrname = NULL, *spath;
 	char			buf[RUSS_REQ_SPATH_MAX];
-	int			sz;
+	int			n;
 
 	if (strcmp(req->spath, "/") == 0) {
 		russ_standard_answer_handler(sconn);		
@@ -424,8 +430,8 @@ svc_root_handler(struct russ_sess *sess) {
 			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 			goto done;
 		}
-		if (((sz = snprintf(buf, sizeof(buf), "%s%s", trackdir, req->spath)) < 0)
-			|| (sz >= sizeof(buf))
+		if (((n = snprintf(buf, sizeof(buf), "%s%s", trackdir, req->spath)) < 0)
+			|| (n >= sizeof(buf))
 			|| ((spath = strdup(buf)) == NULL)) {
 			russ_standard_answer_handler(sconn);
 			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);

@@ -391,6 +391,7 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 	char			*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
 	char			section_name[256];
 	int			exit_status;
+	int			n;
 
 	/* init */
 	p0 = req->spath+6;
@@ -402,7 +403,8 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 	}
 
 	new_spath = p2;
-	if ((snprintf(section_name, sizeof(section_name)-1, "cluster.%s", cluster_name) < 0)
+	if (((n = snprintf(section_name, sizeof(section_name), "cluster.%s", cluster_name)) < 0)
+		|| (n >= sizeof(section_name))
 		|| ((method = russ_conf_get(conf, section_name, "method", NULL)) == NULL)) {
 		goto free_vars;
 	}

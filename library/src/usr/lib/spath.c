@@ -62,6 +62,7 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
 	char		*services_dir;
 	int		sdlen, cnt, stval;
 	int		changed;
+	int		n;
 
 	if ((spath == NULL) || (strncpy(buf, spath, sizeof(buf)) < 0)) {
 		return NULL;
@@ -91,7 +92,8 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
 			} else {
 				bp = &buf[3];
 			}
-			if ((snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", services_dir, bp) < 0)
+			if (((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", services_dir, bp)) < 0)
+				|| (n >= sizeof(tmpbuf))
 				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
 				return NULL;
 			}
@@ -108,7 +110,8 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
 			if ((uid_p == NULL)
 				|| (getpwuid_r(*uid_p, &pwd, pwd_buf, sizeof(pwd_buf), &result) != 0)
 				|| (result == NULL)
-				|| (snprintf(tmpbuf, sizeof(tmpbuf), "%s/.russ/%s", pwd.pw_dir, bp) < 0)
+				|| ((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s/.russ/%s", pwd.pw_dir, bp)) < 0)
+				|| (n >= sizeof(tmpbuf))
 				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
 				return NULL;
 			}
@@ -135,16 +138,25 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
 
 						if ((lnkbuf[0] == '/') || (strncmp(lnkbuf, "+/", 2) == 0)) {
 							/* replace subpath with lnkbuf */
-							snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf);
+							if (((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf)) < 0)
+								|| (n >= sizeof(tmpbuf))) {
+								return NULL;
+							}
 						} else {
 							if ((bp2 = rindex(buf, '/')) != NULL) {
 								/* append lnkbuf to subpath */
 								*bp2 = '\0';
-								snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", buf, lnkbuf);
+								if (((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", buf, lnkbuf)) < 0)
+									|| (n >= sizeof(tmpbuf))) {
+									return NULL;
+								}
 								*bp2 = '/';
 							} else {
 								/* replace single component subpath with lnkbuf */
-								snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf);
+								if (((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf)) < 0)
+									|| (n >= sizeof(tmpbuf))) {
+									return NULL;
+								}
 							}
 						}
 						if (bp != NULL) {
@@ -153,7 +165,8 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
 							strncat(tmpbuf, bp, sizeof(tmpbuf));
 						}
 						/* copy back to buf */
-						if (snprintf(buf, sizeof(buf), "%s", tmpbuf) < 0) {
+						if (((n = snprintf(buf, sizeof(buf), "%s", tmpbuf)) < 0)
+							|| (n >= sizeof(buf))) {
 							return NULL;
 						}
 						changed = 1;

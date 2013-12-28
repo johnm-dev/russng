@@ -420,7 +420,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 	char			*cg_path = NULL;
 	char			*next_spath = NULL;
-	int			len;
+	int			n;
 
 	/* find cg_path */
 	if ((cg_path = get_cg_path(req->attrv)) == NULL) {
@@ -442,8 +442,8 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 		free(cgroups_home);
 		cgroups_home = "";
 	}
-	if ((len = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroups_home, cg_path) < 0)
-		|| (len > sizeof(cont.path))) {
+	if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroups_home, cg_path)) < 0)
+		|| (n > sizeof(cont.path))) {
 		russ_sconn_fatal(sconn, "error: cgroup path too long", RUSS_EXIT_FAILURE);
 		goto free_exit;
 	}
