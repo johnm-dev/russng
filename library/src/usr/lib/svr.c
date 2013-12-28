@@ -258,7 +258,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		}
 		break;
 	case RUSS_OPNUM_INFO:
-		if (sconn->creds.uid == getuid()) {
+		if (sconn->creds.uid == self->uid) {
 			char	hostname[HOST_NAME_MAX];
 
 			gethostname(hostname, sizeof(hostname));
