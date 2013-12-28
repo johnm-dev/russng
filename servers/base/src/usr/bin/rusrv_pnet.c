@@ -361,7 +361,6 @@ svc_net_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	case RUSS_OPNUM_HELP:
-fprintf(stderr, "net\n");
 		svc_root_handler(sess);
 		break;
 	default:
