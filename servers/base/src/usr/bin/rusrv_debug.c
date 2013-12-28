@@ -81,41 +81,53 @@ svc_root_handler(struct russ_sess *sess) {
 void
 svc_chargen_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 	char			buf[] = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
 	char			off;
 
-	off = 0;
-	while (russ_dprintf(sconn->fds[1], "%.72s\n", &(buf[off])) > 0) {
-		off++;
-		if (off > 94) {
-			off = 0;
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		off = 0;
+		while (russ_dprintf(sconn->fds[1], "%.72s\n", &(buf[off])) > 0) {
+			off++;
+			if (off > 94) {
+				off = 0;
+			}
+			usleep(100000);
 		}
-		usleep(100000);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
 	}
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 }
 
 void
 svc_conn_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 
-	russ_dprintf(sconn->fds[1], "uid (%d)\ngid (%d)\npid (%d)\n",
-		sconn->creds.uid, sconn->creds.gid, sconn->creds.pid);
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		russ_dprintf(sconn->fds[1], "uid (%d)\ngid (%d)\npid (%d)\n",
+			sconn->creds.uid, sconn->creds.gid, sconn->creds.pid);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
 }
 
 void
 svc_daytime_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 	char			buf[1024];
 	time_t			now;
 	struct tm		*now_tm;
 
-	now = time(NULL);
-	now_tm = localtime(&now);
-	strftime(buf, sizeof(buf), "%A, %B %d, %Y %T-%Z", now_tm);
-	russ_dprintf(sconn->fds[1], "%s\n", buf);
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		now = time(NULL);
+		now_tm = localtime(&now);
+		strftime(buf, sizeof(buf), "%A, %B %d, %Y %T-%Z", now_tm);
+		russ_dprintf(sconn->fds[1], "%s\n", buf);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
 }
 
 static void
@@ -138,6 +150,7 @@ gettimeofday_float(void) {
 void
 svc_discard_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 	struct timeval		tv;
 	double			t0, t1, last_t1;
 	char			*buf;
@@ -145,68 +158,79 @@ svc_discard_handler(struct russ_sess *sess) {
 	long			n, total;
 	int			perf = 0;
 
-	/* 8MB */
-	buf_size = 1<<23;
-	if ((buf = malloc(buf_size)) == NULL) {
-		russ_sconn_fatal(sconn, "error: cannot allocate buffer", RUSS_EXIT_FAILURE);
-		return;
-	}
-	if ((russ_sarray0_count(sess->req->argv, 2) >= 1)
-		&& (strcmp(sess->req->argv[0], "--perf") == 0)) {
-		perf = 1;
-	}
-	t0 = gettimeofday_float();
-	last_t1 = t0;
-	total = 0;
-	while (1) {
-		n = russ_read(sconn->fds[0], buf, buf_size);
-		if (n > 0) {
-			if (perf) {
-				total += n;
-				t1 = gettimeofday_float();
-				if (t1-last_t1 > 2) {
-					print_discard_stats(sconn->fds[1], t1-t0, total);
-					last_t1 = t1;
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		/* 8MB */
+		buf_size = 1<<23;
+		if ((buf = malloc(buf_size)) == NULL) {
+			russ_sconn_fatal(sconn, "error: cannot allocate buffer", RUSS_EXIT_FAILURE);
+			exit(0);
+		}
+		if ((russ_sarray0_count(sess->req->argv, 2) >= 1)
+			&& (strcmp(sess->req->argv[0], "--perf") == 0)) {
+			perf = 1;
+		}
+		t0 = gettimeofday_float();
+		last_t1 = t0;
+		total = 0;
+		while (1) {
+			n = russ_read(sconn->fds[0], buf, buf_size);
+			if (n > 0) {
+				if (perf) {
+					total += n;
+					t1 = gettimeofday_float();
+					if (t1-last_t1 > 2) {
+						print_discard_stats(sconn->fds[1], t1-t0, total);
+						last_t1 = t1;
+					}
 				}
-			}
-		} else if (n < 0) {
-			if ((errno != EAGAIN) && (errno != EINTR)) {
-				/* error */
-				russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+			} else if (n < 0) {
+				if ((errno != EAGAIN) && (errno != EINTR)) {
+					/* error */
+					russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+					exit(0);
+				}
+			} else {
+				/* done */
 				break;
 			}
-		} else {
-			/* done */
-			break;
 		}
+		if (perf) {
+			print_discard_stats(sconn->fds[1], gettimeofday_float()-t0, total);
+		}
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
 	}
-	if (perf) {
-		print_discard_stats(sconn->fds[1], gettimeofday_float()-t0, total);
-	}
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 }
 
 void
 svc_echo_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 	char			buf[1024];
 	ssize_t			n;
 
-	while ((n = russ_read(sconn->fds[0], buf, sizeof(buf))) > 0) {
-		russ_writen(sconn->fds[1], buf, n);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		while ((n = russ_read(sconn->fds[0], buf, sizeof(buf))) > 0) {
+			russ_writen(sconn->fds[1], buf, n);
+		}
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
 	}
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 }
 
 void
 svc_env_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 	int			i;
 
-	for (i = 0; environ[i] != NULL; i++) {
-		russ_dprintf(sconn->fds[1], "%s\n", environ[i]);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		for (i = 0; environ[i] != NULL; i++) {
+			russ_dprintf(sconn->fds[1], "%s\n", environ[i]);
+		}
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
 	}
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 }
 
 void
@@ -216,40 +240,47 @@ svc_request_handler(struct russ_sess *sess) {
 	int			fd;
 	int			i;
 
-	fd = sconn->fds[1];
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		fd = sconn->fds[1];
 
-	russ_dprintf(fd, "protocol string (%s)\n", req->protocol_string);
-	russ_dprintf(fd, "spath (%s)\n", req->spath);
-	russ_dprintf(fd, "op (%s)\n", req->op);
-	russ_dprintf(fd, "opnum (%u)\n", req->opnum);
+		russ_dprintf(fd, "protocol string (%s)\n", req->protocol_string);
+		russ_dprintf(fd, "spath (%s)\n", req->spath);
+		russ_dprintf(fd, "op (%s)\n", req->op);
+		russ_dprintf(fd, "opnum (%u)\n", req->opnum);
 
-	/* attrv */
-	if (req->attrv == NULL) {
-		russ_dprintf(fd, "attrv (NULL)\n");
-	} else {
-		for (i = 0; req->attrv[i] != NULL; i++) {
-			russ_dprintf(fd, "attrv[%d] (%s)\n", i, req->attrv[i]);
+		/* attrv */
+		if (req->attrv == NULL) {
+			russ_dprintf(fd, "attrv (NULL)\n");
+		} else {
+			for (i = 0; req->attrv[i] != NULL; i++) {
+				russ_dprintf(fd, "attrv[%d] (%s)\n", i, req->attrv[i]);
+			}
 		}
-	}
 
-	/* argv */
-	if (req->argv == NULL) {
-		russ_dprintf(fd, "argv (NULL)\n");
-	} else {
-		for (i = 0; req->argv[i] != NULL; i++) {
-			russ_dprintf(fd, "argv[%d] (%s)\n", i, req->argv[i]);
+		/* argv */
+		if (req->argv == NULL) {
+			russ_dprintf(fd, "argv (NULL)\n");
+		} else {
+			for (i = 0; req->argv[i] != NULL; i++) {
+				russ_dprintf(fd, "argv[%d] (%s)\n", i, req->argv[i]);
+			}
 		}
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
 	}
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 }
 
 void
 svc_whoami_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 
-	russ_dprintf(sconn->fds[1], "uid (%d) gid (%d)\n", getuid(), getgid());
-	russ_dprintf(sconn->fds[1], "euid (%d) egid (%d)\n", geteuid(), getegid());
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		russ_dprintf(sconn->fds[1], "uid (%d) gid (%d)\n", getuid(), getgid());
+		russ_dprintf(sconn->fds[1], "euid (%d) egid (%d)\n", geteuid(), getegid());
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
 }
 
 void
