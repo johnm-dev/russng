@@ -308,7 +308,7 @@ russ_sconn_exits(struct russ_sconn *self, char *msg, int exit_status) {
 }
 
 /**
-* Helper routine to write error message, write exit status, and
+* Helper routine to write final message, write exit status, and
 * close connection fds.
 *
 * Calls russ_sconn_exits() followed by russ_sconn_close().
