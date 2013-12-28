@@ -356,17 +356,17 @@ svc_loginshell_handler(struct russ_sess *sess) {
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		if (req->argv[0] == NULL) {
 			russ_sconn_fatal(sconn, "error: bad/missing arguments", RUSS_EXIT_FAILURE);
-			return;
+			exit(0);
 		}
 		/* argv[] = {shell, "-c", cmd, NULL} */
 		if ((argv = malloc(sizeof(char *)*4)) == NULL) {
 			russ_sconn_fatal(sconn, "error: could not run", RUSS_EXIT_FAILURE);
-			return;
+			exit(0);
 		}
 
 		if (get_user_info(sconn->creds.uid, &username, &shell, &lshell, &home) < 0) {
 			russ_sconn_fatal(sconn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
-			return;
+			exit(0);
 		}
 
 		argv[0] = shell;
@@ -379,11 +379,9 @@ svc_loginshell_handler(struct russ_sess *sess) {
 		}
 
 		execute(sess, home, username, home, shell, argv, req->attrv);
-	} else {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
-	russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
-	exit(0);
 }
 
 void
@@ -394,16 +392,14 @@ svc_simple_handler(struct russ_sess *sess) {
 
 	if (get_user_info(sconn->creds.uid, &username, &shell, &lshell, &home) < 0) {
 		russ_sconn_fatal(sconn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
-		return;
+		exit(0);
 	}
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		execute(sess, "/", username, home, req->argv[0], req->argv, req->attrv);
-	} else {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
-	russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
-	exit(0);
 }
 
 void
@@ -427,7 +423,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 		cg_path = strchr(req->spath+1, '/')+1;
 		if ((cg_path = strndup(cg_path, strchr(cg_path, '/')-cg_path)) == NULL) {
 			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
-			goto free_exit;
+			exit(0);
 		}
 	}
 
@@ -435,7 +431,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 	cont.type = CONTAINER_TYPE_CGROUP;
 	if (cgroups_home == NULL) {
 		russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
-		goto free_exit;
+		exit(0);
 	}
 	if (strncmp(cg_path, "/", 1) == 0) {
 		/* not relative */
@@ -445,7 +441,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 	if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroups_home, cg_path)) < 0)
 		|| (n > sizeof(cont.path))) {
 		russ_sconn_fatal(sconn, "error: cgroup path too long", RUSS_EXIT_FAILURE);
-		goto free_exit;
+		exit(0);
 	}
 
 	/* patch request spath */
@@ -453,23 +449,20 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 		|| ((next_spath = strchr(next_spath+1, '/')) == NULL)
 		|| ((next_spath = strdup(next_spath)) == NULL)) {
 		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
-		return;
+		exit(0);
 	}
 	free(req->spath); /* assumes dynamic allocation */
 	req->spath = next_spath;
 
 	/* forward to "next" handler */
-	if ((strcmp(next_spath, "/shell") == 0) || (strcmp(next_spath, "/login") == 0)) {
+	if ((strcmp(req->spath, "/shell") == 0) || (strcmp(req->spath, "/login") == 0)) {
 		svc_loginshell_handler(sess);
-	} else if (strcmp(next_spath, "/simple") == 0) {
+	} else if (strcmp(req->spath, "/simple") == 0) {
 		svc_simple_handler(sess);
 	} else {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
-
-free_exit:
-	free(next_spath);
-	free(cg_path);
 }
 
 void
@@ -479,8 +472,7 @@ svc_cgroup_handler(struct russ_sess *sess) {
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
-	} else {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
 }
 
