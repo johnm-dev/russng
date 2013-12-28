@@ -224,33 +224,38 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	sess.spath[0] = '\0';
 	sess.req = req;
 
-	/* virtual node */
-	if (node->virtual) {
-		goto call_node_handler;
+	/* call handler, if available */
+	if ((node) && (node->handler)) {
+		node->handler(&sess);
+	} else {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	}
 
-	/* default handling; non-virtual node */
+	/*
+	* fallback handler:
+	* * when no handler
+	* * when request is unserviced
+	* * when exit() is not called by handler
+	*/
 	switch (req->opnum) {
 	case RUSS_OPNUM_LIST:
 		/* TODO: test against ctxt.spath */
-		if ((node->children != NULL) && (!node->children->wildcard)) {
-			for (node = node->children; node != NULL; node = node->next) {
-				russ_dprintf(sconn->fds[1], "%s\n", node->name);
+		if (!node-virtual) {
+			if ((node->children != NULL) && (!node->children->wildcard)) {
+				for (node = node->children; node != NULL; node = node->next) {
+					russ_dprintf(sconn->fds[1], "%s\n", node->name);
+				}
+				russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 			}
-			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-			goto cleanup;
 		}
 		break;
 	case RUSS_OPNUM_HELP:
 		if (self->help != NULL) {
 			russ_dprintf(sconn->fds[1], self->help);
 			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-			goto cleanup;
 		} else {
 			node = self->root;
 		}
-		/* TODO: test against ctxt.spath */
-		/* fall through */
 		break;
 	case RUSS_OPNUM_INFO:
 		if (sconn->creds.uid == getuid()) {
@@ -265,15 +270,9 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 			russ_dprintf(sconn->fds[1], "time=%ld\n", russ_gettime());
 		}
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		goto cleanup;
 		break;
-	}
-
-call_node_handler:
-	if ((node) && (node->handler)) {
-		node->handler(&sess);
-	} else {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	default:
+		russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
 	}
 
 cleanup:
