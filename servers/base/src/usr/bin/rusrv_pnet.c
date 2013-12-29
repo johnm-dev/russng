@@ -219,10 +219,10 @@ svc_host_userhost_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	tail = strchr(req->spath+1, '/');
-	tail = strchr(tail+1, '/')+1;
 
 	/* set up new spath */
+	tail = strchr(req->spath+1, '/');
+	tail = strchr(tail+1, '/')+1;
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
 	if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
 		|| (n >= sizeof(new_spath))) {
@@ -304,9 +304,6 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 		exit(0);
 	}
 
-	tail = strchr(req->spath+1, '/');
-	tail = strchr(tail+1, '/')+1;
-
 	/* wrap if requested; handle negative indexes */
 	if (wrap) {
 		idx = idx % hostslist.nhosts;
@@ -316,6 +313,8 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	}
 
 	/* set up new spath */
+	tail = strchr(req->spath+1, '/');
+	tail = strchr(tail+1, '/')+1;
 	userhost = hostslist.hosts[idx];
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
 	if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
@@ -377,10 +376,10 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	tail = strchr(req->spath+1, '/');
-	tail = strchr(tail+1, '/')+1;
 
 	/* set up new spath */
+	tail = strchr(req->spath+1, '/');
+	tail = strchr(tail+1, '/')+1;
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
 	if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
 		|| (n >= sizeof(new_spath))) {
