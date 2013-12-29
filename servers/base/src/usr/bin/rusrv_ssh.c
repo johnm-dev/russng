@@ -219,35 +219,58 @@ void
 svc_root_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
-	char			*p, *new_spath, *userhost;
-	int			i;
 
-	if (russ_misc_str_count(req->spath, "/") < 2) {
-		/* local */
-		switch (req->opnum) {
-		case RUSS_OPNUM_HELP:
-			russ_dprintf(sconn->fds[1], "%s", HELP);
-			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-			break;
-		case RUSS_OPNUM_LIST:
-			russ_sconn_fatal(sconn, "error: unspecified service", RUSS_EXIT_FAILURE);
-			break;
-		default:
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
-		}
-	} else {
-		/* forward request over ssh */
-		
-		/* extract and validate user@host and new_spath */
-		userhost = &(req->spath[1]);
-		if ((p = index(userhost, '/')) == NULL) {
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-		new_spath = strdup(p);
-		p[0] = '\0'; /* terminate userhost */
-		execute(sess, userhost, new_spath);
+	if (req->opnum == RUSS_OPNUM_LIST) {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		exit(0);
 	}
+}
+
+char *
+get_userhostport(char *spath) {
+	char	*userhostport, *p;
+
+	if ((p = strchr(spath+1, '/')) == NULL) {
+		userhostport = strdup(spath+1);
+	} else if ((userhostport = strndup(spath+1, p-(spath+1))) == NULL) {
+		return NULL;
+	}
+	return userhostport;
+}
+
+void
+svc_userhostport_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+	char			*userhostport;
+
+	if ((userhostport = get_userhostport(req->spath)) == NULL) {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	if (req->opnum == RUSS_OPNUM_LIST) {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
+}
+
+/**
+* Handler for /<user@host:port>/...
+*
+* @param sess		session object
+*/
+void
+svc_userhostport_other_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+	char			*userhostport, *new_spath;
+
+	if ((userhostport = get_userhostport(req->spath)) == NULL) {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	new_spath = strchr(req->spath+1, '/');
+	execute(sess, userhostport, new_spath);
 }
 
 void
@@ -263,7 +286,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root;
+	struct russ_svcnode	*root, *node;
 	struct russ_svr		*svr;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -275,7 +298,11 @@ main(int argc, char **argv) {
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| (russ_svcnode_set_virtual(root, 1) < 0)
+		|| ((node = russ_svcnode_add(root, "*", svc_userhostport_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| ((node = russ_svcnode_add(node, "*", svc_userhostport_other_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
 		fprintf(stderr, "error: cannot set up\n");
 	}
