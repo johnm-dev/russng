@@ -276,7 +276,7 @@ svc_userhostport_other_handler(struct russ_sess *sess) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_ssh [<conf options>] [-- <hostsfile>]\n"
+"usage: rusrv_ssh [<conf options>]\n"
 "\n"
 "russ-based server for ssh-based remote connections. Configuration\n"
 "can be obtained from the conf file if no options are used, otherwise\n"
