@@ -479,6 +479,7 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_set_virtual(root, 1) < 0)
 		|| (russ_svcnode_set_auto_answer(root, 0) < 0)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
 	}
