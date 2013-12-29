@@ -303,7 +303,8 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(node, "*", svc_userhostport_other_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
+		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
 	}
 	if (russ_svr_announce(svr,
