@@ -77,3 +77,36 @@ russ_str_dup_comp(char *s, char sep, int idx) {
 	}
 	return s;
 }
+
+/**
+* Like russ_str_dup_comp() except the component is copied into a
+* supplied (and known-sized) buffer. The buffer is safely null-
+* terminated.
+*
+* @param s		string
+* @param sep		separator character
+* @param idx		index of the desired component
+* @param b		buffer
+* @param sz		buffer size
+* @return		0 on success; -1 on failure
+*/
+int
+russ_str_get_comp(char *s, char sep, int idx, char *b, int sz) {
+	char	*p;
+
+	for(; idx > 0; idx--) {
+		if ((s = strchr(s, sep)) == NULL) {
+			return -1;
+		}
+		s++;
+	}
+	if ((p = strchr(s, sep)) == NULL) {
+		p = s+strlen(s);
+	}
+	if ((p-s > sz-1)
+		|| (strncpy(b, s, p-s) == NULL)) {
+		return -1;
+	}
+	b[p-s] = '\0';
+	return 0;
+}
