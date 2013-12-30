@@ -46,3 +46,33 @@ russ_str_count_sub(char *s, char *ss) {
 	}
 	return n;
 }
+
+/**
+* Find the idx-th component from the string as divided by a
+* separator and return a copy of it. Must be freed by caller.
+*
+* If string starts with separator, then component at index 0 returns
+* "" (empty string).
+*
+* @param s		string
+* @param sep		separator character
+* @param idx		index of the desired component
+* @return		component string; NULL on error/unavailable
+*/
+char *
+russ_str_get_comp(char *s, char sep, int idx) {
+	char	*p;
+
+	for (; idx > 0; idx--) {
+		if ((s = strchr(s, sep)) == NULL) {
+			return NULL;
+		}
+		s++;
+	}
+	if ((p = strchr(s, sep)) == NULL) {
+		s = strdup(s);
+	} else {
+		s = strndup(s, p-s);
+	}
+	return s;
+}

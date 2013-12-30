@@ -341,6 +341,7 @@ char *russ_spath_resolve_with_uid(char *, uid_t *);
 
 /* str.c */
 int russ_str_count_sub(char *, char *);
+char *russ_str_get_comp(char *, char, int);
 
 /* time.c */
 russ_deadline russ_gettime(void); /* internal */
