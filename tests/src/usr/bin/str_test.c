@@ -14,7 +14,7 @@ main(int argc, char **argv) {
 	int	i;
 
 	for (i = 0; i < 10; i++) {
-		s = russ_str_get_comp(spath, '/', i);
+		s = russ_str_dup_comp(spath, '/', i);
 		if (s == NULL) {
 			break;
 		}
