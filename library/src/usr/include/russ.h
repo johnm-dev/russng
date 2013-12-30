@@ -275,7 +275,6 @@ void russ_lis_loop(struct russ_lis *, russ_accepthandler, russ_answerhandler, ru
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);
-int russ_misc_str_count(char *, char *);
 void *russ_malloc(size_t);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);
@@ -339,6 +338,9 @@ int russ_svcnode_set_virtual(struct russ_svcnode *, int);
 int russ_spath_split(char *, char **, char **);
 char *russ_spath_resolve(char *);
 char *russ_spath_resolve_with_uid(char *, uid_t *);
+
+/* str.c */
+int russ_str_count_sub(char *, char *);
 
 /* time.c */
 russ_deadline russ_gettime(void); /* internal */
