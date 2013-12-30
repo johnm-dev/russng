@@ -406,45 +406,44 @@ void
 svc_root_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
+
+	if (req->opnum == RUSS_OPNUM_LIST) {
+		list_servers(sess);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
+}
+
+void
+svc_server_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 	char			*svrname = NULL, *spath;
 	char			buf[RUSS_REQ_SPATH_MAX];
 	int			n;
 
-	if (strcmp(req->spath, "/") == 0) {
-		russ_standard_answer_handler(sconn);		
-		switch (req->opnum) {
-		case RUSS_OPNUM_HELP:
-			russ_dprintf(sconn->fds[1], "%s", HELP);
-			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-			break;
-		case RUSS_OPNUM_LIST:
-			list_servers(sess);
-			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-			break;
-		default:
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		}
-	} else {
-		if ((svrname = match_svrname(req->spath)) == NULL) {
-			russ_standard_answer_handler(sconn);
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			goto done;
-		}
-		if (((n = snprintf(buf, sizeof(buf), "%s%s", trackdir, req->spath)) < 0)
-			|| (n >= sizeof(buf))
-			|| ((spath = strdup(buf)) == NULL)) {
-			russ_standard_answer_handler(sconn);
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			goto done;
-		}
-		free(req->spath);
-		req->spath = spath;
-		if (redial_and_splice(sess, svrname) < 0) {
-			russ_standard_answer_handler(sconn);
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-			goto done;		
-		}
+	if (req->opnum != RUSS_OPNUM_EXECUTE) {
+		return;
 	}
+
+	/* RUSS_OPNUM_EXECUTE only */
+	if ((svrname = match_svrname(req->spath)) == NULL) {
+		goto no_service;
+	}
+	if (((n = snprintf(buf, sizeof(buf), "%s%s", trackdir, req->spath)) < 0)
+		|| (n >= sizeof(buf))
+		|| ((spath = strdup(buf)) == NULL)) {
+		goto no_service;
+	}
+	free(req->spath);
+	req->spath = spath;
+	if (redial_and_splice(sess, svrname) < 0) {
+		goto no_service;
+	}
+
+no_service:
+	russ_standard_answer_handler(sconn);
+	russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 done:
 	free(svrname);
 	russ_sconn_close(sconn);
@@ -476,9 +475,11 @@ main(int argc, char **argv) {
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| (russ_svcnode_set_virtual(root, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(root, 0) < 0)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)) {
+		|| ((node = russ_svcnode_add(root, "*", svc_server_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
+		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
 		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
