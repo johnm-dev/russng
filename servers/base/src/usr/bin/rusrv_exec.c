@@ -420,8 +420,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 
 	/* find cg_path */
 	if ((cg_path = get_cg_path(req->attrv)) == NULL) {
-		cg_path = strchr(req->spath+1, '/')+1;
-		if ((cg_path = strndup(cg_path, strchr(cg_path, '/')-cg_path)) == NULL) {
+		if ((cg_path = russ_str_dup_comp(req->spath, '/', 2)) == NULL) {
 			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
 			exit(0);
 		}

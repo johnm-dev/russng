@@ -228,13 +228,9 @@ svc_root_handler(struct russ_sess *sess) {
 
 char *
 get_userhostport(char *spath) {
-	char	*userhostport, *p;
+	char	*userhostport;
 
-	if ((p = strchr(spath+1, '/')) == NULL) {
-		userhostport = strdup(spath+1);
-	} else if ((userhostport = strndup(spath+1, p-(spath+1))) == NULL) {
-		return NULL;
-	}
+	userhostport = russ_str_dup_comp(spath, '/', 1);
 	return userhostport;
 }
 
@@ -252,6 +248,7 @@ svc_userhostport_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
+	free(userhostport);
 }
 
 /**

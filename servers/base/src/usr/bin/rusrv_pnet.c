@@ -151,17 +151,9 @@ svc_host_handler(struct russ_sess *sess) {
 
 char *
 get_userhost(char *spath) {
-	char	*userhost, *p;
+	char	*userhost;
 
-	if ((userhost = strchr(spath+1, '/')) == NULL) {
-		return NULL;
-	}
-	userhost++;
-	if ((p = strchr(userhost, '/')) == NULL) {
-		userhost = strdup(userhost);
-	} else {
-		userhost = strndup(userhost, p-userhost);
-	}
+	userhost = russ_str_dup_comp(spath, '/', 2);
 	return userhost;
 }
 
@@ -197,6 +189,7 @@ svc_host_userhost_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
+	free(userhost);
 }
 
 /**
@@ -229,6 +222,7 @@ svc_host_userhost_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
+	free(userhost);
 	free(req->spath);
 	req->spath = strdup(new_spath);
 
@@ -256,11 +250,19 @@ svc_id_handler(struct russ_sess *sess) {
 
 int
 get_valid_id_index(char *spath, int *idx, int *wrap) {
-	*wrap = 0;
-	if (sscanf(spath, "/id/:%d[/]", idx) == 1) {
+	char	buf[64];
+
+	if (russ_str_get_comp(spath, '/', 2, buf, sizeof(buf)) < 0) {
+		return -1;
+	}
+	if (sscanf(buf, ":%d", idx) == 1) {
 		*wrap = 1;
-	} else if ((sscanf(spath, "/id/%d[/]", idx) != 1)
-		|| (*idx < 0) || (*idx >= hostslist.nhosts)) {
+	} else if (sscanf(buf, "%d", idx) == 1) {
+		*wrap = 0;
+	} else {
+		return -1;
+	}
+	if ((*idx < 0) || (*idx >= hostslist.nhosts)) {
 		return -1;
 	}
 	return 0;
@@ -322,6 +324,7 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
+	free(userhost);
 	free(req->spath);
 	req->spath = strdup(new_spath);
 
@@ -354,6 +357,7 @@ svc_net_userhost_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
+	free(userhost);
 }
 
 /**
@@ -386,9 +390,9 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
+	free(userhost);
 	free(req->spath);
 	req->spath = strdup(new_spath);
-
 	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 }
 
