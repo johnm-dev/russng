@@ -46,7 +46,7 @@ char			*HELP =
 "that is returned from a russ_dial call.\n"
 "\n"
 "/chargen\n"
-"    Character generator outputting to stdout; follows the RPC 864\n"
+"    Character generator outputting to stdout; follows the RFC 864\n"
 "    the RFC 864 protocol sequence.\n"
 "\n"
 "/conn\n"
