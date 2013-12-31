@@ -316,25 +316,6 @@ int russ_sconn_redial_and_splice(struct russ_sconn *, russ_deadline, struct russ
 int russ_sconn_sendfds(struct russ_sconn *, int, int *, int *);
 int russ_sconn_splice(struct russ_sconn *, struct russ_cconn *);
 
-/* server.c */
-struct russ_svr *russ_svr_new(struct russ_svcnode *, int);
-struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
-struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid_t);
-void russ_svr_loop(struct russ_svr *);
-int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
-int russ_svr_set_auto_switch_user(struct russ_svr *, int);
-int russ_svr_set_help(struct russ_svr *, char *);
-
-/* servicenodes.c */
-struct russ_svcnode *russ_svcnode_new(char *, russ_svchandler);
-struct russ_svcnode *russ_svcnode_free(struct russ_svcnode *);
-struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, char *, russ_svchandler);
-struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *, char *, int);
-int russ_svcnode_set_auto_answer(struct russ_svcnode *, int);
-int russ_svcnode_set_handler(struct russ_svcnode *, russ_svchandler);
-int russ_svcnode_set_virtual(struct russ_svcnode *, int);
-int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
-
 /* spath.c */
 int russ_spath_split(char *, char **, char **);
 char *russ_spath_resolve(char *);
@@ -344,6 +325,25 @@ char *russ_spath_resolve_with_uid(char *, uid_t *);
 int russ_str_count_sub(char *, char *);
 char *russ_str_dup_comp(char *, char, int);
 int russ_str_get_comp(char *, char, int, char *, int);
+
+/* svcnode.c */
+struct russ_svcnode *russ_svcnode_new(char *, russ_svchandler);
+struct russ_svcnode *russ_svcnode_free(struct russ_svcnode *);
+struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, char *, russ_svchandler);
+struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *, char *, int);
+int russ_svcnode_set_auto_answer(struct russ_svcnode *, int);
+int russ_svcnode_set_handler(struct russ_svcnode *, russ_svchandler);
+int russ_svcnode_set_virtual(struct russ_svcnode *, int);
+int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
+
+/* svr.c */
+struct russ_svr *russ_svr_new(struct russ_svcnode *, int);
+struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
+struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid_t);
+void russ_svr_loop(struct russ_svr *);
+int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
+int russ_svr_set_auto_switch_user(struct russ_svr *, int);
+int russ_svr_set_help(struct russ_svr *, char *);
 
 /* time.c */
 russ_deadline russ_gettime(void); /* internal */
