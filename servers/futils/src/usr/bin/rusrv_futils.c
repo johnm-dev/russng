@@ -309,12 +309,12 @@ svc_head_handler(struct russ_sess *sess) {
 	long			cval = 0, nval = -10;
 	int			i, cnt, n;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		argv = req->argv;
 		if ((argv) && ((argv = parse_copt_nopt(argv, &copt, &cval, &nopt, &nval)) == NULL)) {
 			/* parse error */
 			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			exit(0);
 		}
 		filenames = ((argv == NULL) || (argv[0] == NULL)) \
 			? (char **)default_argv : req->argv;
@@ -343,11 +343,8 @@ svc_head_handler(struct russ_sess *sess) {
 			fclose(f);
 		}
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
-	exit(0);
 }
 
 #ifdef OPENSSL
@@ -367,8 +364,7 @@ svc_md5sum_handler(struct russ_sess *sess) {
 	char			*filename, **filenames;
 	int			i, n;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		filenames = ((req->argv == NULL) || (req->argv[0] == NULL)) \
 			? (char **)default_argv \
 			: req->argv;
@@ -397,11 +393,8 @@ svc_md5sum_handler(struct russ_sess *sess) {
 			russ_dprintf(sconn->fds[1], " %s\n", filename);
 		}
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
-	exit(0);
 }
 #endif /* OPENSSL */
 
@@ -415,15 +408,11 @@ svc_read_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
-		russ_dprintf(sconn->fds[1], "%s", HELP);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		russ_dprintf(sconn->fds[1], "%s", "NIY\n");
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
-	exit(0);
 }
 
 /**
@@ -442,12 +431,12 @@ svc_tail_handler(struct russ_sess *sess) {
 	long			cval = 0, nval = -10;
 	int			i, cnt, n;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		argv = req->argv;
 		if ((argv) && ((argv = parse_copt_nopt(argv, &copt, &cval, &nopt, &nval)) == NULL)) {
 			/* parse error */
 			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			exit(0);
 		}
 		filenames = ((argv == NULL) || (argv[0] == NULL)) \
 			? (char **)default_argv \
@@ -482,11 +471,8 @@ svc_tail_handler(struct russ_sess *sess) {
 			fclose(f);
 		}
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
-	exit(0);
 }
 
 /**
@@ -504,8 +490,7 @@ svc_wc_handler(struct russ_sess *sess) {
 	int			ch, nwords, nlines;
 	long			nbytes, lastwhite;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		argv = req->argv;
 		filenames = ((argv == NULL) || (argv[0] == NULL)) \
 			? (char **)default_argv \
@@ -543,11 +528,8 @@ svc_wc_handler(struct russ_sess *sess) {
 			fclose(f);
 		}
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
 	}
-	exit(0);
 }
 
 /**
@@ -563,12 +545,11 @@ svc_write_handler(struct russ_sess *sess) {
 	char			**argv;
 	char			*filename, *s;
 
-	switch (req->opnum) {
-	case RUSS_OPNUM_EXECUTE:
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		argv = req->argv;
 		if (argv == NULL) {
 			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
-			goto done;
+			exit(0);
 		}
 		filename = NULL;
 		s = NULL;
@@ -576,26 +557,27 @@ svc_write_handler(struct russ_sess *sess) {
 			argv++;
 			if (*argv == NULL) {
 				russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
-				goto done;
+				exit(0);
 			}
 			s = *argv;
 			argv++;
 		}
 		if ((*argv == NULL) || (*(argv+1))) {
 			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
-			goto done;
+			exit(0);
 		}
 		filename = *argv;
 
 		/* use fd instead of FILE because we're using russ_write */
 		if ((fd = open(filename, O_WRONLY)) < 0) {
 			russ_sconn_fatal(sconn, "error: could not open file", RUSS_EXIT_FAILURE);
-			goto done;
+			exit(0);
 		}
 		if (s != NULL) {
 			if (russ_write(fd, s) < 0) {
 				russ_sconn_fatal(sconn, "error: could not write to file", RUSS_EXIT_FAILURE);
-				goto done;
+				close(fd);
+				exit(0);
 			}
 		} else {
 			char	buf[4096];
@@ -604,23 +586,21 @@ svc_write_handler(struct russ_sess *sess) {
 			while (1) {
 				if ((n = russ_read(sconn->fds[0], buf, sizeof(buf))) < 0) {
 					russ_sconn_fatal(sconn, "error: could not read input", RUSS_EXIT_FAILURE);
+					break;
 				} else if (n == 0) {
 					break;
 				}
 				if (russ_write(fd, buf, n) < n) {
 					russ_sconn_fatal(sconn, "error: could not write to file", RUSS_EXIT_FAILURE);
+					break;
 				}
 			}
 		}
-		break;
-	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		if (fd) {
+			close(fd);
+		}
+		exit(0);
 	}
-done:
-	if (fd) {
-		close(fd);
-	}
-	exit(0);
 }
 
 void
