@@ -6,7 +6,7 @@
 include ../../../../Makefile.inc
 
 # rt for clock_gettime()
-LIBS=-lruss $(LIBS_PLAT)
+#LIBS=-lruss $(LIBS_PLAT)
 LIBS_PTHREAD=-lruss-pthread -lruss -lpthread $(LIBS_PLAT)
 BINS=rudial ruexec ruhelp ruinfo ruls russ_resolve_spath
 
