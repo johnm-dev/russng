@@ -191,7 +191,6 @@ find_nth_rev(FILE *f, char ch, long cnt, int ignore_last) {
 	}
 	lastpos = ftell(f);
 	while ((cnt > 0) && (lastpos > 0)) {
-fprintf(stderr, "cnt (%ld) lastpos (%ld)\n", cnt, lastpos);
 		if (lastpos < sizeof(buf)) {
 			/* short read */
 			fseek(f, 0, SEEK_SET);
