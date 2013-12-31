@@ -333,6 +333,7 @@ struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *, char *, in
 int russ_svcnode_set_auto_answer(struct russ_svcnode *, int);
 int russ_svcnode_set_handler(struct russ_svcnode *, russ_svchandler);
 int russ_svcnode_set_virtual(struct russ_svcnode *, int);
+int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
 
 /* spath.c */
 int russ_spath_split(char *, char **, char **);
