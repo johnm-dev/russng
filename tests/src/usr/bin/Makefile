@@ -8,6 +8,7 @@ include ../../../../Makefile.inc
 # rt for clock_gettime()
 LIBS=-lruss -lpthread $(LIBS_PLAT)
 BINS=dial_ev dial_inouterr \
+	rusrv_hello rusrv_hello2 rusrv_hello3 \
 	snprintf_test str_test
 
 ifndef RUSS_INCLUDE_DIR
@@ -35,6 +36,15 @@ dial_ev: dial_ev.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 dial_inouterr: dial_inouterr.c
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
+
+rusrv_hello:	rusrv_hello.c
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
+
+rusrv_hello2:	rusrv_hello2.c
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
+
+rusrv_hello3:	rusrv_hello3.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 snprintf_test: snprintf_test.c
