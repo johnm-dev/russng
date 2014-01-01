@@ -54,6 +54,7 @@ RUSS_MSG_BAD_ARGS = "error: bad/missing arguments"
 RUSS_MSG_BAD_OP = "error: unsupported operation"
 RUSS_MSG_NO_DIAL = "error: cannot dial service"
 RUSS_MSG_NO_EXIT = "error: no exit status"
+RUSS_MSG_NO_LIST = "info: list not available"
 RUSS_MSG_NO_SERVICE = "error: no service"
 RUSS_MSG_NO_SWITCH_USER = "error: cannot switch user"
 RUSS_MSG_UNDEF_SERVICE = "warning: undefined service"
@@ -262,6 +263,13 @@ libruss.russ_sconn_free.argtypes = [
 ]
 libruss.russ_sconn_free.restype = ctypes.POINTER(russ_sconn_Structure)
 
+libruss.russ_sconn_redial_and_splice = [
+    ctypes.POINTER(russ_sconn_Structure),
+    russ_deadline,
+    ctypes.POINTER(russ_req_Structure),
+]
+libruss.russ_sconn_redial_and_splice.restype = ctypes.c_int
+
 libruss.russ_sconn_sendfds.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),
     ctypes.c_int,
@@ -395,6 +403,12 @@ libruss.russ_svcnode_set_virtual.argtypes = [
     ctypes.c_int,
 ]
 libruss.russ_svcnode_set_virtual.restype = ctypes.POINTER(russ_svcnode_Structure)
+
+libruss.russ_svcnode_set_wildcard.argtypes = [
+    ctypes.POINTER(russ_svcnode_Structure),
+    ctypes.c_int,
+]
+libruss.russ_svcnode_set_wildcard.restype = ctypes.POINTER(russ_svcnode_Structure)
 
 libruss.russ_svr_new.argtypes = [
     ctypes.POINTER(russ_svcnode_Structure),

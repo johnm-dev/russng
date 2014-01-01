@@ -84,6 +84,9 @@ class ServiceNode:
     def set_virtual(self, value):
         return libruss.russ_svcnode_set_virtual(self._ptr, value)
 
+    def set_wildcard(self, value):
+        return libruss.russ_svcnode_set_wildcard(self._ptr, value)
+
 class Server:
     """Wrapper for russ_svr object and associated methods.
     """
@@ -134,8 +137,14 @@ class Server:
             else:
                 sys.stderr.write("error: cannot spawn thread\n")
 
+    def redial_and_splice(self, deadline, cconn):
+        return libruss.russ_svr_redial_and_splice(self._ptr, deadline, cconn._ptr)
+
     def set_auto_switch_user(self, value):
         return libruss.russ_svr_set_auto_switch_user(self._ptr, value)
+
+    def splice(self, cconn):
+        return libruss.russ_svr_splice(self._ptr, cconn._ptr)
 
 class Sess:
     """Wrapper for russ_sess.
