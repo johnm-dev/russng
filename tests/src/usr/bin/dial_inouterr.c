@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include <russ.h>
-#include <russ_experimental.h>
 
 void
 print_usage(char *prog_name) {
@@ -79,3 +78,4 @@ main(int argc, char **argv) {
 
 	exit(0);
 }
+
