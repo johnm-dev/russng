@@ -151,7 +151,6 @@ stop_server(char *svrname) {
 int
 setup_trackdir(void) {
 	if ((mkdir(trackdir, 0755) < 0) && (errno != EEXIST)) {
-		fprintf(stderr, "error: cannot set up trackdir (%s)\n", trackdir);
 		return -1;
 	}
 	return 0;
@@ -490,8 +489,14 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: confdir or trackdir are not configured\n");
 		exit(1);
 	}
-	setup_trackdir();
-	clean_trackdir();
+	if (setup_trackdir() < 0) {
+		fprintf(stderr, "error: cannot set up trackdir (%s)\n", trackdir);
+		exit(1);
+	}
+	if (clean_trackdir() < 0) {
+		fprintf(stderr, "error: cannot clean trackdir (%s)\n", trackdir);
+		exit(1);
+	}
 
 	if (russ_svr_announce(svr,
 		russ_conf_get(conf, "server", "path", NULL),
