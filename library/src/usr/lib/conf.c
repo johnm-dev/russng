@@ -796,7 +796,7 @@ russ_conf_write(struct russ_conf *self, FILE *fp) {
 
 	for (i = 0; i < self->len; i++) {
 		section = self->sections[i];
-		fprintf(fp, "[%s]\n", section->name, section->len, section->cap);
+		fprintf(fp, "[%s]\n", section->name);
 		for (j = 0; j < section->len; j++) {
 			item = section->items[j];
 			fprintf(fp, "%s=%s\n", item->option, item->value);
