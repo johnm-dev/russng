@@ -34,6 +34,8 @@
 
 #include "russ_priv.h"
 
+#define RUSS_SPATH_RESOLVE_SYMLINKS_MAX	32
+
 /**
 * Resolve spath by replacing prefixes and symlinks.
 *
@@ -63,7 +65,7 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p, int follow) {
 	char		*services_dir;
 	int		sdlen, cnt, stval;
 	int		changed;
-	int		n;
+	int		n, nfollow;
 
 	if ((spath == NULL) || (strncpy(buf, spath, sizeof(buf)) < 0)) {
 		return NULL;
@@ -83,6 +85,7 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p, int follow) {
 	* TODO: the following code could be simplified and
 	* clarified so that flow is obvious.
 	*/
+	nfollow = 0;
 	changed = 1;
 	while (changed) {
 		changed = 0;
@@ -131,6 +134,9 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p, int follow) {
 						}
 						continue;
 					} else if (follow && S_ISLNK(st.st_mode)) {
+						if (++nfollow > RUSS_SPATH_RESOLVE_SYMLINKS_MAX) {
+							return NULL;
+						}
 						if (readlink(buf, lnkbuf, sizeof(lnkbuf)) < 0) {
 							/* insufficient space */
 							return NULL;
