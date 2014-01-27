@@ -319,7 +319,7 @@ int russ_sconn_splice(struct russ_sconn *, struct russ_cconn *);
 /* spath.c */
 int russ_spath_split(char *, char **, char **);
 char *russ_spath_resolve(char *);
-char *russ_spath_resolve_with_uid(char *, uid_t *);
+char *russ_spath_resolve_with_uid(char *, uid_t *, int);
 
 /* str.c */
 int russ_str_count_sub(char *, char *);

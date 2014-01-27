@@ -51,10 +51,11 @@
 *
 * @param spath		service path
 * @param uid		pointer to uid (may be NULL)
+* @param follow		follow symlinks (0 to disable)
 * @return		absolute path (malloc'ed); NULL on failure
 */
 char *
-russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
+russ_spath_resolve_with_uid(char *spath, uid_t *uid_p, int follow) {
 	struct stat	st;
 	char		buf[RUSS_REQ_SPATH_MAX], lnkbuf[RUSS_REQ_SPATH_MAX], tmpbuf[RUSS_REQ_SPATH_MAX];
 	char		*bp, *bend, *bp2;
@@ -129,7 +130,7 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p) {
 							*bp = '/'; /* restore */
 						}
 						continue;
-					} else if (S_ISLNK(st.st_mode)) {
+					} else if (follow && S_ISLNK(st.st_mode)) {
 						if (readlink(buf, lnkbuf, sizeof(lnkbuf)) < 0) {
 							/* insufficient space */
 							return NULL;
@@ -191,7 +192,7 @@ char *
 russ_spath_resolve(char *spath) {
 	uid_t	uid;
 	uid = getuid();
-	return russ_spath_resolve_with_uid(spath, &uid);
+	return russ_spath_resolve_with_uid(spath, &uid, 1);
 }
 
 /**
