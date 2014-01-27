@@ -141,6 +141,58 @@ stop_server(char *svrname) {
 }
 
 /**
+* Simple case for russ_spath_resolve_with_uid without current uid.
+*/
+char *
+_russ_spath_resolve(char *spath) {
+	uid_t	uid;
+	uid = getuid();
+	return russ_spath_resolve_with_uid(spath, &uid, 0);
+}
+
+/**
+* Set up announce symlinks to the super server.
+*
+* @return		number of symlinks created; -1 on failure
+*/
+int
+setup_announce_paths(void) {
+	char	*path = NULL, *superpath = NULL, *rpath = NULL;
+	char	sympath[PATH_MAX];
+	char	**sections, *section;
+	int	cnt = 0, i, n;
+
+	superpath = russ_conf_get(conf, "server", "path", NULL);
+	if ((sections = russ_conf_sections(conf)) == NULL) {
+		return -1;
+	}
+
+	for (i = 0, section = sections[i]; section != NULL; i++, section = sections[i]) {
+		free(path);
+		free(rpath);
+		path = NULL;
+		rpath = NULL;
+
+		if ((section[0] != '/')
+			|| ((path = russ_conf_get(conf, section, "path", NULL)) == NULL)
+			|| ((rpath = _russ_spath_resolve(path)) == NULL)
+			|| ((n = snprintf(sympath, sizeof(sympath), "%s%s", superpath, section)) < 0)
+			|| (n >= sizeof(sympath))) {
+			continue;
+		}
+		if ((unlink(rpath) < 0) || (symlink(sympath, rpath) < 0)) {
+			continue;
+		}
+		cnt++;
+	}
+	free(superpath);
+	free(path);
+	free(rpath);
+	russ_conf_sarray0_free(sections);
+	return cnt;
+}
+
+/**
 * Set up the trackdir (working directory).
 *
 * The trackdir is where super puts all the temporary socket,
@@ -495,6 +547,10 @@ main(int argc, char **argv) {
 	}
 	if (clean_trackdir() < 0) {
 		fprintf(stderr, "error: cannot clean trackdir (%s)\n", trackdir);
+		exit(1);
+	}
+	if (setup_announce_paths() < 0) {
+		fprintf(stderr, "error: cannot create symlinks\n");
 		exit(1);
 	}
 
