@@ -473,11 +473,6 @@ svc_server_handler(struct russ_sess *sess) {
 	char			buf[RUSS_REQ_SPATH_MAX];
 	int			n;
 
-	if (req->opnum != RUSS_OPNUM_EXECUTE) {
-		return;
-	}
-
-	/* RUSS_OPNUM_EXECUTE only */
 	if ((svrname = match_svrname(req->spath)) == NULL) {
 		goto no_service;
 	}
