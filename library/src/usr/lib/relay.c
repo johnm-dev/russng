@@ -57,6 +57,15 @@ russ_relaystream_init(struct russ_relaystream *self, int rfd, int wfd, int bufsi
 	self->wfd = wfd;
 	self->auto_close = auto_close;
 	self->bidir = 0;
+
+	/* stats */
+	self->last_read = 0;
+	self->last_write = 0;
+	self->nbytes_read;
+	self->nbytes_written;
+	self->nreads = 0;
+	self->nwrites = 0;
+
 	return 0;
 }
 
@@ -93,10 +102,20 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close) {
 		free(self);
 		return NULL;
 	}
+
 	self->rfd = rfd;
 	self->wfd = wfd;
 	self->auto_close = auto_close;
 	self->bidir = 0;
+
+	/* stats */
+	self->last_read = 0;
+	self->last_write = 0;
+	self->nbytes_read;
+	self->nbytes_written;
+	self->nreads = 0;
+	self->nwrites = 0;
+
 	return self;
 }
 
@@ -325,6 +344,9 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exit_fd) {
 				}
 				rbuf->len = cnt;
 				rbuf->off = 0;
+				stream->last_read = russ_gettime();
+				stream->nbytes_read += cnt;
+				stream->nreads++;
 
 				pollfd->fd = stream->wfd;
 				pollfd->events = POLLOUT;
@@ -335,6 +357,10 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exit_fd) {
 					goto disable_stream;
 				}
 				rbuf->off += cnt;
+				stream->last_write = russ_gettime();
+				stream->nbytes_written += cnt;
+				stream->nwrites++;
+
 				if (rbuf->off == rbuf->len) {
 					rbuf->off = 0;
 					rbuf->len = 0;

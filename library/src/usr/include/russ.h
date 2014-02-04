@@ -220,6 +220,14 @@ struct russ_relaystream {
 	struct russ_buf	*rbuf;		/**< output russ_buf */
 	int		auto_close;	/**< close on HEN */
 	int		bidir;		/**< flag as bidirectional fds */
+
+	/* stats */
+	russ_deadline	last_write;
+	russ_deadline	last_read;
+	unsigned long	nbytes_read;
+	unsigned long	nbytes_written;
+	unsigned long	nreads;
+	unsigned long	nwrites;
 };
 
 struct russ_relay {
