@@ -120,6 +120,53 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close) {
 }
 
 /**
+* Read input into buffer.
+*
+* @param self		russ_relaystream object
+* @return		number of bytes read; -1 on failure
+*/
+int
+russ_relaystream_read(struct russ_relaystream *self) {
+	struct russ_buf	*rbuf;
+	int		cnt;
+
+	rbuf = self->rbuf;
+	if ((cnt = russ_read(self->rfd, rbuf->data, rbuf->cap)) > 0) {
+		rbuf->len = cnt;
+		rbuf->off = 0;
+		self->last_read = russ_gettime();
+		self->nbytes_read += cnt;
+		self->nreads++;
+	}
+	return cnt;
+}
+
+/**
+* Write from buffer to output.
+*
+* @param self		russ_relaystream object
+* @retrun		number of bytes written; -1 on failure
+*/
+int
+russ_relaystream_write(struct russ_relaystream *self) {
+	struct russ_buf	*rbuf;
+	int		cnt;
+
+	rbuf = self->rbuf;
+	if ((cnt = russ_write(self->wfd, rbuf->data+rbuf->off, rbuf->len)) > 0) {
+		rbuf->off += cnt;
+		if (rbuf->off == rbuf->len) {
+			rbuf->off = 0;
+			rbuf->len = 0;
+		}
+		self->last_write = russ_gettime();
+		self->nbytes_written += cnt;
+		self->nwrites++;
+	}
+	return cnt;
+}
+
+/**
 * Free relay object.
 *
 * @param self		relay object
@@ -337,34 +384,18 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exit_fd) {
 			stream = streams[i];
 
 			if (revents & POLLIN) {
-				rbuf = stream->rbuf;
-				if ((cnt = russ_read(fd, rbuf->data, rbuf->cap)) <= 0) {
+				if (russ_relaystream_read(stream) <= 0) {
 					/* EOF or error; unrecoverable */
 					goto disable_stream;
 				}
-				rbuf->len = cnt;
-				rbuf->off = 0;
-				stream->last_read = russ_gettime();
-				stream->nbytes_read += cnt;
-				stream->nreads++;
-
 				pollfd->fd = stream->wfd;
 				pollfd->events = POLLOUT;
 			} else if (revents & POLLOUT) {
-				rbuf = stream->rbuf;
-				if ((cnt = russ_write(fd, rbuf->data+rbuf->off, rbuf->len)) < 0) {
+				if (russ_relaystream_write(stream) < 0) {
 					/* error; unrecoverable */
 					goto disable_stream;
 				}
-				rbuf->off += cnt;
-				stream->last_write = russ_gettime();
-				stream->nbytes_written += cnt;
-				stream->nwrites++;
-
-				if (rbuf->off == rbuf->len) {
-					rbuf->off = 0;
-					rbuf->len = 0;
-
+				if (stream->rbuf->len == 0) {
 					if (exited) {
 						goto disable_stream;
 					}
