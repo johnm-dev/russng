@@ -239,7 +239,7 @@ struct russ_relaystream {
 struct russ_relay {
 	int				nstreams;
 	int				exit_fd;
-	struct russ_relaystream	**streams;
+	struct russ_relaystream		**streams;
 	struct pollfd			*pollfds;
 };
 
