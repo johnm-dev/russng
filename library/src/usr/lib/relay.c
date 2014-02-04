@@ -94,7 +94,7 @@ russ_relaystream_free(struct russ_relaystream *self) {
 * @return		relaystream on success; NULL on failure
 */
 struct russ_relaystream *
-russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close) {
+russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close, russ_relaystream_callback cb, void *cbarg) {
 	struct russ_relaystream	*self;
 
 	if (((self = malloc(sizeof(struct russ_relaystream))) == NULL)
@@ -107,6 +107,8 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close) {
 	self->wfd = wfd;
 	self->auto_close = auto_close;
 	self->bidir = 0;
+	self->cb = cb;
+	self->cbarg = cbarg;
 
 	/* stats */
 	self->last_read = 0;
@@ -137,6 +139,10 @@ russ_relaystream_read(struct russ_relaystream *self) {
 		self->last_read = russ_gettime();
 		self->nbytes_read += cnt;
 		self->nreads++;
+
+		if (self->cb) {
+			self->cb(self, 0, self->cbarg);
+		}
 	}
 	return cnt;
 }
@@ -162,6 +168,10 @@ russ_relaystream_write(struct russ_relaystream *self) {
 		self->last_write = russ_gettime();
 		self->nbytes_written += cnt;
 		self->nwrites++;
+
+		if (self->cb) {
+			self->cb(self, 1, self->cbarg);
+		}
 	}
 	return cnt;
 }
@@ -234,23 +244,44 @@ free_relay:
 * @param wfd		write fd
 * @param bufsize	relay buffer size
 * @param auto_close	auto close flag
+* @param cb		callback called for each I/O operation
+* @param cbarg		callback argument object
 * @return		index; -1 on error
 */
 int
-russ_relay_add(struct russ_relay *self, int rfd, int wfd, int bufsize, int auto_close) {
+russ_relay_add_with_callback(struct russ_relay *self, int rfd, int wfd, int bufsize, int auto_close,
+	russ_relaystream_callback cb, void *cbarg) {
 	int	i;
 
 	for (i = 0; (i < self->nstreams) && (self->streams[i] != NULL); i++);
 	if (i == self->nstreams) {
 		return -1;
 	}
-	if ((self->streams[i] = russ_relaystream_new(rfd, wfd, bufsize, auto_close)) == NULL) {
+	if ((self->streams[i] = russ_relaystream_new(rfd, wfd, bufsize, auto_close, cb, cbarg)) == NULL) {
 		return -1;
 	}
 	self->pollfds[i].fd = rfd;
 	self->pollfds[i].events = POLLIN;
 
 	return i;
+}
+
+/**
+* Register an fd pair to relay (rfd -> wfd).
+*
+* Like russ_relay_add_with_callback() but with NULL callback and
+* NULL callback arg.
+*
+* @param self		relay object
+* @param rfd		read fd
+* @param wfd		write fd
+* @param bufsize	relay buffer size
+* @param auto_close	auto close flag
+* @return		index; -1 on error
+*/
+int
+russ_relay_add(struct russ_relay *self, int rfd, int wfd, int bufsize, int auto_close) {
+	return russ_relay_add_with_callback(self, rfd, wfd, bufsize, auto_close, NULL, NULL);
 }
 
 /**

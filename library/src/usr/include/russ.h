@@ -214,12 +214,18 @@ struct russ_sess {
 /**
 * Relay and support objects.
 */
+struct russ_relaystream;
+
+typedef void (*russ_relaystream_callback)(struct russ_relaystream *, int, void *);
+
 struct russ_relaystream {
 	int		rfd;		/**< read fd */
 	int		wfd;		/**< write fd */
 	struct russ_buf	*rbuf;		/**< output russ_buf */
 	int		auto_close;	/**< close on HEN */
 	int		bidir;		/**< flag as bidirectional fds */
+	russ_relaystream_callback	cb; /**< callback */
+	void		*cbarg;		/**< callback argument */
 
 	/* stats */
 	russ_deadline	last_write;
@@ -295,6 +301,7 @@ russ_opnum russ_optable_find_opnum(struct russ_optable *, char *);
 struct russ_relay *russ_relay_new(int);
 struct russ_relay *russ_relay_free(struct russ_relay *);
 int russ_relay_add(struct russ_relay *, int, int, int, int);
+int russ_relay_add_with_callback(struct russ_relay *, int, int, int, int, russ_relaystream_callback, void *);
 int russ_relay_add2(struct russ_relay *, int, int, int, int);
 int russ_relay_find(struct russ_relay *, int, int);
 int russ_relay_remove(struct russ_relay *, int, int);
