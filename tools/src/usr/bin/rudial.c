@@ -71,6 +71,20 @@ print_dir_list(char *spath) {
 }
 
 void
+stats_callback(struct russ_relaystream *self, int dir, void *cbarg) {
+	russ_deadline	last;
+	int		fd, id;
+
+	id = (int)cbarg;
+	fd = (id>>16)&0xffff;
+	id = id&0xffff;
+	last = (dir == 0) ? self->last_read : self->last_write;
+	russ_dprintf(fd, "stats [%lu:%d:%c] r/w (%lu/%lu) nr/nw (%lu/%lu)\n",
+		last, id, (dir == 0) ? 'r' : 'w',
+		self->nreads, self->nwrites, self->nbytes_read, self->nbytes_written);
+}
+
+void
 print_usage(char *prog_name) {
 	if (strcmp(prog_name, "rudial") == 0) {
 		printf(
@@ -127,6 +141,11 @@ print_usage(char *prog_name) {
 "    Set buffer size for reading/writing.\n"
 "-t|--timeout <seconds>\n" \
 "    Allow a given amount of time to connect before aborting.\n"
+"--stats\n"
+"--statsfd <fd>\n"
+"    Output statistics for each read and write operation. The\n"
+"    default is to output to stderr (fd=2). For 'execute' operation\n"
+"    only.\n"
 );
 }
 
@@ -142,6 +161,8 @@ main(int argc, char **argv) {
 	char			*attrv[RUSS_REQ_ATTRS_MAX];
 	int			argi, attrc;
 	int			bufsize, exit_status;
+	int			show_stats;
+	int			cbfd;
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -150,6 +171,8 @@ main(int argc, char **argv) {
 	/* initialize */
 	bufsize = BUFSIZE;
 	debug = 0;
+	show_stats = 0;
+	cbfd = -1;
 	deadline = RUSS_DEADLINE_NEVER;
 	argi = 1;
 	attrc = 0;
@@ -191,6 +214,15 @@ main(int argc, char **argv) {
 		} else if ((strcmp(arg, "-h") == 0) || (strcmp(arg, "--help") == 0)) {
 			print_usage(prog_name);
 			exit(0);
+		} else if (strcmp(arg, "--stats") == 0) {
+			show_stats = 1;
+			cbfd = 2;
+		} else if ((strcmp(arg, "--statsfd") == 0) && (argi < argc)) {
+			show_stats = 1;
+			arg = argv[argi++];
+			if (sscanf(arg, "%d", (int *)&cbfd) < 0) {
+				cbfd = -1;
+			}
 		} else if (((strcmp(arg, "--timeout") == 0) || (strcmp(arg, "-t") == 0))
 			&& (argi < argc)) {
 
@@ -256,12 +288,22 @@ main(int argc, char **argv) {
 		}
 
 		{
-			struct russ_relay	*relay;
-			
+			struct russ_relay		*relay;
+			russ_relaystream_callback	cb = NULL;
+
+		
+			if ((strcmp(op, "execute") == 0) && (show_stats)) {
+				cb = stats_callback;
+				if ((cbfd < 0) || ((cbfd = dup(cbfd)) < 0)) {
+					fprintf(stderr, "error: bad callback descriptor\n");
+					exit(1);
+				}
+			}
+
 			relay = russ_relay_new(3);
-			russ_relay_add(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1);
-			russ_relay_add(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 1);
-			russ_relay_add(relay, cconn->fds[2], STDERR_FILENO, bufsize, 1);
+			russ_relay_add_with_callback(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1, cb, (void *)(cbfd<<16|0));
+			russ_relay_add_with_callback(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 1, cb, (void *)(cbfd<<16|1));
+			russ_relay_add_with_callback(relay, cconn->fds[2], STDERR_FILENO, bufsize, 1, cb, (void *)(cbfd<<16|2));
 
 			cconn->fds[0] = -1;
 			cconn->fds[1] = -1;
@@ -270,6 +312,9 @@ main(int argc, char **argv) {
 			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 				exit_status = RUSS_EXIT_SYS_FAILURE;
+			}
+			if (cbfd >= 0) {
+				close(cbfd);
 			}
 		}
 
