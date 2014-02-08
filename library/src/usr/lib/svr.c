@@ -279,7 +279,7 @@ cleanup:
 	if (req != NULL) {
 		req = russ_req_free(req);
 	}
-	russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+	russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 	russ_sconn_close(sconn);
 }
 
