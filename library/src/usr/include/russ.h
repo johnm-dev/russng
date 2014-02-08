@@ -289,6 +289,7 @@ void russ_lis_loop(struct russ_lis *, russ_accepthandler, russ_answerhandler, ru
 
 /* misc.c */
 int russ_dprintf(int, char *, ...);
+void *russ_free(void *);
 void *russ_malloc(size_t);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(char *);

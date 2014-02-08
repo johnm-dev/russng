@@ -77,6 +77,21 @@ free_buf:
 }
 
 /**
+* Free memory _and_ return NULL.
+*
+* This consolidates into one call the good practice of resetting
+* a pointer to NULL after free().
+*
+* @param p		pointer to malloc'd memory
+* @return		NULL
+*/
+void *
+russ_free(void *p) {
+	free(p);
+	return NULL;
+}
+
+/**
 * Wrapper for malloc to support 0-sized malloc requests
 * (see AIX malloc()).
 *
