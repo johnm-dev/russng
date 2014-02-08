@@ -218,11 +218,11 @@ russ_find_socket_addr(char *spath) {
 			saddr = dirname(saddr);
 		}
 		if (S_ISSOCK(st.st_mode)) {
-			free(spath);
+			spath = russ_free(spath);
 			return saddr;
 		}
-		free(spath);
-		free(saddr);
+		spath = russ_free(spath);
+		saddr = russ_free(saddr);
 	}
 	return NULL;
 }
@@ -298,13 +298,13 @@ russ_spath_split(char *spath, char **saddr, char **spath2) {
 		|| (snprintf(*spath2, RUSS_REQ_SPATH_MAX, "/%s", p) < 0)) {
 		goto free_saddr;
 	}
-	free(spath);
+	spath = russ_free(spath);
 	return 0;
 
 free_saddr:
-	free(*saddr);
-	free(*spath2);
+	*saddr = russ_free(*saddr);
+	*spath2 = russ_free(*spath2);
 free_spath:
-	free(spath);
+	spath = russ_free(spath);
 	return -1;
 }

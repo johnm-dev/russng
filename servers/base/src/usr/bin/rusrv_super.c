@@ -95,15 +95,15 @@ start_server(char *svrname) {
 	if (unlock_file(lockpath) < 0) {
 		/* unexpected */
 	}
-	free(execfile);
-	free(conffile);
+	execfile = russ_free(execfile);
+	conffile = russ_free(conffile);
 	return 0;
 
 unlock_and_error:
 	unlock_file(lockpath);
 error:
-	free(execfile);
-	free(conffile);
+	execfile = russ_free(execfile);
+	conffile = russ_free(conffile);
 	return -1;
 }
 
@@ -168,10 +168,8 @@ setup_announce_paths(void) {
 	}
 
 	for (i = 0, section = sections[i]; section != NULL; i++, section = sections[i]) {
-		free(path);
-		free(rpath);
-		path = NULL;
-		rpath = NULL;
+		path = russ_free(path);
+		rpath = russ_free(rpath);
 
 		if ((section[0] != '/')
 			|| ((path = russ_conf_get(conf, section, "path", NULL)) == NULL)
@@ -185,9 +183,9 @@ setup_announce_paths(void) {
 		}
 		cnt++;
 	}
-	free(superpath);
-	free(path);
-	free(rpath);
+	superpath = russ_free(superpath);
+	path = russ_free(path);
+	rpath = russ_free(rpath);
 	russ_conf_sarray0_free(sections);
 	return cnt;
 }
@@ -481,7 +479,7 @@ svc_server_handler(struct russ_sess *sess) {
 		|| ((spath = strdup(buf)) == NULL)) {
 		goto no_service;
 	}
-	free(req->spath);
+	req->spath = russ_free(req->spath);
 	req->spath = spath;
 	if (redial_and_splice(sess, svrname) < 0) {
 		goto no_service;
@@ -491,7 +489,7 @@ no_service:
 	russ_standard_answer_handler(sconn);
 	russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 done:
-	free(svrname);
+	svrname = russ_free(svrname);
 	russ_sconn_close(sconn);
 	exit(0);
 }

@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <russ_priv.h>
+
 /**
 * Free NULL-terminated string array.
 *
@@ -38,9 +40,9 @@ russ_sarray0_free(char **arr) {
 
 	if (arr) {
 		for (p = arr; *p != NULL; p++) {
-			free(*p);
+			*p = russ_free(*p);
 		}
-		free(arr);
+		arr = russ_free(arr);
 	}
 	return NULL;
 }
@@ -95,7 +97,7 @@ russ_sarray0_dup(char **arr, int max_cnt) {
 	return dst;
 free_dst:
 	for (; i >= 0; i--) {
-		free(dst[i]);
+		dst[i] = russ_free(dst[i]);
 	}
 	return NULL;
 }
@@ -219,10 +221,10 @@ russ_sarray0_update(char ***arrp, int index, char *s) {
 		*arrp = arr;
 	}
 	/* set */
-	free(arr[i]);
+	arr[i] = russ_free(arr[i]);
 	arr[i] = s;
 	return 0;
 free_s:
-	free(s);
+	s = russ_free(s);
 	return -1;
 }

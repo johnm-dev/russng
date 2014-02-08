@@ -96,8 +96,7 @@ russ_svr_announce(struct russ_svr *self, char *saddr, mode_t mode, uid_t uid, gi
 	}
 	return self->lis;
 free_saddr:
-	free(self->saddr);
-	self->saddr = NULL;
+	self->saddr = russ_free(self->saddr);
 	return NULL;
 }
 

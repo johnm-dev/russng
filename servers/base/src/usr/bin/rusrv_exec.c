@@ -116,10 +116,10 @@ get_user_info(uid_t uid, char **username, char **shell, char **lshell, char **ho
 
 	return 0;
 free_strings:
-	free(_username);
-	free(_shell);
-	free(_lshell);
-	free(_home);
+	_username = russ_free(_username);
+	_shell = russ_free(_shell);
+	_lshell = russ_free(_lshell);
+	_home = russ_free(_home);
 
 	return -1;
 }
@@ -250,11 +250,11 @@ dup_envp_plus(char **envp, char *username, char *home) {
 	return envp2;
 
 free_envp2_items:
-	free(envp2[0]);
-	free(envp2[1]);
-	free(envp2[2]);
+	envp2[0] = russ_free(envp2[0]);
+	envp2[1] = russ_free(envp2[1]);
+	envp2[2] = russ_free(envp2[2]);
 free_envp2:
-	free(envp2);
+	envp2 = russ_free(envp2);
 	return NULL;
 }
 
@@ -434,7 +434,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 	}
 	if (strncmp(cg_path, "/", 1) == 0) {
 		/* not relative */
-		free(cgroups_home);
+		cgroups_home = russ_free(cgroups_home);
 		cgroups_home = "";
 	}
 	if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroups_home, cg_path)) < 0)
@@ -450,7 +450,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	free(req->spath); /* assumes dynamic allocation */
+	req->spath = russ_free(req->spath); /* assumes dynamic allocation */
 	req->spath = next_spath;
 
 	/* forward to "next" handler */

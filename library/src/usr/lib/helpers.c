@@ -216,7 +216,7 @@ russ_execl(russ_deadline deadline, char *spath, char **attrv, ...) {
 		return NULL;
 	}
 	cconn = russ_dialv(deadline, "execute", spath, attrv, argv);
-	free(argv);
+	argv = russ_free(argv);
 
 	return cconn;
 }

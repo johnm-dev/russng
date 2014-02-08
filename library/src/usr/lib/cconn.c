@@ -44,7 +44,7 @@
 */
 struct russ_cconn *
 russ_cconn_free(struct russ_cconn *self) {
-	free(self);
+	self = russ_free(self);
 	return NULL;
 }
 
@@ -248,8 +248,8 @@ russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **a
 		|| (russ_cconn_recvfds(cconn, deadline) < 0)) {
 		goto free_request;
 	}
-	free(saddr);
-	free(spath2);
+	saddr = russ_free(saddr);
+	spath2 = russ_free(spath2);
 	russ_fds_close(&cconn->sd, 1);	/* sd not needed anymore */
 	russ_req_free(req);
 	return cconn;
@@ -258,10 +258,10 @@ free_request:
 	russ_req_free(req);
 close_cconn:
 	russ_cconn_close(cconn);
-	free(cconn);
+	cconn = russ_free(cconn);
 free_saddr:
-	free(saddr);
-	free(spath2);
+	saddr = russ_free(saddr);
+	spath2 = russ_free(spath2);
 	return NULL;
 }
 
@@ -305,7 +305,7 @@ russ_diall(russ_deadline deadline, char *op, char *spath, char **attrv, ...) {
 	va_end(ap);
 
 	cconn = russ_dialv(deadline, op, spath, attrv, argv);
-	free(argv);
+	argv = russ_free(argv);
 
 	return cconn;
 }

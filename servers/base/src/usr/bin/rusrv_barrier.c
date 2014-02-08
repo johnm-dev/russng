@@ -118,9 +118,9 @@ backend_new_barrier(char *saddr, int count, time_t timeout) {
 	return barr;
 
 free_saddr:
-	free(barr->saddr);
+	barr->saddr = russ_free(barr->saddr);
 free_barr:
-	free(barr);
+	barr = russ_free(barr);
 	return NULL;
 }
 
@@ -141,11 +141,11 @@ backend_release_barrier(char ch) {
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			russ_conn_close(conn);
 			barrier->items[i].conn = russ_conn_free(conn);
-			free(barrier->items[i].tag);
+			barrier->items[i].tag = russ_free(barrier->items[i].tag);
 		}
 	}
 	barrier->nitems = 0;
-	free(barrier->items);
+	barrier->items = russ_free(barrier->items);
 }
 
 void
@@ -457,7 +457,7 @@ svc_new_handler(struct russ_sess *sess) {
 		}
 
 		backend_loop(conn, saddr, mode, uid, gid, count, timeout);
-		free(saddr);
+		saddr = russ_free(saddr);
 		break;
 	default:
 		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);

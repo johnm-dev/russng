@@ -90,13 +90,13 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	}
 
 	lis->sd = sd;
-	free(saddr);
+	saddr = russ_free(saddr);
 	return lis;
 
 close_sd:
 	russ_close(sd);
 free_saddr:
-	free(saddr);
+	saddr = russ_free(saddr);
 	return NULL;
 }
 
@@ -135,7 +135,7 @@ russ_lis_accept(struct russ_lis *self, russ_deadline deadline) {
 close_sd:
 	russ_fds_close(&sconn->sd, 1);
 free_sconn:
-	free(sconn);
+	sconn = russ_free(sconn);
 	return NULL;
 }
 
@@ -159,7 +159,7 @@ russ_lis_close(struct russ_lis *self) {
 */
 struct russ_lis *
 russ_lis_free(struct russ_lis *self) {
-	free(self);
+	self = russ_free(self);
 	return NULL;
 }
 

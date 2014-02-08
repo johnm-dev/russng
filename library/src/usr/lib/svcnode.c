@@ -62,7 +62,7 @@ russ_svcnode_new(char *name, russ_svchandler handler) {
 	self->wildcard = 0;
 	return self;
 free_node:
-	free(self);
+	self = russ_free(self);
 	return NULL;
 }
 
@@ -75,8 +75,8 @@ free_node:
 struct russ_svcnode *
 russ_svcnode_free(struct russ_svcnode *self) {
 	if (self != NULL) {
-		free(self->name);
-		free(self);
+		self->name = russ_free(self->name);
+		self = russ_free(self);
 	}
 	return NULL;
 }

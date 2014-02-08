@@ -249,7 +249,7 @@ __dial_remote(struct russ_sess *sess, char *new_spath, char *section_name, char 
 	return 0;
 
 free_vars:
-	free(buf);
+	buf = russ_free(buf);
 	close(sd);
 	return -1;
 }
@@ -288,9 +288,9 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 	russ_conn_exit(conn, exit_status);
 
 free_vars:
-	free(method);
-	free(cluster_name);
-	free(hostname);
+	method = russ_free(method);
+	cluster_name = russ_free(cluster_name);
+	hostname = russ_free(hostname);
 	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 }
 

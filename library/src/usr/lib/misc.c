@@ -71,7 +71,7 @@ russ_dprintf(int fd, char *format, ...) {
 	/* fallthrough */
 free_buf:
 	if (buf != _buf) {
-		free(buf);
+		buf = russ_free(buf);
 	}
 	return n;
 }
@@ -145,12 +145,12 @@ russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
 		|| (setuid(uid) < 0)) {
 		goto restore;
 	}
-	free(_gids);
+	_gids = russ_free(_gids);
 	return 0;
 restore:
 	/* restore setting */
 	setgroups(_ngids, _gids);
-	free(_gids);
+	_gids = russ_free(_gids);
 	setgid(_gid);
 	/* no need to restore uid */
 	return -1;
@@ -170,9 +170,9 @@ russ_unlink(char *saddr) {
 		return -1;
 	}
 	if (unlink(saddr) < 0) {
-		free(saddr);
+		saddr = russ_free(saddr);
 		return -1;
 	}
-	free(saddr);
+	saddr = russ_free(saddr);
 	return 0;
 }

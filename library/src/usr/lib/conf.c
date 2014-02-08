@@ -46,9 +46,9 @@
 */
 static void
 __russ_confitem_free(struct russ_confitem *self) {
-	free(self->option);
-	free(self->value);
-	free(self);
+	self->option = russ_free(self->option);
+	self->value = russ_free(self->value);
+	self = russ_free(self);
 }
 
 /**
@@ -104,8 +104,8 @@ __russ_confsection_new(char *section_name) {
 	}
 	return self;
 free_all:
-	free(self->name);
-	free(self);
+	self->name = russ_free(self->name);
+	self = russ_free(self);
 	return NULL;
 }
 
@@ -121,9 +121,9 @@ __russ_confsection_free(struct russ_confsection *self) {
 	for (i = 0; i < self->len; i++) {
 		__russ_confitem_free(self->items[i]);
 	}
-	free(self->name);
-	free(self->items);
-	free(self);
+	self->name = russ_free(self->name);
+	self->items = russ_free(self->items);
+	self = russ_free(self);
 }
 
 /**
@@ -225,7 +225,7 @@ russ_conf_new(void) {
 	}
 	return self;
 free_all:
-	free(self);
+	self = russ_free(self);
 	return NULL;
 }
 
@@ -241,8 +241,8 @@ russ_conf_free(struct russ_conf *self) {
 	for (i = 0; i < self->len; i++) {
 		__russ_confsection_free(self->sections[i]);
 	}
-	free(self->sections);
-	free(self);
+	self->sections = russ_free(self->sections);
+	self = russ_free(self);
 }
 
 /**
@@ -703,9 +703,9 @@ russ_conf_sarray0_free(char **sarray0) {
 
 	if (sarray0) {
 		for (p = sarray0; *p != NULL; p++) {
-			free(*p);
+			*p = russ_free(*p);
 		}
-		free(sarray0);
+		sarray0 = russ_free(sarray0);
 	}
 }
 

@@ -136,7 +136,7 @@ svc_root_value_handler(struct russ_sess *sess) {
 			} else {
 				*p1 = '/';
 			}
-			free(req->spath);
+			req->spath = russ_free(req->spath);
 			req->spath = p1;
 			break;
 		}
@@ -156,12 +156,12 @@ svc_root_value_handler(struct russ_sess *sess) {
 		russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 		exit(0);
 	}
-	free(spath);
+	spath = russ_free(spath);
 	russ_standard_answer_handler(sconn);
 	return;
 
 failed_update:
-	free(spath);
+	spath = russ_free(spath);
 	if (russ_standard_answer_handler(sconn) == 0) {
 		russ_sconn_fatal(sconn, "error: could not set attribute/argument", RUSS_EXIT_FAILURE);
 	}

@@ -35,7 +35,7 @@ print_usage(char **argv) {
 
 	prog_name = strdup(argv[0]);
 	printf("usage: %s <spath> [...]\n", basename(prog_name));
-	free(prog_name);
+	prog_name = russ_free(prog_name);
 }
 
 int

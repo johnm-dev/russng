@@ -187,9 +187,9 @@ _dec_sarray0(char *b, char ***v, int *alen, int append_null) {
 	return b;
 free_array:
 	for (; i >= 0; i--) {
-		free(array[i]);
+		array[i] = russ_free(array[i]);
 	}
-	free(*array);
+	*array = russ_free(*array);
 	return NULL;
 }
 

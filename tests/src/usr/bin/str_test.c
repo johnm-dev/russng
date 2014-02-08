@@ -20,7 +20,7 @@ test_russ_str_dup_comp(void) {
 			break;
 		}
 		printf("spath (%s) i (%d) s (%s)\n", spath, i, s);
-		free(s);
+		s = russ_free(s);
 	};
 }
 

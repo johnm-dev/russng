@@ -23,7 +23,7 @@ rw_new(int type, int datafd) {
 		return NULL;
 	}
 	if (pipe(p) < 0) {
-		free(self);
+		self = russ_free(self);
 		return NULL;
 	}
 	self->id = -1;
@@ -42,7 +42,7 @@ rw_destroy(struct rw *self) {
 		close(self->wsigfd);
 	}
 	pthread_join(self->th, NULL);
-	free(self);
+	self = russ_free(self);
 	return NULL;
 }
 
@@ -198,7 +198,7 @@ dispatcher_new(int maxrws, int fd) {
 
 	if (((self = malloc(sizeof(struct dispatcher))) == NULL)
 		|| ((self->rws = malloc(sizeof(struct rw *)*maxrws)) == NULL)) {
-		free(self);
+		self = russ_free(self);
 		return NULL;
 	}
 
@@ -213,8 +213,8 @@ dispatcher_destroy(struct dispatcher *self) {
 	if (self == NULL) {
 		return NULL;
 	}
-	free(self->rws);
-	free(self);
+	self->rws = russ_free(self->rws);
+	self = russ_free(self);
 	return NULL;
 }
 

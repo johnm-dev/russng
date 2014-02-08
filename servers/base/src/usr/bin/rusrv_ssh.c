@@ -248,7 +248,7 @@ svc_userhostport_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
-	free(userhostport);
+	userhostport = russ_free(userhostport);
 }
 
 /**

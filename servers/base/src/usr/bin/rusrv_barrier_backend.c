@@ -86,9 +86,9 @@ new_barrier(char *saddr, int count, time_t timeout) {
 	return barr;
 
 free_saddr:
-	free(barr->saddr);
+	barr->saddr = russ_free(barr->saddr);
 free_barr:
-	free(barr);
+	barr = russ_free(barr);
 	return NULL;
 }
 
@@ -108,11 +108,11 @@ release_barrier(char ch) {
 			write(fd, &ch, 1);
 			russ_conn_close(conn);
 			barrier->items[i].conn = russ_conn_free(conn);
-			free(barrier->items[i].tag);
+			barrier->items[i].tag = russ_free(barrier->items[i].tag);
 		}
 	}
 	barrier->nitems = 0;
-	free(barrier->items);
+	barrier->items = russ_free(barrier->items);
 }
 
 void

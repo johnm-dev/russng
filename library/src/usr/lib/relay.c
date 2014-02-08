@@ -79,7 +79,7 @@ struct russ_relaystream *
 russ_relaystream_free(struct russ_relaystream *self) {
 	if (self) {
 		self->rbuf = russ_buf_free(self->rbuf);
-		free(self);
+		self = russ_free(self);
 	}
 	return NULL;
 }
@@ -99,7 +99,7 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close, russ_relayst
 
 	if (((self = malloc(sizeof(struct russ_relaystream))) == NULL)
 		|| ((self->rbuf = russ_buf_new(bufsize)) == NULL)) {
-		free(self);
+		self = russ_free(self);
 		return NULL;
 	}
 
@@ -187,12 +187,12 @@ russ_relay_free(struct russ_relay *self) {
 	int	i;
 
 	if (self) {
-		free(self->pollfds);
+		self->pollfds = russ_free(self->pollfds);
 		for (i = 0; i < self->nstreams; i++) {
 			self->streams[i] = russ_relaystream_free(self->streams[i]);
 		}
-		free(self->streams);
-		free(self);
+		self->streams = russ_free(self->streams);
+		self = russ_free(self);
 	}
 	return NULL;
 }

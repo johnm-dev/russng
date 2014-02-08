@@ -168,8 +168,7 @@ get_valid_userhost(char *spath) {
 				return userhost;
 			}
 		}
-		free(userhost);
-		userhost = NULL;
+		userhost = russ_free(userhost);
 	}
 	return userhost;
 }
@@ -189,7 +188,7 @@ svc_host_userhost_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
-	free(userhost);
+	userhost = russ_free(userhost);
 }
 
 /**
@@ -222,8 +221,8 @@ svc_host_userhost_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	free(userhost);
-	free(req->spath);
+	userhost = russ_free(userhost);
+	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 
 	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
@@ -324,8 +323,8 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	free(userhost);
-	free(req->spath);
+	userhost = russ_free(userhost);
+	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 
 	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
@@ -357,7 +356,7 @@ svc_net_userhost_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
-	free(userhost);
+	userhost = russ_free(userhost);
 }
 
 /**
@@ -390,8 +389,8 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	free(userhost);
-	free(req->spath);
+	userhost = russ_free(userhost);
+	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 }
@@ -421,7 +420,7 @@ svc_next_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: spath is too large", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	free(req->spath);
+	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 	svc_id_handler(sess);
 }
@@ -450,7 +449,7 @@ svc_random_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: spath is too large", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	free(req->spath);
+	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 	svc_id_handler(sess);
 }
@@ -493,7 +492,7 @@ load_hostsfile(char *filename) {
 		}
 		if ((line[0] == '\0') || (line[0] == '#')) {
 			/* ignore empty and comment lines */
-			free(line);
+			line = russ_free(line);
 			continue;
 		}
 		hostslist.hosts[i] = line;

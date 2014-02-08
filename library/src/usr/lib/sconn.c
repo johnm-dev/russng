@@ -44,7 +44,7 @@
 */
 struct russ_sconn *
 russ_sconn_free(struct russ_sconn *self) {
-	free(self);
+	self = russ_free(self);
 	return NULL;
 }
 
@@ -226,11 +226,11 @@ russ_sconn_await_request(struct russ_sconn *self, russ_deadline deadline) {
 
 		goto free_request;
 	}
-	free(dummy);
+	dummy = russ_free(dummy);
 	req->opnum = russ_optable_find_opnum(NULL, req->op);
 	return req;
 free_request:
-	free(dummy);
+	dummy = russ_free(dummy);
 	russ_req_free(req);
 	return NULL;
 }

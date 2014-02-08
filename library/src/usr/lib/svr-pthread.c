@@ -62,8 +62,7 @@ static void
 
 	/* free objects */
 	sconn = russ_sconn_free(sconn);
-	free(data);
-	data = NULL;
+	data = russ_free(data);
 
 	pthread_exit(NULL);
 }

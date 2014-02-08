@@ -313,7 +313,7 @@ _dial_for_ssh(struct russ_sess *sess, char *new_spath, char *section_name, char 
 	forward_bytes_over_ssh(conn, ssh_chan, buf, buf_size);
 
 free_vars:
-	free(buf);
+	buf = russ_free(buf);
 	exit_status = ssh_channel_get_exit_status(ssh_chan);
 	ssh_channel_send_eof(ssh_chan);
 	ssh_channel_close(ssh_chan);
@@ -416,9 +416,9 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 	russ_conn_exit(conn, exit_status);
 
 free_vars:
-	free(method);
-	free(cluster_name);
-	free(hostname);
+	method = russ_free(method);
+	cluster_name = russ_free(cluster_name);
+	hostname = russ_free(hostname);
 	russ_conn_exit(conn, RUSS_EXIT_FAILURE);
 }
 
