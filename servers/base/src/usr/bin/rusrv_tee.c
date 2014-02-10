@@ -44,7 +44,7 @@ extern char **environ;
 /* global */
 struct russ_conf	*conf = NULL;
 int			fds[RUSS_CONN_NFDS];
-char			*HELP = 
+const char		*HELP = 
 "Captures data transferred between client and server.\n"
 "\n"
 "/<attr>/...\n"

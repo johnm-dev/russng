@@ -37,7 +37,7 @@ extern char **environ;
 
 /* global */
 struct russ_conf	*conf = NULL;
-char			*HELP = 
+const char		*HELP = 
 "Provides access to remote user@host using ssh.\n"
 "\n"
 "/... <args>\n"

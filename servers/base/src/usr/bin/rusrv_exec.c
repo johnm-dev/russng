@@ -54,7 +54,7 @@ struct container {
 char			*cgroups_home;
 struct russ_conf	*conf = NULL;
 struct container	cont;
-char			*HELP =
+const char		*HELP =
 "Execute a command/program.\n"
 "\n"
 "/cgroup/<cgname>/login\n"

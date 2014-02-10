@@ -43,7 +43,7 @@ extern char **environ;
 
 /* global */
 struct russ_conf	*conf = NULL;
-char			*HELP = 
+const char		*HELP = 
 "Report on, monitor, and kill processes.\n"
 "\n"
 "/n/kill [<signal>] <pid> [...]\n"

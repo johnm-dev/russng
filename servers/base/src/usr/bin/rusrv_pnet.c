@@ -49,7 +49,7 @@ struct hostslist {
 struct russ_conf	*conf = NULL;
 char			*hostsfilename = NULL;
 struct hostslist	hostslist;
-char			*HELP = 
+const char		*HELP = 
 "Provides access to local/remote targets (e.g., user@host) using a\n"
 "relay (e.g., ssh service).\n"
 "\n"

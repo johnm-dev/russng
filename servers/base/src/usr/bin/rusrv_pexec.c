@@ -38,7 +38,7 @@
 int			gl_argc;
 char			**gl_argv;
 struct russ_conf	*conf = NULL;
-char			*HELP =
+const char		*HELP =
 "Personal execution server to quickly run a command/program in a\n"
 "preloaded login environment. Preloading the environment eliminates\n"
 "the environment configuration delay.\n"

@@ -43,7 +43,7 @@ extern char **environ;
 /* global */
 struct russ_conf	*conf = NULL;
 char			*confdir = NULL, *trackdir = NULL;
-char			*HELP = 
+const char		*HELP = 
 "Super server.\n";
 
 /**

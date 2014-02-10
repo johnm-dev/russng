@@ -68,7 +68,7 @@ struct barrier		*barrier = NULL;
 * backend
 */
 
-char *BACKEND_HELP =
+const char *BACKEND_HELP =
 "Barrier service instance.\n"
 "\n"
 "/cancel\n"
@@ -323,7 +323,7 @@ cleanup_and_exit:
 * frontend
 */
 
-char *FRONTEND_HELP =
+const char *FRONTEND_HELP =
 "Barrier service creator.\n"
 "\n"
 "Once the barrier is actually created, different services are\n"

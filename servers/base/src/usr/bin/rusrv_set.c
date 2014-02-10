@@ -39,7 +39,7 @@
 #define DEFAULT_DIAL_TIMEOUT	(30000)
 
 struct russ_conf	*conf = NULL;
-char			*HELP =
+const char		*HELP =
 "Intermediate service to set/modify attributes and positional\n"
 "arguments in dial request. Multiple settings can be made by\n"
 "separating them by the spath separator (/). The period (.) is used\n"

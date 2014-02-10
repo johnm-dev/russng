@@ -60,7 +60,7 @@
 
 /* global */
 struct russ_conf	*conf = NULL;
-char			*HELP = 
+const char		*HELP = 
 "Relays requests between hosts.\n"
 "\n"
 "Hosts are organized under a locally defined cluster name so that\n"

@@ -45,7 +45,7 @@
 #include "disp.h"
 
 struct russ_conf	*conf = NULL;
-char			*HELP =
+const char		*HELP =
 "Relay service (forwards bytes between local and remote).\n"
 "\n"
 "Hosts are organized under a locally defined cluster name so that\n"

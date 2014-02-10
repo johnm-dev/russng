@@ -37,7 +37,7 @@
 #include <russ.h>
 
 struct russ_conf	*conf = NULL;
-char			*HELP =
+const char		*HELP =
 "Echoes lines of input back.\n";
 
 void
