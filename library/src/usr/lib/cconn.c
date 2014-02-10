@@ -229,7 +229,7 @@ russ_cconn_send_request(struct russ_cconn *self, russ_deadline deadline, struct 
 * @return		client connection object; NULL on failure
 */
 struct russ_cconn *
-russ_dialv(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv) {
+russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv) {
 	struct russ_cconn	*cconn;
 	struct russ_req		*req;
 	struct russ_target	*targ;
@@ -278,7 +278,7 @@ free_saddr:
 * @return		client connection object, NULL on failure
 */
 struct russ_cconn *
-russ_diall(russ_deadline deadline, char *op, char *spath, char **attrv, ...) {
+russ_diall(russ_deadline deadline, const char *op, const char *spath, char **attrv, ...) {
 	struct russ_cconn	*cconn;
 	va_list			ap;
 	void			*p;

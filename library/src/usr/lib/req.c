@@ -42,7 +42,7 @@
 * @return		request object on success; NULL on failure
 */
 struct russ_req *
-russ_req_new(char *protocol_string, char *op, char *spath, char **attrv, char **argv) {
+russ_req_new(const char *protocol_string, const char *op, const char *spath, char **attrv, char **argv) {
 	struct russ_req	*self;
 	int		i;
 

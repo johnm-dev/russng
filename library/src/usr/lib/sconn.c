@@ -299,7 +299,7 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 * @return		0 on success; -1 on failure
 */
 int
-russ_sconn_exits(struct russ_sconn *self, char *msg, int exit_status) {
+russ_sconn_exits(struct russ_sconn *self, const char *msg, int exit_status) {
 	if (self->fds[3] < 0) {
 		return -1;
 	}
@@ -320,7 +320,7 @@ russ_sconn_exits(struct russ_sconn *self, char *msg, int exit_status) {
 *			server connection object is closed)
 */
 int
-russ_sconn_fatal(struct russ_sconn *self, char *msg, int exit_status) {
+russ_sconn_fatal(struct russ_sconn *self, const char *msg, int exit_status) {
 	int	ev;
 
 	ev = russ_sconn_exits(self, msg, exit_status);

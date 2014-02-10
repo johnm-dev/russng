@@ -45,7 +45,7 @@ struct russ_optable russ_optable[] = {
 * @return		op value; RUSS_OPNUM_EXTENSION if no match
 */
 russ_opnum
-russ_optable_find_opnum(struct russ_optable *self, char *str) {
+russ_optable_find_opnum(struct russ_optable *self, const char *str) {
 	if (self == NULL) {
 		self = russ_optable;
 	}

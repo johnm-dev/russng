@@ -254,22 +254,22 @@ struct russ_cconn *russ_cconn_new(void);
 void russ_cconn_close(struct russ_cconn *);
 void russ_cconn_close_fd(struct russ_cconn *, int);
 int russ_cconn_wait(struct russ_cconn *, russ_deadline, int *);
-struct russ_cconn *russ_dialv(russ_deadline, char *, char *, char **, char **);
-struct russ_cconn *russ_diall(russ_deadline, char *, char *, char **, ...);
+struct russ_cconn *russ_dialv(russ_deadline, const char *, const char *, char **, char **);
+struct russ_cconn *russ_diall(russ_deadline, const char *, const char *, char **, ...);
 
 /* handlers.c */
 struct russ_sconn *russ_standard_accept_handler(struct russ_lis *, russ_deadline);
 int russ_standard_answer_handler(struct russ_sconn *);
 
 /* helpers.c */
-int russ_dialv_wait(russ_deadline, char *, char *, char **, char **, int *);
-int russ_dialv_wait_inouterr(russ_deadline, char *, char *, char **, char **, int *, struct russ_buf **);
-int russ_dialv_wait_inouterr3(russ_deadline, char *, char *, char **, char **, int *, struct russ_buf *, struct russ_buf *, struct russ_buf *);
-struct russ_cconn *russ_execv(russ_deadline, char *, char **, char **);
-struct russ_cconn *russ_execl(russ_deadline, char *, char **, ...);
-struct russ_cconn *russ_help(russ_deadline, char *);
-struct russ_cconn *russ_info(russ_deadline, char *);
-struct russ_cconn *russ_list(russ_deadline, char *);
+int russ_dialv_wait(russ_deadline, const char *, const char *, char **, char **, int *);
+int russ_dialv_wait_inouterr(russ_deadline, const char *, const char *, char **, char **, int *, struct russ_buf **);
+int russ_dialv_wait_inouterr3(russ_deadline, const char *, const char *, char **, char **, int *, struct russ_buf *, struct russ_buf *, struct russ_buf *);
+struct russ_cconn *russ_execv(russ_deadline, const char *, char **, char **);
+struct russ_cconn *russ_execl(russ_deadline, const char *, char **, ...);
+struct russ_cconn *russ_help(russ_deadline, const char *);
+struct russ_cconn *russ_info(russ_deadline, const char *);
+struct russ_cconn *russ_list(russ_deadline, const char *);
 
 /* io.c */
 int russ_close(int);
@@ -288,15 +288,15 @@ struct russ_lis *russ_lis_free(struct russ_lis *);
 void russ_lis_loop(struct russ_lis *, russ_accepthandler, russ_answerhandler, russ_reqhandler);
 
 /* misc.c */
-int russ_dprintf(int, char *, ...);
+int russ_dprintf(int, const char *, ...);
 void *russ_free(void *);
 void *russ_malloc(size_t);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
-int russ_unlink(char *);
+int russ_unlink(const char *);
 
 /* optable.c */
 const char *russ_optable_find_op(struct russ_optable *, russ_opnum);
-russ_opnum russ_optable_find_opnum(struct russ_optable *, char *);
+russ_opnum russ_optable_find_opnum(struct russ_optable *, const char *);
 
 /* relay.c */
 struct russ_relay *russ_relay_new(int);
@@ -326,27 +326,27 @@ struct russ_sconn *russ_sconn_new(void);
 int russ_sconn_answer(struct russ_sconn *, int, int *, int *);
 struct russ_req *russ_sconn_await_request(struct russ_sconn *, russ_deadline);
 int russ_sconn_exit(struct russ_sconn *, int);
-int russ_sconn_exits(struct russ_sconn *, char *, int);
-int russ_sconn_fatal(struct russ_sconn *, char *, int);
+int russ_sconn_exits(struct russ_sconn *, const char *, int);
+int russ_sconn_fatal(struct russ_sconn *, const char *, int);
 int russ_sconn_redial_and_splice(struct russ_sconn *, russ_deadline, struct russ_req *);
 int russ_sconn_sendfds(struct russ_sconn *, int, int *, int *);
 int russ_sconn_splice(struct russ_sconn *, struct russ_cconn *);
 
 /* spath.c */
-int russ_spath_split(char *, char **, char **);
-char *russ_spath_resolve(char *);
-char *russ_spath_resolve_with_uid(char *, uid_t *, int);
+int russ_spath_split(const char *, char **, char **);
+char *russ_spath_resolve(const char *);
+char *russ_spath_resolve_with_uid(const char *, uid_t *, int);
 
 /* str.c */
-int russ_str_count_sub(char *, char *);
-char *russ_str_dup_comp(char *, char, int);
-int russ_str_get_comp(char *, char, int, char *, int);
+int russ_str_count_sub(const char *, const char *);
+char *russ_str_dup_comp(const char *, char, int);
+int russ_str_get_comp(const char *, char, int, char *, int);
 
 /* svcnode.c */
-struct russ_svcnode *russ_svcnode_new(char *, russ_svchandler);
+struct russ_svcnode *russ_svcnode_new(const char *, russ_svchandler);
 struct russ_svcnode *russ_svcnode_free(struct russ_svcnode *);
-struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, char *, russ_svchandler);
-struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, char *, char *, int);
+struct russ_svcnode *russ_svcnode_add(struct russ_svcnode *, const char *, russ_svchandler);
+struct russ_svcnode *russ_svcnode_find(struct russ_svcnode *, const char *, char *, int);
 int russ_svcnode_set_auto_answer(struct russ_svcnode *, int);
 int russ_svcnode_set_handler(struct russ_svcnode *, russ_svchandler);
 int russ_svcnode_set_virtual(struct russ_svcnode *, int);
@@ -355,11 +355,11 @@ int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
 /* svr.c */
 struct russ_svr *russ_svr_new(struct russ_svcnode *, int);
 struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
-struct russ_lis *russ_svr_announce(struct russ_svr *, char *, mode_t, uid_t, gid_t);
+struct russ_lis *russ_svr_announce(struct russ_svr *, const char *, mode_t, uid_t, gid_t);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
 int russ_svr_set_auto_switch_user(struct russ_svr *, int);
-int russ_svr_set_help(struct russ_svr *, char *);
+int russ_svr_set_help(struct russ_svr *, const char *);
 
 /* time.c */
 russ_deadline russ_gettime(void); /* internal */

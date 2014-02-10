@@ -41,7 +41,7 @@
 * @return		# of bytes written; -1 on error
 */
 int
-russ_dprintf(int fd, char *format, ...) {
+russ_dprintf(int fd, const char *format, ...) {
 	va_list	ap;
 	char	_buf[8192];
 	char	*buf;
@@ -165,14 +165,14 @@ restore:
 * @return		0 on success; -1 on failure
 */
 int
-russ_unlink(char *saddr) {
+russ_unlink(const char *saddr) {
 	if ((saddr = russ_spath_resolve(saddr)) == NULL) {
 		return -1;
 	}
 	if (unlink(saddr) < 0) {
-		saddr = russ_free(saddr);
+		saddr = russ_free((char *)saddr);
 		return -1;
 	}
-	saddr = russ_free(saddr);
+	saddr = russ_free((char *)saddr);
 	return 0;
 }

@@ -34,7 +34,7 @@
 * @return		# of instances found
 */
 int
-russ_str_count_sub(char *s, char *ss) {
+russ_str_count_sub(const char *s, const char *ss) {
 	int	ss_len, n;
 
 	ss_len = strlen(ss);
@@ -61,7 +61,7 @@ russ_str_count_sub(char *s, char *ss) {
 * @return		copy of component string; NULL on error/unavailable
 */
 char *
-russ_str_dup_comp(char *s, char sep, int idx) {
+russ_str_dup_comp(const char *s, char sep, int idx) {
 	char	*p;
 
 	for (; idx > 0; idx--) {
@@ -75,7 +75,7 @@ russ_str_dup_comp(char *s, char sep, int idx) {
 	} else {
 		s = strndup(s, p-s);
 	}
-	return s;
+	return (char *)s;
 }
 
 /**
@@ -91,7 +91,7 @@ russ_str_dup_comp(char *s, char sep, int idx) {
 * @return		0 on success; -1 on failure
 */
 int
-russ_str_get_comp(char *s, char sep, int idx, char *b, int sz) {
+russ_str_get_comp(const char *s, char sep, int idx, char *b, int sz) {
 	char	*p;
 
 	for(; idx > 0; idx--) {
@@ -101,7 +101,7 @@ russ_str_get_comp(char *s, char sep, int idx, char *b, int sz) {
 		s++;
 	}
 	if ((p = strchr(s, sep)) == NULL) {
-		p = s+strlen(s);
+		p = (char *)s+strlen(s);
 	}
 	if ((p-s > sz-1)
 		|| (strncpy(b, s, p-s) == NULL)) {

@@ -44,7 +44,7 @@
 * @return		service node object; NULL on failure
 */
 struct russ_svcnode *
-russ_svcnode_new(char *name, russ_svchandler handler) {
+russ_svcnode_new(const char *name, russ_svchandler handler) {
 	struct russ_svcnode	*self;
 
 	if ((self = malloc(sizeof(struct russ_svcnode))) == NULL) {
@@ -90,7 +90,7 @@ russ_svcnode_free(struct russ_svcnode *self) {
 * @return		child service node object; NULL on failure
 */
 struct russ_svcnode *
-russ_svcnode_add(struct russ_svcnode *self, char *name, russ_svchandler handler) {
+russ_svcnode_add(struct russ_svcnode *self, const char *name, russ_svchandler handler) {
 	struct russ_svcnode	*curr, *last, *node;
 	int			cmp;
 
@@ -135,7 +135,7 @@ russ_svcnode_add(struct russ_svcnode *self, char *name, russ_svchandler handler)
 * @return		matching service node object; NULL on failure
 */
 struct russ_svcnode *
-russ_svcnode_find(struct russ_svcnode *self, char *path, char *mpath, int mpath_cap) {
+russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int mpath_cap) {
 	struct russ_svcnode	*node;
 	char			*sep;
 	int			len, cmp;

@@ -71,7 +71,7 @@ __russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 * @see russ_dialv()
 */
 int
-russ_dialv_wait(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv, int *exit_status) {
+russ_dialv_wait(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv, int *exit_status) {
 	struct russ_buf	*rbufs[3];
 	int		ev, rv;
 	int		i;
@@ -105,7 +105,7 @@ russ_dialv_wait(russ_deadline deadline, char *op, char *spath, char **attrv, cha
 * @see russ_dialv()
 */
 int
-russ_dialv_wait_inouterr(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv,
+russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv,
 	int *exit_status, struct russ_buf **rbufs) {
 	struct russ_cconn	*cconn;
 	struct pollfd		pollfds[4];
@@ -178,7 +178,7 @@ close_fd:
 * Note: this function should not be used from C.
 */
 int
-russ_dialv_wait_inouterr3(russ_deadline deadline, char *op, char *spath, char **attrv, char **argv,
+russ_dialv_wait_inouterr3(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv,
 	int *exit_status, struct russ_buf *stdin, struct russ_buf *stdout, struct russ_buf *stderr) {
 	struct russ_buf	*rbufs[3];
 
@@ -195,7 +195,7 @@ russ_dialv_wait_inouterr3(russ_deadline deadline, char *op, char *spath, char **
 * @see russ_dialv()
 */
 struct russ_cconn *
-russ_execv(russ_deadline deadline, char *spath, char **attrv, char **argv) {
+russ_execv(russ_deadline deadline, const char *spath, char **attrv, char **argv) {
 	return russ_dialv(deadline, "execute", spath, attrv, argv);
 }
 
@@ -205,7 +205,7 @@ russ_execv(russ_deadline deadline, char *spath, char **attrv, char **argv) {
 * @see russ_diall()
 */
 struct russ_cconn *
-russ_execl(russ_deadline deadline, char *spath, char **attrv, ...) {
+russ_execl(russ_deadline deadline, const char *spath, char **attrv, ...) {
 	struct russ_cconn	*cconn;
 	va_list			ap;
 	char			**argv;
@@ -229,7 +229,7 @@ russ_execl(russ_deadline deadline, char *spath, char **attrv, ...) {
 * @return		client connection object
 */
 struct russ_cconn *
-russ_help(russ_deadline deadline, char *spath) {
+russ_help(russ_deadline deadline, const char *spath) {
 	return russ_dialv(deadline, "help", spath, NULL, NULL);
 }
 
@@ -241,7 +241,7 @@ russ_help(russ_deadline deadline, char *spath) {
 * @return		client connection object
 */
 struct russ_cconn *
-russ_info(russ_deadline deadline, char *spath) {
+russ_info(russ_deadline deadline, const char *spath) {
 	return russ_dialv(deadline, "info", spath, NULL, NULL);
 }
 
@@ -253,6 +253,6 @@ russ_info(russ_deadline deadline, char *spath) {
 * @return		client connection object
 */
 struct russ_cconn *
-russ_list(russ_deadline deadline, char *spath) {
+russ_list(russ_deadline deadline, const char *spath) {
 	return russ_dialv(deadline, "list", spath, NULL, NULL);
 }

@@ -73,7 +73,7 @@ int russ_connectunix_deadline(russ_deadline, char *);
 int russ_poll_deadline(russ_deadline, struct pollfd *, int);
 
 /* request.c */
-struct russ_req *russ_req_new(char *, char *, char *, char **, char **);
+struct russ_req *russ_req_new(const char *, const char *, const char *, char **, char **);
 struct russ_req *russ_req_free(struct russ_req *);
 
 /* socket.c */

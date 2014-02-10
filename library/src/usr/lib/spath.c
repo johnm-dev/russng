@@ -57,7 +57,7 @@
 * @return		absolute path (malloc'ed); NULL on failure
 */
 char *
-russ_spath_resolve_with_uid(char *spath, uid_t *uid_p, int follow) {
+russ_spath_resolve_with_uid(const char *spath, uid_t *uid_p, int follow) {
 	struct stat	st;
 	char		buf[RUSS_REQ_SPATH_MAX], lnkbuf[RUSS_REQ_SPATH_MAX], tmpbuf[RUSS_REQ_SPATH_MAX];
 	char		*bp, *bend, *bp2;
@@ -195,7 +195,7 @@ russ_spath_resolve_with_uid(char *spath, uid_t *uid_p, int follow) {
 * Simple case for russ_spath_resolve_with_uid without current uid.
 */
 char *
-russ_spath_resolve(char *spath) {
+russ_spath_resolve(const char *spath) {
 	uid_t	uid;
 	uid = getuid();
 	return russ_spath_resolve_with_uid(spath, &uid, 1);
@@ -208,7 +208,7 @@ russ_spath_resolve(char *spath) {
 * @return	socket address; NULL on failure
 */
 char *
-russ_find_socket_addr(char *spath) {
+russ_find_socket_addr(const char *spath) {
 	char		*saddr;
 	struct stat	st;
 
@@ -218,10 +218,10 @@ russ_find_socket_addr(char *spath) {
 			saddr = dirname(saddr);
 		}
 		if (S_ISSOCK(st.st_mode)) {
-			spath = russ_free(spath);
+			spath = russ_free((char *)spath);
 			return saddr;
 		}
-		spath = russ_free(spath);
+		spath = russ_free((char *)spath);
 		saddr = russ_free(saddr);
 	}
 	return NULL;
@@ -242,7 +242,7 @@ russ_find_socket_addr(char *spath) {
 * @return		0 on succes; -1 on failure
 */
 int
-russ_spath_split(char *spath, char **saddr, char **spath2) {
+russ_spath_split(const char *spath, char **saddr, char **spath2) {
 	struct russ_target	*targ;
 	struct stat		st;
 	char			*p, _spath2[RUSS_REQ_SPATH_MAX];
@@ -262,7 +262,7 @@ russ_spath_split(char *spath, char **saddr, char **spath2) {
 	* right); temporarily replacing '/' with '\0' avoids
 	* needless copying
 	*/
-	p = spath;
+	p = (char *)spath;
 	while (p != NULL) {
 		if ((p = index(p+1, '/')) != NULL) {
 			*p = '\0';
@@ -298,13 +298,13 @@ russ_spath_split(char *spath, char **saddr, char **spath2) {
 		|| (snprintf(*spath2, RUSS_REQ_SPATH_MAX, "/%s", p) < 0)) {
 		goto free_saddr;
 	}
-	spath = russ_free(spath);
+	spath = russ_free((char *)spath);
 	return 0;
 
 free_saddr:
 	*saddr = russ_free(*saddr);
 	*spath2 = russ_free(*spath2);
 free_spath:
-	spath = russ_free(spath);
+	spath = russ_free((char *)spath);
 	return -1;
 }

@@ -81,7 +81,7 @@ russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
 }
 
 struct russ_lis *
-russ_svr_announce(struct russ_svr *self, char *saddr, mode_t mode, uid_t uid, gid_t gid) {
+russ_svr_announce(struct russ_svr *self, const char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	if (self == NULL) {
 		return NULL;
 	}
@@ -146,7 +146,7 @@ russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
 * @return		0 on success; -1 on failure
 */
 int
-russ_svr_set_help(struct russ_svr *self, char *help) {
+russ_svr_set_help(struct russ_svr *self, const char *help) {
 	if (self == NULL) {
 		return -1;
 	}
