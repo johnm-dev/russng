@@ -1,5 +1,5 @@
 /*
-** include/russ.h
+* include/russ.h
 */
 
 /*
@@ -247,7 +247,7 @@ struct russ_relay {
 	struct pollfd			*pollfds;
 };
 
-/* buffer.c */
+/* buf.c */
 int russ_buf_init(struct russ_buf *, char *, int, int);
 struct russ_buf *russ_buf_new(int);
 struct russ_buf *russ_buf_free(struct russ_buf *);
@@ -284,7 +284,7 @@ ssize_t russ_readn_deadline(russ_deadline, int, char *, size_t);
 ssize_t russ_writen(int, char *, size_t);
 ssize_t russ_writen_deadline(russ_deadline, int, char *, size_t);
 
-/* listener.c */
+/* lis.c */
 struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_sconn *russ_lis_accept(struct russ_lis *, russ_deadline);
 void russ_lis_close(struct russ_lis *);
@@ -313,7 +313,7 @@ int russ_relay_remove(struct russ_relay *, int, int);
 int russ_relay_poll(struct russ_relay *, int);
 int russ_relay_serve(struct russ_relay *, int, int);
 
-/* request.c */
+/* req.c */
 
 /* sarray0.c */
 char **russ_sarray0_free(char **);

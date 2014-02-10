@@ -1,5 +1,5 @@
 /*
-** lib/svr-pthread.c
+* lib/svr-pthread.c
 */
 
 /*

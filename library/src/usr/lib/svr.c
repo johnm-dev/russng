@@ -1,5 +1,5 @@
 /*
-** lib/svr.c
+* lib/svr.c
 */
 
 /*

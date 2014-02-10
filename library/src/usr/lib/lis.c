@@ -1,5 +1,5 @@
 /*
-** lib/lis.c
+* lib/lis.c
 */
 
 /*

@@ -1,5 +1,5 @@
 /*
-** lib/socket.c
+* lib/socket.c
 */
 
 /*

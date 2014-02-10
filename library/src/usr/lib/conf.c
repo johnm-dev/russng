@@ -1,5 +1,5 @@
 /*
-* conf.c
+* lib/conf.c
 *
 * The following are closely modelled after the Python ConfigParser
 * including much of the terminology.

@@ -1,5 +1,5 @@
 /*
-** lib/handlers.c
+* lib/handlers.c
 */
 
 /*

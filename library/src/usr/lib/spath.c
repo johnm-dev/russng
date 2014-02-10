@@ -1,5 +1,5 @@
 /*
-** lib/spath.c
+* lib/spath.c
 */
 
 /*

@@ -1,5 +1,5 @@
 /*
-* russ_conf.h
+* include/russ_conf.h
 */
 
 /*

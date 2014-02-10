@@ -1,5 +1,5 @@
 /*
-** lib/req.c
+* lib/req.c
 */
 
 /*

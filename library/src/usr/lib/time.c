@@ -1,5 +1,5 @@
 /*
-** lib/time.c
+* lib/time.c
 */
 
 /*

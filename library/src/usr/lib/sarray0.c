@@ -1,5 +1,5 @@
 /*
-** lib/sarray0.c
+* lib/sarray0.c
 */
 
 /*

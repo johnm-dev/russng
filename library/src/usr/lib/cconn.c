@@ -1,5 +1,5 @@
 /*
-** lib/cconn.c
+* lib/cconn.c
 */
 
 /*

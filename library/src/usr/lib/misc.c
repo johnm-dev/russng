@@ -1,5 +1,5 @@
 /*
-** lib/misc.c
+* lib/misc.c
 */
 
 /*

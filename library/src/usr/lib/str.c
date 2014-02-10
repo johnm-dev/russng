@@ -1,5 +1,5 @@
 /*
-** lib/str.c
+* lib/str.c
 */
 
 /*

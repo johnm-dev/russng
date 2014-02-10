@@ -1,5 +1,5 @@
 /*
-** lib/buf.c
+* lib/buf.c
 */
 
 /*

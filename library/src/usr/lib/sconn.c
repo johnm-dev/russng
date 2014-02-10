@@ -1,5 +1,5 @@
 /*
-** lib/sconn.c
+* lib/sconn.c
 */
 
 /*
