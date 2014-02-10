@@ -63,7 +63,7 @@ russ_close(int fd) {
 * @return		# of bytes read or error/EOF
 */
 ssize_t
-russ_read(int fd, char *b, size_t count) {
+russ_read(int fd, void *b, size_t count) {
 	ssize_t	n;
 
 	while ((n = read(fd, b, count)) < 0) {
@@ -85,7 +85,7 @@ russ_read(int fd, char *b, size_t count) {
 * @return		# of bytes read or error/EOF
 */
 ssize_t
-russ_readline(int fd, char *b, size_t count) {
+russ_readline(int fd, void *b, size_t count) {
 	ssize_t	n;
 	size_t	total;
 	char	ch;
@@ -95,7 +95,7 @@ russ_readline(int fd, char *b, size_t count) {
 		if ((n = russ_read(fd, b, 1)) <= 0) {
 			break;
 		}
-		ch = *b;
+		ch = *((char *)b);
 		b += n;
 		total += n;
 		if (ch == '\n') {
@@ -120,9 +120,9 @@ russ_readline(int fd, char *b, size_t count) {
 * @return		# of bytes read; < count on error/EOF
 */
 ssize_t
-russ_readn(int fd, char *b, size_t count) {
+russ_readn(int fd, void *b, size_t count) {
 	ssize_t	n;
-	char	*bend;
+	void	*bend;
 
 	bend = b+count;
 	while (b < bend) {
@@ -144,11 +144,11 @@ russ_readn(int fd, char *b, size_t count) {
 * @return		# of bytes read; < count on error/EOF
 */
 ssize_t
-russ_readn_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
+russ_readn_deadline(russ_deadline deadline, int fd, void *b, size_t count) {
 	struct pollfd	pollfds[1];
 	int		rv, due_time;
 	ssize_t		n;
-	char		*bend;
+	void		*bend;
 
 	/* catch fd<0 before calling into poll() */
 	if (fd < 0) {
@@ -184,7 +184,7 @@ russ_readn_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
 * @return		# of bytes written; -1 on error
 */
 ssize_t
-russ_write(int fd, char *b, size_t count) {
+russ_write(int fd, void *b, size_t count) {
 	ssize_t	n;
 
 	while ((n = write(fd, b, count)) < 0) {
@@ -208,9 +208,9 @@ russ_write(int fd, char *b, size_t count) {
 * @return		# of bytes written; < count on error
 */
 ssize_t
-russ_writen(int fd, char *b, size_t count) {
+russ_writen(int fd, void *b, size_t count) {
 	ssize_t	n;
-	char	*bend;
+	void	*bend;
 
 	bend = b+count;
 	while (b < bend) {
@@ -235,11 +235,11 @@ russ_writen(int fd, char *b, size_t count) {
 * @return		# of bytes written; < count on error
 */
 ssize_t
-russ_writen_deadline(russ_deadline deadline, int fd, char *b, size_t count) {
+russ_writen_deadline(russ_deadline deadline, int fd, void *b, size_t count) {
 	struct pollfd	pollfds[1];
 	int		rv, due_time;
 	ssize_t		n;
-	char		*bend;
+	void		*bend;
 
 	/* catch fd<0 before calling into poll() */
 	if (fd < 0) {

@@ -277,12 +277,12 @@ struct russ_cconn *russ_list(russ_deadline, const char *);
 
 /* io.c */
 int russ_close(int);
-ssize_t russ_read(int, char *, size_t);
-ssize_t russ_readline(int, char *, size_t);
-ssize_t russ_readn(int, char *, size_t);
-ssize_t russ_readn_deadline(russ_deadline, int, char *, size_t);
-ssize_t russ_writen(int, char *, size_t);
-ssize_t russ_writen_deadline(russ_deadline, int, char *, size_t);
+ssize_t russ_read(int, void *, size_t);
+ssize_t russ_readline(int, void *, size_t);
+ssize_t russ_readn(int, void *, size_t);
+ssize_t russ_readn_deadline(russ_deadline, int, void *, size_t);
+ssize_t russ_writen(int, void *, size_t);
+ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
 
 /* lis.c */
 struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);
