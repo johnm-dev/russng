@@ -25,6 +25,10 @@
 #ifndef RUSS_H
 #define RUSS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <limits.h>
 #include <pthread.h>
 #include <stdint.h>
@@ -366,5 +370,9 @@ russ_deadline russ_gettime(void); /* internal */
 russ_deadline russ_to_deadline(int);
 russ_deadline russ_to_deadline_diff(russ_deadline);
 int russ_to_timeout(russ_deadline deadline);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* RUSS_H */

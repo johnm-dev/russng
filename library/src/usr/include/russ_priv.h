@@ -25,6 +25,10 @@
 #ifndef RUSS_PRIV_H
 #define RUSS_PRIV_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <poll.h>
 #include <stdint.h>
 #include <sys/socket.h>
@@ -80,5 +84,9 @@ struct russ_req *russ_req_free(struct russ_req *);
 int russ_get_creds(int, struct russ_creds *);
 int russ_recvfd(int, int *);
 int russ_sendfd(int, int);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* RUSS_PRIV_H */
