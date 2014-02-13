@@ -273,7 +273,7 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 	}
 	bp = buf;
 	bend = bp+sizeof(buf);
-	if (((bp = russ_enc_i(bp, bend, exit_status)) == NULL)
+	if (((bp = russ_enc_exit(bp, bend, exit_status)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, exit_string)) == NULL)) {
 		// error?
 		return -1;

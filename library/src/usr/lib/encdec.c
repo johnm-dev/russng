@@ -219,6 +219,17 @@ russ_dec_sarrayn(char *b, char ***vpp, int *alen) {
 	return _dec_sarray0(b, vpp, alen, 0);
 }
 
+/**
+* Decode exit status.
+* @param b		buffer
+* @param[out] exit_status	exit_status
+* @return		new buffer position; NULL if failure
+*/
+char *
+russ_dec_exit(char *b, int *exit_status) {
+	return russ_dec_i(b, exit_status);
+}
+
 /***** encoders *****/
 
 /**
@@ -414,4 +425,17 @@ russ_enc_sarray0(char *b, char *bend, char **v) {
 		}
 	}
 	return russ_enc_sarrayn(b, bend, v, alen);
+}
+
+/**
+* Encode exit status.
+*
+* @param b		buffer
+* @param bend		end of buffer
+* @param exit_status	exit_status
+* @return		new buffer position; NULL on failure
+*/
+char *
+russ_enc_exit(char *b, char *bend, int exit_status) {
+	return russ_enc_i(b, bend, exit_status);
 }

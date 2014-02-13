@@ -164,7 +164,7 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exit_statu
 					/* serious error; close fd? */
 					return -1;
 				}
-				russ_dec_i(buf, &_exit_status);
+				russ_dec_exit(buf, &_exit_status);
 				if (exit_status != NULL) {
 					*exit_status = _exit_status;
 				}

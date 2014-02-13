@@ -54,6 +54,7 @@ char *russ_dec_b(char *, char **);
 char *russ_dec_s(char *, char **);
 char *russ_dec_sarray0(char *, char ***, int *);
 char *russ_dec_sarrayn(char *, char ***, int *);
+char *russ_dec_exit(char *, int *);
 
 char *russ_enc_H(char *, char *, uint16_t);
 char *russ_enc_I(char *, char *, uint32_t);
@@ -64,6 +65,7 @@ char *russ_enc_b(char *, char *, char *, int);
 char *russ_enc_s(char *, char *, char *);
 char *russ_enc_sarrayn(char *, char *, char **, int);
 char *russ_enc_sarray0(char *, char *, char **);
+char *russ_enc_exit(char *, char *, int);
 
 /* fd.c */
 void russ_fds_init(int *, int, int);
