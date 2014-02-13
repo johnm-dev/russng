@@ -259,6 +259,9 @@ class Credentials:
         self.gid = gid
         self.pid = pid
 
+    def __repr__(self):
+        return "(uid=%d, gid=%d, pid=%s)" % (self.uid, self.gid, self.pid)
+
 class ServerConn(Conn):
     """Server connection.
     """
