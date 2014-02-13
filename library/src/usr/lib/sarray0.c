@@ -22,11 +22,49 @@
 # license--end
 */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <russ_priv.h>
+
+/**
+* Create NULL-terminated string array.
+*
+* @param n		new array size (not including the terminating NULL)
+* @param ...		
+* @return		new string array; NULL on failure
+*/
+char **
+russ_sarray0_new(int n, ...) {
+	va_list	ap;
+	char	**self, *s;
+	int	i;
+
+	if ((self = malloc(sizeof(char *)*(n+1))) == NULL) {
+		return NULL;
+	}
+	for (i = 0; i < n; i++) {
+		self[i] = NULL;
+	}
+	va_start(ap, n);
+	for (i = 0; i < n; i++) {
+		if ((s = va_arg(ap, char *)) == NULL) {
+			break;
+		}
+		if ((self[i] = strdup(s)) == NULL) {
+			goto freeall;
+		}
+	}
+	va_end(ap);
+
+	return self;
+freeall:
+	va_end(ap);
+	self = russ_sarray0_free(self);
+	return NULL;
+}
 
 /**
 * Free NULL-terminated string array.
