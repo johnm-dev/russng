@@ -366,7 +366,7 @@ libruss.russ_sconn_free.argtypes = [
 ]
 libruss.russ_sconn_free.restype = ctypes.POINTER(russ_sconn_Structure)
 
-libruss.russ_sconn_redial_and_splice = [
+libruss.russ_sconn_redial_and_splice.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),
     russ_deadline,
     ctypes.POINTER(russ_req_Structure),
