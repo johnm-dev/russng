@@ -226,8 +226,8 @@ russ_dec_sarrayn(char *b, char ***vpp, int *alen) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_exit(char *b, int *exit_status) {
-	return russ_dec_i(b, exit_status);
+russ_dec_exit(char *b, int *v) {
+	return russ_dec_i(b, v);
 }
 
 /**
@@ -467,12 +467,12 @@ russ_enc_sarray0(char *b, char *bend, char **v) {
 *
 * @param b		buffer
 * @param bend		end of buffer
-* @param exit_status	exit_status
+* @param v		exit_status
 * @return		new buffer position; NULL on failure
 */
 char *
-russ_enc_exit(char *b, char *bend, int exit_status) {
-	return russ_enc_i(b, bend, exit_status);
+russ_enc_exit(char *b, char *bend, int v) {
+	return russ_enc_i(b, bend, v);
 }
 
 /**
