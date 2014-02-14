@@ -191,25 +191,11 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exit_statu
 */
 int
 russ_cconn_send_request(struct russ_cconn *self, russ_deadline deadline, struct russ_req *req) {
-	char	buf[RUSS_REQ_BUF_MAX], *bp, *bend;
+	char	buf[RUSS_REQ_BUF_MAX], *bp = NULL;
 
-	bp = buf;
-	bend = buf+sizeof(buf);
 	if ((req == NULL)
-		|| ((bp = russ_enc_i(bp, bend, 0)) == NULL)
-		|| ((bp = russ_enc_s(bp, bend, req->protocol_string)) == NULL)
-		|| ((bp = russ_enc_b(bp, bend, NULL, 0)) == NULL) /* dummy */
-		|| ((bp = russ_enc_s(bp, bend, req->spath)) == NULL)
-		|| ((bp = russ_enc_s(bp, bend, req->op)) == NULL)
-		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
-		|| ((bp = russ_enc_sarray0(bp, bend, req->argv)) == NULL)) {
-		//|| ((bp = russ_enc_sarrayn(bp, bend, req->argv, req->argc)) == NULL)) {
-		return -1;
-	}
-
-	/* patch size and send */
-	russ_enc_i(buf, bend, bp-buf-4);
-	if (russ_writen_deadline(deadline, self->sd, buf, bp-buf) < bp-buf) {
+		|| ((bp = russ_enc_req(buf, buf+sizeof(buf), req)) == NULL)
+		|| (russ_writen_deadline(deadline, self->sd, buf, bp-buf) < bp-buf)) {
 		return -1;
 	}
 	return 0;

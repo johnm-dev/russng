@@ -230,6 +230,41 @@ russ_dec_exit(char *b, int *exit_status) {
 	return russ_dec_i(b, exit_status);
 }
 
+/**
+* Decode russ request object.
+*
+* @param b		buffer
+* @param[out] vpp	request object
+* @return		new buffer position; NULL if failure
+*/
+char *
+russ_dec_req(char *b, struct russ_req **v) {
+	struct russ_req	*req = NULL;
+	char		*dummy = NULL;
+	int		sz;
+
+	if ((v == NULL)
+		|| ((req = russ_req_new(NULL, NULL, NULL, NULL, NULL)) == NULL)) {
+		return NULL;
+	}
+	if (((b = russ_dec_i(b, &sz)) == NULL)
+		|| ((b = russ_dec_s(b, &(req->protocol_string))) == NULL)
+		|| (strcmp(RUSS_REQ_PROTOCOL_STRING, req->protocol_string) != 0)
+		|| ((b = russ_dec_b(b, &dummy)) == NULL)
+		|| ((b = russ_dec_s(b, &(req->spath))) == NULL)
+		|| ((b = russ_dec_s(b, &(req->op))) == NULL)
+		|| ((b = russ_dec_sarray0(b, &(req->attrv), &sz)) == NULL)
+		|| ((b = russ_dec_sarray0(b, &(req->argv), &sz)) == NULL)) {
+		dummy = russ_free(dummy);
+		req = russ_req_free(req);
+		return NULL;
+	}
+	dummy = russ_free(dummy);
+	req->opnum = russ_optable_find_opnum(NULL, req->op);
+	*v = req;
+	return b;
+}
+
 /***** encoders *****/
 
 /**
@@ -438,4 +473,31 @@ russ_enc_sarray0(char *b, char *bend, char **v) {
 char *
 russ_enc_exit(char *b, char *bend, int exit_status) {
 	return russ_enc_i(b, bend, exit_status);
+}
+
+/**
+* Encode russ request object.
+*
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		request object
+* @return		new buffer position; NULL on failure
+*/
+char *
+russ_enc_req(char *b, char *bend, struct russ_req *v) {
+	char	*_b = b;
+
+	if ((v == NULL)
+		|| ((b = russ_enc_i(b, bend, 0)) == NULL)
+		|| ((b = russ_enc_s(b, bend, v->protocol_string)) == NULL)
+		|| ((b = russ_enc_b(b, bend, NULL, 0)) == NULL) /* dummy */
+		|| ((b = russ_enc_s(b, bend, v->spath)) == NULL)
+		|| ((b = russ_enc_s(b, bend, v->op)) == NULL)
+		|| ((b = russ_enc_sarray0(b, bend, v->attrv)) == NULL)
+		|| ((b = russ_enc_sarray0(b, bend, v->argv)) == NULL)) {
+		return NULL;
+	}
+	/* patch size */
+	russ_enc_i(_b, bend, b-_b-4);
+	return b;
 }

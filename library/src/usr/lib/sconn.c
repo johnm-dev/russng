@@ -197,42 +197,18 @@ russ_sconn_splice(struct russ_sconn *self, struct russ_cconn *dconn) {
 struct russ_req *
 russ_sconn_await_request(struct russ_sconn *self, russ_deadline deadline) {
 	struct russ_req		*req;
-	char			buf[RUSS_REQ_BUF_MAX], *bp;
-	int			alen, size;
-	char			*dummy;
+	char			buf[RUSS_REQ_BUF_MAX], *bp = NULL;
+	int			size;
 
-	/* get request size, load, and upack */
-	bp = buf;
-	if ((russ_readn_deadline(deadline, self->sd, bp, 4) < 0)
-		|| ((bp = russ_dec_i(bp, &size)) == NULL)
-		|| (russ_readn_deadline(deadline, self->sd, bp, size) < 0)) {
-		return NULL;
-	}
-
-	if ((req = russ_req_new(NULL, NULL, NULL, NULL, NULL)) == NULL) {
+	/* need to get request size to load buffer */
+	if ((russ_readn_deadline(deadline, self->sd, buf, 4) < 0)
+		|| ((bp = russ_dec_i(buf, &size)) == NULL)
+		|| (russ_readn_deadline(deadline, self->sd, bp, size) < 0)
+		|| ((bp = russ_dec_req(buf, &req)) == NULL)) {
 		/* TODO: what about the connection? */
 		return NULL;
-		goto free_request;
 	}
-
-	dummy = NULL;
-	if (((bp = russ_dec_s(bp, &(req->protocol_string))) == NULL)
-		|| (strcmp(RUSS_REQ_PROTOCOL_STRING, req->protocol_string) != 0)
-		|| ((bp = russ_dec_b(bp, &dummy)) == NULL)
-		|| ((bp = russ_dec_s(bp, &(req->spath))) == NULL)
-		|| ((bp = russ_dec_s(bp, &(req->op))) == NULL)
-		|| ((bp = russ_dec_sarray0(bp, &(req->attrv), &alen)) == NULL)
-		|| ((bp = russ_dec_sarray0(bp, &(req->argv), &alen)) == NULL)) {
-
-		goto free_request;
-	}
-	dummy = russ_free(dummy);
-	req->opnum = russ_optable_find_opnum(NULL, req->op);
 	return req;
-free_request:
-	dummy = russ_free(dummy);
-	russ_req_free(req);
-	return NULL;
 }
 
 /**
