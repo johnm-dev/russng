@@ -137,14 +137,11 @@ class Server:
             else:
                 sys.stderr.write("error: cannot spawn thread\n")
 
-    def redial_and_splice(self, deadline, cconn):
-        return libruss.russ_svr_redial_and_splice(self._ptr, deadline, cconn._ptr)
-
     def set_auto_switch_user(self, value):
         return libruss.russ_svr_set_auto_switch_user(self._ptr, value)
 
-    def splice(self, cconn):
-        return libruss.russ_svr_splice(self._ptr, cconn._ptr)
+    def set_help(self, value):
+        return libruss.russ_svr_set_help(self._ptr, value)
 
 class Sess:
     """Wrapper for russ_sess.

@@ -285,9 +285,6 @@ class ServerConn(Conn):
         creds = self._ptr.contents.creds
         return Credentials(creds.uid, creds.gid, creds.pid)
 
-    def splice(self, cconn):
-        return libruss.russ_sconn_splice(self._ptr, cconn._ptr)
-
     def answer(self, nfds, cfds, sfds):
         if nfds:
             _cfds = (ctypes.c_int*nfds)(*tuple(cfds))
@@ -313,6 +310,12 @@ class ServerConn(Conn):
 
     def fatal(self, msg, exit_status):
         return libruss.russ_sconn_fatal(self._ptr, msg, exit_status)
+
+    def redial_and_splice(self, deadline, cconn):
+        return libruss.russ_sconn_redial_and_splice(self._ptr, deadline, cconn._ptr)
+
+    def splice(self, cconn):
+        return libruss.russ_sconn_splice(self._ptr, cconn._ptr)
 
     def standard_answer_handler(self):
         return libruss.russ_standard_answer_handler(self._ptr)

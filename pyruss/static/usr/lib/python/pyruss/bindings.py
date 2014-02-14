@@ -426,15 +426,15 @@ libruss.russ_svcnode_set_wildcard.argtypes = [
 ]
 libruss.russ_svcnode_set_wildcard.restype = ctypes.POINTER(russ_svcnode_Structure)
 
+#
+# from svr.c
+#
 libruss.russ_svr_new.argtypes = [
     ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_int,
 ]
 libruss.russ_svr_new.restype = ctypes.POINTER(russ_svr_Structure)
 
-#
-# from svr.c
-#
 libruss.russ_svr_accept.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
     russ_deadline,
@@ -461,6 +461,12 @@ libruss.russ_svr_set_auto_switch_user.argtypes = [
     ctypes.c_int,
 ]
 libruss.russ_svr_set_auto_switch_user.restype = ctypes.c_int
+
+libruss.russ_svr_set_help.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctypes.c_char_p,
+]
+libruss.russ_svr_set_help.restype = ctypes.c_int
 
 libruss.russ_svr_loop.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
