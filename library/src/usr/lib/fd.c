@@ -23,6 +23,8 @@
 */
 
 #include <stdio.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 /* external */
@@ -81,8 +83,14 @@ russ_make_pipes(int count, int *rfds, int *wfds) {
 	russ_fds_init(wfds, count, -1);
 
 	for (i = 0; i < count; i++) {
-		if (pipe(pfds) < 0) {
-			goto close_fds;
+		if (count == 3) {
+			if (socketpair(AF_UNIX, SOCK_STREAM, 0, pfds) < 0) {
+				goto close_fds;
+			}
+		} else {
+			if (pipe(pfds) < 0) {
+				goto close_fds;
+			}
 		}
 		rfds[i] = pfds[0];
 		wfds[i] = pfds[1];
