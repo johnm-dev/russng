@@ -121,10 +121,13 @@ class Server:
 
     def loop_thread(self):
         def helper(svr, sconn):
-            self.handler(sconn)
-            # failsafe exit info (if not provided)
-            sconn.fatal(pyruss.RUSS_MSG_NO_EXIT, pyruss.RUSS_EXIT_SYS_FAILURE)
-            sconn.free()
+            try:
+                self.handler(sconn)
+                # failsafe exit info (if not provided)
+                sconn.fatal(pyruss.RUSS_MSG_NO_EXIT, pyruss.RUSS_EXIT_SYS_FAILURE)
+                sconn.free()
+            except:
+                pass
 
         while True:
             sconn = self.accept(self._ptr.contents.accept_timeout)
