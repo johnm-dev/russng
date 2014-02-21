@@ -97,6 +97,15 @@ struct russ_relaystream *
 russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close, russ_relaystream_callback cb, void *cbarg) {
 	struct russ_relaystream	*self;
 
+	if (((rfd < 0) || (wfd < 0)) && (auto_close)) {
+		if (rfd < 0) {
+			close(rfd);
+		}
+		if (wfd < 0) {
+			close(wfd);
+		}
+		return NULL;
+	}
 	if (((self = malloc(sizeof(struct russ_relaystream))) == NULL)
 		|| ((self->rbuf = russ_buf_new(bufsize)) == NULL)) {
 		self = russ_free(self);
