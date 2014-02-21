@@ -80,6 +80,9 @@ int russ_connect_deadline(russ_deadline, int sd, struct sockaddr *, socklen_t);
 int russ_connectunix_deadline(russ_deadline, char *);
 int russ_poll_deadline(russ_deadline, struct pollfd *, int);
 
+/* misc.c */
+int russ_test_fd(int, int);
+
 /* req.c */
 struct russ_req *russ_req_new(const char *, const char *, const char *, char **, char **);
 struct russ_req *russ_req_free(struct russ_req *);

@@ -157,6 +157,24 @@ restore:
 }
 
 /**
+* Test an fd status using poll events.
+*
+* @param fd		file descriptor
+* @param events		poll events
+* @return		poll() result; -1 on failure
+*/
+int
+russ_test_fd(int fd, int events) {
+	struct pollfd	pollfds[1];
+	int		rv;
+
+	pollfds[0].fd = fd;
+	pollfds[0].events = events;
+	rv = poll(pollfds, 1, 0);
+	return (rv < 0) ? rv : pollfds[0].revents;
+}
+
+/**
 * Unlink/remove an existing socket file.
 *
 * Resolves the address and unlinks the file.
