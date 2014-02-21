@@ -176,3 +176,22 @@ russ_unlink(const char *saddr) {
 	saddr = russ_free((char *)saddr);
 	return 0;
 }
+
+/**
+* Write an (encoded) exit status to an fd.
+*
+* @param fd		file descriptor (presumably the exit fd)
+* @param exit_status	exit status to encode and write
+* @return		0 on success; -1 on failure
+*
+*/
+int
+russ_write_exit(int fd, int exit_status) {
+	char	buf[16], *bp;
+
+	if (((bp = russ_enc_exit(buf, buf+sizeof(buf), exit_status)) == NULL)
+		|| (russ_writen(fd, buf, bp-buf) < bp-buf)) {
+		return -1;
+	}
+	return 0;
+}

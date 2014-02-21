@@ -297,6 +297,7 @@ void *russ_free(void *);
 void *russ_malloc(size_t);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(const char *);
+int russ_write_exit(int, int);
 
 /* optable.c */
 const char *russ_optable_find_op(struct russ_optable *, russ_opnum);

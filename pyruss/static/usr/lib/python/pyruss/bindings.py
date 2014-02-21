@@ -313,6 +313,12 @@ libruss.russ_unlink.argtypes = [
 ]
 libruss.russ_unlink.restype = ctypes.c_int
 
+libruss.russ_write_exit.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+]
+libruss.russ_write_exit.restype = ctypes.c_int
+
 #
 # from sconn.c
 #
