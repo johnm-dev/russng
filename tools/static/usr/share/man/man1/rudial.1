@@ -1,0 +1,101 @@
+.TH RUDIAL "1" "" "russ 2.10" ""
+.SH NAME
+rudial, ruexec, ruhelp, ruls \- Client-side tools for accessing russ servers
+
+.SH SYNOPSIS
+.B rudial
+.RB [<option>]
+.I "<op> <spath> [<arg> ...]"
+
+.B ruexec
+.RB [<option>]
+.I "<spath> [<arg> ...]"
+
+.B ruhelp
+.RB [<option>]
+.I "<spath> [<arg> ...]"
+
+.B ruls
+.RB [<option>]
+.I "<spath> [<arg> ...]"
+
+.SH DESCRIPTION
+.PP
+These client-side tools are used to dial (connect to) a russ
+serivce. When connected to a russ service, file descriptors
+are returned, corresponding to stdin, stdout, stderr of the
+service, and can be used as usual. (Note that the file descriptors
+returned depends on the service.)
+
+.PP
+The standard exit code mechanism functions as usual and, in most
+cases, is returned by the service. Common exit codes are 0 for
+success, 1 for error. When there is a problem with the dial step,
+and exit code of 126 or 127 may be returned.
+
+.PP
+Options:
+.TP
+.B -a|--attr <name=value>
+Pass a "name=value" string to the service.
+
+.TP
+.B -b <bufsize>
+Set the buffer size for reading and writing operations.
+
+.TP
+.B -t|--timeout <seconds>
+Allow given amount of time to dial before aborting and returning an
+error exit code.
+
+.PP
+rudial is the generic form and takes a russ operation (<op>):
+.TP
+execute
+Execute the service <spath> on behalf of the client user.
+
+.TP
+help
+Return help for the server or service associated with the <spath>.
+
+.TP
+list
+Return a list of services at the <spath>.
+
+.PP
+The service path <spath> identifies a service as found in the
+service hierarchy of a russ server.
+
+.SS Helper Programs
+.PP
+To reduce verbosity of the rudial call, some helper programs are provided.
+All but ruls are direct replacements.
+
+.PP
+ruexec is equivalent to "rudial execute".
+
+.PP
+ruhelp is equivalent to "rudial help".
+
+.PP
+ruls is equivalent to "rudial list" except when the <spath> is a
+local filesystem object (e.g., directory). In such a case, a
+modified directory listing is output. This is helpful when
+navigating the filesystem and russ services.
+
+.SH SEE ALSO
+russ(7)
+
+.SH AUTHOR
+Written by John Marshall.
+
+.SH "REPORTING BUGS"
+Report bugs to: <...>.
+
+.SH COPYRIGHT
+Copyright \(co 2014 John Marshall.
+.br
+Unless otherwise indicated, this software is available under the
+terms of the 
+ls
+Apache License version 2.
