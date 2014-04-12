@@ -1,10 +1,23 @@
 #! /bin/bash
 #
-# tee
+# russexec
+#
+### BEGIN INIT INFO
+# Provides:          russexec
+# Required-Start:    $syslog $time $russ
+# Required-Stop:     $syslog $time
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: russexec services
+# Description:       russexec services
+### END INIT INFO
 
-SERVER_NAME=tee
-CONF_FILENAME=/etc/russ/conf/${SERVER_NAME}.conf
-PID_FILENAME=/var/run/russ/${SERVER_NAME}.pid
+SCRIPT_FILENAME=russexec
+SERVER_NAME=exec
+ETC_DIR=/etc/russ
+RUN_DIR=/var/run/russ
+CONF_FILENAME=${ETC_DIR}/conf/${SERVER_NAME}.conf
+PID_FILENAME=${RUN_DIR}/${SERVER_NAME}.pid
 
 case $1 in
 check)
@@ -22,6 +35,7 @@ status)
 	fi
 	;;
 start)
+	/etc/init.d/russ start
 	PID=`cat "${PID_FILENAME}" 2> /dev/null` && `kill -0 ${PID} 2> /dev/null`
 	if [ $? = 0 ]; then
 		echo "already running"
@@ -38,7 +52,7 @@ stop)
 	fi
 	;;
 *)
-	echo "usage: ${SERVER_NAME} {start|stop|restart|status}"
+	echo "usage: ${SCRIPT_FILENAME} {start|stop|restart|status}"
 	exit 1
 	;;
 esac

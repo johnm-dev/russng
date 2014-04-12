@@ -12,49 +12,18 @@
 # Description:       Sets up for russ-based services
 ### END INIT INFO
 
-RUSS_RUN_DIR="/var/run/russ"
-
-start_servers() {
-	mkdir -m 0755 -p "${RUSS_RUN_DIR}"
-	mkdir -m 0755 -p "${RUSS_RUN_DIR}/services"
-
-	filenames=`(cd /etc/russ/init; ls * | grep -v README)`
-	for filename in ${filenames}; do
-		if ( /etc/russ/init/${filename} check ); then
-			echo -n "${filename}: starting server ... "
-			/etc/russ/init/${filename} start
-			[ $? -eq 0 ] && echo "OK" || echo "FAILED"
-		fi
-	done
-}
-
-stop_servers() {
-	filenames=`(cd /etc/russ/init; ls * | grep -v README)`
-	for filename in ${filenames}; do
-		if ( /etc/russ/init/${filename} check ); then
-			echo -n "${filename}: stopping server ... "
-			/etc/russ/init/${filename} stop
-			[ $? -eq 0 ] && echo "OK" || echo "FAILED"
-		fi
-	done
-}
+RUN_DIR="/var/run/russ"
 
 case "$1" in
-restart)
-	stop_servers
-	sleep 1
-	start_servers
-	;;
 start)
-	echo "Starting standard russ servers"
-	start_servers
+	echo "Setup for standard russ servers"
+	mkdir -m 0755 -p "${RUN_DIR}"
+	mkdir -m 0755 -p "${RUN_DIR}/services"
 	;;
 stop)
-	echo "Stopping standard russ servers"
-	stop_servers
 	;;
 *)
-	echo "Usage: /etc/init.d/russ {start|stop}"
+	echo "Usage: /etc/init.d/russ start"
 	exit 2
 	;;
 esac

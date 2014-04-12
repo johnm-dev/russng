@@ -1,19 +1,19 @@
 #! /bin/bash
 #
-# russproc
+# russssh
 #
 ### BEGIN INIT INFO
-# Provides:          russproc
+# Provides:          russssh
 # Required-Start:    $syslog $time $russ
 # Required-Stop:     $syslog $time
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: russproc services
-# Description:       russproc services
+# Short-Description: russssh services
+# Description:       russssh services
 ### END INIT INFO
 
-SCRIPT_FILENAME=russproc
-SERVER_NAME=proc
+SCRIPT_FILENAME=russssh
+SERVER_NAME=ssh
 ETC_DIR=/etc/russ
 RUN_DIR=/var/run/russ
 CONF_FILENAME=${ETC_DIR}/conf/${SERVER_NAME}.conf
