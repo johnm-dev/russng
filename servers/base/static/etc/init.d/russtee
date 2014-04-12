@@ -41,13 +41,17 @@ start)
 		echo "already running"
 		exit 1
 	fi
-	rusrv_${SERVER_NAME} -f ${CONF_FILENAME} < /dev/null > /dev/null 2>&1 &
-	echo $! > "${PID_FILENAME}"
+	echo -n "starting server (${SERVER_NAME}) ... "
+	rusrv_${SERVER_NAME} -f ${CONF_FILENAME} < /dev/null > /dev/null 2>&1 & pid=$!
+	echo ${pid} > "${PID_FILENAME}"
+	kill -0 ${pid} && echo "OK" || { echo "FAILED"; exit 1; }
 	;;
 stop)
 	PID=`cat "${PID_FILENAME}" 2> /dev/null`
+	echo -n "stopping server (${SERVER_NAME}) ... "
 	if [ $? = 0 ]; then
 		kill ${PID} 2> /dev/null
+		[ $? -eq 0 ] && echo "OK" || echo "FAILED"
 		rm -f "${PID_FILENAME}" 2> /dev/null
 	fi
 	;;
