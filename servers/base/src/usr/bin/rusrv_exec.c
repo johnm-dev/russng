@@ -51,7 +51,7 @@ struct container {
 	long	id;
 };
 
-char			*cgroups_home;
+char			*cgroup_base;
 struct russ_conf	*conf = NULL;
 struct container	cont;
 const char		*HELP =
@@ -428,16 +428,16 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 
 	/* create container object */
 	cont.type = CONTAINER_TYPE_CGROUP;
-	if (cgroups_home == NULL) {
+	if (cgroup_base == NULL) {
 		russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	if (strncmp(cg_path, "/", 1) == 0) {
 		/* not relative */
-		cgroups_home = russ_free(cgroups_home);
-		cgroups_home = "";
+		cgroup_base = russ_free(cgroup_base);
+		cgroup_base = "";
 	}
-	if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/cgroup.procs", cgroups_home, cg_path)) < 0)
+	if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/cgroup.procs", cgroup_base, cg_path)) < 0)
 		|| (n > sizeof(cont.path))) {
 		russ_sconn_fatal(sconn, "error: cgroup path too long", RUSS_EXIT_FAILURE);
 		exit(0);
@@ -517,7 +517,7 @@ main(int argc, char **argv) {
 
 	/* container info initialization */
 	cont.type = CONTAINER_TYPE_NONE;
-	cgroups_home = russ_conf_get(conf, "job", "cgroups_home", NULL);
+	cgroup_base = russ_conf_get(conf, "cgroup", "base", NULL);
 
 	if (russ_svr_announce(svr,
 		russ_conf_get(conf, "server", "path", NULL),
