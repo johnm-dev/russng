@@ -188,6 +188,15 @@ squote_string(char *s) {
 	return s2;
 }
 
+void
+str_replace(char *s, char oldc, char newc) {
+	for (; *s != '\0'; s++) {
+		if (*s == oldc) {
+			*s = newc;
+		}
+	}
+}
+
 /*
 * Find "cg_path" in connection attrv list and return a copy of the
 * value part (i.e., string after the "cg_path=") which must be
@@ -424,6 +433,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
 			exit(0);
 		}
+		str_replace(cg_path, ':', '/');
 	}
 
 	/* create container object */
