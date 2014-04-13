@@ -35,25 +35,27 @@ status)
 	fi
 	;;
 start)
-	/etc/init.d/russ start
+	/etc/init.d/russ start > /dev/null
+	echo -n "starting server (${SERVER_NAME}) ... "
 	PID=`cat "${PID_FILENAME}" 2> /dev/null` && `kill -0 ${PID} 2> /dev/null`
 	if [ $? = 0 ]; then
-		echo "already running"
+		echo "RUNNING"
 		exit 1
 	fi
-	echo -n "starting server (${SERVER_NAME}) ... "
 	rusrv_${SERVER_NAME} -f ${CONF_FILENAME} < /dev/null > /dev/null 2>&1 & pid=$!
 	echo ${pid} > "${PID_FILENAME}"
 	kill -0 ${pid} && echo "OK" || { echo "FAILED"; exit 1; }
 	;;
 stop)
-	PID=`cat "${PID_FILENAME}" 2> /dev/null`
 	echo -n "stopping server (${SERVER_NAME}) ... "
-	if [ $? = 0 ]; then
-		kill ${PID} 2> /dev/null
-		[ $? -eq 0 ] && echo "OK" || echo "FAILED"
-		rm -f "${PID_FILENAME}" 2> /dev/null
+	PID=`cat "${PID_FILENAME}" 2> /dev/null`
+	if [ $? != 0 ]; then
+		echo "NOT RUNNING"
+		exit 0
 	fi
+	kill ${PID} 2> /dev/null
+	[ $? -eq 0 ] && echo "OK" || echo "FAILED"
+	rm -f "${PID_FILENAME}" 2> /dev/null
 	;;
 *)
 	echo "usage: ${SCRIPT_FILENAME} {start|stop|restart|status}"
