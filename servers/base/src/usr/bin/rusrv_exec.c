@@ -427,50 +427,52 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 	char			*next_spath = NULL;
 	int			n;
 
-	/* find cg_path */
-	if ((cg_path = get_cg_path(req->attrv)) == NULL) {
-		if ((cg_path = russ_str_dup_comp(req->spath, '/', 2)) == NULL) {
-			russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		/* find cg_path */
+		if ((cg_path = get_cg_path(req->attrv)) == NULL) {
+			if ((cg_path = russ_str_dup_comp(req->spath, '/', 2)) == NULL) {
+				russ_sconn_fatal(sconn, "error: bad cgroup", RUSS_EXIT_FAILURE);
+				exit(0);
+			}
+			str_replace(cg_path, ':', '/');
+		}
+
+		/* create container object */
+		cont.type = CONTAINER_TYPE_CGROUP;
+		if (cgroup_base == NULL) {
+			russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
 			exit(0);
 		}
-		str_replace(cg_path, ':', '/');
-	}
+		if (strncmp(cg_path, "/", 1) == 0) {
+			/* not relative */
+			cgroup_base = russ_free(cgroup_base);
+			cgroup_base = "";
+		}
+		if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/cgroup.procs", cgroup_base, cg_path)) < 0)
+			|| (n > sizeof(cont.path))) {
+			russ_sconn_fatal(sconn, "error: cgroup path too long", RUSS_EXIT_FAILURE);
+			exit(0);
+		}
 
-	/* create container object */
-	cont.type = CONTAINER_TYPE_CGROUP;
-	if (cgroup_base == NULL) {
-		russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	if (strncmp(cg_path, "/", 1) == 0) {
-		/* not relative */
-		cgroup_base = russ_free(cgroup_base);
-		cgroup_base = "";
-	}
-	if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/cgroup.procs", cgroup_base, cg_path)) < 0)
-		|| (n > sizeof(cont.path))) {
-		russ_sconn_fatal(sconn, "error: cgroup path too long", RUSS_EXIT_FAILURE);
-		exit(0);
-	}
+		/* patch request spath */
+		if (((next_spath = strchr(req->spath+1, '/')) == NULL)
+			|| ((next_spath = strchr(next_spath+1, '/')) == NULL)
+			|| ((next_spath = strdup(next_spath)) == NULL)) {
+			russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+			exit(0);
+		}
+		req->spath = russ_free(req->spath); /* assumes dynamic allocation */
+		req->spath = next_spath;
 
-	/* patch request spath */
-	if (((next_spath = strchr(req->spath+1, '/')) == NULL)
-		|| ((next_spath = strchr(next_spath+1, '/')) == NULL)
-		|| ((next_spath = strdup(next_spath)) == NULL)) {
-		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	req->spath = russ_free(req->spath); /* assumes dynamic allocation */
-	req->spath = next_spath;
-
-	/* forward to "next" handler */
-	if ((strcmp(req->spath, "/shell") == 0) || (strcmp(req->spath, "/login") == 0)) {
-		svc_loginshell_handler(sess);
-	} else if (strcmp(req->spath, "/simple") == 0) {
-		svc_simple_handler(sess);
-	} else {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
+		/* forward to "next" handler */
+		if ((strcmp(req->spath, "/shell") == 0) || (strcmp(req->spath, "/login") == 0)) {
+			svc_loginshell_handler(sess);
+		} else if (strcmp(req->spath, "/simple") == 0) {
+			svc_simple_handler(sess);
+		} else {
+			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			exit(0);
+		}
 	}
 }
 
