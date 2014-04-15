@@ -84,7 +84,16 @@ const char		*HELP =
 "\n"
 "/random/... <args>\n"
 "    Connect to a randomly selected target from the targetsfile\n"
-"    list.\n";
+"    list.\n"
+"\n"
+"/run/<index>/<method> <args>\n"
+"    Run exec-based service, where method corresponds to what is\n"
+"    provided by the exec server (e.g., simple, shell, login), at\n"
+"    target identified by a lookup into the targetsfile list at\n"
+"    <index>. A negative index starts at the last entry (1 is the\n"
+"    last entry). An index starting with : loops around to continue\n"
+"    the lookup. If a cgroup is defined in targetsfile, it is used\n"
+"    in the call.\n";
 
 /**
 * Handler for the / service.
@@ -290,7 +299,7 @@ svc_id_index_handler(struct russ_sess *sess) {
 }
 
 /**
-* Handler for the /id/<index>/... service.
+* Handler for the /run/<index>/... service.
 *
 * Convert:
 *	id/<index>/... -> <relay_addr>/<userhost>/...
@@ -459,6 +468,59 @@ svc_random_handler(struct russ_sess *sess) {
 	svc_id_handler(sess);
 }
 
+/**
+* Handler for the /run/<index>/... service.
+*
+* Convert:
+*	run/<index>/... -> <relay_addr>/<userhost>/+/exec/cgroup/<cgname>/...
+*
+* @param sess		session object
+*/
+void
+svc_run_index_other_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+	char			new_spath[RUSS_REQ_SPATH_MAX];
+	char			*relay_addr, *tail = NULL;
+	char			*userhost = NULL, *cgname = NULL, *exec_spath;
+	int			i, idx, n, wrap = 0;
+
+	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
+		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+
+	/* wrap if requested; handle negative indexes */
+	if (wrap) {
+		idx = idx % targetslist.n;
+	}
+	if ((idx < 0) && (-idx <= targetslist.n)) {
+		idx = targetslist.n+idx;
+	}
+
+	/* set up new spath */
+	tail = strchr(req->spath+1, '/');
+	tail = strchr(tail+1, '/')+1;
+	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
+	exec_spath = "+/exec";
+	userhost = targetslist.targets[idx].userhost;
+	cgname = targetslist.targets[idx].cgroup;
+	if (cgname == NULL) {
+		n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s/%s", relay_addr, userhost, exec_spath, tail);
+	} else {
+		n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s/cgroup/%s/%s", relay_addr, userhost, exec_spath, cgname, tail);
+	}
+	if ((n < 0)
+		|| (n >= sizeof(new_spath))) {
+		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
+		exit(0);
+	}
+	req->spath = russ_free(req->spath);
+	req->spath = strdup(new_spath);
+
+	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
+}
+
 struct russ_sconn *
 accept_handler(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_sconn	*sconn;
@@ -593,7 +655,17 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
 		|| (russ_svr_set_accepthandler(svr, accept_handler) < 0)
-		|| (russ_svr_set_help(svr, HELP) < 0)) {
+		|| (russ_svr_set_help(svr, HELP) < 0)
+
+		/* use svc_id_*_handlers as appropriate */
+		|| ((node = russ_svcnode_add(root, "run", svc_id_handler)) == NULL)
+		|| ((node = russ_svcnode_add(node, "*", svc_id_index_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| ((node = russ_svcnode_add(node, "*", svc_run_index_other_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
+		|| (russ_svcnode_set_auto_answer(node, 0) < 0)) {
+
 		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
 	}
