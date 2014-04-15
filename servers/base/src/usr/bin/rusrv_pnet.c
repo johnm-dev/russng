@@ -37,18 +37,23 @@ extern char **environ;
 
 #define DEFAULT_DIAL_TIMEOUT	(30000)
 #define DEFAULT_RELAY_ADDR	"+/ssh"
-#define MAX_HOSTS		(32768)
+#define MAX_TARGETS		(32768)
 
-struct hostslist {
-	char	*hosts[MAX_HOSTS];
-	int	nhosts;
-	int	next;
+struct target {
+	char	*userhost;
+	char	*cgroup;
+};
+
+struct targetslist {
+	struct target	targets[MAX_TARGETS];
+	int		n;
+	int		next;
 };
 
 /* global */
 struct russ_conf	*conf = NULL;
-char			*hostsfilename = NULL;
-struct hostslist	hostslist;
+char			*targetsfilename = NULL;
+struct targetslist	targetslist;
 const char		*HELP = 
 "Provides access to local/remote targets (e.g., user@host) using a\n"
 "relay (e.g., ssh service).\n"
@@ -60,12 +65,12 @@ const char		*HELP =
 "\n"
 "/host/<user@host>/... <args>\n"
 "    Connect to service ... at target (i.e., user@host) verified\n"
-"    by a lookup into the hostsfile list. Only available if a\n"
-"    hostsfile was given at startup.\n"
+"    by a lookup into the targetsfile list. Only available if a\n"
+"    targetsfile was given at startup.\n"
 "\n"
 "/id/<index>/... <args>\n"
 "    Connect to service ... at target identified by a lookup into\n"
-"    the hostsfile list at <index>. A negative index starts at the\n"
+"    the targetsfile list at <index>. A negative index starts at the\n"
 "    last entry (1 is the last entry). An index starting with :\n"
 "    loops around to continue the lookup.\n"
 "\n"
@@ -74,11 +79,11 @@ const char		*HELP =
 "    user@host).\n"
 "\n"
 "/next/... <args>\n"
-"    Connect to the 'next' target selected from the hostsfile\n"
+"    Connect to the 'next' target selected from the targetsfile\n"
 "    list. Each call bumps to 'next' and wraps to 0 as needed.\n"
 "\n"
 "/random/... <args>\n"
-"    Connect to a randomly selected target from the hostsfile\n"
+"    Connect to a randomly selected target from the targetsfile\n"
 "    list.\n";
 
 /**
@@ -106,7 +111,7 @@ svc_count_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
-		russ_dprintf(sconn->fds[1], "%d", hostslist.nhosts);
+		russ_dprintf(sconn->fds[1], "%d", targetslist.n);
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
@@ -137,11 +142,11 @@ svc_host_handler(struct russ_sess *sess) {
 	int			i;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		if (hostslist.nhosts == 0) {
+		if (targetslist.n == 0) {
 			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		} else {
-			for (i = 0; i < hostslist.nhosts; i++) {
-				russ_dprintf(sconn->fds[1], "%s\n", hostslist.hosts[i]);
+			for (i = 0; i < targetslist.n; i++) {
+				russ_dprintf(sconn->fds[1], "%s\n", targetslist.targets[i].userhost);
 			}
 			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		}
@@ -163,8 +168,8 @@ get_valid_userhost(char *spath) {
 	int	i;
 
 	if ((userhost = get_userhost(spath)) != NULL) {
-		for (i = 0; i < hostslist.nhosts; i++) {
-			if (strcmp(userhost, hostslist.hosts[i]) == 0) {
+		for (i = 0; i < targetslist.n; i++) {
+			if (strcmp(userhost, targetslist.targets[i].userhost) == 0) {
 				return userhost;
 			}
 		}
@@ -235,10 +240,10 @@ svc_id_handler(struct russ_sess *sess) {
 	int			i;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		if (hostslist.nhosts == 0) {
+		if (targetslist.n == 0) {
 			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
 		} else {
-			for (i = 0; i < hostslist.nhosts; i++) {
+			for (i = 0; i < targetslist.n; i++) {
 				russ_dprintf(sconn->fds[1], "%d\n", i);
 			}
 			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
@@ -261,7 +266,7 @@ get_valid_id_index(char *spath, int *idx, int *wrap) {
 	} else {
 		return -1;
 	}
-	if ((*idx < 0) || (*idx >= hostslist.nhosts)) {
+	if ((*idx < 0) || (*idx >= targetslist.n)) {
 		return -1;
 	}
 	return 0;
@@ -307,16 +312,16 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 
 	/* wrap if requested; handle negative indexes */
 	if (wrap) {
-		idx = idx % hostslist.nhosts;
+		idx = idx % targetslist.n;
 	}
-	if ((idx < 0) && (-idx <= hostslist.nhosts)) {
-		idx = hostslist.nhosts+idx;
+	if ((idx < 0) && (-idx <= targetslist.n)) {
+		idx = targetslist.n+idx;
 	}
 
 	/* set up new spath */
 	tail = strchr(req->spath+1, '/');
 	tail = strchr(tail+1, '/')+1;
-	userhost = hostslist.hosts[idx];
+	userhost = targetslist.targets[idx].userhost;
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
 	if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
 		|| (n >= sizeof(new_spath))) {
@@ -414,7 +419,7 @@ svc_next_handler(struct russ_sess *sess) {
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	int			idx, n;
 
-	idx = hostslist.next;
+	idx = targetslist.next;
 	if (((n = snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[6]))) < 0)
 		|| (n >= sizeof(new_spath))) {
 		russ_sconn_fatal(sconn, "error: spath is too large", RUSS_EXIT_FAILURE);
@@ -443,7 +448,7 @@ svc_random_handler(struct russ_sess *sess) {
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	int			idx, n;
 
-	idx = (random()/(double)RAND_MAX)*hostslist.nhosts;
+	idx = (random()/(double)RAND_MAX)*targetslist.n;
 	if (((n = snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[8]))) < 0)
 		|| (n >= sizeof(new_spath))) {
 		russ_sconn_fatal(sconn, "error: spath is too large", RUSS_EXIT_FAILURE);
@@ -459,21 +464,21 @@ accept_handler(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_sconn	*sconn;
 
 	if ((sconn = russ_lis_accept(self, deadline)) != NULL) {
-		hostslist.next = (hostslist.next+1 >= hostslist.nhosts) ? 0 : hostslist.next+1;
+		targetslist.next = (targetslist.next+1 >= targetslist.n) ? 0 : targetslist.next+1;
 		random(); /* tickle */
 	}
 	return sconn;
 }
 
 /**
-* Load hosts list from file.
+* Load targets list from file.
 *
-* @param filename	hosts filename
+* @param filename	targets filename
 * @return		0 on success; -1 on failure
 */
 int
-load_hostsfile(char *filename) {
-	char	*line;
+load_targetsfile(char *filename) {
+	char	*line, *p;
 	int	i;
 	size_t	line_size;
 	ssize_t	nbytes;
@@ -482,7 +487,7 @@ load_hostsfile(char *filename) {
 	if ((f = fopen(filename, "r")) == NULL) {
 		return -1;
 	}
-	for (i = 0, hostslist.nhosts = 0; i < MAX_HOSTS; i++) {
+	for (i = 0, targetslist.n = 0; i < MAX_TARGETS; i++) {
 		line = NULL;
 		if ((nbytes = getline(&line, &line_size, f)) < 0) {
 			break;
@@ -495,17 +500,27 @@ load_hostsfile(char *filename) {
 			line = russ_free(line);
 			continue;
 		}
-		hostslist.hosts[i] = line;
-		hostslist.nhosts++;
+		for (p = line; (!isblank(*p)) && (*p != '\0'); p++);
+		if (*p != '\0') {
+			*p = '\0';
+			for (p++; isblank(*p); p++);
+			if ((p != NULL) && ((p = strdup(p)) == NULL)) {
+				/* fatal: OOM */
+				return -1;
+			}
+		}
+		targetslist.targets[i].userhost = line;
+		targetslist.targets[i].cgroup = p;
+		targetslist.n++;
 	}
-	hostslist.next = -1;
+	targetslist.next = -1;
 	return 0;
 }
 
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_pnet [<conf options>] -- <hostsfile>\n"
+"usage: rusrv_pnet [<conf options>] -- <targetsfile>\n"
 "\n"
 "Routes connections over the network to a fixed set of targets\n"
 "identified by index or hostname.\n"
@@ -520,7 +535,7 @@ main(int argc, char **argv) {
 	signal(SIGPIPE, SIG_IGN);
 
 	srandom(time(NULL));
-	hostslist.nhosts = 0;
+	targetslist.n = 0;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
@@ -531,12 +546,12 @@ main(int argc, char **argv) {
 	}
 
 	if (argc < 2) {
-		fprintf(stderr, "error: missing hosts file\n");
+		fprintf(stderr, "error: missing targets file\n");
 		exit(1);
 	}
-	hostsfilename = argv[1];
-	if (load_hostsfile(hostsfilename) < 0) {
-		fprintf(stderr, "error: could not load hosts file\n");
+	targetsfilename = argv[1];
+	if (load_targetsfile(targetsfilename) < 0) {
+		fprintf(stderr, "error: could not load targets file\n");
 		exit(1);
 	}
 
