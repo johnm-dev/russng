@@ -337,7 +337,6 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
-	userhost = russ_free(userhost);
 	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 
