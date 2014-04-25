@@ -196,7 +196,8 @@ find_cgroup_base(void) {
 		}
 		base = next+1;
 	} while (next != NULL);
-	base = NULL;
+	/* fallback to initial path; assumes \0 at :s in paths */
+	base = strdup(paths);
 free_paths:
 	paths = russ_free(paths);
 	return base;
