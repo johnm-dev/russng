@@ -178,6 +178,31 @@ setup_by_pam(char *service_name, char *username) {
 #endif /* USE_PAM */
 
 char *
+find_cgroup_base(void) {
+	struct stat	st;
+	char		*paths, *base, *next;
+
+	if ((paths = russ_conf_get(conf, "cgroup", "base", NULL)) == NULL) {
+		return NULL;
+	}
+	base = paths;
+	do {
+		if ((next = strchr(base, ':')) != NULL) {
+			*next = '\0';
+		}
+		if ((stat(base, &st) == 0) && (S_ISDIR(st.st_mode))) {
+			base = strdup(base);
+			goto free_paths;
+		}
+		base = next+1;
+	} while (next != NULL);
+	base = NULL;
+free_paths:
+	paths = russ_free(paths);
+	return base;
+}
+
+char *
 squote_string(char *s) {
 	char	*s2;
 
@@ -529,7 +554,10 @@ main(int argc, char **argv) {
 
 	/* container info initialization */
 	cont.type = CONTAINER_TYPE_NONE;
-	cgroup_base = russ_conf_get(conf, "cgroup", "base", NULL);
+	if ((cgroup_base = find_cgroup_base()) == NULL) {
+		fprintf(stderr, "error: cannot find cgroup base\n");
+		exit(1);
+	}
 
 	if (russ_svr_announce(svr,
 		russ_conf_get(conf, "server", "path", NULL),
