@@ -113,8 +113,8 @@ russ_svcnode_add(struct russ_svcnode *self, const char *name, russ_svchandler ha
 		return NULL;
 	}
 	if (last == NULL) {
+		node->next = self->children;
 		self->children = node;
-		node->next = NULL;
 	} else {
 		last->next = node;
 		node->next = curr;
