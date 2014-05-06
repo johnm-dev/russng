@@ -34,30 +34,27 @@ Options:
 -a|--attr <name>=<value>
 	Provide attribute/environment variable settings. A
 	comma-separated list of environment variable names in
-	RURUN_ENV are also passed.
+	\$RURUN_ENV are also passed.
 --debug
 	Enable debugging. Or set RURUN_DEBUG=1.
---exec=simple|shell|login
-	Use a given exec method. See also --simple, --shell,
-	--login. Defaults to \$RURUN_EXEC_METHOD or
-	"${RURUN_EXEC_METHOD}".
---job_id <job_id>
-	Use a given job id to generate RURUN_TAG_FORMAT. Defaults to
-	\$JOB_ID.
---login	Use the exec/login launch.
---notag	Do not generate a tag. Use when not targetting cgroups.
+--exec simple|shell|login
+	Environment to launch with:
+	simple - without shell
+	shell - shell with basic environment
+	login - shell with login environmnet
+	Defaults to \$RURUN_EXEC_METHOD or \"${RURUN_EXEC_METHOD}\".
 --pnet <addr>
 	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
---tag_format <string>
-	Use a given format string, which is evaluated, to determine
-	the cg_path value passed to the exec service. Defaults to
-	\$RURUN_TAG_FORMAT or \"$RURUN_TAG_FORMAT\".
---shell	Use the exec/shell launch method.
---simple
-	Use the exec/simple launch method."
+--target_method id|host|run
+	Method to use to connect to the target: id, host, run.
+	Defaults to \$RURUN_TARGET_METHOD or \"${RURUN_TARGET_METHOD}\"."
 }
 
-	
+# defaults (null or unset)
+PROG_NAME=`basename $0`
+export RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
+export RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-run}
+
 if [ $# -gt 0 ]; then
 	if [ "$1" = "-h" -o "$1" = "--help" ]; then
 		print_usage
@@ -104,25 +101,13 @@ while [ $# -gt 0 ]; do
 		shift 1
 		RURUN_EXEC_METHOD=$1; shift 1
 		;;
-	--job_id)
-		shift 1
-		RURUN_JOB_ID="$1"; shift 1
-		;;
 	--login)
 		shift 1
 		RURUN_EXEC_METHOD=login
 		;;
-	--notag)
-		shift 1
-		RURUN_TAG_FORMAT=""
-		;;
 	--pnet)
 		shift 1
 		RURUN_PNET_ADDR="$1"; shift 1
-		;;
-	--tag_format)
-		shift 1
-		RURUN_TAG_FORMAT="$1"; shift 1
 		;;
 	--shell)
 		shift 1
@@ -147,53 +132,40 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-# defaults (null or unset)
-RURUN_JOB_ID=${RURUN_JOB_ID:-${JOB_ID}}
-RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
-RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-id}
-
-# defaults unset only
-RURUN_TAG_FORMAT=${RURUN_TAG_FORMAT-"jobs/\${RURUN_JOB_ID}-\${target}"}
-
 # debugging output
 if [ -n "${RURUN_DEBUG}" ]; then
 	echo "-----"
 	echo "target (${target})"
 	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
-	echo "RURUN_JOB_ID (${RURUN_JOB_ID})"
 	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
-	echo "RURUN_TAG_FORMAT (${RURUN_TAG_FORMAT})"
+	echo "RURUN_TARGET_METHOD (${RURUN_TARGET_METHOD})"
 	echo "-----"
-fi
-
-# set cg_path (if possible)
-if [ -n "${RURUN_TAG_FORMAT}" ]; then
-	cg_path=`eval echo "$RURUN_TAG_FORMAT"`
-	if [ -n "${cg_path}" ]; then
-		attrs+=("-a" "cg_path=${cg_path}")
-	fi
 fi
 
 # set path
 if [ -n "${RURUN_PNET_ADDR}" ]; then
 	case ${RURUN_TARGET_METHOD} in
 	host)
-		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${target}"
+		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${target}/+/exec/${RURUN_EXEC_METHOD}"
 		;;
 	id)
-		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${colon}${target}"
+		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${colon}${target}/+/exec/${RURUN_EXEC_METHOD}"
+		;;
+	run)
+		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${colon}${target}/${RURUN_EXEC_METHOD}"
 		;;
 	*)
-		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}"
+		echo "error: unknown target method (${RURUN_TARGET_METHOD})" 1>&2
+		exit 1
 		;;
 	esac
 elif [ -n "${RURUN_PNET_DIR}" ]; then
 	case ${RURUN_TARGET_METHOD} in
-	id)
-		path="${RURUN_PNET_DIR}/${target}"
+	id|run)
+		path="${RURUN_PNET_DIR}/${RURUN_TARGET_METHOD}/${target}"
 		;;
 	*)
-		echo "error: unsupported target method (${RURUN_TARGET_METHOD})" 1>&2
+		echo "error: unknown target method (${RURUN_TARGET_METHOD})" 1>&2
 		exit 1
 		;;
 	esac
@@ -201,7 +173,6 @@ else
 	echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_DIR are set" 1>&2
 	exit 1
 fi
-path="${path}/+/exec/${RURUN_EXEC_METHOD}"
 
 # mpirun-specific
 # TODO: eliminate
