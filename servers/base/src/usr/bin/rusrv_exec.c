@@ -474,7 +474,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 			cgroup_base = russ_free(cgroup_base);
 			cgroup_base = "";
 		}
-		if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/cgroup.procs", cgroup_base, cg_path)) < 0)
+		if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroup_base, cg_path)) < 0)
 			|| (n > sizeof(cont.path))) {
 			russ_sconn_fatal(sconn, "error: cgroup path too long", RUSS_EXIT_FAILURE);
 			exit(0);
