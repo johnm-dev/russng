@@ -23,6 +23,7 @@
 */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <libgen.h>
 #include <pwd.h>
 #ifdef USE_PAM
@@ -297,9 +298,9 @@ void
 execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd, char **argv, char **envp) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
-	FILE			*f;
 	char			**envp2;
 	pid_t			pid;
+	int			fd;
 	int			status;
 
 	if (setup_by_pam("rusrv_exec", username) < 0) {
@@ -319,15 +320,15 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 		break;
 	case CONTAINER_TYPE_CGROUP:
 		/* migrate self process to cgroup (affects child, too) */
-		if (((f = fopen(cont.path, "w")) ==  NULL)
-			|| (fprintf(f, "%d", getpid()) < 0)) {
-			if (f) {
-				fclose(f);
-			}
-			russ_sconn_fatal(sconn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-		fclose(f);
+                if (((fd = open(cont.path, O_WRONLY)) < 0)
+                        || (russ_dprintf(fd, "%d", getpid()) < 0)) {
+                        if (fd >= 0) {
+                                close(fd);
+                        }
+                        russ_sconn_fatal(sconn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
+                        exit(0);
+                }
+                fd = russ_close(fd);
 		break;
 	default:
 		russ_sconn_fatal(sconn, "error: unknown container type", RUSS_EXIT_FAILURE);
