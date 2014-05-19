@@ -66,14 +66,10 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_add(root, "confused", svc_chm_handler) == NULL)
 		|| (russ_svcnode_add(root, "happy", svc_chm_handler) == NULL)
 		|| (russ_svcnode_add(root, "mean", svc_chm_handler) == NULL)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
 		|| (russ_svr_set_auto_switch_user(svr, 1) < 0)
 		|| (russ_svr_set_help(svr, "Hello world example server.\n") < 0)) {
-		fprintf(stderr, "error: cannot set up\n");
-		exit(1);
-	}
-	if (russ_svr_announce(svr, argv[1], 0666, -1, -1) == NULL) {
-		fprintf(stderr, "error: cannot announce service\n");
+		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}
 	russ_svr_loop(svr);

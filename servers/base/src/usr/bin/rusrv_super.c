@@ -513,19 +513,8 @@ main(int argc, char **argv) {
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
 		exit(0);
-	} else if ((argc < 2) || ((conf = russ_conf_init(&argc, argv)) == NULL)) {
+	} else if ((conf = russ_conf_init(&argc, argv)) == NULL) {
 		fprintf(stderr, "error: cannot configure\n");
-		exit(1);
-	}
-
-	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "*", svc_server_handler)) == NULL)
-		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK)) == NULL)
-		|| (russ_svr_set_help(svr, HELP) < 0)) {
-		fprintf(stderr, "error: cannot set up\n");
 		exit(1);
 	}
 
@@ -547,12 +536,14 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (russ_svr_announce(svr,
-		russ_conf_get(conf, "server", "path", NULL),
-		russ_conf_getsint(conf, "server", "mode", 0600),
-		russ_conf_getint(conf, "server", "uid", getuid()),
-		russ_conf_getint(conf, "server", "gid", getgid())) == NULL) {
-		fprintf(stderr, "error: cannot announce service\n");
+	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "*", svc_server_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
+		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
+		|| (russ_svr_set_help(svr, HELP) < 0)) {
+		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}
 	russ_svr_loop(svr);
