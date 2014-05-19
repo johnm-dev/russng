@@ -299,6 +299,7 @@ russ_conf_init(int *argc, char **argv) {
 		}
 	}
 
+	/* move arguments to front */
 	for (j = 1; i < *argc; i++, j++) {
 		argv[j] = argv[i];
 	}
