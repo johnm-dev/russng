@@ -56,8 +56,18 @@ User ownership for the socket file. Default is to use the uid of
 the user calling rustart.
 
 .TP
+.B group=gid|groupname
+The group under which the server should run. Default is that of the
+calling user. Be very careful.
+
+.TP
 .B path=<server path>
 Path to the server executable to be started.
+
+.TP
+.B user=uid|username
+The user under which the server should run. Default is that of the
+calling user. Be very careful.
 
 .SS Other Attributes
 
