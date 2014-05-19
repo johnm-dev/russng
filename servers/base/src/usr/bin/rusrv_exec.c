@@ -541,8 +541,7 @@ main(int argc, char **argv) {
 	/* container info initialization */
 	cont.type = CONTAINER_TYPE_NONE;
 	if ((cgroup_base = find_cgroup_base()) == NULL) {
-		fprintf(stderr, "error: cannot find cgroup base\n");
-		exit(1);
+		fprintf(stderr, "warning: cannot find cgroup base\n");
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
