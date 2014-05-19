@@ -33,7 +33,7 @@
 * Create NULL-terminated string array.
 *
 * @param n		new array size (not including the terminating NULL)
-* @param ...		
+* @param ...		strings (at least n of them)
 * @return		new string array; NULL on failure
 */
 char **
