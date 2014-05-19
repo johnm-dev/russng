@@ -1,0 +1,101 @@
+.TH RUSTART "1" "" "russ 3.x" ""
+.SH NAME
+rustart \- Start a RUSS server
+
+.SH SYNOPSIS
+.B rustart
+.RB [<option>]
+.I "(-f <path>|-c <name>=<value>) [...] [-- ...]"
+
+.SH DESCRIPTION
+.PP
+rustart starts a RUSS server. The configuration file and settings
+are used to set up a socket file, start the server, and pass it a
+listener socket, and otherwise set things up. Arguments after the
+-- are passed to the server untouched.
+
+.PP
+Where:
+.TP
+.B -c <name>=<value>
+Set an attribute. The name is composed of a section name and an
+attribute name separated by a ":" (e.g., server:addr=+/debug).
+
+.TP
+.B -f <path>
+Load a configuration file.
+
+.SH CONFIGURATION
+.PP
+The configuration file uses an INI-style with multiple sections
+containing simple name=value attributes.
+
+Only the server section is used by rustart. Supported attributes
+are:
+
+.SS Basic Attributes
+
+.TP
+.B addr=<address>
+Path to the socket file. RUSS-specific aliases such as + and ++
+are supported.
+
+.TP
+.B file_group=gid|groupname
+Group ownership for the socket file. Default is to use the gid of
+the user calling rustart.
+
+.TP
+.B file_mode=<mode>
+File mode for the socket file. Octal mode values must be preceded
+by 0 (e.g., 0700).
+
+.TP
+.B file_user=uid|username
+User ownership for the socket file. Default is to use the uid of
+the user calling rustart.
+
+.TP
+.B path=<server path>
+Path to the server executable to be started.
+
+.SS Other Attributes
+
+.TP
+.B hide_conf=0|1
+If hide_conf is defined and 1, the configuration file and settings
+provided to rustart will _not_ be passed to the server. This is
+useful when the server does not use the conf file to configure
+itself (or uses a different kind, not supported/known by rustart).
+The default is 0 (pass the conf file and settings).
+
+.SH EXAMPLE
+
+.PP
+The debug.conf file typically looks like:
+
+.RS
+.nf
+[server]
+path=/usr/bin/rusrv_debug
+addr=+/debug
+file_mode=0777
+.fi
+.RE
+
+.PP
+Depending on the server, additional sections may be used/required.
+
+.SH AUTHOR
+Written by John Marshall.
+
+.SH "REPORTING BUGS"
+Report bugs to: <...>.
+
+.SH COPYRIGHT
+Copyright \(co 2014 John Marshall.
+.br
+Unless otherwise indicated, this software is available under the
+terms of the 
+ls
+Apache License version 2.
