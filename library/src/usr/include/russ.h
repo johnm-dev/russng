@@ -285,6 +285,7 @@ ssize_t russ_writen(int, void *, size_t);
 ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
 
 /* lis.c */
+struct russ_lis *russ_lis_new(int);
 struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_sconn *russ_lis_accept(struct russ_lis *, russ_deadline);
 void russ_lis_close(struct russ_lis *);

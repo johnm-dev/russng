@@ -36,6 +36,23 @@
 #include "russ_priv.h"
 
 /**
+* Create a russ_lis object.
+*
+* @param sd		initial descriptor
+* @return		russ_lis object; NULL on failure
+*/
+struct russ_lis *
+russ_lis_new(int sd) {
+	struct russ_lis	*self;
+
+	if ((self = malloc(sizeof(struct russ_lis))) == NULL) {
+		return NULL;
+	}
+	self->sd = sd;
+	return self;
+}
+
+/**
 * Announce service as a socket file.
 *
 * If the address already exists (EADDRINUSE), then we check to see
@@ -54,7 +71,7 @@
 */
 struct russ_lis *
 russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
-	struct russ_lis		*lis;
+	struct russ_lis		*self;
 	struct sockaddr_un	servaddr;
 	int			sd;
 
@@ -85,13 +102,11 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	if ((chmod(saddr, mode) < 0)
 		|| (chown(saddr, uid, gid) < 0)
 		|| (listen(sd, RUSS_LISTEN_BACKLOG) < 0)
-		|| ((lis = malloc(sizeof(struct russ_lis))) == NULL)) {
+		|| ((self = russ_lis_new(sd)) == NULL)) {
 		goto close_sd;
 	}
-
-	lis->sd = sd;
 	saddr = russ_free(saddr);
-	return lis;
+	return self;
 
 close_sd:
 	russ_close(sd);
