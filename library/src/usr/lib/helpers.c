@@ -256,3 +256,61 @@ struct russ_cconn *
 russ_list(russ_deadline deadline, const char *spath) {
 	return russ_dialv(deadline, "list", spath, NULL, NULL);
 }
+
+/**
+* Start a server using arguments as provide from the command line.
+* Configuration and non-configuration (i.e., after the --) may be
+* provided.
+*
+* @param argc		number of arguments
+* @param argv		argument list
+* @return		-1 on failure (which should not happen)
+*/
+int
+russ_start(int argc, char **argv) {
+	struct russ_lis		*lis;
+	struct russ_conf	*conf;
+	int			oargc;
+	char			**oargv;
+	char			*file_user, *file_group, *user, *group;
+	char			*path, *addr;
+	mode_t			file_mode;
+	uid_t			file_uid, uid;
+	gid_t			file_gid, gid;
+	int			hide_conf;
+
+	/* duplicate args and load conf */
+	oargc = argc;
+	if ((oargv = russ_sarray0_dup(argv, oargc+1)) == NULL) {
+		fprintf(stderr, "error: cannot duplicate argument list\n");
+		exit(1);
+	} else if ((argc < 2) || ((conf = russ_conf_init(&argc, argv)) == NULL)) {
+		fprintf(stderr, "error: cannot load configuration.\n");
+		exit(1);
+	}
+
+	/* get settings */
+	path = russ_conf_get(conf, "server", "path", NULL);
+	addr = russ_conf_get(conf, "server", "addr", NULL);
+	file_mode = russ_conf_getsint(conf, "server", "file_mode", 0666);
+	file_uid = (file_user = russ_conf_get(conf, "server", "file_user", NULL)) \
+		? russ_user2uid(file_user) : getuid();
+	file_gid = (file_group = russ_conf_get(conf, "server", "file_group", NULL)) \
+		? russ_group2gid(file_group) : getgid();
+	uid = (user = russ_conf_get(conf, "server", "user", NULL)) \
+		? russ_user2uid(user) : getuid();
+	gid = (group = russ_conf_get(conf, "server", "group", NULL)) \
+		? russ_group2gid(group) : getgid();
+	hide_conf = russ_conf_getint(conf, "server", "hide_conf", 0);
+
+	argv[0] = path;
+	if ((argv[0] == NULL) || ((lis = russ_announce(addr, file_mode, file_uid, file_gid)) == NULL)) {
+		fprintf(stderr, "error: cannot set up server\n");
+		exit(1);
+	}
+	/* listen socket is at fd lis->sd */
+	setgid(gid);
+	setuid(uid);
+	execv(argv[0], hide_conf ? argv : oargv);
+	return -1;
+}

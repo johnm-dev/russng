@@ -74,6 +74,9 @@ void russ_fds_init(int *, int, int);
 void russ_fds_close(int *, int);
 int russ_make_pipes(int, int *, int *);
 
+/* helper.c */
+int russ_start(int, char **);
+
 /* io.c */
 int russ_accept_deadline(russ_deadline, int, struct sockaddr *, socklen_t *);
 int russ_connect_deadline(russ_deadline, int sd, struct sockaddr *, socklen_t);
@@ -81,7 +84,9 @@ int russ_connectunix_deadline(russ_deadline, char *);
 int russ_poll_deadline(russ_deadline, struct pollfd *, int);
 
 /* misc.c */
+gid_t russ_group2gid(char *);
 int russ_test_fd(int, int);
+uid_t russ_user2uid(char *);
 
 /* req.c */
 struct russ_req *russ_req_new(const char *, const char *, const char *, char **, char **);

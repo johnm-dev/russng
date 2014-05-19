@@ -23,6 +23,7 @@
 */
 
 #include <grp.h>
+#include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,6 +90,27 @@ void *
 russ_free(void *p) {
 	free(p);
 	return NULL;
+}
+
+/**
+* Convert group as gid or groupname string into a gid.
+*
+* @param group		gid/groupname string
+* @return		gid; -1 on failure
+*/
+gid_t
+russ_group2gid(char *group) {
+	struct group	*gr;
+	gid_t	gid;
+
+	if ((group) && ((group[0] >= '0') && (group[0] <= '9'))) {
+		if (sscanf(group, "%d", &gid) < 1) {
+			gid = -1;
+		}
+	} else {
+		gid = ((gr = getgrnam(group)) == NULL) ? -1 : gr->gr_gid;
+	}
+	return (gid >= 0) ? gid : -1;
 }
 
 /**
@@ -193,6 +215,27 @@ russ_unlink(const char *saddr) {
 	}
 	saddr = russ_free((char *)saddr);
 	return 0;
+}
+
+/**
+* Convert user as uid or username string into a uid.
+*
+* @param group		uid/username string
+* @return		uid; -1 on failure
+*/
+uid_t
+russ_user2uid(char *user) {
+	struct passwd	*pw;
+	uid_t		uid;
+
+	if ((user) && ((user[0] >= '0') && (user[0] <= '9'))) {
+		if (sscanf(user, "%d", &uid) < 1) {
+			uid = -1;
+		}
+	} else {
+		uid = ((pw = getpwnam(user)) == NULL) ? -1 : pw->pw_uid;
+	}
+	return (uid >= 0) ? uid : -1;
 }
 
 /**
