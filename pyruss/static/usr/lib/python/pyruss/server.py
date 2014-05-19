@@ -95,8 +95,8 @@ class Server:
         self._ptr = _ptr
 
     @classmethod
-    def new(cls, root, typ):
-        _ptr = libruss.russ_svr_new(root._ptr, typ)
+    def new(cls, root, typ, sd):
+        _ptr = libruss.russ_svr_new(root._ptr, typ, sd)
         if not bool(_ptr):
             raise Exception("could not create Server")
         return cls(_ptr)
