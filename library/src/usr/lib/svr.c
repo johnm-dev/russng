@@ -41,11 +41,23 @@
 #define HOST_NAME_MAX	64
 #endif /* HOST_NAME_MAX */
 
+/**
+* Create russ_svr object.
+*
+* @param root		root service node object
+* @param type		server type (see RUSS_SVR_TYPE_*)
+* @param sd		initial listener descriptor
+* @return		russ_svr object; NULL on failure
+*/
 struct russ_svr *
-russ_svr_new(struct russ_svcnode *root, int type) {
+russ_svr_new(struct russ_svcnode *root, int type, int sd) {
 	struct russ_svr	*self;
 
-	if ((self = malloc(sizeof(struct russ_svr))) == NULL) {
+	if (((self = malloc(sizeof(struct russ_svr))) == NULL)
+		|| ((self->lis = russ_lis_new(sd)) == NULL)) {
+		if (self) {
+			self = russ_free(self);
+		}
 		return NULL;
 	}
 	self->root = root;
@@ -56,7 +68,7 @@ russ_svr_new(struct russ_svcnode *root, int type) {
 	self->mode = 0;
 	self->uid = -1;
 	self->gid = -1;
-	self->lis = NULL;
+	/* self->lis set above */
 	self->accept_handler = russ_standard_accept_handler;
 	self->accept_timeout = RUSS_SVR_TIMEOUT_ACCEPT;
 	self->answer_handler = russ_standard_answer_handler;
@@ -91,6 +103,9 @@ russ_svr_announce(struct russ_svr *self, const char *saddr, mode_t mode, uid_t u
 	self->mode = mode;
 	self->uid = uid;
 	self->gid = gid;
+	if (self->lis) {
+		self->lis = russ_free(self->lis);
+	}
 	if ((self->lis = russ_announce(self->saddr, self->mode, self->uid, self->gid)) == NULL) {
 		goto free_saddr;
 	}

@@ -92,6 +92,7 @@ extern "C" {
 #define RUSS_REQ_PROTOCOL_STRING	"0009"
 
 /* svr */
+#define RUSS_SVR_LIS_SD_DEFAULT	3
 #define RUSS_SVR_TIMEOUT_ACCEPT	INT_MAX
 #define RUSS_SVR_TIMEOUT_AWAIT	15000
 #define RUSS_SVR_TYPE_FORK	1
@@ -359,7 +360,7 @@ int russ_svcnode_set_virtual(struct russ_svcnode *, int);
 int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
 
 /* svr.c */
-struct russ_svr *russ_svr_new(struct russ_svcnode *, int);
+struct russ_svr *russ_svr_new(struct russ_svcnode *, int, int);
 struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
 struct russ_lis *russ_svr_announce(struct russ_svr *, const char *, mode_t, uid_t, gid_t);
 void russ_svr_loop(struct russ_svr *);
