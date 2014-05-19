@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <russ.h>
 
@@ -86,8 +87,10 @@ main(int argc, char **argv) {
 	struct russ_lis	*lis;
 	char		*addr, *path;
 	char		*file_user, *file_group;
-	int		file_mode;
-	int		file_uid, file_gid;
+	char		*user, *group;
+	mode_t		file_mode;
+	uid_t		file_uid, uid;
+	gid_t		file_gid, gid;
 	int		hide_conf;
 	char		**oargv;
 	int		oargc;
@@ -112,16 +115,14 @@ main(int argc, char **argv) {
 	path = russ_conf_get(conf, "server", "path", NULL);
 	addr = russ_conf_get(conf, "server", "addr", NULL);
 	file_mode = russ_conf_getsint(conf, "server", "file_mode", 0666);
-	if ((file_user = russ_conf_get(conf, "server", "file_user", NULL)) == NULL) {
-		file_uid = getuid();
-	} else {
-		file_uid = user2uid(file_user);
-	}
-	if ((file_group = russ_conf_get(conf, "server", "file_group", NULL)) == NULL) {
-		file_uid = getgid();
-	} else {
-		file_gid = group2gid(file_group);
-	}
+	file_uid = (file_user = russ_conf_get(conf, "server", "file_user", NULL)) \
+		? user2uid(file_user) : getuid();
+	file_gid = (file_group = russ_conf_get(conf, "server", "file_group", NULL)) \
+		? group2gid(file_group) : getgid();
+	uid = (user = russ_conf_get(conf, "server", "user", NULL)) \
+		? user2uid(user) : getuid();
+	gid = (group = russ_conf_get(conf, "server", "group", NULL)) \
+		? group2gid(group) : getgid();
 	hide_conf = russ_conf_getint(conf, "server", "hide_conf", 0);
 
 	argv[0] = path;
@@ -130,6 +131,8 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 	/* listen socket is at fd lis->sd */
+	setgid(gid);
+	setuid(uid);
 	execv(argv[0], hide_conf ? argv : oargv);
 	fprintf(stderr, "error: cannot start server\n");
 	exit(1);
