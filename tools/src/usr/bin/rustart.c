@@ -71,7 +71,7 @@ user2uid(char *user) {
 	struct passwd	*pw;
 	uid_t		uid;
 
-	if ((user) && (isdigit(user))) {
+	if ((user) && (isdigit(user[0]))) {
 		if (sscanf(user, "%d", &uid) < 1) {
 			uid = -1;
 		}
