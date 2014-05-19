@@ -31,7 +31,7 @@
 void
 print_usage(char *prog_name) {
 	printf(
-"usage: rustart (-f <path>|-c <name>=<value>) [...]\n"
+"usage: rustart (-f <path>|-c <name>=<value>) [...] [-- ...]\n"
 "\n"
 "Start a uss server. Using the configuration, a socket file is\n"
 "created and the listener socket is passed to the server.\n"
@@ -41,6 +41,7 @@ print_usage(char *prog_name) {
 "	Load configuration file.\n"
 "-c <name>=<value>\n"
 "	Set configuration attribute.\n"
+"-- ...	Arguments to pass to the server program.\n"
 );
 }
 
@@ -49,7 +50,6 @@ struct russ_conf	*conf = NULL;
 int
 main(int argc, char **argv) {
 	struct russ_lis	*lis;
-	char		*path;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
@@ -61,7 +61,7 @@ main(int argc, char **argv) {
 
 	signal(SIGPIPE, SIG_IGN);
 
-	if (((path = russ_conf_get(conf, "server", "path", NULL)) == NULL)
+	if (((argv[0] = russ_conf_get(conf, "server", "path", NULL)) == NULL)
 		|| ((lis = russ_announce(russ_conf_get(conf, "server", "addr", NULL),
 			russ_conf_getsint(conf, "server", "mode", 0666),
 			russ_conf_getint(conf, "server", "uid", getuid()),
@@ -70,7 +70,7 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 	/* listen socket is at fd lis->sd */
-	execl(path, path, NULL);
+	execv(argv[0], argv);
 	fprintf(stderr, "error: cannot start server\n");
 	exit(1);
 }
