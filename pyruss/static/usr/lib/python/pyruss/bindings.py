@@ -439,6 +439,7 @@ libruss.russ_svcnode_set_wildcard.restype = ctypes.POINTER(russ_svcnode_Structur
 libruss.russ_svr_new.argtypes = [
     ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_int,
+    ctypes.c_int,
 ]
 libruss.russ_svr_new.restype = ctypes.POINTER(russ_svr_Structure)
 
