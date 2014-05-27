@@ -173,6 +173,10 @@ elif [ -n "${RURUN_PNET_DIR}" ]; then
 	case ${RURUN_TARGET_METHOD} in
 	id|run)
 		path="${RURUN_PNET_DIR}/${RURUN_TARGET_METHOD}/${target}"
+		if [ ! -f "${path}" ]; then
+			echo "error: cannot find target"
+			exit 1
+		fi
 		;;
 	*)
 		echo "error: unknown target method (${RURUN_TARGET_METHOD})" 1>&2
