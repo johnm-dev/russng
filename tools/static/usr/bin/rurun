@@ -42,22 +42,25 @@ Options:
 	simple - without shell
 	shell - shell with basic environment
 	login - shell with login environmnet
-	Defaults to \$RURUN_EXEC_METHOD or \"${RURUN_EXEC_METHOD}\".
+	Defaults to \$RURUN_EXEC_METHOD or \"${RURUN_EXEC_METHOD_DEFAULT}\".
 --pnet <addr>
 	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
 --relay <name>
 	Use a given relay service. Defaults to \${RURUN_RELAY} or
-	\"${RURUN_RELAY}\".
+	\"${RURUN_RELAY_DEFAULT}\".
 --target_method id|host|run
 	Method to use to connect to the target: id, host, run.
-	Defaults to \$RURUN_TARGET_METHOD or \"${RURUN_TARGET_METHOD}\"."
+	Defaults to \$RURUN_TARGET_METHOD or \"${RURUN_TARGET_METHOD_DEFAULT}\"."
 }
 
 # defaults (null or unset)
 PROG_NAME=`basename $0`
-export RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
-export RURUN_RELAY=${RURUN_RELAY:-ssh}
-export RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-run}
+RURUN_EXEC_METHOD_DEFAULT=shell
+RURUN_TARGET_METHOD_DEFAULT=run
+RURUN_RELAY_DEFAULT=ssh
+export RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-${RURUN_EXEC_METHOD_DEFAULT}}
+export RURUN_RELAY=${RURUN_RELAY:-${RURUN_RELAY_DEFAULT}}
+export RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-${RURUN_TARGET_METHOD_DEFAULT}}
 
 if [ $# -gt 0 ]; then
 	if [ "$1" = "-h" -o "$1" = "--help" ]; then
