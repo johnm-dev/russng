@@ -96,6 +96,10 @@ while [ $# -gt 0 ]; do
 		shift 1
 		RURUN_EXEC_METHOD=$1; shift 1
 		;;
+	--file)
+		shift 1
+		RURUN_PNET_FILE="$1"; shift 1
+		;;
 	--login)
 		shift 1
 		RURUN_EXEC_METHOD=login
@@ -164,6 +168,39 @@ elif [ -n "${RURUN_PNET_DIR}" ]; then
 		exit 1
 		;;
 	esac
+elif [ -n "${RURUN_PNET_FILE}" ]; then
+	if [ ! -f "${RURUN_PNET_FILE}" ]; then
+		echo "error: cannot find file" 1>&2
+		exit 1
+	fi
+	lineno=$((target+1))
+	line=`tail -n +${lineno} ${RURUN_PNET_FILE} | head -1`
+	if [ -z "${line}" ]; then
+		echo "error: cannot find target" 1>&2
+		exit 1
+	fi
+	case ${RURUN_TARGET_METHOD} in
+	id)
+		host=${line% *}
+		path="+/ssh/${host}/+/exec/${RURUN_EXEC_METHOD}"
+		;;
+	run)
+		host=${line% *}
+		container=""
+		if [ "${host}" != "${line}" ]; then
+			container=${line#* }
+		fi
+		if [ -n "${container}" ]; then
+			path="+/ssh/${host}/+/exec/cgroup/${container}/${RURUN_EXEC_METHOD}"
+		else
+			path="+/ssh/${host}/+/exec/${RURUN_EXEC_METHOD}"
+		fi
+		;;
+	*)
+		echo "error: unknown target method (${RURUN_TARGET_METHOD})" 1>&2
+		exit 1
+		;;
+	esac
 else
 	echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_DIR are set" 1>&2
 	exit 1
@@ -176,6 +213,13 @@ if [ -n "${count_opt}" ]; then
 	elif [ -n "${RURUN_PNET_DIR}" ]; then
 		if [ -d "${RURUN_PNET_DIR}" ]; then
 			count=`ls -1 "${RURUN_PNET_DIR}" | wc -l`
+			ev=$?
+		else
+			ev=1
+		fi
+	elif [ -n "${RURUN_PNET_FILE}" ]; then
+		if [ -f "${RURUN_PNET_FILE}" ]; then
+			count=`wc -l "${RURUN_PNET_FILE}"`
 			ev=$?
 		else
 			ev=1
