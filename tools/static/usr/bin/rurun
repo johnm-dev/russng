@@ -81,13 +81,8 @@ while [ $# -gt 0 ]; do
 		attrs+=("-a" "$1"); shift 1
 		;;
 	--count)
+		count_opt=1
 		shift 1
-		count=`ruexec ${RURUN_PNET_ADDR}/count`
-		ev=$?
-		if [ ${ev} -eq 0 ]; then
-			echo ${count}
-		fi
-		exit ${ev}
 		;;
 	--debug)
 		shift 1
@@ -172,6 +167,15 @@ elif [ -n "${RURUN_PNET_DIR}" ]; then
 else
 	echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_DIR are set" 1>&2
 	exit 1
+fi
+
+if [ -n "${count_opt}" ]; then
+	count=`ruexec ${RURUN_PNET_ADDR}/count`
+	ev=$?
+	if [ ${ev} -eq 0 ]; then
+		echo ${count}
+	fi
+	exit ${ev}
 fi
 
 # mpirun-specific
