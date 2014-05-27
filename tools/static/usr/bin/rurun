@@ -170,8 +170,19 @@ else
 fi
 
 if [ -n "${count_opt}" ]; then
-	count=`ruexec ${RURUN_PNET_ADDR}/count`
-	ev=$?
+	if [ -n "${RURUN_PNET_ADDR}" ]; then
+		count=`ruexec ${RURUN_PNET_ADDR}/count`
+		ev=$?
+	elif [ -n "${RURUN_PNET_DIR}" ]; then
+		if [ -d "${RURUN_PNET_DIR}" ]; then
+			count=`ls -1 "${RURUN_PNET_DIR}" | wc -l`
+			ev=$?
+		else
+			ev=1
+		fi
+	else
+		ev=1
+	fi
 	if [ ${ev} -eq 0 ]; then
 		echo ${count}
 	fi
