@@ -45,6 +45,9 @@ Options:
 	Defaults to \$RURUN_EXEC_METHOD or \"${RURUN_EXEC_METHOD}\".
 --pnet <addr>
 	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
+--relay <name>
+	Use a given relay service. Defaults to \${RURUN_RELAY} or
+	\"${RURUN_RELAY}\".
 --target_method id|host|run
 	Method to use to connect to the target: id, host, run.
 	Defaults to \$RURUN_TARGET_METHOD or \"${RURUN_TARGET_METHOD}\"."
@@ -53,6 +56,7 @@ Options:
 # defaults (null or unset)
 PROG_NAME=`basename $0`
 export RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-shell}
+export RURUN_RELAY=${RURUN_RELAY:-ssh}
 export RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-run}
 
 if [ $# -gt 0 ]; then
@@ -107,6 +111,10 @@ while [ $# -gt 0 ]; do
 	--pnet)
 		shift 1
 		RURUN_PNET_ADDR="$1"; shift 1
+		;;
+	--relay)
+		shift 1
+		RURUN_RELAY="$1"; shift 1
 		;;
 	--shell)
 		shift 1
@@ -182,7 +190,7 @@ elif [ -n "${RURUN_PNET_FILE}" ]; then
 	case ${RURUN_TARGET_METHOD} in
 	id)
 		host=${line% *}
-		path="+/ssh/${host}/+/exec/${RURUN_EXEC_METHOD}"
+		path="+/${RURUN_RELAY}/${host}/+/exec/${RURUN_EXEC_METHOD}"
 		;;
 	run)
 		host=${line% *}
@@ -191,9 +199,9 @@ elif [ -n "${RURUN_PNET_FILE}" ]; then
 			container=${line#* }
 		fi
 		if [ -n "${container}" ]; then
-			path="+/ssh/${host}/+/exec/cgroup/${container}/${RURUN_EXEC_METHOD}"
+			path="+/${RURUN_RELAY}/${host}/+/exec/cgroup/${container}/${RURUN_EXEC_METHOD}"
 		else
-			path="+/ssh/${host}/+/exec/${RURUN_EXEC_METHOD}"
+			path="+/${RURUN_RELAY}/${host}/+/exec/${RURUN_EXEC_METHOD}"
 		fi
 		;;
 	*)
