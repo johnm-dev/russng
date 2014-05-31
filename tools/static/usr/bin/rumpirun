@@ -1,10 +1,10 @@
 #! /bin/bash
 #
-# rumpirun
+# rumpirun (symlinked to rumpirun.openmpi and rumpirun.mpich)
 
 # license--start
 #
-# Copyright 2012 John Marshall
+# Copyright 2014 John Marshall
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,20 +20,34 @@
 #
 # license--end
 
+# optional/required variables:
+# RUMPIRUN_HOSTFILE (req)
+# RUMPIRUN_LAUNCHER (opt)
+# RUMPIRUN_MPIRUN (opt)
+# RUMPIRUN_ENV (opt)
+# RURUN_PNET_ADDR or RURUN_PNET_DIR or RURUN_PNET_FILE (req)
+# RURUN_EXEC_METHOD (opt)
+
 function print_usage {
 	echo "usage: ${PROG_NAME} [options] ...
 
-RUSS-specifc mpirun wrapper.
+RUSS-based mpirun wrapper. If called as rumpirun, automatically
+senses and calls mpirun of openmpi or mpich."
+}
 
-Options:
--f <filename>
--hosts <hostname>[,...]
+function is_openmpi {
+	local name=$1
 
-Environment Variables:
-JOB_ID
-RURUN_JOB_ID
-RURUN_PNET_ADDR
-"
+	st=`${name} -V 2>&1`
+	[ "${st#*Open MPI}" != "${st}" ]
+	return $?
+}
+
+function is_mpich {
+	local name=$1
+
+	st=`${name} --info 2>&1`
+	return $?
 }
 
 #
@@ -42,45 +56,59 @@ RURUN_PNET_ADDR
 
 PROG_NAME=`basename $0`
 
-export HYDRA_BOOTSTRAP_EXEC=${HYDRA_BOOTSTRAP_EXEC:-rurun}
-export HYDRA_BOOTSTRAP=${HYDRA_BOOTSTRAP:-rsh}
-export HYDRA_LAUNCHER=${HYDRA_LAUNCHER:-rsh}
-export HYDRA_LAUNCHER_EXEC=${HYDRA_LAUNCHER_EXEC:-rurun}
-export HYDRA_LAUNCHER_AUTOFORK=0
+export RUMPIRUN_MPIRUN=${RUMPIRUN_MPIRUN:-mpirun}
+export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun}
 
-while [ $# -gt 0 ]; do
-	if [ $1 -eq "-f" -a $# -gt 1 ]; then
-		shift 1
-		hosts_filename=$1; shift 1
-	elif [ $1 -eq "-hosts" -a $# -gt 1 ]; then
-		shift 1
-		hosts=$1; shift 1 # split by ,
+if [ -n "${RUMPIRUN_ENV}" ]; then
+	export RURUN_ENV="${RUMPIRUN_ENV}"
+fi
+
+RUMPIRUN_MPIRUN=`which ${RUMPIRUN_MPIRUN} 2> /dev/null`
+if [ -z "${RUMPIRUN_MPIRUN}" ]; then
+	echo "error: cannot find mpirun" 1>&2
+	exit 1
+fi
+
+if [ "${PROG_NAME}" = "rumpirun" ]; then
+	if is_openmpi ${RUMPIRUN_MPIRUN}; then
+		PROG_NAME="rumpirun.openmpi"
+	elif is_mpich ${RUMPIRUN_MPIRUN}; then
+		PROG_NAME="rumpirun.mpich"
+	fi
+fi
+echo "info: Running as ${PROG_NAME}" 1>&2
+
+if [ -n "${RURUN_PNET_ADDR}" -o -n "${RURUN_PNET_DIR}" -o -n "${RURUN_PNET_FILE}" ]; then
+	unset PE_HOSTFILE
+
+	if [ "${PROG_NAME}" = "rumpirun.openmpi" ]; then
+		export OMPI_MCA_orte_default_hostfile="${RUMPIRUN_HOSTFILE}"
+		export OMPI_MCA_orte_rsh_agent=${RUMPIRUN_LAUNCHER}
+		export OMPI_MCA_plm_rsh_disable_qrsh=1
+
+		MPIRUN_ARGS=""
+
+		if ! is_openmpi "${RUMPIRUN_MPIRUN}"; then
+			echo "warning: cannot validate mpirun is from openmpi"
+		fi
+
+	elif [ "${PROG_NAME}" = "rumpirun.mpich" ]; then
+		export HYDRA_BOOTSTRAP=rsh
+		export HYDRA_BOOTSTRAP_EXEC=${RUMPIRUN_LAUNCHER}
+		export HYDRA_LAUNCHER=rsh
+		export HYDRA_LAUNCHER_EXEC=${RUMPIRUN_LAUNCHER}
+		export HYDRA_HOST_FILE="${RUMPIRUN_HOSTFILE}"
+		export HYDRA_LAUNCHER_AUTOFORK=0
+
+		MPIRUN_ARGS="-disable-hostname-propagation"
+
+		if ! is_mpich "${RUMPIRUN_MPIRUN}"; then
+			echo "warning: cannot validate mpirun is from mpich" 1>&2
+		fi
 	else
-		break
-	fi 
-done
-
-# set up job tag
-if [ "${JOB_ID}" != "" ]; then
-	export RURUN_JOB_TAG=/jobs/${JOB_ID}
+		echo "error: unknown implementation of mpirun" 1>&2
+		exit 1
+	fi
 fi
 
-# set up pnet
-if [ "${hosts}" ]; then
-	hosts_filename=/tmp/$$.hosts
-	echo ${hosts} > ${hosts_filename}
-fi
-
-if [ "${hosts_filename}" ]; then
-	export RURUN_PNET_ADDR=/tmp/$$.pnet
-	rusrv_pnet -c server:path=${RURUN_PNET_ADDR} -- ${hosts_filename}
-fi
-
-if [ "${RURUN_PNET_ADDR}" = "" ]; then
-	echo "warning: RURUN_PNET_ADDR is not set"
-fi
-
-ruls ${RURUN_PNET_ADDR}/id > /tmp/$$.host-indexes
-
-# start
-mpiexec -f /tmp/$$.host-indexes "$*"
+exec ${RUMPIRUN_MPIRUN} ${MPIRUN_ARGS} "${@}"
