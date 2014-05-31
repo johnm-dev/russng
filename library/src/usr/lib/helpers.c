@@ -208,12 +208,13 @@ russ_execv(russ_deadline deadline, const char *spath, char **attrv, char **argv)
 struct russ_cconn *
 russ_execl(russ_deadline deadline, const char *spath, char **attrv, ...) {
 	struct russ_cconn	*cconn;
-	va_list			ap;
+	va_list			ap, ap2;
 	char			**argv;
 	int			argc;
 
 	va_start(ap, attrv);
-	if ((argv = __russ_variadic_to_argv(&argc, ap, ap)) == NULL) {
+	va_start(ap2, attrv);
+	if ((argv = __russ_variadic_to_argv(&argc, ap, ap2)) == NULL) {
 		return NULL;
 	}
 	cconn = russ_dialv(deadline, "execute", spath, attrv, argv);
