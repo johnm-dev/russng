@@ -74,9 +74,6 @@ void russ_fds_init(int *, int, int);
 void russ_fds_close(int *, int);
 int russ_make_pipes(int, int *, int *);
 
-/* helper.c */
-int russ_start(int, char **);
-
 /* io.c */
 int russ_accept_deadline(russ_deadline, int, struct sockaddr *, socklen_t *);
 int russ_connect_deadline(russ_deadline, int sd, struct sockaddr *, socklen_t);
