@@ -59,8 +59,8 @@ const char		*HELP =
 int
 start_server(char *svrname) {
 	char	lockpath[PATH_MAX], pidpath[PATH_MAX], sockpath[PATH_MAX];
-	char	*execfile = NULL, *conffile = NULL;
-	char	serverpath_buf[PATH_MAX];
+	char	*conffile = NULL, *execfile = NULL;
+	char	serveraddr[PATH_MAX], serverpath[PATH_MAX];
 	int	pid, wpid;
 	int	wst;
 
@@ -68,22 +68,29 @@ start_server(char *svrname) {
 	if ((sprintf(lockpath, "%s/.lock.%s", trackdir, svrname+1) < 0)
 		|| (sprintf(pidpath, "%s/.pid.%s", trackdir, svrname+1) < 0)
 		|| (sprintf(sockpath, "%s/%s", trackdir, svrname+1) < 0)
-		|| (sprintf(serverpath_buf, "server:path=%s", sockpath) < 0)) {
+		|| (sprintf(serveraddr, "server:addr=%s", sockpath) < 0)) {
 		return -1;
 	}
-	if (((execfile = russ_conf_get(conf, svrname, "execfile", NULL)) == NULL)
-		|| ((conffile = russ_conf_get(conf, svrname, "conffile", NULL)) == NULL)
+	if (((execfile = russ_conf_get(conf, svrname, "execfile", NULL)) != NULL)
+		&& (sprintf(serverpath, "server:path=%s", execfile) < 0)) {
+		goto error;
+	}
+	if (((conffile = russ_conf_get(conf, svrname, "conffile", NULL)) == NULL)
 		|| ((lock_file(lockpath, 100, 10000) < 0))) {		
 		/* TODO: should svrname section be removed/disabled since it is invalid? */
 		goto error;
 	}
+
 	/* double fork and exec new server */
 	if ((pid = fork()) == 0) {
 		setsid();
 		signal(SIGHUP, SIG_IGN);
 		if (fork() == 0) {
 			put_pid(pidpath, getpid());
-			execl(execfile, execfile, "-f", conffile, "-c", serverpath_buf, (char *)NULL);
+			russ_startl("", serverpath,
+				"-f", conffile,
+				"-c", serveraddr,
+				(char *)NULL);
 			exit(1);
 		}
 		exit(0);
