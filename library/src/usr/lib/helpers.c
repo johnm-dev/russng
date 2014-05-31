@@ -316,3 +316,32 @@ russ_start(int argc, char **argv) {
 	execv(argv[0], hide_conf ? argv : oargv);
 	return -1;
 }
+
+/**
+* Wrapper for russ_start supporting variadic args.
+*
+* @see russ_start()
+*
+* @param dummy		ignored placeholder
+* @return		-1 on failure or russ_start()
+*/
+int
+russ_startl(char *dummy, ...) {
+	va_list			ap, ap2;
+	char			**argv;
+	int			argc;
+
+	va_start(ap, dummy);
+	va_start(ap2, dummy);
+	if ((argv = __russ_variadic_to_argv(&argc, ap, ap2)) == NULL) {
+		return -1;
+	}
+	russ_start(argc, argv);
+
+	/* should not get here; clean up on failure */
+	for (argc; argc >= 0; argc--) {
+		free(argv[argc]);
+	}
+	free(argv);
+	return -1;
+}
