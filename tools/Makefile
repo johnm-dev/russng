@@ -23,4 +23,4 @@ install:
 	:
 	(mkdir -p "${INSTALL_DIR}")
 	(cd src/usr/bin; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	(cd static; tar cf - usr/bin/rurun usr/bin/rumrun usr/bin/rumpirun.* usr/bin/russ_converthosts.py etc usr/share) | (cd $(INSTALL_DIR); tar xvf -)
+	(cd static; tar cf - usr/bin/rurun usr/bin/rumrun usr/bin/rumpirun* usr/bin/russ_converthosts.py etc usr/share) | (cd $(INSTALL_DIR); tar xvf -)
