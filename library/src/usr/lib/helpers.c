@@ -67,7 +67,7 @@ __russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 *
 * @param[out] exit_status
 *			exit status returned
-* @return		0 for success; -1 for failure
+* @return		return value of russ_cconn_wait()
 *
 * @see russ_dialv()
 */
@@ -101,7 +101,7 @@ russ_dialv_wait(russ_deadline deadline, const char *op, const char *spath, char 
 * @param[inout] rbufs	array of russ_buf objects to hold in, out, err
 * @param[out] exit_status
 *			exit status returned
-* @return		0 for success; -1 for failure
+* @return		return value of russ_cconn_wait()
 *
 * @see russ_dialv()
 */
@@ -111,11 +111,14 @@ russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spa
 	struct russ_cconn	*cconn;
 	struct pollfd		pollfds[4];
 	char			*buf, dbuf[1<<16];
-	int			fd, openfds, rv;
+	int			fd, openfds, rv, wrv;
 	int			i, n;
 
+	/* default wait rv to general error */
+	wrv = -1;
+
 	if ((cconn = russ_dialv(deadline, op, spath, attrv, argv)) == NULL) {
-		return -1;
+		return wrv;
 	}
 
 	pollfds[0].fd = cconn->fds[0];
@@ -164,12 +167,16 @@ close_fd:
 			}
 		}
 		if (pollfds[3].revents & POLLIN) {
-			russ_cconn_wait(cconn, deadline, exit_status);
+			wrv = russ_cconn_wait(cconn, deadline, exit_status);
 			openfds--;
 		}
 	}
+	if ((rv < 0) && (deadline < russ_to_deadline(0))) {
+		/* wait rv as expired deadline */
+		wrv = -3;
+	}
 	russ_cconn_close(cconn);
-	return 0;
+	return wrv;
 }
 
 /**
