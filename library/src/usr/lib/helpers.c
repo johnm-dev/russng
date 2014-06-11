@@ -152,6 +152,7 @@ russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spa
 					}
 				} else if (pollfds[i].revents & POLLOUT) {
 					n = rbufs[i]->len-rbufs[i]->off;
+					n = RUSS__MIN(n, 1<<16);
 					buf = &rbufs[i]->data[rbufs[i]->off];
 					if ((n == 0) || ((n = russ_write(fd, buf, n)) < 0)) {
 						goto close_fd;
