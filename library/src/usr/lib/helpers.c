@@ -287,6 +287,7 @@ russ_start(int argc, char **argv) {
 	uid_t			file_uid, uid;
 	gid_t			file_gid, gid;
 	int			hide_conf;
+	int			i;
 
 	/* duplicate args and load conf */
 	oargc = argc;
@@ -312,11 +313,18 @@ russ_start(int argc, char **argv) {
 		? russ_group2gid(group) : getgid();
 	hide_conf = russ_conf_getint(conf, "server", "hide_conf", 0);
 
+	/* close fds >= 3 */
+	for (i = 3; i < 1024; i++) {
+		close(i);
+	}
+
+	/* set up socket */
 	argv[0] = path;
 	if ((argv[0] == NULL) || ((lis = russ_announce(addr, file_mode, file_uid, file_gid)) == NULL)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}
+
 	/* listen socket is at fd lis->sd */
 	setgid(gid);
 	setuid(uid);
