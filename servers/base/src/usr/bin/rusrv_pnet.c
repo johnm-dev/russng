@@ -22,10 +22,12 @@
 # license--end
 */
 
+#include <netdb.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -54,6 +56,8 @@ struct targetslist {
 struct russ_conf	*conf = NULL;
 char			*targetsfilename = NULL;
 struct targetslist	targetslist;
+char			fqlocalhostname[1024] = "";
+
 const char		*HELP = 
 "Provides access to local/remote targets (e.g., user@host) using a\n"
 "relay (e.g., ssh service).\n"
@@ -94,6 +98,40 @@ const char		*HELP =
 "    last entry). An index starting with : loops around to continue\n"
 "    the lookup. If a cgroup is defined in targetsfile, it is used\n"
 "    in the call.\n";
+
+/**
+* Check if given hostname resolves to the local host.
+*
+* @param hostname	name to check
+* @return		1 for match; 0 for no match
+*/
+int
+is_localhost(char *hostname) {
+	struct hostent	*hent;
+
+	if (((hent = gethostbyname(hostname)) != NULL)
+		&& (strcmp(fqlocalhostname, hent->h_name) == 0)) {
+		return 1;
+	}
+	return 0;
+}
+
+/**
+* Set the fqlocalhostname to the fq hostname for the local host.
+*/
+void
+set_fqlocalhostname(void) {
+	struct hostent	*hent;
+
+	fqlocalhostname[sizeof(fqlocalhostname)-1] = '\0';
+	if ((gethostname(fqlocalhostname, sizeof(fqlocalhostname)-1) < 0)
+		|| ((hent = gethostbyname(fqlocalhostname)) == NULL)
+		|| (strlen(hent->h_name) >= sizeof(fqlocalhostname))) {
+		fqlocalhostname[0] = '\0';
+	} else {
+		strncpy(fqlocalhostname, hent->h_name, sizeof(fqlocalhostname));
+	}
+}
 
 /**
 * Handler for the / service.
@@ -331,11 +369,20 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	tail = strchr(req->spath+1, '/');
 	tail = strchr(tail+1, '/')+1;
 	userhost = targetslist.targets[idx].userhost;
-	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
-	if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
-		|| (n >= sizeof(new_spath))) {
-		russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
-		exit(0);
+	if ((index(userhost, '@') == NULL) && (is_localhost(userhost))) {
+		if (((n = snprintf(new_spath, sizeof(new_spath), "%s", tail)) < 0)
+			|| (n >= sizeof(new_spath))) {
+			russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
+			exit(0);
+		}
+	} else {
+		relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
+		if (((n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s", relay_addr, userhost, tail)) < 0)
+			|| (n >= sizeof(new_spath))) {
+			russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
+			exit(0);
+		}
+		relay_addr = russ_free(relay_addr);
 	}
 	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
@@ -614,6 +661,10 @@ main(int argc, char **argv) {
 	if (load_targetsfile(targetsfilename) < 0) {
 		fprintf(stderr, "error: could not load targets file\n");
 		exit(1);
+	}
+
+	if (russ_conf_getint(conf, "other", "fastlocalhost", 0) == 1) {
+		set_fqlocalhostname();
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
