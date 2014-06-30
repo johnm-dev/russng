@@ -142,11 +142,11 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exit_statu
 	char		buf[1024];
 	int		rv, _exit_status;
 
-	if (self->fds[3] < 0) {
+	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
 		return -2;
 	}
 
-	poll_fds[0].fd = self->fds[3];
+	poll_fds[0].fd = self->sysfds[RUSS_CONN_SYSFD_EXIT];
 	poll_fds[0].events = POLLIN;
 	while (1) {
 		rv = poll(poll_fds, 1, russ_to_deadline(deadline));
@@ -160,7 +160,7 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exit_statu
 		} else {
 			if (poll_fds[0].revents & POLLIN) {
 				// TODO: should this be a byte or integer?
-				if (russ_read(self->fds[3], buf, 4) < 0) {
+				if (russ_read(self->sysfds[RUSS_CONN_SYSFD_EXIT], buf, 4) < 0) {
 					/* serious error; close fd? */
 					return -1;
 				}
@@ -175,7 +175,7 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exit_statu
 			}
 		}
 	}
-	russ_fds_close(&self->fds[3], 1);
+	russ_fds_close(&self->sysfds[RUSS_CONN_SYSFD_EXIT], 1);
 	return 0;
 }
 

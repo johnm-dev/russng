@@ -308,7 +308,7 @@ main(int argc, char **argv) {
 			cconn->fds[0] = -1;
 			cconn->fds[1] = -1;
 			cconn->fds[2] = -1;
-			russ_relay_serve(relay, -1, cconn->fds[3]);
+			russ_relay_serve(relay, -1, cconn->sysfds[RUSS_CONN_SYSFD_EXIT]);
 			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
 				exit_status = RUSS_EXIT_SYS_FAILURE;

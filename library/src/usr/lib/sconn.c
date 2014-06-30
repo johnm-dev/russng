@@ -244,7 +244,7 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 	char	*exit_string = "";
 	char	*bp, *bend;
 
-	if (self->fds[3] < 0) {
+	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
 		return -1;
 	}
 	bp = buf;
@@ -254,10 +254,10 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 		// error?
 		return -1;
 	}
-	if (russ_writen(self->fds[3], buf, bp-buf) < bp-buf) {
+	if (russ_writen(self->sysfds[RUSS_CONN_SYSFD_EXIT], buf, bp-buf) < bp-buf) {
 		return -1;
 	}
-	russ_fds_close(&self->fds[3], 1);
+	russ_fds_close(&self->sysfds[RUSS_CONN_SYSFD_EXIT], 1);
 	return 0;
 }
 
@@ -276,7 +276,7 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 */
 int
 russ_sconn_exits(struct russ_sconn *self, const char *msg, int exit_status) {
-	if (self->fds[3] < 0) {
+	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
 		return -1;
 	}
 	russ_dprintf(self->fds[2], "%s\n", msg);
