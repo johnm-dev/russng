@@ -52,11 +52,13 @@ extern "C" {
 #define RUSS__MAX( a,b )	(( (a) > (b) ) ? (a) : (b))
 
 #define RUSS_CONN_NFDS		32
-#define RUSS_CONN_STD_NFDS	4
+#define RUSS_CONN_STD_NFDS	3
 #define RUSS_CONN_FD_STDIN	0
 #define RUSS_CONN_FD_STDOUT	1
 #define RUSS_CONN_FD_STDERR	2
-#define RUSS_CONN_FD_EXIT	3
+
+#define RUSS_CONN_NSYSFDS	1
+#define RUSS_CONN_SYSFD_EXIT	0
 
 #define RUSS_DEADLINE_NEVER	INT64_MAX
 
@@ -154,12 +156,14 @@ struct russ_req {
 struct russ_cconn {
 	int			sd;		/**< socket descriptor */
 	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
+	int			sysfds[RUSS_CONN_NSYSFDS];	/**< array of system fds */
 };
 
 struct russ_sconn {
 	struct russ_creds	creds;		/**< credentials */
 	int			sd;		/**< socket descriptor */
 	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
+	int			sysfds[RUSS_CONN_NSYSFDS];	/**< array of system fds */
 };
 
 /* declare here, defined below */
