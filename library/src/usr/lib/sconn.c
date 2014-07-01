@@ -264,18 +264,12 @@ russ_sconn_close(struct russ_sconn *self) {
 */
 int
 russ_sconn_exit(struct russ_sconn *self, int exit_status) {
-	char	buf[1024];
-	char	*bp, *bend;
+	char	buf[32], *bp;
 
-	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
-		return -1;
-	}
 	bp = buf;
-	bend = bp+sizeof(buf);
-	if ((bp = russ_enc_exit(bp, bend, exit_status)) == NULL) {
-		return -1;
-	}
-	if (russ_writen(self->sysfds[RUSS_CONN_SYSFD_EXIT], buf, bp-buf) < bp-buf) {
+	if ((self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0)
+		|| ((bp = russ_enc_exit(bp, bp+sizeof(buf), exit_status)) == NULL)
+		|| (russ_writen(self->sysfds[RUSS_CONN_SYSFD_EXIT], buf, bp-buf) < bp-buf)) {
 		return -1;
 	}
 	russ_fds_close(&self->sysfds[RUSS_CONN_SYSFD_EXIT], 1);
@@ -287,16 +281,14 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 * close connection fds.
 *
 * @param self		server connection object
-* @param msg		message string (no newline)
+* @param msg		message string to connection stderr (newline
+*			will be added)
 * @param exit_status	exit status
-* @return		0 on success; -1 on failure (but the
-*			server connection object is closed)
+* @return		0 on success; -1 on failure (but the server
+*			connection object is closed)
 */
 int
 russ_sconn_fatal(struct russ_sconn *self, const char *msg, int exit_status) {
-	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
-		return -1;
-	}
 	russ_dprintf(self->fds[2], "%s\n", msg);
 	return russ_sconn_exit(self, exit_status);
 }
