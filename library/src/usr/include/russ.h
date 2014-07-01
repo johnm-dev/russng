@@ -338,7 +338,7 @@ int russ_sarray0_update(char ***, int, char *);
 /* sconn.c */
 struct russ_sconn *russ_sconn_free(struct russ_sconn *);
 struct russ_sconn *russ_sconn_new(void);
-int russ_sconn_answer(struct russ_sconn *, int, int *, int *);
+int russ_sconn_answer(struct russ_sconn *, int, int *);
 struct russ_req *russ_sconn_await_request(struct russ_sconn *, russ_deadline);
 int russ_sconn_exit(struct russ_sconn *, int);
 int russ_sconn_fatal(struct russ_sconn *, const char *, int);

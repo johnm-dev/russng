@@ -139,12 +139,13 @@ russ_sconn_sendfds(struct russ_sconn *self, int nfds, int *cfds) {
 * @param self		accepted server connection object
 * @param nfds		number of elements in cfds (and sfds) array
 * @param cfds		array of descriptors to send to client
-* @param sfds		array of descriptors for server side
+*			(corresponding to the server-side connection
+*			fds)
 * @return		0 on success; -1 on error
 */
 int
-russ_sconn_answer(struct russ_sconn *self, int nfds, int *cfds, int *sfds) {
-	int	csysfds[RUSS_CONN_NSYSFDS], ssysfds[RUSS_CONN_NSYSFDS];
+russ_sconn_answer(struct russ_sconn *self, int nfds, int *cfds) {
+	int	csysfds[RUSS_CONN_NSYSFDS];
 	int	i;
 
 	if (nfds < 0) {
@@ -153,24 +154,18 @@ russ_sconn_answer(struct russ_sconn *self, int nfds, int *cfds, int *sfds) {
 
 	/* set up system fds */
 	russ_fds_init(csysfds, RUSS_CONN_NSYSFDS, -1);
-	russ_fds_init(ssysfds, RUSS_CONN_NSYSFDS, -1);
-	if (russ_make_pipes(RUSS_CONN_NSYSFDS, csysfds, ssysfds) < 0) {
+	russ_fds_init(self->sysfds, RUSS_CONN_NSYSFDS, -1);
+	if (russ_make_pipes(RUSS_CONN_NSYSFDS, csysfds, self->sysfds) < 0) {
 		fprintf(stderr, "error: cannot create pipes\n");
 		return -1;
 	}
-	/* copy server-side sysfds */
-	self->sysfds[RUSS_CONN_SYSFD_EXIT] = ssysfds[RUSS_CONN_SYSFD_EXIT];
 
 	if ((russ_sconn_sendfds(self, RUSS_CONN_NSYSFDS, csysfds) < 0)
 		|| (russ_sconn_sendfds(self, nfds, cfds) < 0)) {
 		russ_fds_close(csysfds, RUSS_CONN_NSYSFDS);
-		russ_fds_close(ssysfds, RUSS_CONN_NSYSFDS);
+		russ_fds_close(self->sysfds, RUSS_CONN_NSYSFDS);
 		russ_fds_close(&self->sd, 1);
 		return -1;
-	}
-	/* copy server-side fds */
-	for (i = 0; i < nfds; i++) {
-		self->fds[i] = sfds[i];
 	}
 	russ_fds_close(&self->sd, 1);
 	return 0;

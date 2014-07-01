@@ -49,23 +49,23 @@ russ_standard_accept_handler(struct russ_lis *self, russ_deadline deadline) {
 */
 int
 russ_standard_answer_handler(struct russ_sconn *self) {
-	int	cfds[RUSS_CONN_NFDS], sfds[RUSS_CONN_NFDS];
+	int	cfds[RUSS_CONN_NFDS];
 	int	tmpfd;
 
 	russ_fds_init(cfds, RUSS_CONN_NFDS, -1);
-	russ_fds_init(sfds, RUSS_CONN_NFDS, -1);
-	if (russ_make_pipes(RUSS_CONN_STD_NFDS, cfds, sfds) < 0) {
+	russ_fds_init(self->fds, RUSS_CONN_NFDS, -1);
+	if (russ_make_pipes(RUSS_CONN_STD_NFDS, cfds, self->fds) < 0) {
 		fprintf(stderr, "error: cannot create pipes\n");
 		return -1;
 	}
 	/* swap fds for stdin */
 	tmpfd = cfds[0];
-	cfds[0] = sfds[0];
-	sfds[0] = tmpfd;
+	cfds[0] = self->fds[0];
+	self->fds[0] = tmpfd;
 
-	if (russ_sconn_answer(self, RUSS_CONN_STD_NFDS, cfds, sfds) < 0) {
+	if (russ_sconn_answer(self, RUSS_CONN_STD_NFDS, cfds) < 0) {
 		russ_fds_close(cfds, RUSS_CONN_STD_NFDS);
-		russ_fds_close(sfds, RUSS_CONN_STD_NFDS);
+		russ_fds_close(self->fds, RUSS_CONN_STD_NFDS);
 		return -1;
 	}
 	return 0;
