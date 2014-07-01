@@ -265,7 +265,6 @@ russ_sconn_close(struct russ_sconn *self) {
 int
 russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 	char	buf[1024];
-	char	*exit_string = "";
 	char	*bp, *bend;
 
 	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
@@ -273,9 +272,7 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 	}
 	bp = buf;
 	bend = bp+sizeof(buf);
-	if (((bp = russ_enc_exit(bp, bend, exit_status)) == NULL)
-		|| ((bp = russ_enc_s(bp, bend, exit_string)) == NULL)) {
-		// error?
+	if ((bp = russ_enc_exit(bp, bend, exit_status)) == NULL) {
 		return -1;
 	}
 	if (russ_writen(self->sysfds[RUSS_CONN_SYSFD_EXIT], buf, bp-buf) < bp-buf) {
@@ -286,32 +283,8 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 }
 
 /**
-* Helper routine to write error message and exit status.
-*
-* An error message is sent to the connection exit fd (with a
-* trailing newline) and the exit_status over the exit fd. If the
-* exit fd is already closed, then no message is written or exit
-* status sent.
-*
-* @param self		server connection object
-* @param msg		message string (no newline)
-* @param exit_status	exit status
-* @return		0 on success; -1 on failure
-*/
-int
-russ_sconn_exits(struct russ_sconn *self, const char *msg, int exit_status) {
-	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
-		return -1;
-	}
-	russ_dprintf(self->fds[2], "%s\n", msg);
-	return russ_sconn_exit(self, exit_status);
-}
-
-/**
 * Helper routine to write final message, write exit status, and
 * close connection fds.
-*
-* Calls russ_sconn_exits() followed by russ_sconn_close().
 *
 * @param self		server connection object
 * @param msg		message string (no newline)
@@ -321,11 +294,11 @@ russ_sconn_exits(struct russ_sconn *self, const char *msg, int exit_status) {
 */
 int
 russ_sconn_fatal(struct russ_sconn *self, const char *msg, int exit_status) {
-	int	ev;
-
-	ev = russ_sconn_exits(self, msg, exit_status);
-	russ_sconn_close(self);
-	return ev;
+	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
+		return -1;
+	}
+	russ_dprintf(self->fds[2], "%s\n", msg);
+	return russ_sconn_exit(self, exit_status);
 }
 
 /**
