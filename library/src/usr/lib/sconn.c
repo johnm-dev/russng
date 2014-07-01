@@ -86,22 +86,23 @@ russ_sconn_close_fd(struct russ_sconn *self, int index) {
 *
 * Each cfd has an sfd counterpart. The cfds are sent over the
 * connection and closed. The sfds are saved to the connection
-* object. 
+* object.
+*
+* Note: This is used for sending sysfds and fds.
 *
 * @param self		server connection object
 * @param nfds		number of fds to send (from index 0)
 * @param cfds		client-side descriptors
-* @param sfds		server-side descriptors
 * @return		0 on success; -1 on error
 */
 int
-russ_sconn_sendfds(struct russ_sconn *self, int nfds, int *cfds, int *sfds) {
-	char	buf[32+RUSS_CONN_NFDS], *bp, *bend;
+russ_sconn_sendfds(struct russ_sconn *self, int nfds, int *cfds) {
+	char	buf[32+RUSS_CONN_MAX_NFDS], *bp, *bend;
 	int	i;
 
 	/* find "real" nfds (where fd>=0) */
 	for (; (nfds > 0) && (cfds[nfds-1] < 0); nfds--);
-	if (nfds > RUSS_CONN_NFDS) {
+	if (nfds > RUSS_CONN_MAX_NFDS) {
 		return -1;
 	}
 
@@ -126,15 +127,14 @@ russ_sconn_sendfds(struct russ_sconn *self, int nfds, int *cfds, int *sfds) {
 			return -1;
 		}
 		russ_fds_close(&cfds[i], 1);
-		if (sfds) {
-			self->fds[i] = sfds[i];
-		}
 	}
 	return 0;
 }
 
 /**
 * Answer request and close socket.
+*
+* System fds are created and sent; supplied I/O fds are sent.
 *
 * @param self		accepted server connection object
 * @param nfds		number of elements in cfds (and sfds) array
@@ -144,9 +144,33 @@ russ_sconn_sendfds(struct russ_sconn *self, int nfds, int *cfds, int *sfds) {
 */
 int
 russ_sconn_answer(struct russ_sconn *self, int nfds, int *cfds, int *sfds) {
-	if ((nfds < 0) || (russ_sconn_sendfds(self, nfds, cfds, sfds) < 0)) {
+	int	csysfds[RUSS_CONN_NSYSFDS], ssysfds[RUSS_CONN_NSYSFDS];
+	int	i;
+
+	if (nfds < 0) {
+		return -1;
+	}
+
+	/* set up system fds */
+	russ_fds_init(csysfds, RUSS_CONN_NSYSFDS, -1);
+	russ_fds_init(ssysfds, RUSS_CONN_NSYSFDS, -1);
+	if (russ_make_pipes(RUSS_CONN_NSYSFDS, csysfds, ssysfds) < 0) {
+		fprintf(stderr, "error: cannot create pipes\n");
+		return -1;
+	}
+	/* copy server-side sysfds */
+	self->sysfds[RUSS_CONN_SYSFD_EXIT] = ssysfds[RUSS_CONN_SYSFD_EXIT];
+
+	if ((russ_sconn_sendfds(self, RUSS_CONN_NSYSFDS, csysfds) < 0)
+		|| (russ_sconn_sendfds(self, nfds, cfds) < 0)) {
+		russ_fds_close(csysfds, RUSS_CONN_NSYSFDS);
+		russ_fds_close(ssysfds, RUSS_CONN_NSYSFDS);
 		russ_fds_close(&self->sd, 1);
 		return -1;
+	}
+	/* copy server-side fds */
+	for (i = 0; i < nfds; i++) {
+		self->fds[i] = sfds[i];
 	}
 	russ_fds_close(&self->sd, 1);
 	return 0;
@@ -166,19 +190,19 @@ russ_sconn_answer(struct russ_sconn *self, int nfds, int *cfds, int *sfds) {
 */
 int
 russ_sconn_splice(struct russ_sconn *self, struct russ_cconn *dconn) {
-	int	cfds[RUSS_CONN_NFDS];
-	int	i, ev;
+	int	ev = 0;
 
-	for (i = 0; i < RUSS_CONN_NFDS; i++) {
-		cfds[i] = dconn->fds[i];
+	/* send sysfds and fds */
+	if ((russ_sconn_sendfds(self, RUSS_CONN_NSYSFDS, dconn->sysfds) < 0)
+		|| (russ_sconn_sendfds(self, RUSS_CONN_NFDS, dconn->fds) < 0)) {
+		ev = -1;
 	}
-	ev = russ_sconn_sendfds(self, RUSS_CONN_NFDS, cfds, NULL);
-
-	/* dconn fds are closed by russ_sconn_sendfds */
-	russ_fds_close(&dconn->sd, 1);
-
-	/* close sd and fds */
+	/* close fds */
+	russ_fds_close(self->sysfds, RUSS_CONN_NSYSFDS);
 	russ_fds_close(self->fds, RUSS_CONN_NFDS);
+
+	/* close sockets */
+	russ_fds_close(&dconn->sd, 1);
 	russ_fds_close(&self->sd, 1);
 
 	return ev;

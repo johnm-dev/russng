@@ -82,25 +82,26 @@ russ_cconn_close_fd(struct russ_cconn *self, int index) {
 *
 * @param self		client connection object
 * @param deadline	deadline for operation
+* @param nfds		size of fds array
+* @param fds		array for descriptors
 * @return		0 on success; -1 on error
 */
 static int
-russ_cconn_recvfds(struct russ_cconn *self, russ_deadline deadline) {
-	char	buf[32+RUSS_CONN_NFDS], *bp, *bend;
-	int	nfds, i;
+russ_cconn_recvfds(struct russ_cconn *self, russ_deadline deadline, int nfds, int *fds) {
+	char	buf[32+RUSS_CONN_MAX_NFDS], *bp, *bend;
+	int	recvnfds, i;
 
 	/* recv count of fds and fd statuses */
 	if ((russ_readn_deadline(deadline, self->sd, buf, 4) < 4)
-		|| (russ_dec_i(buf, &nfds) == NULL)
-		|| (nfds > RUSS_CONN_NFDS)
-		|| (russ_readn_deadline(deadline, self->sd, buf, nfds) < nfds)) {
+		|| (russ_dec_i(buf, &recvnfds) == NULL)
+		|| (recvnfds > nfds)
+		|| (russ_readn_deadline(deadline, self->sd, buf, recvnfds) < recvnfds)) {
 		return -1;
 	}
 
-	/* initialize and recv fds and load first nfds */
-	russ_fds_init(self->fds, RUSS_CONN_NFDS, -1);
-	for (i = 0; i < nfds; i++) {
-		if ((buf[i]) && (russ_recvfd(self->sd, &(self->fds[i])) < 0)) {
+	/* (assume initialization) recv fds and load */
+	for (i = 0; i < recvnfds; i++) {
+		if ((buf[i]) && (russ_recvfd(self->sd, &fds[i]) < 0)) {
 			return -1;
 		}
 	}
@@ -229,9 +230,13 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 		goto free_saddr;
 	}
 
+	russ_fds_init(cconn->sysfds, RUSS_CONN_NSYSFDS, -1);
+	russ_fds_init(cconn->fds, RUSS_CONN_NFDS, -1);
+
 	if (((req = russ_req_new(RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv)) == NULL)
 		|| (russ_cconn_send_request(cconn, deadline, req) < 0)
-		|| (russ_cconn_recvfds(cconn, deadline) < 0)) {
+		|| (russ_cconn_recvfds(cconn, deadline, RUSS_CONN_NSYSFDS, cconn->sysfds) < 0)
+		|| (russ_cconn_recvfds(cconn, deadline, RUSS_CONN_NFDS, cconn->fds) < 0)) {
 		goto free_request;
 	}
 	saddr = russ_free(saddr);

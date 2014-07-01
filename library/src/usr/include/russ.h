@@ -60,6 +60,8 @@ extern "C" {
 #define RUSS_CONN_NSYSFDS	1
 #define RUSS_CONN_SYSFD_EXIT	0
 
+#define RUSS_CONN_MAX_NFDS	( RUSS__MAX(RUSS_CONN_NFDS, RUSS_CONN_NSYSFDS) )
+
 #define RUSS_DEADLINE_NEVER	INT64_MAX
 
 /* common exit_status values */
@@ -342,7 +344,7 @@ int russ_sconn_exit(struct russ_sconn *, int);
 int russ_sconn_exits(struct russ_sconn *, const char *, int);
 int russ_sconn_fatal(struct russ_sconn *, const char *, int);
 int russ_sconn_redial_and_splice(struct russ_sconn *, russ_deadline, struct russ_req *);
-int russ_sconn_sendfds(struct russ_sconn *, int, int *, int *);
+int russ_sconn_sendfds(struct russ_sconn *, int, int *);
 int russ_sconn_splice(struct russ_sconn *, struct russ_cconn *);
 
 /* spath.c */
