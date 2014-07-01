@@ -66,6 +66,9 @@ const char		*HELP =
 "/env\n"
 "    Outputs environ entries to stdout.\n"
 "\n"
+"/exit <value>\n"
+"    Return with given exit value (between 0 and 255).\n"
+"\n"
 "/request\n"
 "    Outputs the request information at the server stdout.\n"
 "\n"
@@ -234,6 +237,27 @@ svc_env_handler(struct russ_sess *sess) {
 }
 
 void
+svc_exit_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+	int			ev, rv;
+
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		if ((req->argv == NULL)
+			|| (req->argv[0] == NULL)
+			|| ((rv = sscanf(req->argv[0], "%d", &ev)) < 1)
+			|| (rv == EOF)
+			|| (ev < 0)
+			|| (ev > 255)) {
+			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+		} else {
+			russ_sconn_exit(sconn, ev);
+		}
+		exit(0);
+	}
+}
+
+void
 svc_request_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
@@ -312,6 +336,7 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_add(root, "discard", svc_discard_handler) == NULL)
 		|| (russ_svcnode_add(root, "echo", svc_echo_handler) == NULL)
 		|| (russ_svcnode_add(root, "env", svc_env_handler) == NULL)
+		|| (russ_svcnode_add(root, "exit", svc_exit_handler) == NULL)
 		|| (russ_svcnode_add(root, "request", svc_request_handler) == NULL)
 		|| (russ_svcnode_add(root, "whoami", svc_whoami_handler) == NULL)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
