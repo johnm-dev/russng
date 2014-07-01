@@ -261,12 +261,18 @@ int
 russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 	char	buf[32], *bp;
 
+	/* close all non-sysfds */
+	russ_fds_close(self->fds, RUSS_CONN_NFDS);
+
+	/* send exit status */
 	bp = buf;
 	if ((self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0)
 		|| ((bp = russ_enc_exit(bp, bp+sizeof(buf), exit_status)) == NULL)
 		|| (russ_writen(self->sysfds[RUSS_CONN_SYSFD_EXIT], buf, bp-buf) < bp-buf)) {
 		return -1;
 	}
+
+	/* last step: close exit fd */
 	russ_fds_close(&self->sysfds[RUSS_CONN_SYSFD_EXIT], 1);
 	return 0;
 }
