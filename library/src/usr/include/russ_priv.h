@@ -46,6 +46,7 @@ int russ_conn_send_request(struct russ_conn *, russ_deadline, struct russ_req *)
 
 /* encdec.c */
 char *russ_dec_H(char *, uint16_t *);
+char *russ_dec_h(char *, int16_t *);
 char *russ_dec_I(char *, uint32_t *);
 char *russ_dec_i(char *, int32_t *);
 char *russ_dec_Q(char *, uint64_t *);
@@ -58,6 +59,7 @@ char *russ_dec_exit(char *, int *);
 char *russ_dec_req(char *, struct russ_req **);
 
 char *russ_enc_H(char *, char *, uint16_t);
+char *russ_enc_h(char *, char *, int16_t);
 char *russ_enc_I(char *, char *, uint32_t);
 char *russ_enc_i(char *, char *, int32_t);
 char *russ_enc_Q(char *, char *, uint64_t);

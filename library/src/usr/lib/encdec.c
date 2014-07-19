@@ -44,6 +44,20 @@ russ_dec_H(char *b, uint16_t *v) {
 }
 
 /**
+* Decode LE 16-bit signed integer.
+*
+* @param b		buffer
+* @param[out] v		storage area
+* @return		new buffer position; NULL if failure
+*/
+char *
+russ_dec_h(char *b, int16_t *v) {
+	*v = (int16_t)(uint8_t)b[0]
+		| (int16_t)(uint8_t)b[1]<<8;
+	return b+2;
+}
+
+/**
 * Decode LE 32-bit unsigned integer.
 *
 * @param b		buffer
@@ -277,6 +291,24 @@ russ_dec_req(char *b, struct russ_req **v) {
 */
 char *
 russ_enc_H(char *b, char *bend, uint16_t v) {
+	if ((bend-b) < 2) {
+		return NULL;
+	}
+	b[0] = (uint8_t)v;
+	b[1] = (uint8_t)(v>>8);
+	return b+2;
+}
+
+/**
+* Encode int16.
+*
+* @param b		buffer
+* @param bend		end of buffer
+* @param v		int16 value
+* @return		new buffer position; NULL if failure
+*/
+char *
+russ_enc_h(char *b, char *bend, int16_t v) {
 	if ((bend-b) < 2) {
 		return NULL;
 	}
