@@ -57,7 +57,7 @@ function is_mpich {
 PROG_NAME=`basename $0`
 
 export RUMPIRUN_MPIRUN=${RUMPIRUN_MPIRUN:-mpirun}
-export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun}
+export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun-mpi}
 
 if [ -n "${RUMPIRUN_ENV}" ]; then
 	export RURUN_ENV="${RUMPIRUN_ENV}"

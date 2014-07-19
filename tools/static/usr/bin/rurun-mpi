@@ -1,0 +1,8 @@
+#! /bin/bash
+#
+# rurun-mpi
+
+# when called by native mpirun as launcher; causes RUMPIRUN_ENV to
+# be used rather than RURUN_ENV (which is what rurun uses)
+
+exec rurun --mpi "${@}"

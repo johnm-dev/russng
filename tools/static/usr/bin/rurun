@@ -72,14 +72,8 @@ elif [ $# -lt 2 ]; then
 	exit 1
 fi
 
-
-# update attributes/env vars
 attrs=()
-if [ -n "${RURUN_ENV}" ]; then
-	for name in $(echo ${RURUN_ENV} | tr ',' ' '); do
-		attrs+=("-a" "${name}='$(printenv ${name})'")
-	done
-fi
+mpi=0
 
 while [ $# -gt 0 ]; do
 	case $1 in
@@ -111,6 +105,10 @@ while [ $# -gt 0 ]; do
 		shift 1
 		RURUN_EXEC_METHOD=login
 		;;
+	--mpi)
+		shift 1
+		mpi=1
+		;;
 	--pnet)
 		shift 1
 		RURUN_PNET_ADDR="$1"; shift 1
@@ -141,6 +139,19 @@ while [ $# -gt 0 ]; do
 		;;
 	esac
 done
+
+# get different env var list for mpi
+if [ ${mpi} -eq 1 ]; then
+	RURUN_ENV="${RUMPIRUN_ENV}"
+fi
+
+# get env attributes
+env=()
+if [ -n "${RURUN_ENV}" ]; then
+	for name in $(echo ${RURUN_ENV} | tr ',' ' '); do
+		env+=("-a" "${name}='$(printenv ${name})'")
+	done
+fi
 
 # debugging output
 if [ -n "${RURUN_DEBUG}" ]; then
@@ -257,6 +268,6 @@ fi
 
 # execute
 if [ -n "${RURUN_DEBUG}" ]; then
-	echo exec ruexec "${attrs[@]}" "${path}" "$*"
+	echo exec ruexec "${env[@]}" "${attrs[@]}" "${path}" "$*"
 fi
-exec ruexec "${attrs[@]}" "${path}" "$*"
+exec ruexec "${env[@]}" "${attrs[@]}" "${path}" "$*"
