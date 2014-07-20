@@ -51,7 +51,7 @@ struct helper_data {
 * @param data		helper_data object
 */
 static void
-*russ_svr_handler_helper(void *data) {
+russ_svr_handler_helper(void *data) {
 	struct russ_svr		*svr = ((struct helper_data *)data)->svr;
 	struct russ_sconn	*sconn = ((struct helper_data *)data)->sconn;
 
@@ -79,6 +79,7 @@ void
 russ_svr_loop_thread(struct russ_svr *self) {
 	struct russ_sconn	*sconn;
 	struct helper_data	*data;
+	pthread_t		th;
 
 	while (1) {
 		if (((sconn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL)
@@ -92,7 +93,7 @@ russ_svr_loop_thread(struct russ_svr *self) {
 		}
 		data->svr = self;
 		data->sconn = sconn;
-		if (pthread_create(NULL, NULL, russ_svr_handler_helper, data) < 0) {
+		if (pthread_create(&th, NULL, (void *)russ_svr_handler_helper, (void *)data) < 0) {
 			fprintf(stderr, "error: cannot spawn thread\n");
 		}
 	}
