@@ -149,7 +149,7 @@ fi
 env=()
 if [ -n "${RURUN_ENV}" ]; then
 	for name in $(echo ${RURUN_ENV} | tr ',' ' '); do
-		env+=("-a" "${name}='$(printenv ${name})'")
+		env+=("-a" "${name}=$(printenv ${name})")
 	done
 fi
 
