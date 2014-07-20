@@ -37,11 +37,15 @@ libruss = ctypes.cdll.LoadLibrary("libruss.so")
 
 # russ.h
 RUSS_CONN_NFDS = 32
-RUSS_CONN_STD_NFDS = 4
+RUSS_CONN_STD_NFDS = 3
 RUSS_CONN_FD_STDIN = 0
 RUSS_CONN_FD_STDOUT = 1
 RUSS_CONN_FD_STDERR = 2
-RUSS_CONN_FD_EXIT = 3
+
+RUSS_CONN_NSYSFDS = 1
+RUSS_CONN_FD_EXIT = 0
+
+RUSS_CONN_MAX_NFDS = max(RUSS_CONN_NFDS, RUSS_CONN_NSYSFDS)
 
 RUSS_DEADLINE_NEVER = (1<<63)-1 # INT64_MAX
 
@@ -70,7 +74,7 @@ RUSS_OPNUM_LIST = 6
 RUSS_REQ_ARGS_MAX = 1024
 RUSS_REQ_ATTRS_MAX = 1024
 RUSS_REQ_SPATH_MAX = 8192
-RUSS_REQ_PROTOCOL_STRING = "0009"
+RUSS_REQ_PROTOCOL_STRING = "0010"
 
 RUSS_SVR_LIS_SD_DEFAULT = 3
 RUSS_SVR_TIMEOUT_ACCEPT = (1<<31)-1 # INT32_MAX
@@ -117,6 +121,7 @@ class russ_cconn_Structure(ctypes.Structure):
     _fields_ = [
         ("sd", ctypes.c_int),
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
+        ("sysfds", ctypes.c_int*RUSS_CONN_NSYSFDS),
     ]
 
 class russ_sconn_Structure(ctypes.Structure):
@@ -124,6 +129,7 @@ class russ_sconn_Structure(ctypes.Structure):
         ("creds", russ_creds_Structure),
         ("sd", ctypes.c_int),
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
+        ("sysfds", ctypes.c_int*RUSS_CONN_NSYSFDS),
     ]
 
 class russ_sess_Structure(ctypes.Structure):
@@ -181,6 +187,13 @@ libruss.russ_buf_free.argtypes = [
     ctypes.POINTER(russ_buf_Structure),
 ]
 libruss.russ_buf_free.restype = ctypes.POINTER(russ_buf_Structure)
+
+libruss.russ_buf_set.argtypes = [
+    ctypes.POINTER(russ_buf_Structure),
+    ctypes.c_void_p,
+    ctypes.c_int,
+]
+libruss.russ_buf_set.restype = ctypes.c_int
 
 #
 # from cconn.c
@@ -327,7 +340,6 @@ libruss.russ_sconn_answer.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
-    ctypes.POINTER(ctypes.c_int),
 ]
 libruss.russ_sconn_answer.restype = ctypes.c_int
 
@@ -353,13 +365,6 @@ libruss.russ_sconn_exit.argtypes = [
     ctypes.c_int,
 ]
 libruss.russ_sconn_exit.restype = ctypes.c_int
-
-libruss.russ_sconn_exits.argtypes = [
-    ctypes.POINTER(russ_sconn_Structure),
-    ctypes.c_char_p,
-    ctypes.c_int,
-]
-libruss.russ_sconn_exits.restype = ctypes.c_int
 
 libruss.russ_sconn_fatal.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),

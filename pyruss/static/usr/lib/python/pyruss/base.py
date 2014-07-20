@@ -285,28 +285,22 @@ class ServerConn(Conn):
         creds = self._ptr.contents.creds
         return Credentials(creds.uid, creds.gid, creds.pid)
 
-    def answer(self, nfds, cfds, sfds):
+    def answer(self, nfds, cfds):
         if nfds:
             _cfds = (ctypes.c_int*nfds)(*tuple(cfds))
-            _sfds = (ctypes.c_int*nfds)(*tuple(sfds))
             rv = libruss.russ_sconn_answer(self._ptr, nfds,
-                ctypes.cast(_cfds, ctypes.POINTER(ctypes.c_int)),
-                ctypes.cast(_sfds, ctypes.POINTER(ctypes.c_int)))
+                ctypes.cast(_cfds, ctypes.POINTER(ctypes.c_int)))
             # update python side (in-place)
             cfds[0:] = [fd for fd in _cfds]
-            sfds[0:] = [fd for fd in _sfds]
             return rv
         else:
-            return libruss.russ_sconn_answer(self._ptr, 0, None, None)
+            return libruss.russ_sconn_answer(self._ptr, 0, None)
 
     def await_request(self, deadline):
         return libruss.russ_sconn_await_request(self._ptr, deadline)
 
     def exit(self, exit_status):
         return libruss.russ_sconn_exit(self._ptr, exit_status)
-
-    def exits(self, msg, exit_status):
-        return libruss.russ_sconn_exits(self._ptr, msg, exit_status)
 
     def fatal(self, msg, exit_status):
         return libruss.russ_sconn_fatal(self._ptr, msg, exit_status)
