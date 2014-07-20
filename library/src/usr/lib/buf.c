@@ -23,6 +23,7 @@
 */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <russ_priv.h>
 
@@ -94,4 +95,21 @@ russ_buf_free(struct russ_buf *self) {
 		self = russ_free(self);
 	}
 	return NULL;
+}
+
+/*
+* Copy to internal buffer.
+*
+* @param self		russ_buf object
+* @param buf		buf to copy from
+* @param count		number of bytes to copy
+* @return		number of bytes copied; -1 on failure
+*/
+int
+russ_buf_set(struct russ_buf *self, char *buf, int count) {
+	if (count > self->cap) {
+		memcpy(self->data, buf, count);
+	}
+	self->off = 0;
+	self->len = count;
 }

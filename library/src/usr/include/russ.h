@@ -258,6 +258,7 @@ struct russ_relay {
 int russ_buf_init(struct russ_buf *, char *, int, int);
 struct russ_buf *russ_buf_new(int);
 struct russ_buf *russ_buf_free(struct russ_buf *);
+int russ_buf_set(struct russ_buf *, char *buf, int count);
 
 /* cconn.c */
 struct russ_cconn *russ_cconn_free(struct russ_cconn *);
