@@ -365,6 +365,9 @@ russ_connectunix_deadline(russ_deadline deadline, char *path) {
 
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sun_family = AF_UNIX;
+	if (strlen(path) >= sizeof(servaddr.sun_path)) {
+		return -1;
+	}
 	strcpy(servaddr.sun_path, path);
 
 retry:
