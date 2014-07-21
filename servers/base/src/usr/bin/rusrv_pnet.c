@@ -551,7 +551,7 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 	exec_spath = "+/exec";
 	userhost = targetslist.targets[idx].userhost;
 	cgname = targetslist.targets[idx].cgroup;
-	if (cgname == NULL) {
+	if ((cgname == NULL) || (strcmp(cgname, "") == 0)) {
 		n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s/%s", relay_addr, userhost, exec_spath, tail);
 	} else {
 		n = snprintf(new_spath, sizeof(new_spath), "%s/%s/%s/cgroup/%s/%s", relay_addr, userhost, exec_spath, cgname, tail);
