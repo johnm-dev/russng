@@ -144,7 +144,9 @@ russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spa
 						n = sizeof(dbuf);
 						buf = dbuf;
 					}
-					if ((n == 0) || ((n = russ_read(fd, buf, n)) < 0)) {
+					if ((n == 0)
+						|| ((n = russ_read(fd, buf, n)) < 0)
+						|| (n == 0)) {
 						goto close_fd;
 					}
 					if (rbufs[i]->cap > 0) {
@@ -154,7 +156,9 @@ russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spa
 					n = rbufs[i]->len-rbufs[i]->off;
 					n = RUSS__MIN(n, 1<<16);
 					buf = &rbufs[i]->data[rbufs[i]->off];
-					if ((n == 0) || ((n = russ_write(fd, buf, n)) < 0)) {
+					if ((n == 0)
+						|| ((n = russ_write(fd, buf, n)) < 0)
+						|| (n == 0)) {
 						goto close_fd;
 					}
 					rbufs[i]->off += n;
