@@ -310,7 +310,7 @@ svc_p_pid_wait_handler(struct russ_sess *sess) {
 			russ_sconn_fatal(sconn, "error: invalid pid", RUSS_EXIT_FAILURE);
 			exit(0);
 		}
-		pollfds[0].fd = sconn->fds[3]; /* exit */
+		pollfds[0].fd = sconn->sysfds[RUSS_CONN_SYSFD_EXIT]; /* exit */
 		pollfds[0].events = POLLHUP;
 
 		/* periodically check pid */

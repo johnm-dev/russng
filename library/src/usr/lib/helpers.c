@@ -127,7 +127,7 @@ russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spa
 	pollfds[1].events = POLLIN;
 	pollfds[2].fd = cconn->fds[2];
 	pollfds[2].events = POLLIN;
-	pollfds[3].fd = cconn->fds[3];
+	pollfds[3].fd = cconn->sysfds[RUSS_CONN_SYSFD_EXIT];
 	pollfds[3].events = POLLIN;
 	openfds = 4;
 
@@ -167,6 +167,7 @@ close_fd:
 				}
 			}
 		}
+		/* special case exit fd */
 		if (pollfds[3].revents & POLLIN) {
 			wrv = russ_cconn_wait(cconn, deadline, exit_status);
 			openfds--;

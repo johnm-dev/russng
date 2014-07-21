@@ -152,7 +152,7 @@ svc_exec_handler(struct russ_sess *sess) {
 			russ_close(conn->fds[0]);
 			russ_close(conn->fds[1]);
 			russ_close(conn->fds[2]);
-			russ_close(conn->fds[3]);
+			russ_close(conn->sysfds[RUSS_CONN_SYSFD_EXIT]);
 			close_fds(3, 127);
 
 			/* augment and execute */
