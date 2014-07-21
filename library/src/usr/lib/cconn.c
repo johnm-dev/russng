@@ -118,6 +118,7 @@ russ_cconn_recvfds(struct russ_cconn *self, russ_deadline deadline, int nfds, in
 */
 void
 russ_cconn_close(struct russ_cconn *self) {
+	russ_fds_close(self->sysfds, RUSS_CONN_NSYSFDS);
 	russ_fds_close(self->fds, RUSS_CONN_NFDS);
 	russ_fds_close(&self->sd, 1);
 }

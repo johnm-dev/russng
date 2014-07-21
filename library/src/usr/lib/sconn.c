@@ -240,6 +240,7 @@ russ_sconn_await_request(struct russ_sconn *self, russ_deadline deadline) {
 */
 void
 russ_sconn_close(struct russ_sconn *self) {
+	russ_fds_close(self->sysfds, RUSS_CONN_NSYSFDS);
 	russ_fds_close(self->fds, RUSS_CONN_NFDS);
 	russ_fds_close(&self->sd, 1);
 }
