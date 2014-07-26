@@ -104,6 +104,12 @@ extern "C" {
 
 #define RUSS_SERVICES_DIR	"/var/run/russ/services"
 
+#define RUSS_WAIT_UNSET		1
+#define RUSS_WAIT_OK		0
+#define RUSS_WAIT_FAILURE	-1
+#define RUSS_WAIT_BADFD		-2
+#define RUSS_WAIT_TIMEOUT	-3
+
 typedef uint32_t	russ_opnum;
 
 /**

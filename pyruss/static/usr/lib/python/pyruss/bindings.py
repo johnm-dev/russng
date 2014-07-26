@@ -82,6 +82,12 @@ RUSS_SVR_TIMEOUT_AWAIT = 15000
 RUSS_SVR_TYPE_FORK = 1
 RUSS_SVR_TYPE_THREAD = 2
 
+RUSS_WAIT_UNSET = 1
+RUSS_WAIT_OK = 0
+RUSS_WAIT_FAILURE = -1
+RUSS_WAIT_BADFD = -2
+RUSS_WAIT_TIMEOUT = -3
+
 # typedef aliases
 russ_deadline = ctypes.c_int64
 russ_opnum = ctypes.c_uint32
