@@ -207,8 +207,8 @@ svc_attr_handler(struct russ_sess *sess) {
 			cconn->fds[2] = -1;
 			russ_relay_serve(relay, -1, cconn->sysfds[RUSS_CONN_SYSFD_EXIT]);
 			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
-				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
-				exit_status = RUSS_EXIT_SYS_FAILURE;
+				fprintf(stderr, "%s\n", RUSS_MSG_BADCONNEVENT);
+				exit_status = RUSS_EXIT_SYSFAILURE;
 			}
 		}
 

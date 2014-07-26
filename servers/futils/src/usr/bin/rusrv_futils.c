@@ -313,7 +313,7 @@ svc_head_handler(struct russ_sess *sess) {
 		argv = req->argv;
 		if ((argv) && ((argv = parse_copt_nopt(argv, &copt, &cval, &nopt, &nval)) == NULL)) {
 			/* parse error */
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		filenames = ((argv == NULL) || (argv[0] == NULL)) \
@@ -435,7 +435,7 @@ svc_tail_handler(struct russ_sess *sess) {
 		argv = req->argv;
 		if ((argv) && ((argv = parse_copt_nopt(argv, &copt, &cval, &nopt, &nval)) == NULL)) {
 			/* parse error */
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		filenames = ((argv == NULL) || (argv[0] == NULL)) \
@@ -548,7 +548,7 @@ svc_write_handler(struct russ_sess *sess) {
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		argv = req->argv;
 		if (argv == NULL) {
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		filename = NULL;
@@ -556,14 +556,14 @@ svc_write_handler(struct russ_sess *sess) {
 		if (strcmp(*argv, "-s") == 0) {
 			argv++;
 			if (*argv == NULL) {
-				russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+				russ_sconn_fatal(sconn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 				exit(0);
 			}
 			s = *argv;
 			argv++;
 		}
 		if ((*argv == NULL) || (*(argv+1))) {
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		filename = *argv;

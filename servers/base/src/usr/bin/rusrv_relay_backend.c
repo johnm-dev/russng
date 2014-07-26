@@ -51,17 +51,17 @@ main(int argc, char **argv) {
 		|| ((bp = russ_dec_I(bp, &size)) == NULL)
 		|| (size > 16384)
 		|| (read(0, bp, size) < 0)) {
-		exit(RUSS_EXIT_SYS_FAILURE);
+		exit(RUSS_EXIT_SYSFAILURE);
 	}
 	/* op, addr */
 	if (((bp = russ_dec_s(bp, &op)) == NULL)
 		|| ((bp = russ_dec_s(bp, &addr)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &attrs, &cnt)) == NULL)
 		|| ((bp = russ_dec_sarray0(bp, &args, &cnt)) == NULL)) {
-		exit(RUSS_EXIT_SYS_FAILURE);
+		exit(RUSS_EXIT_SYSFAILURE);
 	}
 	if ((conn = russ_dialv(RUSS_DEADLINE_NEVER, op, addr, attrs, args)) == NULL) {
-		exit(RUSS_EXIT_SYS_FAILURE);
+		exit(RUSS_EXIT_SYSFAILURE);
 	}
 
 	/* initialize forwarders (handing off fds) and start threads */
@@ -73,12 +73,12 @@ main(int argc, char **argv) {
 	conn->fds[2] = -1;
 	if (russ_fwds_run(fwds, RUSS_CONN_NFDS) < 0) {
 		fprintf(stderr, "error: could not forward bytes\n");
-		exit(RUSS_EXIT_SYS_FAILURE);
+		exit(RUSS_EXIT_SYSFAILURE);
 	}
 
 	/* wait for exit */
 	if (russ_conn_wait(conn, -1, &exit_status) != 0) {
-		exit_status = RUSS_EXIT_SYS_FAILURE;
+		exit_status = RUSS_EXIT_SYSFAILURE;
 	}
 	russ_fwd_join(&(fwds[1]));
 	russ_fwd_join(&(fwds[2]));

@@ -201,9 +201,9 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	}
 
 	/* validate opnum */
-	if (req->opnum == RUSS_OPNUM_NOT_SET) {
+	if (req->opnum == RUSS_OPNUM_NOTSET) {
 		/* invalid opnum */
-		russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_SYS_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_BADOP, RUSS_EXIT_SYSFAILURE);
 		goto cleanup;
 	}
 	/* validate spath: must be absolute */
@@ -215,7 +215,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	if ((node = russ_svcnode_find(self->root, &(req->spath[1]), sess.spath, sizeof(sess.spath))) == NULL) {
 		/* we need standard fds */
 		russ_standard_answer_handler(sconn);
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		goto cleanup;
 	}
 
@@ -227,7 +227,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	/* auto switch user if requested */
 	if (self->auto_switch_user) {
 		if (russ_switch_user(sconn->creds.uid, sconn->creds.gid, 0, NULL) < 0) {
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 			goto cleanup;
 		}
 	}
@@ -242,7 +242,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	if ((node) && (node->handler)) {
 		node->handler(&sess);
 	} else {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	}
 
 	/*
@@ -261,7 +261,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 				}
 				russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 			} else if (node->wildcard) {
-				russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+				russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 			}
 		}
 		break;
@@ -288,7 +288,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		break;
 	default:
-		russ_sconn_fatal(sconn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_BADOP, RUSS_EXIT_FAILURE);
 	}
 
 cleanup:
@@ -296,7 +296,7 @@ cleanup:
 	if (req != NULL) {
 		req = russ_req_free(req);
 	}
-	russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	russ_sconn_close(sconn);
 }
 
@@ -330,7 +330,7 @@ russ_svr_once(struct russ_svr *self, int asd) {
 			russ_svr_handler(self, sconn);
 
 			/* failsafe exit info (if not provided) */
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
 			sconn = russ_sconn_free(sconn);
 			exit(0);
 		}
@@ -372,7 +372,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 				russ_svr_handler(self, sconn);
 
 				/* failsafe exit info (if not provided) */
-				russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+				russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
 				sconn = russ_sconn_free(sconn);
 				exit(0);
 			}

@@ -311,7 +311,7 @@ russ_sconn_redial_and_splice(struct russ_sconn *self, russ_deadline deadline, st
 	/* switch user */
 	if (russ_switch_user(self->creds.uid, self->creds.gid, 0, NULL) < 0) {
 		russ_standard_answer_handler(self);
-		russ_sconn_fatal(self, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(self, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 		return -1;
 	}
 
@@ -320,7 +320,7 @@ russ_sconn_redial_and_splice(struct russ_sconn *self, russ_deadline deadline, st
 		|| (russ_sconn_splice(self, cconn) < 0)) {
 		russ_cconn_close(cconn);
 		russ_standard_answer_handler(self);
-		russ_sconn_fatal(self, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(self, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		return -1;
 	}
 	return 0;

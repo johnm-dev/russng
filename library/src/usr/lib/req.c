@@ -52,7 +52,7 @@ russ_req_new(const char *protocol_string, const char *op, const char *spath, cha
 	self->protocol_string = NULL;
 	self->spath = NULL;
 	self->op = NULL;
-	self->opnum = RUSS_OPNUM_NOT_SET;;
+	self->opnum = RUSS_OPNUM_NOTSET;;
 	self->attrv = NULL;
 	self->argv = NULL;
 

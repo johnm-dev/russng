@@ -314,7 +314,7 @@ master_handler(struct russ_sess *sess) {
 			if (strcmp(req->spath, "/debug") == 0) {
 				svc_debug_handler(sess);
 			} else {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+				russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 			}
 			break;
 		case RUSS_OPNUM_HELP:
@@ -328,11 +328,11 @@ master_handler(struct russ_sess *sess) {
 			} else if (strcmp(req->spath, "/dial") == 0) {
 				svc_dial_handler(sess);
 			} else {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+				russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 			}
 			break;
 		default:
-			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+			russ_conn_fatal(conn, RUSS_MSG_BADOP, RUSS_EXIT_FAILURE);
 		}
 	}
 }

@@ -249,7 +249,7 @@ svc_exit_handler(struct russ_sess *sess) {
 			|| (rv == EOF)
 			|| (ev < 0)
 			|| (ev > 255)) {
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 		} else {
 			russ_sconn_exit(sconn, ev);
 		}

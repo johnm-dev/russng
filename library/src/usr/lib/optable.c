@@ -51,7 +51,7 @@ russ_optable_find_opnum(struct russ_optable *self, const char *str) {
 	}
 
 	if (str == NULL) {
-		return RUSS_OPNUM_NOT_SET;
+		return RUSS_OPNUM_NOTSET;
 	}
 	/* RUSS_OPNUM_EXTENSION tests last to ensure match */
 	for (; ; self++) {
@@ -75,7 +75,7 @@ russ_optable_find_op(struct russ_optable *self, russ_opnum opnum) {
 		self = russ_optable;
 	}
 
-	for (; self->num != RUSS_OPNUM_NOT_SET; self++) {
+	for (; self->num != RUSS_OPNUM_NOTSET; self++) {
 		if (self->num == opnum) {
 			break;
 		}

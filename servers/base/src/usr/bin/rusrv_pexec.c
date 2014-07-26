@@ -164,7 +164,7 @@ svc_exec_handler(struct russ_sess *sess) {
 		russ_conn_fatal(conn, "error: could not execute program", RUSS_EXIT_FAILURE);
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	}
 	exit(0);
 }
@@ -195,7 +195,7 @@ svc_reload_handler(struct russ_sess *sess) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	}
 	exit(0);
 }
@@ -219,7 +219,7 @@ svc_shutdown_handler(struct russ_sess *sess) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	}
 	exit(0);
 }
@@ -242,7 +242,7 @@ svc_status_handler(struct russ_sess *sess) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	}
 	exit(0);
 }

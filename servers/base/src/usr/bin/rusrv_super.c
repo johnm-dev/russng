@@ -394,7 +394,7 @@ redial_and_splice(struct russ_sess *sess, char *svrname) {
 			/* this should not happen for root */
 			russ_standard_answer_handler(sconn);
 			/* TODO: what msg should be output? */
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 
@@ -407,7 +407,7 @@ redial_and_splice(struct russ_sess *sess, char *svrname) {
 			|| (setegid(getgid()) < 0)) {
 			russ_standard_answer_handler(sconn);
 			/* TODO: what msg should be output? */
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 
@@ -494,7 +494,7 @@ svc_server_handler(struct russ_sess *sess) {
 
 no_service:
 	russ_standard_answer_handler(sconn);
-	russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+	russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 done:
 	svrname = russ_free(svrname);
 	russ_sconn_close(sconn);

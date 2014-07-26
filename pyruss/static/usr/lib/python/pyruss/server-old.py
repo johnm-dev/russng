@@ -203,7 +203,7 @@ class Server:
                 os.write(conn.get_fd(1), "%s\n" % "\n".join(sorted(node.children)))
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
-                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+                conn.fatal(pyruss.RUSS_MSG_NOSERVICE, pyruss.RUSS_EXIT_FAILURE)
         elif req.opnum == pyruss.RUSS_OPNUM_HELP:
             # default handling for "help"; use node spath == "/"
             node, ctxt.spath = self.service_tree.find("/")
@@ -211,12 +211,12 @@ class Server:
                 node.handler(conn, ctxt)
                 conn.exit(pyruss.RUSS_EXIT_SUCCESS)
             else:
-                conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+                conn.fatal(pyruss.RUSS_MSG_NOSERVICE, pyruss.RUSS_EXIT_FAILURE)
         elif node.handler:
             # service request from this tree for all other ops
             node.handler(conn, ctxt)
         else:
-            conn.fatal(pyruss.RUSS_MSG_NO_SERVICE, pyruss.RUSS_EXIT_FAILURE)
+            conn.fatal(pyruss.RUSS_MSG_NOSERVICE, pyruss.RUSS_EXIT_FAILURE)
 
         # clean up
         conn.exit(pyruss.RUSS_EXIT_FAILURE)

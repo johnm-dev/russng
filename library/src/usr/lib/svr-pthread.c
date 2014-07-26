@@ -58,7 +58,7 @@ russ_svr_handler_helper(void *data) {
 	russ_svr_handler(svr, sconn);
 
 	/* failsafe exit info (if not provided) */
-	russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+	russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
 
 	/* free objects */
 	sconn = russ_sconn_free(sconn);
@@ -85,7 +85,7 @@ russ_svr_loop_thread(struct russ_svr *self) {
 		if (((sconn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL)
 			|| ((data = malloc(sizeof(struct helper_data))) != NULL)) {
 			if (sconn) {
-				russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+				russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
 				russ_sconn_free(sconn);
 			}
 			fprintf(stderr, "error: cannot accept connection\n");

@@ -83,7 +83,7 @@ switch_user(struct russ_sconn *sconn) {
 
 	/* switch user */
 	if (russ_switch_user(uid, gid, 0, NULL) < 0) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SWITCH_USER, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	return 0;
@@ -205,7 +205,7 @@ svc_net_handler(struct russ_sess *sess) {
 	/* extract and validate user@host and new_spath */
 	userhost = &(req->spath[5]);
 	if ((p = index(userhost, '/')) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	new_spath = strdup(p);
@@ -221,7 +221,7 @@ svc_root_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
 }
@@ -241,11 +241,11 @@ svc_userhostport_handler(struct russ_sess *sess) {
 	char			*userhostport;
 
 	if ((userhostport = get_userhostport(req->spath)) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
 	userhostport = russ_free(userhostport);
@@ -263,7 +263,7 @@ svc_userhostport_other_handler(struct russ_sess *sess) {
 	char			*userhostport, *new_spath;
 
 	if ((userhostport = get_userhostport(req->spath)) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 	new_spath = strchr(req->spath+1, '/');

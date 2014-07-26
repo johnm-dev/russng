@@ -106,7 +106,7 @@ svc_root_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
 }

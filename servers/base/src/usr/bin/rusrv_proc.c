@@ -294,12 +294,12 @@ svc_p_pid_wait_handler(struct russ_sess *sess) {
 		deadline = RUSS_DEADLINE_NEVER;
 
 		if ((req->argv)	&& (sscanf(req->argv[0], "%d", &poll_delay) < 0)) {
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		poll_delay = (poll_delay < 1000) ? 1000 : poll_delay;
 		if ((req->argv) && (req->argv[0] != NULL) && (sscanf(req->argv[1], "%d", &timeout) < 0)) {
-			russ_sconn_fatal(sconn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		deadline = russ_to_deadline(timeout);

@@ -82,11 +82,11 @@ master_handler(struct russ_sess *sess) {
 			break;
 		case RUSS_OPNUM_LIST:
 			russ_dprintf(conn->fds[1], "%s", HELP);
-			russ_conn_fatal(conn, RUSS_MSG_UNDEF_SERVICE, RUSS_EXIT_FAILURE);
+			russ_conn_fatal(conn, RUSS_MSG_UNDEFSERVICE, RUSS_EXIT_FAILURE);
 			break;
 		default:
 			/* TODO: something else needs to be here */
-			russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+			russ_conn_fatal(conn, RUSS_MSG_BADOP, RUSS_EXIT_FAILURE);
 		}
 	}
 	exit(0);

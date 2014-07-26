@@ -234,14 +234,14 @@ main(int argc, char **argv) {
 			timeout *= 1000;
 			deadline = russ_to_deadline(timeout);
 		} else {
-			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
+			fprintf(stderr, "%s\n", RUSS_MSG_BADARGS);
 			exit(1);
 		}
 	}
 
 	/* [op], spath and args */
 	if (argi == argc) {
-		fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
+		fprintf(stderr, "%s\n", RUSS_MSG_BADARGS);
 		exit(1);
 	}
 	if ((strcmp(prog_name, "rudial") == 0) || (strcmp(prog_name, "ruexec") == 0)) {
@@ -254,7 +254,7 @@ main(int argc, char **argv) {
 			op = "execute";
 			spath = argv[argi++];
 		} else {
-			fprintf(stderr, "%s\n", RUSS_MSG_BAD_ARGS);
+			fprintf(stderr, "%s\n", RUSS_MSG_BADARGS);
 			exit(1);
 		}
 	} else if (strcmp(prog_name, "ruhelp") == 0) {
@@ -283,8 +283,8 @@ main(int argc, char **argv) {
 	} else {
 		cconn = russ_dialv(deadline, op, spath, attrv, &(argv[argi]));
 		if (cconn == NULL) {
-			fprintf(stderr, "%s\n", RUSS_MSG_NO_DIAL);
-			exit(RUSS_EXIT_CALL_FAILURE);
+			fprintf(stderr, "%s\n", RUSS_MSG_NODIAL);
+			exit(RUSS_EXIT_CALLFAILURE);
 		}
 
 		{
@@ -310,8 +310,8 @@ main(int argc, char **argv) {
 			cconn->fds[2] = -1;
 			russ_relay_serve(relay, -1, cconn->sysfds[RUSS_CONN_SYSFD_EXIT]);
 			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
-				fprintf(stderr, "%s\n", RUSS_MSG_BAD_CONN_EVENT);
-				exit_status = RUSS_EXIT_SYS_FAILURE;
+				fprintf(stderr, "%s\n", RUSS_MSG_BADCONNEVENT);
+				exit_status = RUSS_EXIT_SYSFAILURE;
 			}
 			if (cbfd >= 0) {
 				close(cbfd);

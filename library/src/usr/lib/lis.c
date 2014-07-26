@@ -227,7 +227,7 @@ russ_lis_loop(struct russ_lis *self, russ_accepthandler accept_handler,
 				exit(-1);
 			}
 			req_handler(sconn);
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_EXIT, RUSS_EXIT_SYS_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
 			sconn = russ_sconn_free(sconn);
 			exit(0);
 		}

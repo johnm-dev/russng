@@ -67,21 +67,21 @@ extern "C" {
 /* common exit_status values */
 #define RUSS_EXIT_SUCCESS	0
 #define RUSS_EXIT_FAILURE	1
-#define RUSS_EXIT_CALL_FAILURE	126
-#define RUSS_EXIT_SYS_FAILURE	127
+#define RUSS_EXIT_CALLFAILURE	126
+#define RUSS_EXIT_SYSFAILURE	127
 
 /* common messages */
-#define RUSS_MSG_BAD_ARGS	"error: bad/missing arguments"
-#define RUSS_MSG_BAD_CONN_EVENT	"error: unexpected connection event"
-#define RUSS_MSG_BAD_OP		"error: unsupported operation"
-#define RUSS_MSG_NO_DIAL	"error: cannot dial service"
-#define RUSS_MSG_NO_EXIT	"error: no exit status"
-#define RUSS_MSG_NO_LIST	"info: list not available"
-#define RUSS_MSG_NO_SERVICE	"error: no service"
-#define RUSS_MSG_NO_SWITCH_USER	"error: cannot switch user"
-#define RUSS_MSG_UNDEF_SERVICE	"warning: undefined service"
+#define RUSS_MSG_BADARGS	"error: bad/missing arguments"
+#define RUSS_MSG_BADCONNEVENT	"error: unexpected connection event"
+#define RUSS_MSG_BADOP		"error: unsupported operation"
+#define RUSS_MSG_NODIAL		"error: cannot dial service"
+#define RUSS_MSG_NOEXIT		"error: no exit status"
+#define RUSS_MSG_NOLIST		"info: list not available"
+#define RUSS_MSG_NOSERVICE	"error: no service"
+#define RUSS_MSG_NOSWITCHUSER	"error: cannot switch user"
+#define RUSS_MSG_UNDEFSERVICE	"warning: undefined service"
 
-#define RUSS_OPNUM_NOT_SET	0
+#define RUSS_OPNUM_NOTSET	0
 #define RUSS_OPNUM_EXTENSION	1
 #define RUSS_OPNUM_EXECUTE	2
 #define RUSS_OPNUM_HELP		3
@@ -109,6 +109,20 @@ extern "C" {
 #define RUSS_WAIT_FAILURE	-1
 #define RUSS_WAIT_BADFD		-2
 #define RUSS_WAIT_TIMEOUT	-3
+
+/* deprecated - pre v4.1 */
+#define RUSS_EXIT_CALL_FAILURE	RUSS_EXIT_CALLFAILURE
+#define RUSS_EXIT_SYS_FAILURE	RUSS_EXIT_SYSFAILURE
+#define RUSS_MSG_BAD_ARGS	RUSS_MSG_BADARGS
+#define RUSS_MSG_BAD_CONN_EVENT	RUSS_MSG_BADCONNEVENT
+#define RUSS_MSG_BAD_OP		RUSS_MSG_BADOP
+#define RUSS_MSG_NO_DIAL	RUSS_MSG_NODIAL
+#define RUSS_MSG_NO_EXIT	RUSS_MSG_NOEXIT
+#define RUSS_MSG_NO_LIST	RUSS_MSG_NOLIST
+#define RUSS_MSG_NO_SERVICE	RUSS_MSG_NOSERVICE
+#define RUSS_MSG_NO_SWITCH_USER	RUSS_MSG_NOSWITCHUSER
+#define RUSS_MSG_UNDEF_SERVICE	RUSS_MSG_UNDEFSERVICE
+#define RUSS_OPNUM_NOT_SET	RUSS_OPNUM_NOTSET
 
 typedef uint32_t	russ_opnum;
 

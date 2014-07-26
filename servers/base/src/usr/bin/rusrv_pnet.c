@@ -190,7 +190,7 @@ svc_host_handler(struct russ_sess *sess) {
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		if (targetslist.n == 0) {
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		} else {
 			for (i = 0; i < targetslist.n; i++) {
 				russ_dprintf(sconn->fds[1], "%s\n", targetslist.targets[i].userhost);
@@ -232,12 +232,12 @@ svc_host_userhost_handler(struct russ_sess *sess) {
 	char			*userhost;
 
 	if ((userhost = get_valid_userhost(req->spath)) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
 	userhost = russ_free(userhost);
@@ -260,7 +260,7 @@ svc_host_userhost_other_handler(struct russ_sess *sess) {
 	int			i, n;
 
 	if ((userhost = get_valid_userhost(req->spath)) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 
@@ -288,7 +288,7 @@ svc_id_handler(struct russ_sess *sess) {
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		if (targetslist.n == 0) {
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		} else {
 			for (i = 0; i < targetslist.n; i++) {
 				russ_dprintf(sconn->fds[1], "%d\n", i);
@@ -326,12 +326,12 @@ svc_id_index_handler(struct russ_sess *sess) {
 	int			i, idx, wrap;
 
 	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 
 	if (req->opnum ==  RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
 }
@@ -353,7 +353,7 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	int			i, idx, n, wrap = 0;
 
 	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 
@@ -396,7 +396,7 @@ svc_net_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
 }
@@ -408,12 +408,12 @@ svc_net_userhost_handler(struct russ_sess *sess) {
 	char			*userhost;
 
 	if ((userhost = get_userhost(req->spath)) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
 	userhost = russ_free(userhost);
@@ -436,7 +436,7 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 	int			n;
 
 	if ((userhost = get_userhost(req->spath)) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 
@@ -532,7 +532,7 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 	int			i, idx, n, wrap = 0;
 
 	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
 

@@ -364,7 +364,7 @@ class Listener:
                             pass
                         try:
                             if sconn:
-                                sconn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
+                                sconn.fatal(RUSS_MSG_NOEXIT, RUSS_EXIT_FAILURE)
                                 sconn.close()
                         except:
                             pass
@@ -390,7 +390,7 @@ class Listener:
                 pass
             try:
                 if sconn:
-                    sconn.fatal(RUSS_MSG_NO_EXIT, RUSS_EXIT_FAILURE)
+                    sconn.fatal(RUSS_MSG_NOEXIT, RUSS_EXIT_FAILURE)
                     sconn.close()
             except:
                 pass

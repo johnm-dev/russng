@@ -51,19 +51,19 @@ RUSS_DEADLINE_NEVER = (1<<63)-1 # INT64_MAX
 
 RUSS_EXIT_SUCCESS = 0
 RUSS_EXIT_FAILURE = 1
-RUSS_EXIT_CALL_FAILURE = 126
-RUSS_EXIT_SYS_FAILURE = 127
+RUSS_EXIT_CALLFAILURE = 126
+RUSS_EXIT_SYSFAILURE = 127
 
-RUSS_MSG_BAD_ARGS = "error: bad/missing arguments"
-RUSS_MSG_BAD_OP = "error: unsupported operation"
-RUSS_MSG_NO_DIAL = "error: cannot dial service"
-RUSS_MSG_NO_EXIT = "error: no exit status"
-RUSS_MSG_NO_LIST = "info: list not available"
-RUSS_MSG_NO_SERVICE = "error: no service"
-RUSS_MSG_NO_SWITCH_USER = "error: cannot switch user"
-RUSS_MSG_UNDEF_SERVICE = "warning: undefined service"
+RUSS_MSG_BADARGS = "error: bad/missing arguments"
+RUSS_MSG_BADOP = "error: unsupported operation"
+RUSS_MSG_NODIAL = "error: cannot dial service"
+RUSS_MSG_NOEXIT = "error: no exit status"
+RUSS_MSG_NOLIST = "info: list not available"
+RUSS_MSG_NOSERVICE = "error: no service"
+RUSS_MSG_NOSWITCHUSER = "error: cannot switch user"
+RUSS_MSG_UNDEFSERVICE = "warning: undefined service"
 
-RUSS_OPNUM_NOT_SET = 0
+RUSS_OPNUM_NOTSET = 0
 RUSS_OPNUM_EXTENSION = 1
 RUSS_OPNUM_EXECUTE = 2
 RUSS_OPNUM_HELP = 3
@@ -87,6 +87,19 @@ RUSS_WAIT_OK = 0
 RUSS_WAIT_FAILURE = -1
 RUSS_WAIT_BADFD = -2
 RUSS_WAIT_TIMEOUT = -3
+
+# deprecated - pre v4.1
+RUSS_EXIT_CALL_FAILURE = RUSS_EXIT_CALLFAILURE
+RUSS_EXIT_SYS_FAILURE = RUSS_EXIT_SYSFAILURE
+RUSS_MSG_BAD_ARGS = RUSS_MSG_BADARGS
+RUSS_MSG_BAD_OP = RUSS_MSG_BADOP
+RUSS_MSG_NO_DIAL = RUSS_MSG_NODIAL
+RUSS_MSG_NO_EXIT = RUSS_MSG_NOEXIT
+RUSS_MSG_NO_LIST = RUSS_MSG_NOLIST
+RUSS_MSG_NO_SERVICE = RUSS_MSG_NOSERVICE
+RUSS_MSG_NO_SWITCH_USER = RUSS_MSG_NOSWITCHUSER
+RUSS_MSG_UNDEF_SERVICE = RUSS_MSG_UNDEFSERVICE
+RUSS_OPNUM_NOT_SET = RUSS_OPNUM_NOTSET
 
 # typedef aliases
 russ_deadline = ctypes.c_int64

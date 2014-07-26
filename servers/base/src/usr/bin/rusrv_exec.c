@@ -497,7 +497,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 		} else if (strcmp(req->spath, "/simple") == 0) {
 			svc_simple_handler(sess);
 		} else {
-			russ_sconn_fatal(sconn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 	}
@@ -509,7 +509,7 @@ svc_cgroup_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NO_LIST, RUSS_EXIT_SUCCESS);
+		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
 }

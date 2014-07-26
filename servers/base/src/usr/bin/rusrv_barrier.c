@@ -216,7 +216,7 @@ backend_master_handler(struct russ_conn *conn) {
 				russ_dprintf(outfd, "%d\n", barrier->nitems);
 				russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 			} else {
-				russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+				russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 			}
 			return;
 		}
@@ -231,12 +231,12 @@ backend_master_handler(struct russ_conn *conn) {
 			russ_dprintf(outfd, "cancel\ncount\ntags\nttl\nwait\nwcount\n");
 			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		} else {
-			russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+			russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		}
 		return;
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_BAD_OP, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_BADOP, RUSS_EXIT_FAILURE);
 		return;
 	}
 
@@ -383,7 +383,7 @@ svc_generate_handler(struct russ_conn *conn) {
 		russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	}
 }
 
@@ -460,13 +460,13 @@ svc_new_handler(struct russ_sess *sess) {
 		saddr = russ_free(saddr);
 		break;
 	default:
-		russ_conn_fatal(conn, RUSS_MSG_NO_SERVICE, RUSS_EXIT_FAILURE);
+		russ_conn_fatal(conn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	}
 
 	return;
 
 error_bad_args:
-	russ_conn_fatal(conn, RUSS_MSG_BAD_ARGS, RUSS_EXIT_FAILURE);
+	russ_conn_fatal(conn, RUSS_MSG_BADARGS, RUSS_EXIT_FAILURE);
 }
 
 void

@@ -124,7 +124,7 @@ class Server:
             try:
                 self.handler(sconn)
                 # failsafe exit info (if not provided)
-                sconn.fatal(pyruss.RUSS_MSG_NO_EXIT, pyruss.RUSS_EXIT_SYS_FAILURE)
+                sconn.fatal(pyruss.RUSS_MSG_NOEXIT, pyruss.RUSS_EXIT_SYSFAILURE)
                 sconn.free()
             except:
                 pass
