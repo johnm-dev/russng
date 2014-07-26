@@ -131,7 +131,8 @@ russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spa
 	pollfds[3].events = POLLIN;
 	openfds = 4;
 
-	while ((openfds > 0) && ((rv = russ_poll_deadline(deadline, pollfds, 4)) >= 0)) {
+	wrv = RUSS_WAIT_UNSET; /* not set */
+	while ((openfds > 0) && ((rv = russ_poll_deadline(deadline, pollfds, 4)) > 0)) {
 		for (i = 0; i < 3; i++) {
 			if (pollfds[i].revents) {
 				fd = pollfds[i].fd;
@@ -177,9 +178,9 @@ close_fd:
 			openfds--;
 		}
 	}
-	if ((rv < 0) && (deadline < russ_to_deadline(0))) {
+	if ((rv == 0) && (wrv > RUSS_WAIT_OK)) {
 		/* wait rv as expired deadline */
-		wrv = -3;
+		wrv = RUSS_WAIT_TIMEOUT;
 	}
 	russ_cconn_close(cconn);
 	return wrv;
