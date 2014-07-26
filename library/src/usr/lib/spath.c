@@ -57,7 +57,7 @@
 * @return		absolute path (malloc'ed); NULL on failure
 */
 char *
-russ_spath_resolve_with_uid(const char *spath, uid_t *uid_p, int follow) {
+russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 	struct stat	st;
 	char		buf[RUSS_REQ_SPATH_MAX], lnkbuf[RUSS_REQ_SPATH_MAX], tmpbuf[RUSS_REQ_SPATH_MAX];
 	char		*bp, *bend, *bp2;
@@ -192,13 +192,13 @@ russ_spath_resolve_with_uid(const char *spath, uid_t *uid_p, int follow) {
 }
 
 /**
-* Simple case for russ_spath_resolve_with_uid without current uid.
+* Simple case for russ_spath_resolvewithuid without current uid.
 */
 char *
 russ_spath_resolve(const char *spath) {
 	uid_t	uid;
 	uid = getuid();
-	return russ_spath_resolve_with_uid(spath, &uid, 1);
+	return russ_spath_resolvewithuid(spath, &uid, 1);
 }
 
 /**

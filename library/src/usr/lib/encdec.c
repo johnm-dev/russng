@@ -236,7 +236,7 @@ russ_dec_sarrayn(char *b, char ***vpp, int *alen) {
 /**
 * Decode exit status.
 * @param b		buffer
-* @param[out] exit_status	exit_status
+* @param[out] exitst	exit status
 * @return		new buffer position; NULL if failure
 */
 char *
@@ -262,8 +262,8 @@ russ_dec_req(char *b, struct russ_req **v) {
 		return NULL;
 	}
 	if (((b = russ_dec_i(b, &sz)) == NULL)
-		|| ((b = russ_dec_s(b, &(req->protocol_string))) == NULL)
-		|| (strcmp(RUSS_REQ_PROTOCOL_STRING, req->protocol_string) != 0)
+		|| ((b = russ_dec_s(b, &(req->protocolstring))) == NULL)
+		|| (strcmp(RUSS_REQ_PROTOCOLSTRING, req->protocolstring) != 0)
 		|| ((b = russ_dec_b(b, &dummy)) == NULL)
 		|| ((b = russ_dec_s(b, &(req->spath))) == NULL)
 		|| ((b = russ_dec_s(b, &(req->op))) == NULL)
@@ -499,7 +499,7 @@ russ_enc_sarray0(char *b, char *bend, char **v) {
 *
 * @param b		buffer
 * @param bend		end of buffer
-* @param v		exit_status
+* @param v		exit status
 * @return		new buffer position; NULL on failure
 */
 char *
@@ -521,7 +521,7 @@ russ_enc_req(char *b, char *bend, struct russ_req *v) {
 
 	if ((v == NULL)
 		|| ((b = russ_enc_i(b, bend, 0)) == NULL)
-		|| ((b = russ_enc_s(b, bend, v->protocol_string)) == NULL)
+		|| ((b = russ_enc_s(b, bend, v->protocolstring)) == NULL)
 		|| ((b = russ_enc_b(b, bend, NULL, 0)) == NULL) /* dummy */
 		|| ((b = russ_enc_s(b, bend, v->spath)) == NULL)
 		|| ((b = russ_enc_s(b, bend, v->op)) == NULL)

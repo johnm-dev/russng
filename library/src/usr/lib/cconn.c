@@ -87,7 +87,7 @@ russ_cconn_close_fd(struct russ_cconn *self, int index) {
 * @return		0 on success; -1 on error
 */
 static int
-russ_cconn_recvfds(struct russ_cconn *self, russ_deadline deadline, int nfds, int *fds) {
+russ_cconn_recv_fds(struct russ_cconn *self, russ_deadline deadline, int nfds, int *fds) {
 	char	buf[32+RUSS_CONN_MAX_NFDS], *bp, *bend;
 	int	recvnfds, i;
 
@@ -101,7 +101,7 @@ russ_cconn_recvfds(struct russ_cconn *self, russ_deadline deadline, int nfds, in
 
 	/* (assume initialization) recv fds and load */
 	for (i = 0; i < recvnfds; i++) {
-		if ((buf[i]) && (russ_recvfd(self->sd, &fds[i]) < 0)) {
+		if ((buf[i]) && (russ_recv_fd(self->sd, &fds[i]) < 0)) {
 			return -1;
 		}
 	}
@@ -133,16 +133,15 @@ russ_cconn_close(struct russ_cconn *self) {
 * Note: the other (non-exit fd) fds are not affected.
 *
 * @param self		client connection object
-* @param[out] exit_status
-			exit status
+* @param[out] exitst	exit status
 * @param deadline	deadline to wait
 * @return		0 on success; on -1 general failure; -2 on exit fd closed; -3 on deadline expired
 */
 int
-russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exit_status) {
+russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exitst) {
 	struct pollfd	poll_fds[1];
 	char		buf[1024];
-	int		rv, _exit_status;
+	int		rv, _exitst;
 
 	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
 		return RUSS_WAIT_BADFD;
@@ -166,9 +165,9 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exit_statu
 					/* serious error; close fd? */
 					return RUSS_WAIT_FAILURE;
 				}
-				russ_dec_exit(buf, &_exit_status);
-				if (exit_status != NULL) {
-					*exit_status = _exit_status;
+				russ_dec_exit(buf, &_exitst);
+				if (exitst != NULL) {
+					*exitst = _exitst;
 				}
 				/* TODO: exit_string is ignored */
 				break;
@@ -192,7 +191,7 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exit_statu
 * @return		0 on success; -1 on error
 */
 int
-russ_cconn_send_request(struct russ_cconn *self, russ_deadline deadline, struct russ_req *req) {
+russ_cconn_send_req(struct russ_cconn *self, russ_deadline deadline, struct russ_req *req) {
 	char	buf[RUSS_REQ_BUF_MAX], *bp = NULL;
 
 	if ((req == NULL)
@@ -234,10 +233,10 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 	russ_fds_init(cconn->sysfds, RUSS_CONN_NSYSFDS, -1);
 	russ_fds_init(cconn->fds, RUSS_CONN_NFDS, -1);
 
-	if (((req = russ_req_new(RUSS_REQ_PROTOCOL_STRING, op, spath2, attrv, argv)) == NULL)
-		|| (russ_cconn_send_request(cconn, deadline, req) < 0)
-		|| (russ_cconn_recvfds(cconn, deadline, RUSS_CONN_NSYSFDS, cconn->sysfds) < 0)
-		|| (russ_cconn_recvfds(cconn, deadline, RUSS_CONN_NFDS, cconn->fds) < 0)) {
+	if (((req = russ_req_new(RUSS_REQ_PROTOCOLSTRING, op, spath2, attrv, argv)) == NULL)
+		|| (russ_cconn_send_req(cconn, deadline, req) < 0)
+		|| (russ_cconn_recv_fds(cconn, deadline, RUSS_CONN_NSYSFDS, cconn->sysfds) < 0)
+		|| (russ_cconn_recv_fds(cconn, deadline, RUSS_CONN_NFDS, cconn->fds) < 0)) {
 		goto free_request;
 	}
 	saddr = russ_free(saddr);

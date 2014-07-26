@@ -78,8 +78,8 @@ class ServiceNode:
     def find(self, path):
         return ServiceNode(libruss.russ_svcnode_find(self._ptr, path))
 
-    def set_auto_answer(self, value):
-        return libruss.russ_svcnode_set_auto_answer(self._ptr, value)
+    def set_autoanswer(self, value):
+        return libruss.russ_svcnode_set_autoanswer(self._ptr, value)
 
     def set_virtual(self, value):
         return libruss.russ_svcnode_set_virtual(self._ptr, value)
@@ -130,7 +130,7 @@ class Server:
                 pass
 
         while True:
-            sconn = self.accept(self._ptr.contents.accept_timeout)
+            sconn = self.accept(self._ptr.contents.accepttimeout)
             if not sconn:
                 sys.stderr.write("error: cannot accept connection\n")
                 continue
@@ -140,8 +140,8 @@ class Server:
             else:
                 sys.stderr.write("error: cannot spawn thread\n")
 
-    def set_auto_switch_user(self, value):
-        return libruss.russ_svr_set_auto_switch_user(self._ptr, value)
+    def set_autoswitchuser(self, value):
+        return libruss.russ_svr_set_autoswitchuser(self._ptr, value)
 
     def set_help(self, value):
         return libruss.russ_svr_set_help(self._ptr, value)

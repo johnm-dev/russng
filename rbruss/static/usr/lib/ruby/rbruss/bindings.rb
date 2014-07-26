@@ -46,7 +46,7 @@ module Russ
   end
 
   class Russ_Request_Structure < FFI::Struct
-    layout :protocol_string, :string,
+    layout :protocolstring, :string,
       :spath, :string,
       :op, :string,
       :attrc, :int,
@@ -76,7 +76,7 @@ module Russ
   attach_function 'russ_loop', [:pointer, :pointer], :void
   attach_function 'russ_answer', [:pointer, :int], :pointer
   attach_function 'russ_accept', [:pointer, :pointer, :pointer], :int
-  attach_function 'russ_await_request', [:pointer], :int
+  attach_function 'russ_await_req', [:pointer], :int
   attach_function 'russ_close_listener', [:pointer], :void
   attach_function 'russ_free_listener', [:pointer], :pointer
   attach_function 'russ_loop', [:pointer, :handler_func], :void
@@ -226,8 +226,8 @@ module Russ
       Russ.russ_accept(@raw_conn, _cfds, _sfds)
     end
 
-    def await_request
-      Russ.russ_await_request(@raw_conn)
+    def await_req
+      Russ.russ_await_req(@raw_conn)
     end
   end
 

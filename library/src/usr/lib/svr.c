@@ -69,11 +69,11 @@ russ_svr_new(struct russ_svcnode *root, int type, int sd) {
 	self->uid = -1;
 	self->gid = -1;
 	/* self->lis set above */
-	self->accept_handler = russ_standard_accept_handler;
-	self->accept_timeout = RUSS_SVR_TIMEOUT_ACCEPT;
-	self->answer_handler = russ_standard_answer_handler;
-	self->await_timeout = RUSS_SVR_TIMEOUT_AWAIT;
-	self->auto_switch_user = 0;
+	self->accepthandler = russ_standard_accept_handler;
+	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
+	self->answerhandler = russ_standard_answer_handler;
+	self->awaittimeout = RUSS_SVR_TIMEOUT_AWAIT;
+	self->autoswitchuser = 0;
 	self->help = NULL;
 
 	return self;
@@ -89,7 +89,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int sd) {
 */
 struct russ_sconn *
 russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
-	return self->accept_handler(self->lis, deadline);
+	return self->accepthandler(self->lis, deadline);
 }
 
 struct russ_lis *
@@ -130,7 +130,7 @@ russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
 	if (handler == NULL) {
 		return -1;
 	}
-	self->accept_handler = handler;
+	self->accepthandler = handler;
 	return 0;
 }
 
@@ -145,11 +145,11 @@ russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
 * @return		0 on success; -1 on failure
 */
 int
-russ_svr_set_auto_switch_user(struct russ_svr *self, int value) {
+russ_svr_set_autoswitchuser(struct russ_svr *self, int value) {
 	if (self == NULL) {
 		return -1;
 	}
-	self->auto_switch_user = value;
+	self->autoswitchuser = value;
 	return 0;
 }
 
@@ -195,7 +195,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		return;
 	}
 
-	if ((req = russ_sconn_await_request(sconn, russ_to_deadline(self->await_timeout))) == NULL) {
+	if ((req = russ_sconn_await_req(sconn, russ_to_deadline(self->awaittimeout))) == NULL) {
 		/* failure */
 		goto cleanup;
 	}
@@ -219,13 +219,13 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		goto cleanup;
 	}
 
-	if ((node->auto_answer)
-		&& ((self->answer_handler == NULL) || (self->answer_handler(sconn) < 0))) {
+	if ((node->autoanswer)
+		&& ((self->answerhandler == NULL) || (self->answerhandler(sconn) < 0))) {
 		goto cleanup;
 	}
 
 	/* auto switch user if requested */
-	if (self->auto_switch_user) {
+	if (self->autoswitchuser) {
 		if (russ_switch_user(sconn->creds.uid, sconn->creds.gid, 0, NULL) < 0) {
 			russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 			goto cleanup;
@@ -357,7 +357,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	}
 
 	while (1) {
-		if ((sconn = self->accept_handler(self->lis, russ_to_deadline(self->accept_timeout))) == NULL) {
+		if ((sconn = self->accepthandler(self->lis, russ_to_deadline(self->accepttimeout))) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
 			sleep(1);
 			continue;

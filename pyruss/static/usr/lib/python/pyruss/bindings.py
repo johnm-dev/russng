@@ -74,7 +74,7 @@ RUSS_OPNUM_LIST = 6
 RUSS_REQ_ARGS_MAX = 1024
 RUSS_REQ_ATTRS_MAX = 1024
 RUSS_REQ_SPATH_MAX = 8192
-RUSS_REQ_PROTOCOL_STRING = "0010"
+RUSS_REQ_PROTOCOLSTRING = "0010"
 
 RUSS_SVR_LIS_SD_DEFAULT = 3
 RUSS_SVR_TIMEOUT_ACCEPT = (1<<31)-1 # INT32_MAX
@@ -128,7 +128,7 @@ class russ_lis_Structure(ctypes.Structure):
 
 class russ_req_Structure(ctypes.Structure):
     _fields_ = [
-        ("protocol_string", ctypes.c_char_p),
+        ("protocolstring", ctypes.c_char_p),
         ("op", ctypes.c_char_p),
         ("opnum", russ_opnum),
         ("spath", ctypes.c_char_p),
@@ -174,9 +174,9 @@ class russ_svr_Structure(ctypes.Structure):
         ("uid", ctypes.c_uint),
         ("gid", ctypes.c_uint),
         ("lis", ctypes.POINTER(russ_lis_Structure)),
-        ("accept_timeout", ctypes.c_int),
-        ("await_timeout", ctypes.c_int),
-        ("auto_switch_user", ctypes.c_int),
+        ("accepttimeout", ctypes.c_int),
+        ("awaittimeout", ctypes.c_int),
+        ("autoswitchuser", ctypes.c_int),
     ]
 
 russ_sess_Structure._fields_ = [
@@ -362,11 +362,11 @@ libruss.russ_sconn_answer.argtypes = [
 ]
 libruss.russ_sconn_answer.restype = ctypes.c_int
 
-libruss.russ_sconn_await_request.argtypes = [
+libruss.russ_sconn_await_req.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),
     russ_deadline,
 ]
-libruss.russ_sconn_await_request.restype = ctypes.POINTER(russ_req_Structure)
+libruss.russ_sconn_await_req.restype = ctypes.POINTER(russ_req_Structure)
 
 libruss.russ_sconn_close.argtypes = [
     ctypes.c_void_p
@@ -397,20 +397,20 @@ libruss.russ_sconn_free.argtypes = [
 ]
 libruss.russ_sconn_free.restype = ctypes.POINTER(russ_sconn_Structure)
 
-libruss.russ_sconn_redial_and_splice.argtypes = [
+libruss.russ_sconn_redialandsplice.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),
     russ_deadline,
     ctypes.POINTER(russ_req_Structure),
 ]
-libruss.russ_sconn_redial_and_splice.restype = ctypes.c_int
+libruss.russ_sconn_redialandsplice.restype = ctypes.c_int
 
-libruss.russ_sconn_sendfds.argtypes = [
+libruss.russ_sconn_send_fds.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),
     ctypes.c_int,
     ctypes.c_void_p,
     ctypes.c_void_p,
 ]
-libruss.russ_sconn_sendfds.restype = ctypes.c_int
+libruss.russ_sconn_send_fds.restype = ctypes.c_int
 
 libruss.russ_sconn_splice.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),
@@ -488,11 +488,11 @@ libruss.russ_svr_handler.argtypes = [
 ]
 libruss.russ_svr_handler.restype = None
 
-libruss.russ_svr_set_auto_switch_user.argtypes = [
+libruss.russ_svr_set_autoswitchuser.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
     ctypes.c_int,
 ]
-libruss.russ_svr_set_auto_switch_user.restype = ctypes.c_int
+libruss.russ_svr_set_autoswitchuser.restype = ctypes.c_int
 
 libruss.russ_svr_set_help.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
@@ -516,10 +516,10 @@ libruss.russ_to_deadline.argtypes = [
 ]
 libruss.russ_to_deadline.restype = russ_deadline
 
-libruss.russ_to_deadline_diff.argtypes = [
+libruss.russ_to_deadlinediff.argtypes = [
     russ_deadline,
 ]
-libruss.russ_to_deadline_diff.restype = russ_deadline
+libruss.russ_to_deadlinediff.restype = russ_deadline
 
 libruss.russ_to_timeout.argtypes = [
     russ_deadline,

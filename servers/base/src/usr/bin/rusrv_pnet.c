@@ -277,7 +277,7 @@ svc_host_userhost_other_handler(struct russ_sess *sess) {
 	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 
-	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
+	russ_sconn_redialandsplice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 }
 
 void
@@ -387,7 +387,7 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 
-	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
+	russ_sconn_redialandsplice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 }
 
 void
@@ -452,7 +452,7 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 	userhost = russ_free(userhost);
 	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
-	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
+	russ_sconn_redialandsplice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 }
 
 /**
@@ -564,11 +564,11 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 	req->spath = russ_free(req->spath);
 	req->spath = strdup(new_spath);
 
-	russ_sconn_redial_and_splice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
+	russ_sconn_redialandsplice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 }
 
 struct russ_sconn *
-accept_handler(struct russ_lis *self, russ_deadline deadline) {
+accepthandler(struct russ_lis *self, russ_deadline deadline) {
 	struct russ_sconn	*sconn;
 
 	if ((sconn = russ_lis_accept(self, deadline)) != NULL) {
@@ -671,7 +671,7 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(root, "count", svc_count_handler)) == NULL)
 //		|| ((node = russ_svcnode_add(root, "first", svc_first_handler)) == NULL)
 //		|| (russ_svcnode_set_virtual(node, 1) < 0)
-//		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+//		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 
 		|| ((node = russ_svcnode_add(root, "host", svc_host_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_host_userhost_handler)) == NULL)
@@ -679,7 +679,7 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(node, "*", svc_host_userhost_other_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 
 		|| ((node = russ_svcnode_add(root, "id", svc_id_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_id_index_handler)) == NULL)
@@ -687,7 +687,7 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(node, "*", svc_id_index_other_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 
 		|| ((node = russ_svcnode_add(root, "net", svc_net_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_net_userhost_handler)) == NULL)
@@ -695,16 +695,16 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(node, "*", svc_net_userhost_other_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 
 		|| ((node = russ_svcnode_add(root, "next", svc_next_handler)) == NULL)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 		|| ((node = russ_svcnode_add(root, "random", svc_random_handler)) == NULL)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_accepthandler(svr, accept_handler) < 0)
+		|| (russ_svr_set_accepthandler(svr, accepthandler) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)
 
 		/* use svc_id_*_handlers as appropriate */
@@ -714,7 +714,7 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(node, "*", svc_run_index_other_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(node, 0) < 0)) {
+		|| (russ_svcnode_set_autoanswer(node, 0) < 0)) {
 
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);

@@ -138,7 +138,7 @@ class ServiceTree:
         req = sess.get_request()
         if req.opnum == pyruss.RUSS_OPNUM_EXECUTE:
             fd = sconn.get_fd(1)
-            os.write(fd, "protocol string (%s)\n" % req.protocol_string)
+            os.write(fd, "protocol string (%s)\n" % req.protocolstring)
             os.write(fd, "spath (%s)\n" % req.spath)
             os.write(fd, "op (%s)\n" % req.op)
 

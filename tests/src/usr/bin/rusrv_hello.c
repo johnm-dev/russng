@@ -50,7 +50,7 @@ main(int argc, char **argv) {
 	}
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_auto_switch_user(svr, 1) < 0)
+		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
 		|| (russ_svr_set_help(svr, "Hello world example server.\n") < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);

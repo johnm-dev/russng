@@ -146,7 +146,7 @@ svc_attr_handler(struct russ_sess *sess) {
 	char			*spath;
 	char			*attr, *attreq;
 	char			*name, *value;
-	int			i, attrlen, exit_status;
+	int			i, attrlen, exitst;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		spath = req->spath;
@@ -195,20 +195,20 @@ svc_attr_handler(struct russ_sess *sess) {
 			int			x;
 
 			relay = russ_relay_new(3);
-			x = russ_relay_add_with_callback(relay, sconn->fds[0], cconn->fds[0], bufsize, 1,
+			x = russ_relay_addwithcallback(relay, sconn->fds[0], cconn->fds[0], bufsize, 1,
 				(fds[0] >= 0) ? tee_callback : NULL, (void *)0);
-			russ_relay_add_with_callback(relay, cconn->fds[1], sconn->fds[1], bufsize, 1,
+			russ_relay_addwithcallback(relay, cconn->fds[1], sconn->fds[1], bufsize, 1,
 				(fds[1] >= 0) ? tee_callback : NULL, (void *)1);
-			russ_relay_add_with_callback(relay, cconn->fds[2], sconn->fds[2], bufsize, 1,
+			russ_relay_addwithcallback(relay, cconn->fds[2], sconn->fds[2], bufsize, 1,
 				(fds[2] >= 0) ? tee_callback : NULL, (void *)2);
 
 			cconn->fds[0] = -1;
 			cconn->fds[1] = -1;
 			cconn->fds[2] = -1;
 			russ_relay_serve(relay, -1, cconn->sysfds[RUSS_CONN_SYSFD_EXIT]);
-			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
+			if (russ_cconn_wait(cconn, -1, &exitst) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BADCONNEVENT);
-				exit_status = RUSS_EXIT_SYSFAILURE;
+				exitst = RUSS_EXIT_SYSFAILURE;
 			}
 		}
 
@@ -217,7 +217,7 @@ svc_attr_handler(struct russ_sess *sess) {
 		russ_cconn_close(cconn);
 		cconn = russ_cconn_free(cconn);
 
-		russ_sconn_exit(sconn, exit_status);
+		russ_sconn_exit(sconn, exitst);
 		russ_sconn_close(sconn);
 		sconn = russ_sconn_free(sconn);
 	}
@@ -258,9 +258,9 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(root, "*", svc_attr_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		//|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		//|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_auto_switch_user(svr, 1) < 0)
+		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);

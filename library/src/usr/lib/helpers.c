@@ -65,14 +65,13 @@ __russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 * stdout, and stderr comes from/goes to 0 capacity buffers
 * effectively mimicking /dev/null.
 *
-* @param[out] exit_status
-*			exit status returned
+* @param[out] exitst	exit status returned
 * @return		return value of russ_cconn_wait()
 *
 * @see russ_dialv()
 */
 int
-russ_dialv_wait(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv, int *exit_status) {
+russ_dialv_wait(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv, int *exitst) {
 	struct russ_buf	*rbufs[3];
 	int		ev, rv;
 	int		i;
@@ -81,7 +80,7 @@ russ_dialv_wait(russ_deadline deadline, const char *op, const char *spath, char 
 		rbufs[i] = russ_buf_new(0);
 	}
 
-	rv = russ_dialv_wait_inouterr(deadline, op, spath, attrv, argv, exit_status, (struct russ_buf **)&rbufs);
+	rv = russ_dialv_wait_inouterr(deadline, op, spath, attrv, argv, exitst, (struct russ_buf **)&rbufs);
 
 	for (i = 0; i < 3; i++) {
 		rbufs[i] = russ_buf_free(rbufs[i]);
@@ -99,15 +98,14 @@ russ_dialv_wait(russ_deadline deadline, const char *op, const char *spath, char 
 * status is important.
 *
 * @param[inout] rbufs	array of russ_buf objects to hold in, out, err
-* @param[out] exit_status
-*			exit status returned
+* @param[out] exitst	exit status returned
 * @return		return value of russ_cconn_wait()
 *
 * @see russ_dialv()
 */
 int
 russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv,
-	int *exit_status, struct russ_buf **rbufs) {
+	int *exitst, struct russ_buf **rbufs) {
 	struct russ_cconn	*cconn;
 	struct pollfd		pollfds[4];
 	char			*buf, dbuf[1<<16];
@@ -174,7 +172,7 @@ close_fd:
 		}
 		/* special case exit fd */
 		if (pollfds[3].revents & POLLIN) {
-			wrv = russ_cconn_wait(cconn, deadline, exit_status);
+			wrv = russ_cconn_wait(cconn, deadline, exitst);
 			openfds--;
 		}
 	}
@@ -194,14 +192,14 @@ close_fd:
 */
 int
 russ_dialv_wait_inouterr3(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv,
-	int *exit_status, struct russ_buf *stdin, struct russ_buf *stdout, struct russ_buf *stderr) {
+	int *exitst, struct russ_buf *stdin, struct russ_buf *stdout, struct russ_buf *stderr) {
 	struct russ_buf	*rbufs[3];
 
 	rbufs[0] = stdin;
 	rbufs[1] = stdout;
 	rbufs[2] = stderr;
 
-	return russ_dialv_wait_inouterr(deadline, op, spath, attrv, argv, exit_status, rbufs);
+	return russ_dialv_wait_inouterr(deadline, op, spath, attrv, argv, exitst, rbufs);
 }
 
 /**

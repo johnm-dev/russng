@@ -57,7 +57,7 @@ russ_svcnode_new(const char *name, russ_svchandler handler) {
 	self->next = NULL;
 	self->children = NULL;
 
-	self->auto_answer = 1;
+	self->autoanswer = 1;
 	self->virtual = 0;
 	self->wildcard = 0;
 	return self;
@@ -177,11 +177,11 @@ russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int 
 }
 
 int
-russ_svcnode_set_auto_answer(struct russ_svcnode *self, int value) {
+russ_svcnode_set_autoanswer(struct russ_svcnode *self, int value) {
 	if (self == NULL) {
 		return -1;
 	}
-	self->auto_answer = value;
+	self->autoanswer = value;
 	return 0;
 }
 

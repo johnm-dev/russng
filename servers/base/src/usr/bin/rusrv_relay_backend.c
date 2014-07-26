@@ -41,7 +41,7 @@ main(int argc, char **argv) {
 	int			size, cnt;
 	char			buf[16384], *bp;
 	FILE			*f;
-	int			exit_status;
+	int			exitst;
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -77,13 +77,13 @@ main(int argc, char **argv) {
 	}
 
 	/* wait for exit */
-	if (russ_conn_wait(conn, -1, &exit_status) != 0) {
-		exit_status = RUSS_EXIT_SYSFAILURE;
+	if (russ_conn_wait(conn, -1, &exitst) != 0) {
+		exitst = RUSS_EXIT_SYSFAILURE;
 	}
 	russ_fwd_join(&(fwds[1]));
 	russ_fwd_join(&(fwds[2]));
 
 	russ_conn_close(conn);
 	conn = russ_conn_free(conn);
-	exit(exit_status);
+	exit(exitst);
 }

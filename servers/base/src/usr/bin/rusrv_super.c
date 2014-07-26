@@ -148,13 +148,13 @@ stop_server(char *svrname) {
 }
 
 /**
-* Simple case for russ_spath_resolve_with_uid without current uid.
+* Simple case for russ_spath_resolvewithuid without current uid.
 */
 char *
 _russ_spath_resolve(char *spath) {
 	uid_t	uid;
 	uid = getuid();
-	return russ_spath_resolve_with_uid(spath, &uid, 0);
+	return russ_spath_resolvewithuid(spath, &uid, 0);
 }
 
 /**
@@ -381,7 +381,7 @@ russ_spath_reprefix(char *spath, char *oldpref, char *newpref) {
 * @return		0 on success; -1 on failure
 */
 int
-redial_and_splice(struct russ_sess *sess, char *svrname) {
+redialandsplice(struct russ_sess *sess, char *svrname) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;	
 	struct russ_cconn	*cconn;
@@ -488,7 +488,7 @@ svc_server_handler(struct russ_sess *sess) {
 	}
 	req->spath = russ_free(req->spath);
 	req->spath = spath;
-	if (redial_and_splice(sess, svrname) < 0) {
+	if (redialandsplice(sess, svrname) < 0) {
 		goto no_service;
 	}
 
@@ -547,7 +547,7 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(root, "*", svc_server_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_auto_answer(node, 0) < 0)
+		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
 		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");

@@ -38,11 +38,11 @@
 * @param rfd		read fd
 * @param wfd		write fd
 * @param bufsize	size of buffer (to allocate)
-* @param auto_close	1 to close fds
+* @param autoclose	1 to close fds
 * @return		0 on success; -1 on failure
 */
 int
-russ_relaystream_init(struct russ_relaystream *self, int rfd, int wfd, int bufsize, int auto_close) {
+russ_relaystream_init(struct russ_relaystream *self, int rfd, int wfd, int bufsize, int autoclose) {
 	struct russ_buf	*rbuf;
 
 	if ((self == NULL)
@@ -55,14 +55,14 @@ russ_relaystream_init(struct russ_relaystream *self, int rfd, int wfd, int bufsi
 	self->rbuf = rbuf;
 	self->rfd = rfd;
 	self->wfd = wfd;
-	self->auto_close = auto_close;
+	self->autoclose = autoclose;
 	self->bidir = 0;
 
 	/* stats */
-	self->last_read = 0;
-	self->last_write = 0;
-	self->nbytes_read;
-	self->nbytes_written;
+	self->rlast = 0;
+	self->wlast = 0;
+	self->nrbytes;
+	self->nwbytes;
 	self->nreads = 0;
 	self->nwrites = 0;
 
@@ -90,14 +90,14 @@ russ_relaystream_free(struct russ_relaystream *self) {
 * @param rfd		read fd
 * @param wfd		write fd
 * @param bufsize	buffer size
-* @param auto_close	flag to automatically close
+* @param autoclose	flag to automatically close
 * @return		relaystream on success; NULL on failure
 */
 struct russ_relaystream *
-russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close, russ_relaystream_callback cb, void *cbarg) {
+russ_relaystream_new(int rfd, int wfd, int bufsize, int autoclose, russ_relaystream_callback cb, void *cbarg) {
 	struct russ_relaystream	*self;
 
-	if (((rfd < 0) || (wfd < 0)) && (auto_close)) {
+	if (((rfd < 0) || (wfd < 0)) && (autoclose)) {
 		if (rfd < 0) {
 			close(rfd);
 		}
@@ -114,16 +114,16 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int auto_close, russ_relayst
 
 	self->rfd = rfd;
 	self->wfd = wfd;
-	self->auto_close = auto_close;
+	self->autoclose = autoclose;
 	self->bidir = 0;
 	self->cb = cb;
 	self->cbarg = cbarg;
 
 	/* stats */
-	self->last_read = 0;
-	self->last_write = 0;
-	self->nbytes_read;
-	self->nbytes_written;
+	self->rlast = 0;
+	self->wlast = 0;
+	self->nrbytes;
+	self->nwbytes;
 	self->nreads = 0;
 	self->nwrites = 0;
 
@@ -145,8 +145,8 @@ russ_relaystream_read(struct russ_relaystream *self) {
 	if ((cnt = russ_read(self->rfd, rbuf->data, rbuf->cap)) > 0) {
 		rbuf->len = cnt;
 		rbuf->off = 0;
-		self->last_read = russ_gettime();
-		self->nbytes_read += cnt;
+		self->rlast = russ_gettime();
+		self->nrbytes += cnt;
 		self->nreads++;
 
 		if (self->cb) {
@@ -174,8 +174,8 @@ russ_relaystream_write(struct russ_relaystream *self) {
 			rbuf->off = 0;
 			rbuf->len = 0;
 		}
-		self->last_write = russ_gettime();
-		self->nbytes_written += cnt;
+		self->wlast = russ_gettime();
+		self->nwbytes += cnt;
 		self->nwrites++;
 
 		if (self->cb) {
@@ -222,7 +222,7 @@ russ_relay_new(int n) {
 	}
 
 	self->nstreams = n;
-	self->exit_fd = -1;
+	self->exitfd = -1;
 	self->pollfds = NULL;
 
 	if (((self->streams = malloc(sizeof(struct russ_relaystream *)*n)) == NULL)
@@ -234,7 +234,7 @@ russ_relay_new(int n) {
 		self->pollfds[i].fd = -1;
 		self->pollfds[i].events = 0;
 	}
-	/* last element (for exit_fd) */
+	/* last element (for exitfd) */
 	self->pollfds[i].fd = -1;
 	self->pollfds[i].events = 0;
 
@@ -252,13 +252,13 @@ free_relay:
 * @param rfd		read fd
 * @param wfd		write fd
 * @param bufsize	relay buffer size
-* @param auto_close	auto close flag
+* @param autoclose	auto close flag
 * @param cb		callback called for each I/O operation
 * @param cbarg		callback argument object
 * @return		index; -1 on error
 */
 int
-russ_relay_add_with_callback(struct russ_relay *self, int rfd, int wfd, int bufsize, int auto_close,
+russ_relay_addwithcallback(struct russ_relay *self, int rfd, int wfd, int bufsize, int autoclose,
 	russ_relaystream_callback cb, void *cbarg) {
 	int	i;
 
@@ -266,7 +266,7 @@ russ_relay_add_with_callback(struct russ_relay *self, int rfd, int wfd, int bufs
 	if (i == self->nstreams) {
 		return -1;
 	}
-	if ((self->streams[i] = russ_relaystream_new(rfd, wfd, bufsize, auto_close, cb, cbarg)) == NULL) {
+	if ((self->streams[i] = russ_relaystream_new(rfd, wfd, bufsize, autoclose, cb, cbarg)) == NULL) {
 		return -1;
 	}
 	self->pollfds[i].fd = rfd;
@@ -278,19 +278,19 @@ russ_relay_add_with_callback(struct russ_relay *self, int rfd, int wfd, int bufs
 /**
 * Register an fd pair to relay (rfd -> wfd).
 *
-* Like russ_relay_add_with_callback() but with NULL callback and
+* Like russ_relay_addwithcallback() but with NULL callback and
 * NULL callback arg.
 *
 * @param self		relay object
 * @param rfd		read fd
 * @param wfd		write fd
 * @param bufsize	relay buffer size
-* @param auto_close	auto close flag
+* @param autoclose	auto close flag
 * @return		index; -1 on error
 */
 int
-russ_relay_add(struct russ_relay *self, int rfd, int wfd, int bufsize, int auto_close) {
-	return russ_relay_add_with_callback(self, rfd, wfd, bufsize, auto_close, NULL, NULL);
+russ_relay_add(struct russ_relay *self, int rfd, int wfd, int bufsize, int autoclose) {
+	return russ_relay_addwithcallback(self, rfd, wfd, bufsize, autoclose, NULL, NULL);
 }
 
 /**
@@ -302,15 +302,15 @@ russ_relay_add(struct russ_relay *self, int rfd, int wfd, int bufsize, int auto_
 * @param fd0		an fd
 * @param fd1		another fd
 * @param bufsize	relay buffer size
-* @param auto_close	auto close flag
+* @param autoclose	auto close flag
 * @return		0 on success; -1 or error
 */
 int
-russ_relay_add2(struct russ_relay *self, int fd0, int fd1, int bufsize, int auto_close) {
+russ_relay_add2(struct russ_relay *self, int fd0, int fd1, int bufsize, int autoclose) {
 	int	i, j;
 
-	if (((i = russ_relay_add(self, fd0, fd1, bufsize, auto_close)) < 0)
-		|| ((j = russ_relay_add(self, fd1, fd0, bufsize, auto_close)) < 0)) {
+	if (((i = russ_relay_add(self, fd0, fd1, bufsize, autoclose)) < 0)
+		|| ((j = russ_relay_add(self, fd1, fd0, bufsize, autoclose)) < 0)) {
 		russ_relay_remove(self, fd0, fd1);
 		return -1;
 	}
@@ -382,7 +382,7 @@ russ_relay_poll(struct russ_relay *self, int timeout) {
 * @retrun		0 on success; -1 on error
 */
 int
-russ_relay_serve(struct russ_relay *self, int timeout, int exit_fd) {
+russ_relay_serve(struct russ_relay *self, int timeout, int exitfd) {
 	struct pollfd		*pollfds, *pollfd;
 	struct russ_buf		*rbuf;
 	struct russ_relaystream	*stream, **streams;
@@ -397,7 +397,7 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exit_fd) {
 	nactive = self->nstreams+1;
 	nstreams = self->nstreams;
 
-	pollfds[nstreams].fd = exit_fd;
+	pollfds[nstreams].fd = exitfd;
 	pollfds[nstreams].events = POLLIN;
 
 	while (nactive) {
@@ -450,8 +450,8 @@ disable_stream:
 			nevents--;
 		}
 
-		/* special case exit_fd */
-		if ((pollfds[nstreams].fd == exit_fd) && (pollfds[nstreams].revents & POLLHUP)) {
+		/* special case exitfd */
+		if ((pollfds[nstreams].fd == exitfd) && (pollfds[nstreams].revents & POLLHUP)) {
 			if (nactive == 1) {
 				break;
 			}

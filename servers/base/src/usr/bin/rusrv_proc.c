@@ -314,7 +314,7 @@ svc_p_pid_wait_handler(struct russ_sess *sess) {
 		pollfds[0].events = POLLHUP;
 
 		/* periodically check pid */
-		while (russ_to_deadline_diff(deadline) > 0) {
+		while (russ_to_deadlinediff(deadline) > 0) {
 			switch (poll(pollfds, 1, poll_delay)) {
 			case -1:
 				if (errno != EINTR) {

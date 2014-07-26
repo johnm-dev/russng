@@ -96,7 +96,7 @@ russ_sconn_close_fd(struct russ_sconn *self, int index) {
 * @return		0 on success; -1 on error
 */
 int
-russ_sconn_sendfds(struct russ_sconn *self, int nfds, int *cfds) {
+russ_sconn_send_fds(struct russ_sconn *self, int nfds, int *cfds) {
 	char	buf[32+RUSS_CONN_MAX_NFDS], *bp, *bend;
 	int	i;
 
@@ -123,7 +123,7 @@ russ_sconn_sendfds(struct russ_sconn *self, int nfds, int *cfds) {
 		if (cfds[i] < 0) {
 			continue;
 		}
-		if (russ_sendfd(self->sd, cfds[i]) < 0) {
+		if (russ_send_fd(self->sd, cfds[i]) < 0) {
 			return -1;
 		}
 		russ_fds_close(&cfds[i], 1);
@@ -160,8 +160,8 @@ russ_sconn_answer(struct russ_sconn *self, int nfds, int *cfds) {
 		return -1;
 	}
 
-	if ((russ_sconn_sendfds(self, RUSS_CONN_NSYSFDS, csysfds) < 0)
-		|| (russ_sconn_sendfds(self, nfds, cfds) < 0)) {
+	if ((russ_sconn_send_fds(self, RUSS_CONN_NSYSFDS, csysfds) < 0)
+		|| (russ_sconn_send_fds(self, nfds, cfds) < 0)) {
 		russ_fds_close(csysfds, RUSS_CONN_NSYSFDS);
 		russ_fds_close(self->sysfds, RUSS_CONN_NSYSFDS);
 		russ_fds_close(&self->sd, 1);
@@ -188,8 +188,8 @@ russ_sconn_splice(struct russ_sconn *self, struct russ_cconn *dconn) {
 	int	ev = 0;
 
 	/* send sysfds and fds */
-	if ((russ_sconn_sendfds(self, RUSS_CONN_NSYSFDS, dconn->sysfds) < 0)
-		|| (russ_sconn_sendfds(self, RUSS_CONN_NFDS, dconn->fds) < 0)) {
+	if ((russ_sconn_send_fds(self, RUSS_CONN_NSYSFDS, dconn->sysfds) < 0)
+		|| (russ_sconn_send_fds(self, RUSS_CONN_NFDS, dconn->fds) < 0)) {
 		ev = -1;
 	}
 	/* close fds */
@@ -214,7 +214,7 @@ russ_sconn_splice(struct russ_sconn *self, struct russ_cconn *dconn) {
 * @return		request object; NULL on failure
 */
 struct russ_req *
-russ_sconn_await_request(struct russ_sconn *self, russ_deadline deadline) {
+russ_sconn_await_req(struct russ_sconn *self, russ_deadline deadline) {
 	struct russ_req		*req;
 	char			buf[RUSS_REQ_BUF_MAX], *bp = NULL;
 	int			size;
@@ -255,11 +255,11 @@ russ_sconn_close(struct russ_sconn *self) {
 * Note: the other (non-exit fd) fds are not affected.
 *
 * @param self		server connection object
-* @param exit_status	exit status
+* @param exitst		exit status
 * @return		0 on success; -1 on failure
 */
 int
-russ_sconn_exit(struct russ_sconn *self, int exit_status) {
+russ_sconn_exit(struct russ_sconn *self, int exitst) {
 	char	buf[32], *bp;
 
 	/* close all non-sysfds */
@@ -268,7 +268,7 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 	/* send exit status */
 	bp = buf;
 	if ((self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0)
-		|| ((bp = russ_enc_exit(bp, bp+sizeof(buf), exit_status)) == NULL)
+		|| ((bp = russ_enc_exit(bp, bp+sizeof(buf), exitst)) == NULL)
 		|| (russ_writen(self->sysfds[RUSS_CONN_SYSFD_EXIT], buf, bp-buf) < bp-buf)) {
 		return -1;
 	}
@@ -285,14 +285,14 @@ russ_sconn_exit(struct russ_sconn *self, int exit_status) {
 * @param self		server connection object
 * @param msg		message string to connection stderr (newline
 *			will be added)
-* @param exit_status	exit status
+* @param exitst		exit status
 * @return		0 on success; -1 on failure (but the server
 *			connection object is closed)
 */
 int
-russ_sconn_fatal(struct russ_sconn *self, const char *msg, int exit_status) {
+russ_sconn_fatal(struct russ_sconn *self, const char *msg, int exitst) {
 	russ_dprintf(self->fds[2], "%s\n", msg);
-	return russ_sconn_exit(self, exit_status);
+	return russ_sconn_exit(self, exitst);
 }
 
 /**
@@ -305,7 +305,7 @@ russ_sconn_fatal(struct russ_sconn *self, const char *msg, int exit_status) {
 * @return		0 on success; -1 on failure
 */
 int
-russ_sconn_redial_and_splice(struct russ_sconn *self, russ_deadline deadline, struct russ_req *req) {
+russ_sconn_redialandsplice(struct russ_sconn *self, russ_deadline deadline, struct russ_req *req) {
 	struct russ_cconn	*cconn;
 
 	/* switch user */

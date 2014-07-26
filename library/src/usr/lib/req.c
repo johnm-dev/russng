@@ -33,8 +33,7 @@
 *
 * Note: All provided (non NULL) information is duplicated.
 *
-* @param protocol_string
-*			russ protocol identification string
+* @param protocolstring	russ protocol identification string
 * @param op		operation string
 * @param spath		service path
 * @param attrv		NULL-terminated array of attributes ("name=value" strings)
@@ -42,21 +41,21 @@
 * @return		request object on success; NULL on failure
 */
 struct russ_req *
-russ_req_new(const char *protocol_string, const char *op, const char *spath, char **attrv, char **argv) {
+russ_req_new(const char *protocolstring, const char *op, const char *spath, char **attrv, char **argv) {
 	struct russ_req	*self;
 	int		i;
 
 	if ((self = malloc(sizeof(struct russ_req))) == NULL) {
 		return NULL;
 	}
-	self->protocol_string = NULL;
+	self->protocolstring = NULL;
 	self->spath = NULL;
 	self->op = NULL;
 	self->opnum = RUSS_OPNUM_NOTSET;;
 	self->attrv = NULL;
 	self->argv = NULL;
 
-	if (((protocol_string) && ((self->protocol_string = strdup(protocol_string)) == NULL))
+	if (((protocolstring) && ((self->protocolstring = strdup(protocolstring)) == NULL))
 		|| ((op) && ((self->op = strdup(op)) == NULL))
 		|| ((spath) && ((self->spath = strdup(spath)) == NULL))) {
 		goto free_request;
@@ -89,7 +88,7 @@ struct russ_req *
 russ_req_free(struct russ_req *self) {
 	int			i;
 
-	self->protocol_string = russ_free(self->protocol_string);
+	self->protocolstring = russ_free(self->protocolstring);
 	self->op = russ_free(self->op);
 	self->spath = russ_free(self->spath);
 	if (self->attrv) {

@@ -242,15 +242,15 @@ russ_user2uid(char *user) {
 * Write an (encoded) exit status to an fd.
 *
 * @param fd		file descriptor (presumably the exit fd)
-* @param exit_status	exit status to encode and write
+* @param exitst		exit status to encode and write
 * @return		0 on success; -1 on failure
 *
 */
 int
-russ_write_exit(int fd, int exit_status) {
+russ_write_exit(int fd, int exitst) {
 	char	buf[16], *bp;
 
-	if (((bp = russ_enc_exit(buf, buf+sizeof(buf), exit_status)) == NULL)
+	if (((bp = russ_enc_exit(buf, buf+sizeof(buf), exitst)) == NULL)
 		|| (russ_writen(fd, buf, bp-buf) < bp-buf)) {
 		return -1;
 	}

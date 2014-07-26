@@ -40,9 +40,8 @@ extern "C" {
 #define RUSS_REQ_BUF_MAX	262144
 #define RUSS_LISTEN_BACKLOG	1024
 
-/* conn.c */
-struct russ_conn *russ_conn_new(void);
-int russ_conn_send_request(struct russ_conn *, russ_deadline, struct russ_req *);
+/* cconn.c */
+int russ_cconn_send_req(struct russ_cconn *, russ_deadline, struct russ_req *);
 
 /* encdec.c */
 char *russ_dec_H(char *, uint16_t *);
@@ -93,8 +92,8 @@ struct russ_req *russ_req_free(struct russ_req *);
 
 /* socket.c */
 int russ_get_creds(int, struct russ_creds *);
-int russ_recvfd(int, int *);
-int russ_sendfd(int, int);
+int russ_recv_fd(int, int *);
+int russ_send_fd(int, int);
 
 #ifdef __cplusplus
 }

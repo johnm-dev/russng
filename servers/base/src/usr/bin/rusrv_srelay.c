@@ -266,7 +266,7 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 	char			*cluster_name = NULL, *hostname = NULL, *method = NULL;
 	char			*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
 	char			section_name[256];
-	int			exit_status;
+	int			exitst;
 	int			n;
 
 	/* init */
@@ -284,8 +284,8 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 		|| ((method = russ_conf_get(conf, section_name, "method", NULL)) == NULL)) {
 		goto free_vars;
 	}
-	exit_status = __dial_remote(sess, new_spath, section_name, cluster_name, hostname);
-	russ_conn_exit(conn, exit_status);
+	exitst = __dial_remote(sess, new_spath, section_name, cluster_name, hostname);
+	russ_conn_exit(conn, exitst);
 
 free_vars:
 	method = russ_free(method);

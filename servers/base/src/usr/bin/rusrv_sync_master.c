@@ -33,7 +33,7 @@ int		nchildren = 0;
 * @return		0 on success, -1 on error
 */
 int
-req_handler(struct russ_sess *sess) {
+reqhandler(struct russ_sess *sess) {
 	struct russ_conn	*conn = sess->conn;
 
 	if (conn->req->opnum == RUSS_OPNUM_EXECUTE) {

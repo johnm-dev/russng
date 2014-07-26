@@ -104,7 +104,7 @@ russ_get_creds(int sd, struct russ_creds *creds) {
 */
 #define CMSG_SIZE	CMSG_SPACE(sizeof(int))
 int
-russ_recvfd(int sd, int *fd) {
+russ_recv_fd(int sd, int *fd) {
 	struct msghdr	msgh;
 	struct iovec	iov[1];
 	struct cmsghdr	*cmsgh;
@@ -151,7 +151,7 @@ russ_recvfd(int sd, int *fd) {
 * @return		0 on success; -1 on error
 */
 int
-russ_sendfd(int sd, int fd) {
+russ_send_fd(int sd, int fd) {
 	struct msghdr	msgh;
 	struct iovec	iov[1];
 	struct cmsghdr	*cmsgh;

@@ -267,7 +267,7 @@ svc_request_handler(struct russ_sess *sess) {
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		fd = sconn->fds[1];
 
-		russ_dprintf(fd, "protocol string (%s)\n", req->protocol_string);
+		russ_dprintf(fd, "protocol string (%s)\n", req->protocolstring);
 		russ_dprintf(fd, "spath (%s)\n", req->spath);
 		russ_dprintf(fd, "op (%s)\n", req->op);
 		russ_dprintf(fd, "opnum (%u)\n", req->opnum);
@@ -340,7 +340,7 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_add(root, "request", svc_request_handler) == NULL)
 		|| (russ_svcnode_add(root, "whoami", svc_whoami_handler) == NULL)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_auto_switch_user(svr, 1) < 0)
+		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);

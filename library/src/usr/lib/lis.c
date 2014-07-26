@@ -188,33 +188,33 @@ russ_lis_free(struct russ_lis *self) {
 *
 * A handler for each phase can be given. However, only the request
 * handler is needed. There are standard/default handlers available
-* for the accept_handler, the answer_handler when each are set to
+* for the accepthandler, the answerhandler when each are set to
 * NULL.
 *
 * The request handler is responsible for servicing requests, closing
 * descriptors as appropriate and exiting (with russ_sconn_exit()).
 *
 * @param self		listener object
-* @param accept_handler	handler function to call on listener object
-* @param answer_handler	handler function to call new server
+* @param accepthandler	handler function to call on listener object
+* @param answerhandler	handler function to call new server
 *			connection object (from accept)
-* @param req_handler	handler function to call on accepted
+* @param reqhandler	handler function to call on accepted
 */
 void
-russ_lis_loop(struct russ_lis *self, russ_accepthandler accept_handler,
-	russ_answerhandler answer_handler, russ_reqhandler req_handler) {
+russ_lis_loop(struct russ_lis *self, russ_accepthandler accepthandler,
+	russ_answerhandler answerhandler, russ_reqhandler reqhandler) {
 
 	struct russ_sconn	*sconn;
 
-	if (accept_handler == NULL) {
-		accept_handler = russ_standard_accept_handler;
+	if (accepthandler == NULL) {
+		accepthandler = russ_standard_accept_handler;
 	}
-	if (answer_handler == NULL) {
-		answer_handler = russ_standard_answer_handler;
+	if (answerhandler == NULL) {
+		answerhandler = russ_standard_answer_handler;
 	}
 
 	while (1) {
-		if ((sconn = accept_handler(self, RUSS_DEADLINE_NEVER)) == NULL) {
+		if ((sconn = accepthandler(self, RUSS_DEADLINE_NEVER)) == NULL) {
 			fprintf(stderr, "error: cannot answer connection\n");
 			continue;
 		}
@@ -222,11 +222,11 @@ russ_lis_loop(struct russ_lis *self, russ_accepthandler accept_handler,
 			setsid();
 			russ_lis_close(self);
 			self = russ_lis_free(self);
-			if ((russ_sconn_await_request(sconn, RUSS_DEADLINE_NEVER) < 0)
-				|| (answer_handler(sconn) < 0)) {
+			if ((russ_sconn_await_req(sconn, RUSS_DEADLINE_NEVER) < 0)
+				|| (answerhandler(sconn) < 0)) {
 				exit(-1);
 			}
-			req_handler(sconn);
+			reqhandler(sconn);
 			russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
 			sconn = russ_sconn_free(sconn);
 			exit(0);

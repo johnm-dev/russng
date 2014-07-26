@@ -79,13 +79,13 @@ dial = dialv
 
 def dialv_wait(deadline, op, spath, attrs, args):
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
-    exit_status = ctypes.c_int()
-    rv = libruss.russ_dialv_wait(deadline, op, spath, c_attrs, c_argv, ctypes.byref(exit_status))
-    return rv, int(exit_status.value)
+    exitst = ctypes.c_int()
+    rv = libruss.russ_dialv_wait(deadline, op, spath, c_attrs, c_argv, ctypes.byref(exitst))
+    return rv, int(exitst.value)
 
 def dialv_wait_inouterr(deadline, op, spath, attrs, args, stdin, stdout_size, stderr_size):
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
-    exit_status = ctypes.c_int()
+    exitst = ctypes.c_int()
 
     # create rbufs; exit on failure
     rbufs = [
@@ -105,7 +105,7 @@ def dialv_wait_inouterr(deadline, op, spath, attrs, args, stdin, stdout_size, st
         rbufs[0].contents.len = len(stdin)
 
     rv = libruss.russ_dialv_wait_inouterr3(deadline, op, spath, c_attrs, c_argv,
-        ctypes.byref(exit_status), rbufs[0], rbufs[1], rbufs[2])
+        ctypes.byref(exitst), rbufs[0], rbufs[1], rbufs[2])
 
     # copy stdout and stderr out
     stdout = ctypes.string_at(rbufs[1].contents.data, rbufs[1].contents.len)
@@ -115,7 +115,7 @@ def dialv_wait_inouterr(deadline, op, spath, attrs, args, stdin, stdout_size, st
     for i in xrange(3):
         libruss.russ_buf_free(rbufs[i])
 
-    return rv, int(exit_status.value), stdout, stderr
+    return rv, int(exitst.value), stdout, stderr
 
 def execv(deadline, spath, attrs, args):
     """ruexec a service.
@@ -195,9 +195,9 @@ class Request:
         return self._ptr.contents.opnum
     opnum = property(get_opnum, None)
 
-    def get_protocol_string(self):
-        return self._ptr.contents.protocol_string
-    protocol_string = property(get_protocol_string, None)
+    def get_protocolstring(self):
+        return self._ptr.contents.protocolstring
+    protocolstring = property(get_protocolstring, None)
 
     def get_spath(self):
         return self._ptr.contents.spath
@@ -247,8 +247,8 @@ class ClientConn(Conn):
         self._ptr = None
 
     def wait(self, deadline):
-        exit_status = ctypes.c_int()
-        return libruss.russ_cconn_wait(self._ptr, deadline, ctypes.byref(exit_status)), exit_status.value
+        exitst = ctypes.c_int()
+        return libruss.russ_cconn_wait(self._ptr, deadline, ctypes.byref(exitst)), exitst.value
 
 class Credentials:
     """Connection credentials.
@@ -297,16 +297,16 @@ class ServerConn(Conn):
             return libruss.russ_sconn_answer(self._ptr, 0, None)
 
     def await_request(self, deadline):
-        return libruss.russ_sconn_await_request(self._ptr, deadline)
+        return libruss.russ_sconn_await_req(self._ptr, deadline)
 
-    def exit(self, exit_status):
-        return libruss.russ_sconn_exit(self._ptr, exit_status)
+    def exit(self, exitst):
+        return libruss.russ_sconn_exit(self._ptr, exitst)
 
-    def fatal(self, msg, exit_status):
-        return libruss.russ_sconn_fatal(self._ptr, msg, exit_status)
+    def fatal(self, msg, exitst):
+        return libruss.russ_sconn_fatal(self._ptr, msg, exitst)
 
-    def redial_and_splice(self, deadline, cconn):
-        return libruss.russ_sconn_redial_and_splice(self._ptr, deadline, cconn._ptr)
+    def redialandsplice(self, deadline, cconn):
+        return libruss.russ_sconn_redialandsplice(self._ptr, deadline, cconn._ptr)
 
     def splice(self, cconn):
         return libruss.russ_sconn_splice(self._ptr, cconn._ptr)
@@ -402,7 +402,7 @@ class Listener:
                     sys.stderr.write("error: cannot accept connection\n")
                     continue
                 # no limiting of thread count
-                Thread(target=pre_handler_thread, args=(sconn, req_handler)).start()
+                Thread(target=pre_handler_thread, args=(sconn, reqhandler)).start()
             except SystemExit:
                 raise
             except:

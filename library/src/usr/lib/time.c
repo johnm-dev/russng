@@ -73,7 +73,7 @@ russ_to_deadline(int timeout) {
 * @return		difference (msec)
 */
 inline russ_deadline
-russ_to_deadline_diff(russ_deadline deadline) {
+russ_to_deadlinediff(russ_deadline deadline) {
 	return deadline-russ_gettime();
 }
 

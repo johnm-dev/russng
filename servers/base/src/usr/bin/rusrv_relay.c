@@ -97,7 +97,7 @@ forward_bytes_over_ssh(struct russ_conn *conn, ssh_channel ssh_chan, char *buf, 
 	int		maxfd, rv;
 	int		nread, nwrite;
 	int		ready_out, ready_err;
-	int		exit_status = RUSS_EXIT_SYSFAILURE;
+	int		exitst = RUSS_EXIT_SYSFAILURE;
 
 	in_chans[0] = ssh_chan;
 	in_chans[1] = NULL;
@@ -202,7 +202,7 @@ fprintf(stderr, "rv (%d) in_chans[0] (%d) out_chans[0] (%d) conn->fds[0] (%d) re
 			}
 		}
 	}
-//fprintf(stderr, "relay forward EXITING rv (%d) is_closed (%d) is_eof (%d) exit_status (%d) ready_out (%d) ready_err (%d)\n", rv, ssh_channel_is_closed(ssh_chan), ssh_channel_is_eof(ssh_chan), ssh_channel_get_exit_status(ssh_chan), ready_out, ready_err);
+//fprintf(stderr, "relay forward EXITING rv (%d) is_closed (%d) is_eof (%d) exitst (%d) ready_out (%d) ready_err (%d)\n", rv, ssh_channel_is_closed(ssh_chan), ssh_channel_is_eof(ssh_chan), ssh_channel_get_exit_status(ssh_chan), ready_out, ready_err);
 	return 0;
 }
 
@@ -251,7 +251,7 @@ _dial_for_ssh(struct russ_sess *sess, char *new_spath, char *section_name, char 
 	char			*subsystem_path = NULL;
 	char			*buf;
 	int			buf_size, nbytes;
-	int			exit_status = -1;
+	int			exitst = -1;
 
 	/* prep */
 	if ((conn->creds.gid == 0)
@@ -314,14 +314,14 @@ _dial_for_ssh(struct russ_sess *sess, char *new_spath, char *section_name, char 
 
 free_vars:
 	buf = russ_free(buf);
-	exit_status = ssh_channel_get_exit_status(ssh_chan);
+	exitst = ssh_channel_get_exit_status(ssh_chan);
 	ssh_channel_send_eof(ssh_chan);
 	ssh_channel_close(ssh_chan);
 	ssh_channel_free(ssh_chan);
 	ssh_disconnect(ssh_sess);
 	ssh_free(ssh_sess);
 
-	return exit_status;
+	return exitst;
 }
 
 /**
@@ -390,7 +390,7 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 	char			*cluster_name = NULL, *hostname = NULL, *method = NULL;
 	char			*new_spath = NULL, *p0 = NULL, *p1 = NULL, *p2 = NULL;
 	char			section_name[256];
-	int			exit_status;
+	int			exitst;
 	int			n;
 
 	/* init */
@@ -409,11 +409,11 @@ svc_dial_cluster_host_handler(struct russ_sess *sess) {
 		goto free_vars;
 	}
 	if (strcmp(method, "ssh") == 0) {
-		exit_status = _dial_for_ssh(sess, new_spath, section_name, cluster_name, hostname);
+		exitst = _dial_for_ssh(sess, new_spath, section_name, cluster_name, hostname);
 	} else if (strcmp(method, "ssl-key") == 0) {
-		exit_status = _dial_for_ssl_key(sess, new_spath, section_name, cluster_name, hostname);
+		exitst = _dial_for_ssl_key(sess, new_spath, section_name, cluster_name, hostname);
 	}
-	russ_conn_exit(conn, exit_status);
+	russ_conn_exit(conn, exitst);
 
 free_vars:
 	method = russ_free(method);

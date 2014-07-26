@@ -78,10 +78,10 @@ stats_callback(struct russ_relaystream *self, int dir, void *cbarg) {
 	id = (int)cbarg;
 	fd = (id>>16)&0xffff;
 	id = id&0xffff;
-	last = (dir == 0) ? self->last_read : self->last_write;
+	last = (dir == 0) ? self->rlast : self->wlast;
 	russ_dprintf(fd, "stats [%lu:%d:%c] r/w (%lu/%lu) nr/nw (%lu/%lu)\n",
 		last, id, (dir == 0) ? 'r' : 'w',
-		self->nreads, self->nwrites, self->nbytes_read, self->nbytes_written);
+		self->nreads, self->nwrites, self->nrbytes, self->nwbytes);
 }
 
 void
@@ -160,7 +160,7 @@ main(int argc, char **argv) {
 	char			*op, *spath, *arg;
 	char			*attrv[RUSS_REQ_ATTRS_MAX];
 	int			argi, attrc;
-	int			bufsize, exit_status;
+	int			bufsize, exitst;
 	int			show_stats;
 	int			cbfd;
 
@@ -272,13 +272,13 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	exit_status = 0;
+	exitst = 0;
 	if ((strcmp(op, "list") == 0) && (stat(spath, &st) == 0) && (!S_ISSOCK(st.st_mode))) {
 		if (S_ISDIR(st.st_mode)) {
-			exit_status = (print_dir_list(spath) == 0) ? 0 : 1;
+			exitst = (print_dir_list(spath) == 0) ? 0 : 1;
 		} else {
 			fprintf(stderr, "error: not a service or directory\n");
-			exit_status = 1;
+			exitst = 1;
 		}
 	} else {
 		cconn = russ_dialv(deadline, op, spath, attrv, &(argv[argi]));
@@ -301,17 +301,17 @@ main(int argc, char **argv) {
 			}
 
 			relay = russ_relay_new(3);
-			russ_relay_add_with_callback(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1, cb, (void *)(cbfd<<16|0));
-			russ_relay_add_with_callback(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 1, cb, (void *)(cbfd<<16|1));
-			russ_relay_add_with_callback(relay, cconn->fds[2], STDERR_FILENO, bufsize, 1, cb, (void *)(cbfd<<16|2));
+			russ_relay_addwithcallback(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1, cb, (void *)(cbfd<<16|0));
+			russ_relay_addwithcallback(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 1, cb, (void *)(cbfd<<16|1));
+			russ_relay_addwithcallback(relay, cconn->fds[2], STDERR_FILENO, bufsize, 1, cb, (void *)(cbfd<<16|2));
 
 			cconn->fds[0] = -1;
 			cconn->fds[1] = -1;
 			cconn->fds[2] = -1;
 			russ_relay_serve(relay, -1, cconn->sysfds[RUSS_CONN_SYSFD_EXIT]);
-			if (russ_cconn_wait(cconn, -1, &exit_status) < 0) {
+			if (russ_cconn_wait(cconn, -1, &exitst) < 0) {
 				fprintf(stderr, "%s\n", RUSS_MSG_BADCONNEVENT);
-				exit_status = RUSS_EXIT_SYSFAILURE;
+				exitst = RUSS_EXIT_SYSFAILURE;
 			}
 			if (cbfd >= 0) {
 				close(cbfd);
@@ -322,5 +322,5 @@ main(int argc, char **argv) {
 		cconn = russ_cconn_free(cconn);
 	}
 
-	exit(exit_status);
+	exit(exitst);
 }
