@@ -97,7 +97,7 @@ def dialv_wait_inouterr(deadline, op, spath, attrs, args, stdin, stdout_size, st
     if None in rbufs:
         for i in xrange(3):
             libruss.russ_buf_free(rbufs[i])
-        return RUSS_WAIT_FAILURE, None, None, None
+        return RUSS_WAIT_FAILURE, RUSS_EXIT_FAILURE, None, None
 
     # copy stdin in
     if stdin:
