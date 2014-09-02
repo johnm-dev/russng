@@ -10,15 +10,15 @@ HERE_DIR:=$(shell dirname $(HERE_FILE))
 
 all:
 	(cd base; $(MAKE))
-	(cd futils; $(MAKE))
+	#(cd futils; $(MAKE))
 
 clean:
 	(cd base; $(MAKE) clean)
-	(cd futils; $(MAKE) clean)
+	#(cd futils; $(MAKE) clean)
 
 doc:
 	#(doxygen doxygen.conf)
 
 install:
 	(cd base; $(MAKE) install)
-	(cd futils; $(MAKE) install)
+	#(cd futils; $(MAKE) install)
