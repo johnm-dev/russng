@@ -181,13 +181,17 @@ if [ -n "${RURUN_PNET_ADDR}" ]; then
 		;;
 	esac
 elif [ -n "${RURUN_PNET_DIR}" ]; then
+	path="${RURUN_PNET_DIR}/${target}"
+	if [ ! -h "${path}" -a ! -S "${path}" ]; then
+		echo "error: cannot find target" 1>&2
+		exit 1
+	fi
 	case ${RURUN_TARGET_METHOD} in
-	id|run)
-		path="${RURUN_PNET_DIR}/${RURUN_TARGET_METHOD}/${target}"
-		if [ ! -f "${path}" ]; then
-			echo "error: cannot find target"
-			exit 1
-		fi
+	id)
+		path="${path}/+/exec/${RURUN_EXEC_METHOD}"
+		;;
+	run)
+		path="${path}/${RURUN_EXEC_METHOD}"
 		;;
 	*)
 		echo "error: unknown target method (${RURUN_TARGET_METHOD})" 1>&2
