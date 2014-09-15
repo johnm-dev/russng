@@ -31,9 +31,13 @@ function get_target_ids {
 
 	head=""
 	rest=$1; shift 1
-	while [ "${head}" != "${rest}" ]; do
+	while [ -n "${rest}" ]; do
 		head=${rest%%,*}
-		rest=${rest#*,}
+		if [ "${head}" = "${rest}" ]; then
+			rest=""
+		else
+			rest=${rest#*,}
+		fi
 		start=${head%%:*}
 		endstep=${head#*:}
 		end=${endstep%%:*}
