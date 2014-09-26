@@ -140,6 +140,43 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+# debugging output
+if [ -n "${RURUN_DEBUG}" ]; then
+	echo "-----"
+	echo "target (${target})"
+	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
+	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
+	echo "RURUN_TARGET_METHOD (${RURUN_TARGET_METHOD})"
+	echo "-----"
+fi
+
+if [ -n "${count_opt}" ]; then
+	if [ -n "${RURUN_PNET_ADDR}" ]; then
+		count=`ruexec ${RURUN_PNET_ADDR}/count`
+		ev=$?
+	elif [ -n "${RURUN_PNET_DIR}" ]; then
+		if [ -d "${RURUN_PNET_DIR}" ]; then
+			count=`ls -1 "${RURUN_PNET_DIR}" | wc -l`
+			ev=$?
+		else
+			ev=1
+		fi
+	elif [ -n "${RURUN_PNET_FILE}" ]; then
+		if [ -f "${RURUN_PNET_FILE}" ]; then
+			count=`wc -l "${RURUN_PNET_FILE}"`
+			ev=$?
+		else
+			ev=1
+		fi
+	else
+		ev=1
+	fi
+	if [ ${ev} -eq 0 ]; then
+		echo ${count}
+	fi
+	exit ${ev}
+fi
+
 # get different env var list for mpi
 if [ ${mpi} -eq 1 ]; then
 	RURUN_ENV="${RUMPIRUN_ENV}"
@@ -151,16 +188,6 @@ if [ -n "${RURUN_ENV}" ]; then
 	for name in $(echo ${RURUN_ENV} | tr ',' ' '); do
 		env+=("-a" "${name}=$(printenv ${name})")
 	done
-fi
-
-# debugging output
-if [ -n "${RURUN_DEBUG}" ]; then
-	echo "-----"
-	echo "target (${target})"
-	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
-	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
-	echo "RURUN_TARGET_METHOD (${RURUN_TARGET_METHOD})"
-	echo "-----"
 fi
 
 # set path
@@ -234,33 +261,6 @@ elif [ -n "${RURUN_PNET_FILE}" ]; then
 else
 	echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_DIR are set" 1>&2
 	exit 1
-fi
-
-if [ -n "${count_opt}" ]; then
-	if [ -n "${RURUN_PNET_ADDR}" ]; then
-		count=`ruexec ${RURUN_PNET_ADDR}/count`
-		ev=$?
-	elif [ -n "${RURUN_PNET_DIR}" ]; then
-		if [ -d "${RURUN_PNET_DIR}" ]; then
-			count=`ls -1 "${RURUN_PNET_DIR}" | wc -l`
-			ev=$?
-		else
-			ev=1
-		fi
-	elif [ -n "${RURUN_PNET_FILE}" ]; then
-		if [ -f "${RURUN_PNET_FILE}" ]; then
-			count=`wc -l "${RURUN_PNET_FILE}"`
-			ev=$?
-		else
-			ev=1
-		fi
-	else
-		ev=1
-	fi
-	if [ ${ev} -eq 0 ]; then
-		echo ${count}
-	fi
-	exit ${ev}
 fi
 
 # mpirun-specific
