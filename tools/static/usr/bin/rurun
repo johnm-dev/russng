@@ -84,17 +84,9 @@ while [ $# -gt 0 ]; do
 		shift 1
 		export RURUN_DEBUG=1
 		;;
-	--dir)
-		shift 1
-		RURUN_PNET_DIR="$1"; shift 1
-		;;
 	--exec)
 		shift 1
 		RURUN_EXEC_METHOD=$1; shift 1
-		;;
-	--file)
-		shift 1
-		RURUN_PNET_FILE="$1"; shift 1
 		;;
 	--login)
 		shift 1
@@ -131,6 +123,11 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+if [ -z "${RURUN_PNET_ADDR}" ]; then
+	echo "error: RURUN_PNET_ADDR is not set" 1>&2
+	exit 1
+fi
+
 # debugging output
 if [ -n "${RURUN_DEBUG}" ]; then
 	echo "-----"
@@ -141,25 +138,15 @@ if [ -n "${RURUN_DEBUG}" ]; then
 fi
 
 if [ -n "${count_opt}" ]; then
-	if [ -n "${RURUN_PNET_ADDR}" ]; then
-		count=`ruexec ${RURUN_PNET_ADDR}/count`
+	if [ -f "${RURUN_PNET_ADDR}" ]; then
+		count=`wc -l "${RURUN_PNET_ADDR}"`
 		ev=$?
-	elif [ -n "${RURUN_PNET_DIR}" ]; then
-		if [ -d "${RURUN_PNET_DIR}" ]; then
-			count=`ls -1 "${RURUN_PNET_DIR}" | wc -l`
-			ev=$?
-		else
-			ev=1
-		fi
-	elif [ -n "${RURUN_PNET_FILE}" ]; then
-		if [ -f "${RURUN_PNET_FILE}" ]; then
-			count=`wc -l "${RURUN_PNET_FILE}"`
-			ev=$?
-		else
-			ev=1
-		fi
+	elif [ -d "${RURUN_PNET_ADDR}" ]; then
+		count=`ls -1 "${RURUN_PNET_ADDR}" | wc -l`
+		ev=$?
 	else
-		ev=1
+		count=`ruexec "${RURUN_PNET_ADDR}/count"`
+		ev=$?
 	fi
 	if [ ${ev} -eq 0 ]; then
 		echo ${count}
@@ -181,15 +168,9 @@ if [ -n "${RURUN_ENV}" ]; then
 fi
 
 # set path
-if [ -n "${RURUN_PNET_ADDR}" ]; then
-	# target details in pnet
-	path="${RURUN_PNET_ADDR}/run/${colon}${target}/${RURUN_EXEC_METHOD}"
-elif [ -n "${RURUN_PNET_DIR}" ]; then
-	# does not support containers
-	path="${RURUN_PNET_DIR}/${target}/+/exec/${RURUN_EXEC_METHOD}"
-elif [ -n "${RURUN_PNET_FILE}" ]; then
+if [ -f "${RURUN_PNET_ADDR}" ]; then
 	lineno=$((target+1))
-	line=`tail -n +${lineno} ${RURUN_PNET_FILE} | head -1`
+	line=`tail -n +${lineno} ${RURUN_PNET_ADDR} | head -1`
 	if [ -z "${line}" ]; then
 		echo "error: cannot find target" 1>&2
 		exit 1
@@ -204,9 +185,12 @@ elif [ -n "${RURUN_PNET_FILE}" ]; then
 	else
 		path="+/${RURUN_RELAY}/${host}/+/exec/${RURUN_EXEC_METHOD}"
 	fi
+elif [ -d "${RURUN_PNET_ADDR}" ]; then
+	# does not support containers
+	path="${RURUN_PNET_ADDR}/${target}/+/exec/${RURUN_EXEC_METHOD}"
 else
-	echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_DIR are set" 1>&2
-	exit 1
+	# target details in pnet
+	path="${RURUN_PNET_ADDR}/run/${colon}${target}/${RURUN_EXEC_METHOD}"
 fi
 
 # mpirun-specific
