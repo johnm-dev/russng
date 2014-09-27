@@ -47,20 +47,15 @@ Options:
 	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
 --relay <name>
 	Use a given relay service. Defaults to \${RURUN_RELAY} or
-	\"${RURUN_RELAY_DEFAULT}\".
---target_method id|host|run
-	Method to use to connect to the target: id, host, run.
-	Defaults to \$RURUN_TARGET_METHOD or \"${RURUN_TARGET_METHOD_DEFAULT}\"."
+	\"${RURUN_RELAY_DEFAULT}\"."
 }
 
 # defaults (null or unset)
 PROG_NAME=`basename $0`
 RURUN_EXEC_METHOD_DEFAULT=shell
-RURUN_TARGET_METHOD_DEFAULT=run
 RURUN_RELAY_DEFAULT=ssh
 export RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-${RURUN_EXEC_METHOD_DEFAULT}}
 export RURUN_RELAY=${RURUN_RELAY:-${RURUN_RELAY_DEFAULT}}
-export RURUN_TARGET_METHOD=${RURUN_TARGET_METHOD:-${RURUN_TARGET_METHOD_DEFAULT}}
 
 if [ $# -gt 0 ]; then
 	if [ "$1" = "-h" -o "$1" = "--help" ]; then
@@ -125,10 +120,6 @@ while [ $# -gt 0 ]; do
 		shift 1
 		RURUN_EXEC_METHOD=simple
 		;;
-	--target_method)
-		shift 1
-		RURUN_TARGET_METHOD=$1; shift 1
-		;;
 	--wrap)
 		shift 1
 		colon=":"
@@ -146,7 +137,6 @@ if [ -n "${RURUN_DEBUG}" ]; then
 	echo "target (${target})"
 	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
 	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
-	echo "RURUN_TARGET_METHOD (${RURUN_TARGET_METHOD})"
 	echo "-----"
 fi
 
@@ -192,72 +182,28 @@ fi
 
 # set path
 if [ -n "${RURUN_PNET_ADDR}" ]; then
-	case ${RURUN_TARGET_METHOD} in
-	host)
-		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${target}/+/exec/${RURUN_EXEC_METHOD}"
-		;;
-	id)
-		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${colon}${target}/+/exec/${RURUN_EXEC_METHOD}"
-		;;
-	run)
-		path="${RURUN_PNET_ADDR}/${RURUN_TARGET_METHOD}/${colon}${target}/${RURUN_EXEC_METHOD}"
-		;;
-	*)
-		echo "error: unknown target method (${RURUN_TARGET_METHOD})" 1>&2
-		exit 1
-		;;
-	esac
+	# target details in pnet
+	path="${RURUN_PNET_ADDR}/run/${colon}${target}/${RURUN_EXEC_METHOD}"
 elif [ -n "${RURUN_PNET_DIR}" ]; then
-	path="${RURUN_PNET_DIR}/${target}"
-	if [ ! -h "${path}" -a ! -S "${path}" ]; then
-		echo "error: cannot find target" 1>&2
-		exit 1
-	fi
-	case ${RURUN_TARGET_METHOD} in
-	id)
-		path="${path}/+/exec/${RURUN_EXEC_METHOD}"
-		;;
-	run)
-		path="${path}/${RURUN_EXEC_METHOD}"
-		;;
-	*)
-		echo "error: unknown target method (${RURUN_TARGET_METHOD})" 1>&2
-		exit 1
-		;;
-	esac
+	# does not support containers
+	path="${RURUN_PNET_DIR}/${target}/+/exec/${RURUN_EXEC_METHOD}"
 elif [ -n "${RURUN_PNET_FILE}" ]; then
-	if [ ! -f "${RURUN_PNET_FILE}" ]; then
-		echo "error: cannot find file" 1>&2
-		exit 1
-	fi
 	lineno=$((target+1))
 	line=`tail -n +${lineno} ${RURUN_PNET_FILE} | head -1`
 	if [ -z "${line}" ]; then
 		echo "error: cannot find target" 1>&2
 		exit 1
 	fi
-	case ${RURUN_TARGET_METHOD} in
-	id)
-		host=${line% *}
+	host=${line% *}
+	container=""
+	if [ "${host}" != "${line}" ]; then
+		container=${line#* }
+	fi
+	if [ -n "${container}" ]; then
+		path="+/${RURUN_RELAY}/${host}/+/exec/cgroup/${container}/${RURUN_EXEC_METHOD}"
+	else
 		path="+/${RURUN_RELAY}/${host}/+/exec/${RURUN_EXEC_METHOD}"
-		;;
-	run)
-		host=${line% *}
-		container=""
-		if [ "${host}" != "${line}" ]; then
-			container=${line#* }
-		fi
-		if [ -n "${container}" ]; then
-			path="+/${RURUN_RELAY}/${host}/+/exec/cgroup/${container}/${RURUN_EXEC_METHOD}"
-		else
-			path="+/${RURUN_RELAY}/${host}/+/exec/${RURUN_EXEC_METHOD}"
-		fi
-		;;
-	*)
-		echo "error: unknown target method (${RURUN_TARGET_METHOD})" 1>&2
-		exit 1
-		;;
-	esac
+	fi
 else
 	echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_DIR are set" 1>&2
 	exit 1
