@@ -41,7 +41,7 @@ Options:
 	Environment to launch with:
 	simple - without shell
 	shell - shell with basic environment
-	login - shell with login environmnet
+	login - shell with login environment
 	Defaults to \$RURUN_EXEC_METHOD or \"${RURUN_EXEC_METHOD_DEFAULT}\".
 --pnet <addr>
 	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
@@ -128,12 +128,20 @@ if [ -z "${RURUN_PNET_ADDR}" ]; then
 	exit 1
 fi
 
+# get different env var list for mpi
+if [ ${mpi} -eq 1 ]; then
+	RURUN_ENV="${RUMPIRUN_ENV}"
+fi
+
 # debugging output
 if [ -n "${RURUN_DEBUG}" ]; then
 	echo "-----"
 	echo "target (${target})"
+	echo "RUMPIRUN_ENV (${RUMPIRUN_ENV})"
+	echo "RURUN_ENV (${RURUN_ENV})"
 	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
 	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
+	echo "RURUN_RELAY (${RURUN_RELAY}"
 	echo "-----"
 fi
 
@@ -152,11 +160,6 @@ if [ -n "${count_opt}" ]; then
 		echo ${count}
 	fi
 	exit ${ev}
-fi
-
-# get different env var list for mpi
-if [ ${mpi} -eq 1 ]; then
-	RURUN_ENV="${RUMPIRUN_ENV}"
 fi
 
 # get env attributes
