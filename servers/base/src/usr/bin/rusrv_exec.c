@@ -52,7 +52,7 @@ struct container {
 	long	id;
 };
 
-char			*cgroup_base;
+char			*cgroup_base, *cgroup_spath;
 struct russ_conf	*conf = NULL;
 struct container	cont;
 const char		*HELP =
@@ -177,6 +177,50 @@ setup_by_pam(char *service_name, char *username) {
 	return 0;
 }
 #endif /* USE_PAM */
+
+int
+add_pid_cgroup(int pid, char *cg_path) {
+	if (cgroup_spath) {
+		char	*argv[3];
+		char	pidst[16];
+		int	n, exitst;
+
+		if (((n = snprintf(pidst, sizeof(pidst), "%d", pid)) < 0)
+			|| (n > sizeof(pidst))) {
+			return -1;
+		}
+
+		argv[0] = pidst;
+		argv[1] = cg_path;
+		argv[2] = NULL;
+		if (russ_dialv_wait(russ_to_deadline(30000), "execute", cgroup_spath, NULL, argv, &exitst) < 0) {
+			return -1;
+		}
+	} else if (cgroup_base) {
+		char	path[8192];
+		int	n;
+		int	fd;
+
+		if (((n = snprintf(path, sizeof(path), "%s/%s/tasks", cgroup_base, cg_path)) < 0)
+			|| (n > sizeof(path))) {
+			return -1;
+		}
+
+		/* migrate self process to cgroup (affects child, too) */
+		if (((fd = open(path, O_WRONLY)) < 0)
+		       || (russ_dprintf(fd, "%d", pid) < 0)) {
+		       if (fd >= 0) {
+			       close(fd);
+			}
+			return -1;
+
+		}
+		fd = russ_close(fd);
+	} else {
+		return -1;
+	}
+	return 0;
+}
 
 char *
 find_cgroup_base(void) {
@@ -319,16 +363,10 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	case CONTAINER_TYPE_NONE:
 		break;
 	case CONTAINER_TYPE_CGROUP:
-		/* migrate self process to cgroup (affects child, too) */
-                if (((fd = open(cont.path, O_WRONLY)) < 0)
-                        || (russ_dprintf(fd, "%d", getpid()) < 0)) {
-                        if (fd >= 0) {
-                                close(fd);
-                        }
-                        russ_sconn_fatal(sconn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
-                        exit(0);
-                }
-                fd = russ_close(fd);
+		if (add_pid_cgroup(getpid(), cont.path) < 0) {
+			russ_sconn_fatal(sconn, "error: could not add to cgroup", RUSS_EXIT_FAILURE);
+			exit(0);
+		}
 		break;
 	default:
 		russ_sconn_fatal(sconn, "error: unknown container type", RUSS_EXIT_FAILURE);
@@ -466,18 +504,8 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 
 		/* create container object */
 		cont.type = CONTAINER_TYPE_CGROUP;
-		if (cgroup_base == NULL) {
-			russ_sconn_fatal(sconn, "error: cgroups not configured", RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-		if (strncmp(cg_path, "/", 1) == 0) {
-			/* not relative */
-			cgroup_base = russ_free(cgroup_base);
-			cgroup_base = "";
-		}
-		if (((n = snprintf(cont.path, sizeof(cont.path), "%s/%s/tasks", cgroup_base, cg_path)) < 0)
+		if (((n = snprintf(cont.path, sizeof(cont.path), "%s", cg_path)) < 0)
 			|| (n > sizeof(cont.path))) {
-			russ_sconn_fatal(sconn, "error: cgroup path too long", RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 
@@ -542,6 +570,9 @@ main(int argc, char **argv) {
 	cont.type = CONTAINER_TYPE_NONE;
 	if ((cgroup_base = find_cgroup_base()) == NULL) {
 		fprintf(stderr, "warning: cannot find cgroup base\n");
+	}
+	if ((cgroup_spath = russ_conf_get(conf, "cgroup", "spath", NULL)) == NULL) {
+		fprintf(stderr, "warning: cannot find cgroup spath\n");
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
