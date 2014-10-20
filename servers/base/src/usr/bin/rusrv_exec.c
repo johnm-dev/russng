@@ -193,7 +193,8 @@ add_pid_cgroup(int pid, char *cg_path) {
 		argv[0] = pidst;
 		argv[1] = cg_path;
 		argv[2] = NULL;
-		if (russ_dialv_wait(russ_to_deadline(30000), "execute", cgroup_spath, NULL, argv, &exitst) < 0) {
+		if ((russ_dialv_wait(russ_to_deadline(30000), "execute", cgroup_spath, NULL, argv, &exitst) < 0)
+			|| (exitst != 0)) {
 			return -1;
 		}
 	} else if (cgroup_base) {
