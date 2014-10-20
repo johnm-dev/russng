@@ -202,7 +202,7 @@ add_pid_cgroup(int pid, char *cg_path) {
 		int	n;
 		int	fd;
 
-		if (((n = snprintf(path, sizeof(path), "%s/%s/tasks", cgroup_base, cg_path)) < 0)
+		if (((n = snprintf(path, sizeof(path), "%s/%s/cgroup.procs", cgroup_base, cg_path)) < 0)
 			|| (n > sizeof(path))) {
 			return -1;
 		}
