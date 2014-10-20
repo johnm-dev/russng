@@ -141,7 +141,7 @@ if [ -n "${RURUN_DEBUG}" ]; then
 	echo "RURUN_ENV (${RURUN_ENV})"
 	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
 	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
-	echo "RURUN_RELAY (${RURUN_RELAY}"
+	echo "RURUN_RELAY (${RURUN_RELAY})"
 	echo "-----"
 fi
 
