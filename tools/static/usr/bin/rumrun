@@ -107,7 +107,7 @@ Options:
 "
 }
 
-RURUN_EXEC=${RURUN:-/usr/bin/rurun}
+RURUN_EXEC=${RURUN_EXEC:-/usr/bin/rurun}
 	
 if [ $# -gt 0 ]; then
 	if [ "$1" = "-h" -o "$1" = "--help" ]; then
