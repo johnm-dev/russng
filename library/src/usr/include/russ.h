@@ -253,7 +253,7 @@ struct russ_relaystream {
 	int		rfd;		/**< read fd */
 	int		wfd;		/**< write fd */
 	struct russ_buf	*rbuf;		/**< output russ_buf */
-	int		autoclose;	/**< close on HEN */
+	int		closeonexit;	/**< close when exit occurs */
 	int		bidir;		/**< flag as bidirectional fds */
 	russ_relaystream_callback	cb; /**< callback */
 	void		*cbarg;		/**< callback argument */
