@@ -387,11 +387,10 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exitfd) {
 	struct russ_buf		*rbuf;
 	struct russ_relaystream	*stream, **streams;
 	int			events, nevents, revents;
-	int			exited, fd;
+	int			fd;
 	int			nactive, nstreams;
 	int			i, cnt;
 
-	exited = 0;
 	pollfds = self->pollfds;
 	streams = self->streams;
 	nactive = self->nstreams+1;
@@ -436,9 +435,6 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exitfd) {
 					goto disable_stream;
 				}
 				if (stream->rbuf->len == 0) {
-					if (exited) {
-						goto disable_stream;
-					}
 					pollfd->fd = stream->rfd;
 					pollfd->events = POLLIN;
 				}
@@ -452,15 +448,12 @@ disable_stream:
 
 		/* special case exitfd */
 		if ((pollfds[nstreams].fd == exitfd) && (pollfds[nstreams].revents & POLLHUP)) {
-			if (nactive == 1) {
-				break;
-			}
-			if (!exited) {
-				exited = 1;
-				nactive--;
-			}
+			/* disable exitfd polling */
+			pollfds[nstreams].fd = -1;
+			nactive--;
+			/* remove disable-on-exit streams */
 			for (i = 0; i < nstreams; i++) {
-				if ((pollfds[i].fd >= 0) && (pollfds[i].events & POLLIN)) {
+				if ((pollfds[i].fd >= 0) && (streams[i]) && (streams[i]->autoclose)) {
 					russ_relay_remove(self, streams[i]->rfd, streams[i]->wfd);
 					nactive--;
 				}
