@@ -197,9 +197,9 @@ svc_attr_handler(struct russ_sess *sess) {
 			relay = russ_relay_new(3);
 			x = russ_relay_addwithcallback(relay, sconn->fds[0], cconn->fds[0], bufsize, 1,
 				(fds[0] >= 0) ? tee_callback : NULL, (void *)0);
-			russ_relay_addwithcallback(relay, cconn->fds[1], sconn->fds[1], bufsize, 1,
+			russ_relay_addwithcallback(relay, cconn->fds[1], sconn->fds[1], bufsize, 0,
 				(fds[1] >= 0) ? tee_callback : NULL, (void *)1);
-			russ_relay_addwithcallback(relay, cconn->fds[2], sconn->fds[2], bufsize, 1,
+			russ_relay_addwithcallback(relay, cconn->fds[2], sconn->fds[2], bufsize, 0,
 				(fds[2] >= 0) ? tee_callback : NULL, (void *)2);
 
 			cconn->fds[0] = -1;
