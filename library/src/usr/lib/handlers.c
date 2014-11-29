@@ -26,20 +26,6 @@
 
 #include "russ_priv.h"
 
-
-/**
-* Standard (default) accept handler which accepts on listener
-* socket and returns a new connection object.
-*
-* @param self		listener object
-* @param deadline	deadline to complete operation
-* @return		new server connection object; NULL on failure
-*/
-struct russ_sconn *
-russ_standard_accept_handler(struct russ_lis *self, russ_deadline deadline) {
-	return russ_lis_accept(self, deadline);
-}
-
 /**
 * Standard (default) answer handler which sets up standard fds and
 * answers the request.

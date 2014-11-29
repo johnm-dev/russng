@@ -67,91 +67,50 @@ russ_lis_new(int sd) {
 * @param mode		file mode of path
 * @param uid		owner of path
 * @param gid		group owner of path
-* @return		listener object; NULL on failure
+* @return		listener socket descriptor
 */
-struct russ_lis *
+int
 russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
-	struct russ_lis		*self;
 	struct sockaddr_un	servaddr;
-	int			sd;
+	int			lisd;
 
 	if ((saddr == NULL) || ((saddr = russ_spath_resolve(saddr)) == NULL)) {
-		return NULL;
+		return -1;
 	}
 
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sun_family = AF_UNIX;
 	strcpy(servaddr.sun_path, saddr);
-	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+	if ((lisd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
 		goto free_saddr;
 	}
-	if (bind(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+	if (bind(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
 		if ((errno == EADDRINUSE)
-			&& (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
+			&& (connect(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
 			/* is something listening? */
 			if (errno != ECONNREFUSED) {
-				goto close_sd;
+				goto close_lisd;
 			} else if ((unlink(saddr) < 0)
-				|| (bind(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
-				goto close_sd;
+				|| (bind(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
+				goto close_lisd;
 			}
 		} else {
-			goto close_sd;
+			goto close_lisd;
 		}
 	}
 	if ((chmod(saddr, mode) < 0)
 		|| (chown(saddr, uid, gid) < 0)
-		|| (listen(sd, RUSS_LISTEN_BACKLOG) < 0)
-		|| ((self = russ_lis_new(sd)) == NULL)) {
-		goto close_sd;
+		|| (listen(lisd, RUSS_LISTEN_BACKLOG) < 0)) {
+		goto close_lisd;
 	}
 	saddr = russ_free(saddr);
-	return self;
+	return lisd;
 
-close_sd:
-	russ_close(sd);
+close_lisd:
+	russ_close(lisd);
 free_saddr:
 	saddr = russ_free(saddr);
-	return NULL;
-}
-
-/**
-* Answer dial.
-*
-* @param self		listener object
-* @param deadline	deadline to complete operation
-* @return		new server connection object with
-*			credentials (not fully established); NULL on
-*			failure
-*/
-struct russ_sconn *
-russ_lis_accept(struct russ_lis *self, russ_deadline deadline) {
-	struct russ_sconn	*sconn;
-	struct sockaddr_un	servaddr;
-	socklen_t		servaddr_len;
-
-	if ((self == NULL)
-		|| (self->sd < 0)
-		|| ((sconn = russ_sconn_new()) == NULL)) {
-		return NULL;
-	}
-
-	servaddr_len = sizeof(struct sockaddr_un);
-	if ((sconn->sd = russ_accept_deadline(deadline, self->sd, (struct sockaddr *)&servaddr, &servaddr_len)) < 0) {
-		fprintf(stderr, "warning: russ_accept() fails with errno (%d)\n", errno);
-		goto free_sconn;
-	}
-	if (russ_get_creds(sconn->sd, &(sconn->creds)) < 0) {
-		fprintf(stderr, "warning: russ_get_creds() fails\n");
-		goto close_sd;
-	}
-	return sconn;
-
-close_sd:
-	russ_fds_close(&sconn->sd, 1);
-free_sconn:
-	sconn = russ_free(sconn);
-	return NULL;
+	return -1;
 }
 
 /**

@@ -65,8 +65,8 @@ def convert_dial_attrs_args(attrs, args):
 def announce(path, mode, uid, gid):
     """Announce a service.
     """
-    lis_ptr = libruss.russ_announce(path, mode, uid, gid)
-    return bool(lis_ptr) and Listener(lis_ptr) or None
+    lisd = libruss.russ_announce(path, mode, uid, gid)
+    return lisd
 
 def dialv(deadline, op, spath, attrs, args):
     """Dial a service.

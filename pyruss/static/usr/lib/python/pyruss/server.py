@@ -106,8 +106,8 @@ class Server:
         return bool(sconn_ptr) and ServerConn(sconn_ptr) or None
 
     def announce(self, saddr, mode, uid, gid):
-        lis_ptr = libruss.russ_svr_announce(self._ptr, saddr, mode, uid, gid)
-        return bool(lis_ptr) and Listener(lis_ptr) or None
+        lisd = libruss.russ_svr_announce(self._ptr, saddr, mode, uid, gid)
+        return lisd
 
     def free(self):
         libruss.russ_svr_free(self._ptr)

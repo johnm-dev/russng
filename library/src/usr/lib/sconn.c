@@ -82,6 +82,44 @@ russ_sconn_close_fd(struct russ_sconn *self, int index) {
 }
 
 /**
+* Accept dial.
+*
+* @param deadline	deadline to complete operation
+* @param lisd		listen() socket descriptor
+* @return		new server connection object with
+*			credentials (not fully established); NULL on
+*			failure
+*/
+struct russ_sconn *
+russ_sconn_accept(russ_deadline deadline, int lisd) {
+	struct russ_sconn	*self;
+	struct sockaddr_un	servaddr;
+	socklen_t		servaddr_len;
+
+	if ((lisd < 0)
+		|| ((self = russ_sconn_new()) == NULL)) {
+		return NULL;
+	}
+
+	servaddr_len = sizeof(struct sockaddr_un);
+	if ((self->sd = russ_accept_deadline(deadline, lisd, (struct sockaddr *)&servaddr, &servaddr_len)) < 0) {
+		fprintf(stderr, "warning: russ_sconn_accept() fails with errno (%d)\n", errno);
+		goto free_sconn;
+	}
+	if (russ_get_creds(self->sd, &(self->creds)) < 0) {
+		fprintf(stderr, "warning: russ_get_creds() fails\n");
+		goto close_sd;
+	}
+	return self;
+
+close_sd:
+	russ_fds_close(&self->sd, 1);
+free_sconn:
+	self = russ_free(self);
+	return NULL;
+}
+
+/**
 * Send first nfds fds over the server connection and cleanup.
 *
 * Each cfd has an sfd counterpart. The cfds are sent over the

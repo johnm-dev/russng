@@ -173,7 +173,7 @@ class russ_svr_Structure(ctypes.Structure):
         ("mode", ctypes.c_uint),
         ("uid", ctypes.c_uint),
         ("gid", ctypes.c_uint),
-        ("lis", ctypes.POINTER(russ_lis_Structure)),
+        ("lisd", ctypes.c_int),
         ("accepttimeout", ctypes.c_int),
         ("awaittimeout", ctypes.c_int),
         ("autoswitchuser", ctypes.c_int),
@@ -252,12 +252,6 @@ libruss.russ_dialv.restype = ctypes.POINTER(russ_cconn_Structure)
 #
 # from handlers.c
 #
-libruss.russ_standard_accept_handler.argtypes = [
-    ctypes.POINTER(russ_lis_Structure),
-    russ_deadline,
-]
-libruss.russ_standard_accept_handler.restype = ctypes.POINTER(russ_sconn_Structure)
-
 libruss.russ_standard_answer_handler.argtypes = [
     ctypes.POINTER(russ_sconn_Structure)
 ]
@@ -300,12 +294,6 @@ libruss.russ_announce.argtypes = [
 ]
 libruss.russ_announce.restype = ctypes.POINTER(russ_lis_Structure)
 
-libruss.russ_lis_accept.argtypes = [
-    ctypes.POINTER(russ_lis_Structure),
-    russ_deadline,
-]
-libruss.russ_lis_accept.restype = ctypes.POINTER(russ_sconn_Structure)
-
 libruss.russ_lis_close.argtypes = [
     ctypes.POINTER(russ_lis_Structure),
 ]
@@ -347,6 +335,12 @@ libruss.russ_write_exit.restype = ctypes.c_int
 #
 # from sconn.c
 #
+libruss.russ_sconn_accept.argtypes = [
+    russ_deadline,
+    ctypes.c_int,
+]
+libruss.russ_sconn_accept.restype = ctypes.POINTER(russ_sconn_Structure)
+
 libruss.russ_sconn_answer.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),
     ctypes.c_int,
@@ -472,7 +466,7 @@ libruss.russ_svr_announce.argtypes = [
     ctypes.c_uint,
     ctypes.c_uint,
 ]
-libruss.russ_svr_announce.restype = ctypes.POINTER(russ_lis_Structure)
+libruss.russ_svr_announce.restype = ctypes.c_int
 
 libruss.russ_svr_handler.argtypes = [
     ctypes.POINTER(russ_svr_Structure),

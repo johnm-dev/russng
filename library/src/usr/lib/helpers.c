@@ -282,8 +282,8 @@ russ_list(russ_deadline deadline, const char *spath) {
 */
 int
 russ_start(int argc, char **argv) {
-	struct russ_lis		*lis;
 	struct russ_conf	*conf;
+	int			lisd;
 	int			oargc;
 	char			**oargv;
 	char			*file_user, *file_group, *user, *group;
@@ -325,12 +325,12 @@ russ_start(int argc, char **argv) {
 
 	/* set up socket */
 	argv[0] = path;
-	if ((argv[0] == NULL) || ((lis = russ_announce(addr, file_mode, file_uid, file_gid)) == NULL)) {
+	if ((argv[0] == NULL) || ((lisd = russ_announce(addr, file_mode, file_uid, file_gid)) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}
 
-	/* listen socket is at fd lis->sd */
+	/* listen socket is at fd lisd */
 	setgid(gid);
 	setuid(uid);
 	execv(argv[0], hide_conf ? argv : oargv);

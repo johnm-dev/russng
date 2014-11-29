@@ -46,18 +46,14 @@
 *
 * @param root		root service node object
 * @param type		server type (see RUSS_SVR_TYPE_*)
-* @param sd		initial listener descriptor
+* @param lisd		initial listener descriptor
 * @return		russ_svr object; NULL on failure
 */
 struct russ_svr *
-russ_svr_new(struct russ_svcnode *root, int type, int sd) {
+russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	struct russ_svr	*self;
 
-	if (((self = malloc(sizeof(struct russ_svr))) == NULL)
-		|| ((self->lis = russ_lis_new(sd)) == NULL)) {
-		if (self) {
-			self = russ_free(self);
-		}
+	if ((self = malloc(sizeof(struct russ_svr))) == NULL) {
 		return NULL;
 	}
 	self->root = root;
@@ -68,8 +64,8 @@ russ_svr_new(struct russ_svcnode *root, int type, int sd) {
 	self->mode = 0;
 	self->uid = -1;
 	self->gid = -1;
-	/* self->lis set above */
-	self->accepthandler = russ_standard_accept_handler;
+	self->lisd = lisd;
+	self->accepthandler = russ_sconn_accept;
 	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
 	self->answerhandler = russ_standard_answer_handler;
 	self->awaittimeout = RUSS_SVR_TIMEOUT_AWAIT;
@@ -89,30 +85,28 @@ russ_svr_new(struct russ_svcnode *root, int type, int sd) {
 */
 struct russ_sconn *
 russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
-	return self->accepthandler(self->lis, deadline);
+	return self->accepthandler(deadline, self->lisd);
 }
 
-struct russ_lis *
+int
 russ_svr_announce(struct russ_svr *self, const char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 	if (self == NULL) {
-		return NULL;
+		return -1;
 	}
 	if ((self->saddr = strdup(saddr)) == NULL) {
-		return NULL;
+		return -1;
 	}
 	self->mode = mode;
 	self->uid = uid;
 	self->gid = gid;
-	if (self->lis) {
-		self->lis = russ_free(self->lis);
-	}
-	if ((self->lis = russ_announce(self->saddr, self->mode, self->uid, self->gid)) == NULL) {
+	if ((self->lisd = russ_announce(self->saddr, self->mode, self->uid, self->gid)) < 0) {
+		self->lisd = -1;
 		goto free_saddr;
 	}
-	return self->lis;
+	return self->lisd;
 free_saddr:
 	self->saddr = russ_free(self->saddr);
-	return NULL;
+	return -1;
 }
 
 /**
@@ -357,7 +351,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	}
 
 	while (1) {
-		if ((sconn = self->accepthandler(self->lis, russ_to_deadline(self->accepttimeout))) == NULL) {
+		if ((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd)) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
 			sleep(1);
 			continue;
@@ -366,8 +360,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 			setsid();
 			signal(SIGHUP, SIG_IGN);
 
-			russ_lis_close(self->lis);
-			self->lis = russ_lis_free(self->lis);
+			russ_fds_close(&self->lisd, 1);
 			if (fork() == 0) {
 				russ_svr_handler(self, sconn);
 

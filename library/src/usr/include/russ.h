@@ -194,7 +194,7 @@ struct russ_sess;
 typedef void (*russ_svchandler)(struct russ_sess *);
 typedef int64_t russ_deadline;
 
-typedef struct russ_sconn *(*russ_accepthandler)(struct russ_lis *, russ_deadline);
+typedef struct russ_sconn *(*russ_accepthandler)(russ_deadline, int);
 typedef int (*russ_answerhandler)(struct russ_sconn *);
 typedef void (*russ_reqhandler)(struct russ_sconn *);
 
@@ -223,7 +223,7 @@ struct russ_svr {
 	mode_t			mode;
 	uid_t			uid;
 	gid_t			gid;
-	struct russ_lis		*lis;
+	int			lisd;
 	russ_accepthandler	accepthandler;
 	int			accepttimeout;
 	russ_answerhandler	answerhandler;
@@ -290,7 +290,6 @@ struct russ_cconn *russ_dialv(russ_deadline, const char *, const char *, char **
 struct russ_cconn *russ_diall(russ_deadline, const char *, const char *, char **, ...);
 
 /* handlers.c */
-struct russ_sconn *russ_standard_accept_handler(struct russ_lis *, russ_deadline);
 int russ_standard_answer_handler(struct russ_sconn *);
 
 /* helpers.c */
@@ -316,8 +315,7 @@ ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
 
 /* lis.c */
 struct russ_lis *russ_lis_new(int);
-struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);
-struct russ_sconn *russ_lis_accept(struct russ_lis *, russ_deadline);
+int russ_announce(char *, mode_t, uid_t, gid_t);
 void russ_lis_close(struct russ_lis *);
 struct russ_lis *russ_lis_free(struct russ_lis *);
 
@@ -358,6 +356,7 @@ int russ_sarray0_update(char ***, int, char *);
 /* sconn.c */
 struct russ_sconn *russ_sconn_free(struct russ_sconn *);
 struct russ_sconn *russ_sconn_new(void);
+struct russ_sconn *russ_sconn_accept(russ_deadline, int);
 int russ_sconn_answer(struct russ_sconn *, int, int *);
 struct russ_req *russ_sconn_await_req(struct russ_sconn *, russ_deadline);
 int russ_sconn_exit(struct russ_sconn *, int);
@@ -389,7 +388,7 @@ int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
 /* svr.c */
 struct russ_svr *russ_svr_new(struct russ_svcnode *, int, int);
 struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
-struct russ_lis *russ_svr_announce(struct russ_svr *, const char *, mode_t, uid_t, gid_t);
+int russ_svr_announce(struct russ_svr *, const char *, mode_t, uid_t, gid_t);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
 int russ_svr_set_autoswitchuser(struct russ_svr *, int);

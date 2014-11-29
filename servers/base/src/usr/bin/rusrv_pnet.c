@@ -568,10 +568,10 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 }
 
 struct russ_sconn *
-accepthandler(struct russ_lis *self, russ_deadline deadline) {
+accepthandler(russ_deadline deadline, int lisd) {
 	struct russ_sconn	*sconn;
 
-	if ((sconn = russ_lis_accept(self, deadline)) != NULL) {
+	if ((sconn = russ_sconn_accept(deadline, lisd)) != NULL) {
 		targetslist.next = (targetslist.next+1 >= targetslist.n) ? 0 : targetslist.next+1;
 		random(); /* tickle */
 	}
