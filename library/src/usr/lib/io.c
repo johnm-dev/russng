@@ -39,6 +39,67 @@
 #include "russ_priv.h"
 
 /**
+* Announce service as a socket file.
+*
+* If the address already exists (EADDRINUSE), then we check to see
+* if anything is actually using it. If not, we remove it and try to
+* set it up. If the address cannot be "bind"ed, then we exit with
+* NULL.
+*
+* The only way to claim an address that is in use it to forcibly
+* remove it from the filesystem first (unlink), then call here.
+*
+* @param saddr		socket address
+* @param mode		file mode of path
+* @param uid		owner of path
+* @param gid		group owner of path
+* @return		listener socket descriptor
+*/
+int
+russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
+	struct sockaddr_un	servaddr;
+	int			lisd;
+
+	if ((saddr == NULL) || ((saddr = russ_spath_resolve(saddr)) == NULL)) {
+		return -1;
+	}
+
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sun_family = AF_UNIX;
+	strcpy(servaddr.sun_path, saddr);
+	if ((lisd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		goto free_saddr;
+	}
+	if (bind(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+		if ((errno == EADDRINUSE)
+			&& (connect(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
+			/* is something listening? */
+			if (errno != ECONNREFUSED) {
+				goto close_lisd;
+			} else if ((unlink(saddr) < 0)
+				|| (bind(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
+				goto close_lisd;
+			}
+		} else {
+			goto close_lisd;
+		}
+	}
+	if ((chmod(saddr, mode) < 0)
+		|| (chown(saddr, uid, gid) < 0)
+		|| (listen(lisd, RUSS_LISTEN_BACKLOG) < 0)) {
+		goto close_lisd;
+	}
+	saddr = russ_free(saddr);
+	return lisd;
+
+close_lisd:
+	russ_close(lisd);
+free_saddr:
+	saddr = russ_free(saddr);
+	return -1;
+}
+
+/**
 * Close fd with auto retry on EINTR.
 *
 * @param fd		descriptor

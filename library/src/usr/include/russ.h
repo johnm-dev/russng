@@ -305,6 +305,7 @@ int russ_start(int, char **);
 int russ_startl(char *, ...);
 
 /* io.c */
+int russ_announce(char *, mode_t, uid_t, gid_t);
 int russ_close(int);
 ssize_t russ_read(int, void *, size_t);
 ssize_t russ_readline(int, void *, size_t);
@@ -315,7 +316,6 @@ ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
 
 /* lis.c */
 struct russ_lis *russ_lis_new(int);
-int russ_announce(char *, mode_t, uid_t, gid_t);
 void russ_lis_close(struct russ_lis *);
 struct russ_lis *russ_lis_free(struct russ_lis *);
 
