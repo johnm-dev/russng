@@ -316,14 +316,6 @@ libruss.russ_lis_free.argtypes = [
 ]
 libruss.russ_lis_free.restype = ctypes.POINTER(russ_lis_Structure)
 
-libruss.russ_lis_loop.argtypes = [
-    ctypes.POINTER(russ_lis_Structure),
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-]
-libruss.russ_lis_loop.restype = None
-
 #
 # from misc.c
 #

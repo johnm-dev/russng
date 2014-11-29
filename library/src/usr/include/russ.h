@@ -320,7 +320,6 @@ struct russ_lis *russ_announce(char *, mode_t, uid_t, gid_t);
 struct russ_sconn *russ_lis_accept(struct russ_lis *, russ_deadline);
 void russ_lis_close(struct russ_lis *);
 struct russ_lis *russ_lis_free(struct russ_lis *);
-void russ_lis_loop(struct russ_lis *, russ_accepthandler, russ_answerhandler, russ_reqhandler);
 
 /* misc.c */
 int russ_dprintf(int, const char *, ...);
