@@ -121,11 +121,6 @@ class russ_creds_Structure(ctypes.Structure):
         ("gid", ctypes.c_long),
     ]
 
-class russ_lis_Structure(ctypes.Structure):
-    _fields_ = [
-        ("sd", ctypes.c_int),
-    ]
-
 class russ_req_Structure(ctypes.Structure):
     _fields_ = [
         ("protocolstring", ctypes.c_char_p),
@@ -282,27 +277,6 @@ libruss.russ_dialv_wait_inouterr3.argtypes = [
     ctypes.POINTER(russ_buf_Structure),
 ]
 libruss.russ_dialv_wait_inouterr3.restype = ctypes.c_int
-
-#
-# from lis.c
-#
-libruss.russ_announce.argtypes = [
-    ctypes.c_char_p,
-    ctypes.c_uint,
-    ctypes.c_uint,
-    ctypes.c_uint,
-]
-libruss.russ_announce.restype = ctypes.POINTER(russ_lis_Structure)
-
-libruss.russ_lis_close.argtypes = [
-    ctypes.POINTER(russ_lis_Structure),
-]
-libruss.russ_lis_close.restype = None
-
-libruss.russ_lis_free.argtypes = [
-    ctypes.POINTER(russ_lis_Structure),
-]
-libruss.russ_lis_free.restype = ctypes.POINTER(russ_lis_Structure)
 
 #
 # from misc.c

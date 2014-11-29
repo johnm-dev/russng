@@ -39,7 +39,7 @@ import threading
 #
 import pyruss
 from pyruss import libruss, SVCHANDLER_FUNC
-from pyruss import Listener, Request, ServerConn
+from pyruss import Request, ServerConn
 
 class ServiceHandler:
     def __init__(self, handler):
