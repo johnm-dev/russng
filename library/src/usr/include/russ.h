@@ -154,13 +154,6 @@ struct russ_optable {
 };
 
 /**
-* Listener object.
-*/
-struct russ_lis {
-	int	sd;	/**< socket descriptor */
-};
-
-/**
 * Request object.
 */
 struct russ_req {
@@ -313,11 +306,6 @@ ssize_t russ_readn(int, void *, size_t);
 ssize_t russ_readn_deadline(russ_deadline, int, void *, size_t);
 ssize_t russ_writen(int, void *, size_t);
 ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
-
-/* lis.c */
-struct russ_lis *russ_lis_new(int);
-void russ_lis_close(struct russ_lis *);
-struct russ_lis *russ_lis_free(struct russ_lis *);
 
 /* misc.c */
 int russ_dprintf(int, const char *, ...);
