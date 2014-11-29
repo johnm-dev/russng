@@ -38,58 +38,35 @@ extern char **environ;
 /* global */
 struct russ_conf	*conf = NULL;
 const char		*HELP = 
-"Provides access to remote user@host using ssh.\n"
+"Pass request to another service with splicing of fds.\n"
 "\n"
-"/... <args>\n"
-"    Connect to service ... and pass fds back.\n";
-
-/*
-* Example alternate answer handler.
-*
-* @param self		connection object
-* @return		0 on success; -1 on failure
-*/
-int
-alt_answer_handler(struct russ_conn *self) {
-	struct russ_conn	*conn;
-	struct russ_req		*req;
-
-	req = &(self->req);
-	if (strcmp(req->spath, "/") == 0) {
-		return russ_standard_answer_handler(self);
-	}
-
-	if ((conn = russ_dialv(RUSS_DEADLINE_NEVER, req->op, req->spath, req->attrv, req->argv)) == NULL) {
-		return -1;
-	}
-	return russ_conn_splice(self, conn);
-}
+"/<spath> <args>\n"
+"    Dial service at <spath>.\n";
 
 /**
-* Service request only if it is for "/".
+* Answer and service request only if it is for "/". Otherwise, pass
+* request on with redial and splice operations.
 */
 void
-master_handler(struct russ_sess *sess) {
-	struct russ_conn	*conn = sess->conn;
-	struct russ_req		*req;
+svc_root_handler(struct russ_sess *sess) {
+	struct russ_svr		*svr = sess->svr;
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
 
-	req = sess->req;
 	if (strcmp(req->spath, "/") == 0) {
-		switch (req->opnum) {
-		case RUSS_OPNUM_HELP:
-			russ_dprintf(conn->fds[1], "%s", HELP);
-			russ_conn_exit(conn, RUSS_EXIT_SUCCESS);
-			break;
-		case RUSS_OPNUM_LIST:
-			russ_dprintf(conn->fds[1], "%s", HELP);
-			russ_conn_fatal(conn, RUSS_MSG_UNDEFSERVICE, RUSS_EXIT_FAILURE);
-			break;
-		default:
-			/* TODO: something else needs to be here */
-			russ_conn_fatal(conn, RUSS_MSG_BADOP, RUSS_EXIT_FAILURE);
+		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
+			/* fatal */
+			return;
 		}
+		if (req->opnum == RUSS_OPNUM_HELP) {
+			russ_dprintf(sconn->fds[1], "%s", HELP);
+			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+			russ_sconn_close(sconn);
+		}
+	} else {
+		russ_sconn_redialandsplice(sconn, RUSS_DEADLINE_NEVER, req);
+		exit(0);
 	}
-	exit(0);
 }
 
 void
@@ -107,7 +84,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_lis	*lis;
+	struct russ_svcnode	*root;
+	struct russ_svr		*svr;
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -119,14 +97,14 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	lis = russ_announce(russ_conf_get(conf, "server", "path", NULL),
-		russ_conf_getsint(conf, "server", "mode", 0600),
-		russ_conf_getint(conf, "server", "uid", getuid()),
-		russ_conf_getint(conf, "server", "gid", getgid()));
-	if (lis == NULL) {
-		fprintf(stderr, "error: cannot announce service\n");
+	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
+		|| (russ_svcnode_set_autoanswer(root, 0) < 0)
+		|| (russ_svcnode_set_virtual(root, 1) < 0)
+		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
+		|| (russ_svr_set_help(svr, HELP) < 0)) {
+		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}
-	russ_lis_loop(lis, NULL, alt_answer_handler, master_handler);
+	russ_svr_loop(svr);
 	exit(0);
 }
