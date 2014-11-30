@@ -30,7 +30,6 @@ extern "C" {
 #endif
 
 #include <limits.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>
