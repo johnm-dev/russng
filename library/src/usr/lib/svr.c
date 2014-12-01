@@ -94,10 +94,8 @@ russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
 */
 int
 russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
-	if (self == NULL) {
-		return -1;
-	}
-	if (handler == NULL) {
+	if ((self == NULL)
+		|| (handler == NULL)) {
 		return -1;
 	}
 	self->accepthandler = handler;
