@@ -120,6 +120,18 @@ free_sconn:
 }
 
 /**
+* Accept handler.
+*
+* @param deadline	deadline to complete operation
+* @param lisd		listen() socket descriptor
+* @return		new server connection object
+*/
+struct russ_sconn *
+russ_sconn_accepthandler(russ_deadline deadline, int lisd) {
+	return russ_sconn_accept(deadline, lisd);
+}
+
+/**
 * Send first nfds fds over the server connection and cleanup.
 *
 * Each cfd has an sfd counterpart. The cfds are sent over the

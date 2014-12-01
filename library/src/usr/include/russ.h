@@ -341,6 +341,7 @@ int russ_sarray0_update(char ***, int, char *);
 struct russ_sconn *russ_sconn_free(struct russ_sconn *);
 struct russ_sconn *russ_sconn_new(void);
 struct russ_sconn *russ_sconn_accept(russ_deadline, int);
+struct russ_sconn *russ_sconn_accepthandler(russ_deadline, int);
 int russ_sconn_answer(struct russ_sconn *, int, int *);
 int russ_sconn_answerhandler(struct russ_sconn *);
 struct russ_req *russ_sconn_await_req(struct russ_sconn *, russ_deadline);
