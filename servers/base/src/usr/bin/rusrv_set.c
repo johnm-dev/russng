@@ -157,12 +157,12 @@ svc_root_value_handler(struct russ_sess *sess) {
 		exit(0);
 	}
 	spath = russ_free(spath);
-	russ_standard_answer_handler(sconn);
+	russ_sconn_answerhandler(sconn);
 	return;
 
 failed_update:
 	spath = russ_free(spath);
-	if (russ_standard_answer_handler(sconn) == 0) {
+	if (russ_sconn_answerhandler(sconn) == 0) {
 		russ_sconn_fatal(sconn, "error: could not set attribute/argument", RUSS_EXIT_FAILURE);
 	}
 	exit(0);

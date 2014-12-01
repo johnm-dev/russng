@@ -5,13 +5,13 @@
 
 include ../../../../Makefile.inc
 
-SRCS=buf.c cconn.c conf.c encdec.c fd.c handlers.c \
+SRCS=buf.c cconn.c conf.c encdec.c fd.c \
 	helpers.c io.c misc.c optable.c relay.c req.c \
 	sarray0.c sconn.c socket.c spath.c str.c svcnode.c svr.c \
 	time.c
 	#experimental.c
 SRCS_PTHREAD=svr-pthread.c
-OBJS=buf.o cconn.o conf.o encdec.o fd.o handlers.o \
+OBJS=buf.o cconn.o conf.o encdec.o fd.o \
 	helpers.o io.o misc.o optable.o relay.o req.o \
 	sarray0.o sconn.o socket.o spath.o str.o svcnode.o svr.o \
 	time.o

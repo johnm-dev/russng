@@ -281,9 +281,6 @@ int russ_cconn_wait(struct russ_cconn *, russ_deadline, int *);
 struct russ_cconn *russ_dialv(russ_deadline, const char *, const char *, char **, char **);
 struct russ_cconn *russ_diall(russ_deadline, const char *, const char *, char **, ...);
 
-/* handlers.c */
-int russ_standard_answer_handler(struct russ_sconn *);
-
 /* helpers.c */
 int russ_dialv_wait(russ_deadline, const char *, const char *, char **, char **, int *);
 int russ_dialv_wait_inouterr(russ_deadline, const char *, const char *, char **, char **, int *, struct russ_buf **);
@@ -345,6 +342,7 @@ struct russ_sconn *russ_sconn_free(struct russ_sconn *);
 struct russ_sconn *russ_sconn_new(void);
 struct russ_sconn *russ_sconn_accept(russ_deadline, int);
 int russ_sconn_answer(struct russ_sconn *, int, int *);
+int russ_sconn_answerhandler(struct russ_sconn *);
 struct russ_req *russ_sconn_await_req(struct russ_sconn *, russ_deadline);
 int russ_sconn_exit(struct russ_sconn *, int);
 int russ_sconn_fatal(struct russ_sconn *, const char *, int);

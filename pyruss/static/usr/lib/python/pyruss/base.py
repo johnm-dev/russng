@@ -311,5 +311,5 @@ class ServerConn(Conn):
     def splice(self, cconn):
         return libruss.russ_sconn_splice(self._ptr, cconn._ptr)
 
-    def standard_answer_handler(self):
-        return libruss.russ_standard_answer_handler(self._ptr)
+    def answerhandler(self):
+        return libruss.russ_sconn_answerhandler(self._ptr)

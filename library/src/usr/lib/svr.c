@@ -67,7 +67,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	self->lisd = lisd;
 	self->accepthandler = russ_sconn_accept;
 	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
-	self->answerhandler = russ_standard_answer_handler;
+	self->answerhandler = russ_sconn_answerhandler;
 	self->awaittimeout = RUSS_SVR_TIMEOUT_AWAIT;
 	self->autoswitchuser = 0;
 	self->help = NULL;
@@ -208,7 +208,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 
 	if ((node = russ_svcnode_find(self->root, &(req->spath[1]), sess.spath, sizeof(sess.spath))) == NULL) {
 		/* we need standard fds */
-		russ_standard_answer_handler(sconn);
+		russ_sconn_answerhandler(sconn);
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		goto cleanup;
 	}

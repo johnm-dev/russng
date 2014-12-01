@@ -245,14 +245,6 @@ libruss.russ_dialv.argtypes = [
 libruss.russ_dialv.restype = ctypes.POINTER(russ_cconn_Structure)
 
 #
-# from handlers.c
-#
-libruss.russ_standard_answer_handler.argtypes = [
-    ctypes.POINTER(russ_sconn_Structure)
-]
-libruss.russ_standard_answer_handler.restype = ctypes.c_int
-
-#
 # from helpers.c
 #
 libruss.russ_dialv_wait.argtypes = [
@@ -321,6 +313,11 @@ libruss.russ_sconn_answer.argtypes = [
     ctypes.POINTER(ctypes.c_int),
 ]
 libruss.russ_sconn_answer.restype = ctypes.c_int
+
+libruss.russ_sconn_answerhandler.argtypes = [
+    ctypes.POINTER(russ_sconn_Structure)
+]
+libruss.russ_sconn_answerhandler.restype = ctypes.c_int
 
 libruss.russ_sconn_await_req.argtypes = [
     ctypes.POINTER(russ_sconn_Structure),

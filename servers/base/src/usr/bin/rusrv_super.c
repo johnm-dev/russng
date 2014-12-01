@@ -392,7 +392,7 @@ redialandsplice(struct russ_sess *sess, char *svrname) {
 		if ((setegid(sconn->creds.gid) < 0)
 			|| (seteuid(sconn->creds.uid) < 0)) {
 			/* this should not happen for root */
-			russ_standard_answer_handler(sconn);
+			russ_sconn_answerhandler(sconn);
 			/* TODO: what msg should be output? */
 			russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 			exit(0);
@@ -405,7 +405,7 @@ redialandsplice(struct russ_sess *sess, char *svrname) {
 		/* switch (back) user */
 		if ((seteuid(getuid()) < 0)
 			|| (setegid(getgid()) < 0)) {
-			russ_standard_answer_handler(sconn);
+			russ_sconn_answerhandler(sconn);
 			/* TODO: what msg should be output? */
 			russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 			exit(0);
@@ -493,7 +493,7 @@ svc_server_handler(struct russ_sess *sess) {
 	}
 
 no_service:
-	russ_standard_answer_handler(sconn);
+	russ_sconn_answerhandler(sconn);
 	russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 done:
 	svrname = russ_free(svrname);

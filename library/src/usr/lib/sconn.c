@@ -174,7 +174,7 @@ russ_sconn_send_fds(struct russ_sconn *self, int nfds, int *cfds) {
 *
 * System fds are created and sent; supplied I/O fds are sent.
 *
-* @param self		accepted server connection object
+* @param self		server connection object
 * @param nfds		number of elements in cfds (and sfds) array
 * @param cfds		array of descriptors to send to client
 *			(corresponding to the server-side connection
@@ -206,6 +206,37 @@ russ_sconn_answer(struct russ_sconn *self, int nfds, int *cfds) {
 		return -1;
 	}
 	russ_fds_close(&self->sd, 1);
+	return 0;
+}
+
+/**
+* Default answer handler which sets up standard fds (stdin, stdout,
+* stderr) and answers the request.
+*
+* @param self		server connection object
+* @return		0 on success; -1 on failure
+*/
+int
+russ_sconn_answerhandler(struct russ_sconn *self) {
+	int	cfds[RUSS_CONN_NFDS];
+	int	tmpfd;
+
+	russ_fds_init(cfds, RUSS_CONN_NFDS, -1);
+	russ_fds_init(self->fds, RUSS_CONN_NFDS, -1);
+	if (russ_make_pipes(RUSS_CONN_STD_NFDS, cfds, self->fds) < 0) {
+		fprintf(stderr, "error: cannot create pipes\n");
+		return -1;
+	}
+	/* swap fds for stdin */
+	tmpfd = cfds[0];
+	cfds[0] = self->fds[0];
+	self->fds[0] = tmpfd;
+
+	if (russ_sconn_answer(self, RUSS_CONN_STD_NFDS, cfds) < 0) {
+		russ_fds_close(cfds, RUSS_CONN_STD_NFDS);
+		russ_fds_close(self->fds, RUSS_CONN_STD_NFDS);
+		return -1;
+	}
 	return 0;
 }
 
@@ -348,7 +379,7 @@ russ_sconn_redialandsplice(struct russ_sconn *self, russ_deadline deadline, stru
 
 	/* switch user */
 	if (russ_switch_user(self->creds.uid, self->creds.gid, 0, NULL) < 0) {
-		russ_standard_answer_handler(self);
+		russ_sconn_answerhandler(self);
 		russ_sconn_fatal(self, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 		return -1;
 	}
@@ -357,7 +388,7 @@ russ_sconn_redialandsplice(struct russ_sconn *self, russ_deadline deadline, stru
 	if (((cconn = russ_dialv(deadline, req->op, req->spath, req->attrv, req->argv)) == NULL)
 		|| (russ_sconn_splice(self, cconn) < 0)) {
 		russ_cconn_close(cconn);
-		russ_standard_answer_handler(self);
+		russ_sconn_answerhandler(self);
 		russ_sconn_fatal(self, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		return -1;
 	}
