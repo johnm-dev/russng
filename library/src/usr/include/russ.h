@@ -373,6 +373,7 @@ struct russ_svr *russ_svr_new(struct russ_svcnode *, int, int);
 struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
+int russ_svr_set_answerhandler(struct russ_svr *, russ_answerhandler);
 int russ_svr_set_autoswitchuser(struct russ_svr *, int);
 int russ_svr_set_help(struct russ_svr *, const char *);
 

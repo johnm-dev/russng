@@ -105,6 +105,23 @@ russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
 }
 
 /**
+* Register an alternative answer handler.
+*
+* @param self		russ server object
+* @param handler	answer handler
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_answerhandler(struct russ_svr *self, russ_answerhandler handler) {
+	if ((self == NULL)
+		|| (handler == NULL)) {
+		return -1;
+	}
+	self->answerhandler = handler;
+	return 0;
+}
+
+/**
 * Set to perform (or not) auto switch user.
 *
 * If enabled, the server will automatically call russ_switch_user()
