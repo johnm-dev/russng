@@ -384,7 +384,7 @@ int russ_svr_set_help(struct russ_svr *, const char *);
 russ_deadline russ_gettime(void); /* internal */
 russ_deadline russ_to_deadline(int);
 russ_deadline russ_to_deadlinediff(russ_deadline);
-int russ_to_timeout(russ_deadline deadline);
+int russ_to_timeout(russ_deadline);
 
 #ifdef __cplusplus
 }
