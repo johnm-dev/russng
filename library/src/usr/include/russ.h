@@ -212,9 +212,6 @@ struct russ_svr {
 	pid_t			mpid;
 	long			ctime;
 	char			*saddr;
-	mode_t			mode;
-	uid_t			uid;
-	gid_t			gid;
 	int			lisd;
 	russ_accepthandler	accepthandler;
 	int			accepttimeout;
@@ -374,7 +371,6 @@ int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
 /* svr.c */
 struct russ_svr *russ_svr_new(struct russ_svcnode *, int, int);
 struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
-int russ_svr_announce(struct russ_svr *, const char *, mode_t, uid_t, gid_t);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
 int russ_svr_set_autoswitchuser(struct russ_svr *, int);

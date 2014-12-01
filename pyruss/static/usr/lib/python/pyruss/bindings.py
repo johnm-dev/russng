@@ -165,9 +165,6 @@ class russ_svr_Structure(ctypes.Structure):
         ("root", ctypes.POINTER(russ_svcnode_Structure)),
         ("type", ctypes.c_int),
         ("saddr", ctypes.c_char_p),
-        ("mode", ctypes.c_uint),
-        ("uid", ctypes.c_uint),
-        ("gid", ctypes.c_uint),
         ("lisd", ctypes.c_int),
         ("accepttimeout", ctypes.c_int),
         ("awaittimeout", ctypes.c_int),
@@ -429,15 +426,6 @@ libruss.russ_svr_accept.argtypes = [
     russ_deadline,
 ]
 libruss.russ_svr_accept.restype = ctypes.POINTER(russ_sconn_Structure)
-
-libruss.russ_svr_announce.argtypes = [
-    ctypes.POINTER(russ_svr_Structure),
-    ctypes.c_char_p,
-    ctypes.c_uint,
-    ctypes.c_uint,
-    ctypes.c_uint,
-]
-libruss.russ_svr_announce.restype = ctypes.c_int
 
 libruss.russ_svr_handler.argtypes = [
     ctypes.POINTER(russ_svr_Structure),

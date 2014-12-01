@@ -61,9 +61,6 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	self->mpid = getpid();
 	self->ctime = russ_gettime();
 	self->saddr = NULL;
-	self->mode = 0;
-	self->uid = -1;
-	self->gid = -1;
 	self->lisd = lisd;
 	self->accepthandler = russ_sconn_accepthandler;
 	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
@@ -86,27 +83,6 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 struct russ_sconn *
 russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
 	return self->accepthandler(deadline, self->lisd);
-}
-
-int
-russ_svr_announce(struct russ_svr *self, const char *saddr, mode_t mode, uid_t uid, gid_t gid) {
-	if (self == NULL) {
-		return -1;
-	}
-	if ((self->saddr = strdup(saddr)) == NULL) {
-		return -1;
-	}
-	self->mode = mode;
-	self->uid = uid;
-	self->gid = gid;
-	if ((self->lisd = russ_announce(self->saddr, self->mode, self->uid, self->gid)) < 0) {
-		self->lisd = -1;
-		goto free_saddr;
-	}
-	return self->lisd;
-free_saddr:
-	self->saddr = russ_free(self->saddr);
-	return -1;
 }
 
 /**
@@ -268,7 +244,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		}
 		break;
 	case RUSS_OPNUM_INFO:
-		if (sconn->creds.uid == self->uid) {
+		if (sconn->creds.uid == getuid()) {
 			char	hostname[HOST_NAME_MAX];
 
 			gethostname(hostname, sizeof(hostname));

@@ -105,10 +105,6 @@ class Server:
         sconn_ptr = libruss.russ_svr_accept(self._ptr, deadline)
         return bool(sconn_ptr) and ServerConn(sconn_ptr) or None
 
-    def announce(self, saddr, mode, uid, gid):
-        lisd = libruss.russ_svr_announce(self._ptr, saddr, mode, uid, gid)
-        return lisd
-
     def free(self):
         libruss.russ_svr_free(self._ptr)
         self._ptr = None
