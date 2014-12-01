@@ -147,10 +147,8 @@ russ_svr_set_autoswitchuser(struct russ_svr *self, int value) {
 */
 int
 russ_svr_set_help(struct russ_svr *self, const char *help) {
-	if (self == NULL) {
-		return -1;
-	}
-	if ((self->help = strdup(help)) == NULL) {
+	if ((self == NULL)
+		|| ((self->help = strdup(help)) == NULL)) {
 		return -1;
 	}
 	return 0;
