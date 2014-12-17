@@ -264,6 +264,7 @@ struct russ_relay {
 };
 
 /* buf.c */
+int russ_buf_load(struct russ_buf *, char *, int, int);
 int russ_buf_init(struct russ_buf *, char *, int, int);
 struct russ_buf *russ_buf_new(int);
 struct russ_buf *russ_buf_free(struct russ_buf *);

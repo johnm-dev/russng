@@ -263,7 +263,7 @@ russ_conf_free(struct russ_conf *self) {
 * @return		russ_conf object; NULL on failure
 */
 struct russ_conf *
-russ_conf_init(int *argc, char **argv) {
+russ_conf_load(int *argc, char **argv) {
 	struct russ_conf	*self;
 	int			i, j;
 	char			*colonp, *equalp;
@@ -312,6 +312,11 @@ bad_args:
 free_conf:
 	russ_conf_free(self);
 	return NULL;
+}
+
+struct russ_conf *
+russ_conf_init(int *argc, char **argv) {
+	return russ_conf_load(argc, argv);
 }
 
 /**
