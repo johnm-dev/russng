@@ -37,7 +37,7 @@
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_H(char *b, uint16_t *v) {
+russ_dec_uint16(char *b, uint16_t *v) {
 	*v = (uint16_t)(uint8_t)b[0]
 		| (uint16_t)(uint8_t)b[1]<<8;
 	return b+2;
@@ -51,7 +51,7 @@ russ_dec_H(char *b, uint16_t *v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_h(char *b, int16_t *v) {
+russ_dec_int16(char *b, int16_t *v) {
 	*v = (int16_t)(uint8_t)b[0]
 		| (int16_t)(uint8_t)b[1]<<8;
 	return b+2;
@@ -65,7 +65,7 @@ russ_dec_h(char *b, int16_t *v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_I(char *b, uint32_t *v) {
+russ_dec_uint32(char *b, uint32_t *v) {
 	*v = (uint32_t)(uint8_t)b[0]
 		| (uint32_t)(uint8_t)b[1]<<8
 		| (uint32_t)(uint8_t)b[2]<<16
@@ -81,11 +81,11 @@ russ_dec_I(char *b, uint32_t *v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_i(char *b, int32_t *v) {
+russ_dec_int32(char *b, int32_t *v) {
 	uint32_t	v2;
 	char		*b2;
 
-	b2 = russ_dec_I(b, &v2);
+	b2 = russ_dec_uint32(b, &v2);
 	*v = (int32_t)v2;
 	return b2;
 }
@@ -98,7 +98,7 @@ russ_dec_i(char *b, int32_t *v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_Q(char *b, uint64_t *v) {
+russ_dec_uint64(char *b, uint64_t *v) {
 	*v = (uint64_t)(uint8_t)b[0]
 		| (uint64_t)(uint8_t)b[1]<<8
 		| (uint64_t)(uint8_t)b[2]<<16
@@ -118,11 +118,11 @@ russ_dec_Q(char *b, uint64_t *v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_q(char *b, int64_t *v) {
+russ_dec_int64(char *b, int64_t *v) {
 	uint64_t	v2;
 	char		*b2;
 
-	b2 = russ_dec_Q(b, &v2);
+	b2 = russ_dec_uint64(b, &v2);
 	*v = (int64_t)v2;
 	return b2;
 }
@@ -135,10 +135,10 @@ russ_dec_q(char *b, int64_t *v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_b(char *b, char **bp) {
+russ_dec_char(char *b, char **bp) {
 	int	count;
 
-	if (((b = russ_dec_i(b, &count)) == NULL)
+	if (((b = russ_dec_int32(b, &count)) == NULL)
 		|| ((*bp = russ_malloc(count)) == NULL)) {
 		return NULL;
 	}
@@ -157,7 +157,7 @@ russ_dec_b(char *b, char **bp) {
 */
 char *
 russ_dec_s(char *b, char **bp) {
-	return russ_dec_b(b, bp);
+	return russ_dec_char(b, bp);
 }
 
 /**
@@ -174,7 +174,7 @@ _dec_sarray0(char *b, char ***v, int *alen, int append_null) {
 	char	**array, *s;
 	int	_bcount, i;
 
-	b = russ_dec_i(b, alen);
+	b = russ_dec_int32(b, alen);
 	if (*alen > 0) {
 		if (append_null) {
 			array = russ_malloc(sizeof(char *)*(*alen+1));
@@ -241,7 +241,7 @@ russ_dec_sarrayn(char *b, char ***vpp, int *alen) {
 */
 char *
 russ_dec_exit(char *b, int *v) {
-	return russ_dec_i(b, v);
+	return russ_dec_int32(b, v);
 }
 
 /**
@@ -261,10 +261,10 @@ russ_dec_req(char *b, struct russ_req **v) {
 		|| ((req = russ_req_new(NULL, NULL, NULL, NULL, NULL)) == NULL)) {
 		return NULL;
 	}
-	if (((b = russ_dec_i(b, &sz)) == NULL)
+	if (((b = russ_dec_int32(b, &sz)) == NULL)
 		|| ((b = russ_dec_s(b, &(req->protocolstring))) == NULL)
 		|| (strcmp(RUSS_REQ_PROTOCOLSTRING, req->protocolstring) != 0)
-		|| ((b = russ_dec_b(b, &dummy)) == NULL)
+		|| ((b = russ_dec_char(b, &dummy)) == NULL)
 		|| ((b = russ_dec_s(b, &(req->spath))) == NULL)
 		|| ((b = russ_dec_s(b, &(req->op))) == NULL)
 		|| ((b = russ_dec_sarray0(b, &(req->attrv), &sz)) == NULL)
@@ -290,7 +290,7 @@ russ_dec_req(char *b, struct russ_req **v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_H(char *b, char *bend, uint16_t v) {
+russ_enc_uint16(char *b, char *bend, uint16_t v) {
 	if ((bend-b) < 2) {
 		return NULL;
 	}
@@ -308,7 +308,7 @@ russ_enc_H(char *b, char *bend, uint16_t v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_h(char *b, char *bend, int16_t v) {
+russ_enc_int16(char *b, char *bend, int16_t v) {
 	if ((bend-b) < 2) {
 		return NULL;
 	}
@@ -326,7 +326,7 @@ russ_enc_h(char *b, char *bend, int16_t v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_I(char *b, char *bend, uint32_t v) {
+russ_enc_uint32(char *b, char *bend, uint32_t v) {
 	if ((bend-b) < 4) {
 		return NULL;
 	}
@@ -346,7 +346,7 @@ russ_enc_I(char *b, char *bend, uint32_t v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_i(char *b, char *bend, int32_t v) {
+russ_enc_int32(char *b, char *bend, int32_t v) {
 	if ((bend-b) < 4) {
 		return NULL;
 	}
@@ -366,7 +366,7 @@ russ_enc_i(char *b, char *bend, int32_t v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_Q(char *b, char *bend, uint64_t v) {
+russ_enc_uint64(char *b, char *bend, uint64_t v) {
 	if ((bend-b) < 8) {
 		return NULL;
 	}
@@ -390,7 +390,7 @@ russ_enc_Q(char *b, char *bend, uint64_t v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_q(char *b, char *bend, int64_t v) {
+russ_enc_int64(char *b, char *bend, int64_t v) {
 	if ((bend-b) < 8) {
 		return NULL;
 	}
@@ -417,11 +417,11 @@ russ_enc_q(char *b, char *bend, int64_t v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_b(char *b, char *bend, char *v, int alen) {
+russ_enc_char(char *b, char *bend, char *v, int alen) {
 	if ((bend-b) < 4+alen) {
 		return NULL;
 	}
-	b = russ_enc_i(b, bend, alen);
+	b = russ_enc_int32(b, bend, alen);
 	if (alen > 0) {
 		memcpy(b, v, alen);
 	}
@@ -440,7 +440,7 @@ russ_enc_b(char *b, char *bend, char *v, int alen) {
 */
 char *
 russ_enc_s(char *b, char *bend, char *v) {
-	return russ_enc_b(b, bend, v, strlen(v)+1);
+	return russ_enc_char(b, bend, v, strlen(v)+1);
 }
 
 /**
@@ -458,7 +458,7 @@ char *
 russ_enc_sarrayn(char *b, char *bend, char **v, int alen) {
 	int	i;
 
-	if ((b = russ_enc_i(b, bend, alen)) == NULL) {
+	if ((b = russ_enc_int32(b, bend, alen)) == NULL) {
 		return NULL;
 	}
 	for (i = 0; i < alen; i++) {
@@ -504,7 +504,7 @@ russ_enc_sarray0(char *b, char *bend, char **v) {
 */
 char *
 russ_enc_exit(char *b, char *bend, int v) {
-	return russ_enc_i(b, bend, v);
+	return russ_enc_int32(b, bend, v);
 }
 
 /**
@@ -520,9 +520,9 @@ russ_enc_req(char *b, char *bend, struct russ_req *v) {
 	char	*_b = b;
 
 	if ((v == NULL)
-		|| ((b = russ_enc_i(b, bend, 0)) == NULL)
+		|| ((b = russ_enc_int32(b, bend, 0)) == NULL)
 		|| ((b = russ_enc_s(b, bend, v->protocolstring)) == NULL)
-		|| ((b = russ_enc_b(b, bend, NULL, 0)) == NULL) /* dummy */
+		|| ((b = russ_enc_char(b, bend, NULL, 0)) == NULL) /* dummy */
 		|| ((b = russ_enc_s(b, bend, v->spath)) == NULL)
 		|| ((b = russ_enc_s(b, bend, v->op)) == NULL)
 		|| ((b = russ_enc_sarray0(b, bend, v->attrv)) == NULL)
@@ -530,6 +530,6 @@ russ_enc_req(char *b, char *bend, struct russ_req *v) {
 		return NULL;
 	}
 	/* patch size */
-	russ_enc_i(_b, bend, b-_b-4);
+	russ_enc_int32(_b, bend, b-_b-4);
 	return b;
 }

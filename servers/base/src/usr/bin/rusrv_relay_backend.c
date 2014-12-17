@@ -48,7 +48,7 @@ main(int argc, char **argv) {
 	/* msg size */
 	bp = buf;
 	if ((read(0, bp, 4) < 0)
-		|| ((bp = russ_dec_I(bp, &size)) == NULL)
+		|| ((bp = russ_dec_uint32(bp, &size)) == NULL)
 		|| (size > 16384)
 		|| (read(0, bp, size) < 0)) {
 		exit(RUSS_EXIT_SYSFAILURE);

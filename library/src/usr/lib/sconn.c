@@ -157,7 +157,7 @@ russ_sconn_send_fds(struct russ_sconn *self, int nfds, int *cfds) {
 	}
 
 	/* encode nfds and statuses and send*/
-	if ((bp = russ_enc_i(buf, buf+sizeof(buf), nfds)) == NULL) {
+	if ((bp = russ_enc_int32(buf, buf+sizeof(buf), nfds)) == NULL) {
 		return -1;
 	}
 	for (i = 0; i < nfds; i++) {
@@ -302,7 +302,7 @@ russ_sconn_await_req(struct russ_sconn *self, russ_deadline deadline) {
 
 	/* need to get request size to load buffer */
 	if ((russ_readn_deadline(deadline, self->sd, buf, 4) < 0)
-		|| ((bp = russ_dec_i(buf, &size)) == NULL)
+		|| ((bp = russ_dec_int32(buf, &size)) == NULL)
 		|| (russ_readn_deadline(deadline, self->sd, bp, size) < 0)
 		|| ((bp = russ_dec_req(buf, &req)) == NULL)) {
 		/* TODO: what about the connection? */

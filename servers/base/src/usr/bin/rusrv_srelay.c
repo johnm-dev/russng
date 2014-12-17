@@ -180,7 +180,7 @@ enc_dial_info(struct russ_req *req, char *new_spath, char *buf, int buf_size) {
 
 	bp = buf;
 	bend = buf+buf_size;
-	if (((bp = russ_enc_I(bp, bend, 0)) == NULL)
+	if (((bp = russ_enc_uint32(bp, bend, 0)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, req->op)) == NULL)
 		|| ((bp = russ_enc_s(bp, bend, new_spath)) == NULL)
 		|| ((bp = russ_enc_sarray0(bp, bend, req->attrv)) == NULL)
@@ -189,7 +189,7 @@ enc_dial_info(struct russ_req *req, char *new_spath, char *buf, int buf_size) {
 	}
 	/* patch size */
 fprintf(stderr, "dial psize (%d)\n", (int)(bp-buf-4));
-	russ_enc_I(buf, bend, bp-buf-4);
+	russ_enc_uint32(buf, bend, bp-buf-4);
 	return bp-buf;
 }
 

@@ -93,7 +93,7 @@ russ_cconn_recv_fds(struct russ_cconn *self, russ_deadline deadline, int nfds, i
 
 	/* recv count of fds and fd statuses */
 	if ((russ_readn_deadline(deadline, self->sd, buf, 4) < 4)
-		|| (russ_dec_i(buf, &recvnfds) == NULL)
+		|| (russ_dec_int32(buf, &recvnfds) == NULL)
 		|| (recvnfds > nfds)
 		|| (russ_readn_deadline(deadline, self->sd, buf, recvnfds) < recvnfds)) {
 		return -1;

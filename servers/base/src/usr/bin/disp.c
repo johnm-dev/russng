@@ -228,9 +228,9 @@ dispatcher_send(struct dispatcher *self, int id, int mtype, char *buf, int psize
 	bp = hbuf;
 	bend = hbuf+DISPATCHER_HEADER_BUF_SIZE;
 	if ((memset(bp, 0, DISPATCHER_HEADER_BUF_SIZE) == NULL)
-		|| ((bp = russ_enc_i(bp, bend, id)) == NULL)
-		|| ((bp = russ_enc_i(bp, bend, mtype)) == NULL)
-		|| ((bp = russ_enc_i(bp, bend, psize)) == NULL)) {
+		|| ((bp = russ_enc_int32(bp, bend, id)) == NULL)
+		|| ((bp = russ_enc_int32(bp, bend, mtype)) == NULL)
+		|| ((bp = russ_enc_int32(bp, bend, psize)) == NULL)) {
 		return -1;
 	}
 	
@@ -259,9 +259,9 @@ dispatcher_loop(struct dispatcher *self) {
 		/* get message header */
 		bp = hbuf;
 		if ((russ_readn(self->msgfd, bp, DISPATCHER_HEADER_BUF_SIZE) <= 0)
-			|| ((bp = russ_dec_i(bp, &id)) == NULL)
-			|| ((bp = russ_dec_i(bp, &mtype)) == NULL)
-			|| ((bp = russ_dec_i(bp, &psize)) == NULL)) {
+			|| ((bp = russ_dec_int32(bp, &id)) == NULL)
+			|| ((bp = russ_dec_int32(bp, &mtype)) == NULL)
+			|| ((bp = russ_dec_int32(bp, &psize)) == NULL)) {
 			break;
 		}
 

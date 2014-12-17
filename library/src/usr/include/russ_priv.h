@@ -44,26 +44,26 @@ extern "C" {
 int russ_cconn_send_req(struct russ_cconn *, russ_deadline, struct russ_req *);
 
 /* encdec.c */
-char *russ_dec_H(char *, uint16_t *);
-char *russ_dec_h(char *, int16_t *);
-char *russ_dec_I(char *, uint32_t *);
-char *russ_dec_i(char *, int32_t *);
-char *russ_dec_Q(char *, uint64_t *);
-char *russ_dec_q(char *, int64_t *);
-char *russ_dec_b(char *, char **);
+char *russ_dec_uint16(char *, uint16_t *);
+char *russ_dec_int16(char *, int16_t *);
+char *russ_dec_uint32(char *, uint32_t *);
+char *russ_dec_int32(char *, int32_t *);
+char *russ_dec_uint64(char *, uint64_t *);
+char *russ_dec_int64(char *, int64_t *);
+char *russ_dec_char(char *, char **);
 char *russ_dec_s(char *, char **);
 char *russ_dec_sarray0(char *, char ***, int *);
 char *russ_dec_sarrayn(char *, char ***, int *);
 char *russ_dec_exit(char *, int *);
 char *russ_dec_req(char *, struct russ_req **);
 
-char *russ_enc_H(char *, char *, uint16_t);
-char *russ_enc_h(char *, char *, int16_t);
-char *russ_enc_I(char *, char *, uint32_t);
-char *russ_enc_i(char *, char *, int32_t);
-char *russ_enc_Q(char *, char *, uint64_t);
-char *russ_enc_q(char *, char *, int64_t);
-char *russ_enc_b(char *, char *, char *, int);
+char *russ_enc_uint16(char *, char *, uint16_t);
+char *russ_enc_int16(char *, char *, int16_t);
+char *russ_enc_uint32(char *, char *, uint32_t);
+char *russ_enc_int32(char *, char *, int32_t);
+char *russ_enc_uint64(char *, char *, uint64_t);
+char *russ_enc_int64(char *, char *, int64_t);
+char *russ_enc_char(char *, char *, char *, int);
 char *russ_enc_s(char *, char *, char *);
 char *russ_enc_sarrayn(char *, char *, char **, int);
 char *russ_enc_sarray0(char *, char *, char **);

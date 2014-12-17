@@ -227,7 +227,7 @@ enc_dial_info(struct russ_req *req, char *new_spath, char *buf, int buf_size) {
 		return -1;
 	}
 	/* patch size */
-	russ_enc_I(buf, bend, bp-buf-4);
+	russ_enc_uint32(buf, bend, bp-buf-4);
 	return bp-buf;
 }
 

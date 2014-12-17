@@ -123,7 +123,7 @@ redial(int sd) {
 	/* msg size */
 	bp = buf;
 	if ((read(sd, bp, 4) < 0)
-		|| ((bp = russ_dec_I(bp, &size)) == NULL)
+		|| ((bp = russ_dec_uint32(bp, &size)) == NULL)
 		|| (size > 16384)
 		|| (read(sd, bp, size) < 0)) {
 		return NULL;
