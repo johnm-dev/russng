@@ -391,7 +391,7 @@ main(int argc, char **argv) {
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
 		exit(0);
-	} else if ((conf = russ_conf_init(&argc, argv)) == NULL) {
+	} else if ((conf = russ_conf_load(&argc, argv)) == NULL) {
 		fprintf(stderr, "error: cannot configure\n");
 		exit(1);
 	}

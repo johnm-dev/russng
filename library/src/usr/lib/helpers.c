@@ -299,7 +299,7 @@ russ_start(int argc, char **argv) {
 	if ((oargv = russ_sarray0_dup(argv, oargc+1)) == NULL) {
 		fprintf(stderr, "error: cannot duplicate argument list\n");
 		exit(1);
-	} else if ((argc < 2) || ((conf = russ_conf_init(&argc, argv)) == NULL)) {
+	} else if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
 		fprintf(stderr, "error: cannot load configuration.\n");
 		exit(1);
 	}
