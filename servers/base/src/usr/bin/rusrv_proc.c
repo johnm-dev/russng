@@ -69,11 +69,6 @@ const char		*HELP =
 "    checked every interval milliseconds (default/minimum is 1000ms)\n"
 "    for a maximum of timeout milliseconds (default is infinite).\n";
 
-void
-svc_root_handler(struct russ_sess *sess) {
-	/* auto hanlding in svr */
-}
-
 /* process attributes info */
 #define PATTR_NULL		0
 #define PATTR_PID		1
@@ -485,6 +480,11 @@ dprint_pid_info(int fd, struct pid_info *pi, pattr_idxs pattr_idxs, int long_for
 	if (!long_format) {
 		russ_dprintf(fd, "\n");
 	}
+}
+
+void
+svc_root_handler(struct russ_sess *sess) {
+	/* auto hanlding in svr */
 }
 
 void
