@@ -675,7 +675,7 @@ svc_p_handler(struct russ_sess *sess) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_proc [<conf options>] [-- <hostsfile>]\n"
+"usage: rusrv_proc [<conf options>]\n"
 "\n"
 "russ-based server for reporting on and monitoring processes.\n"
 );
