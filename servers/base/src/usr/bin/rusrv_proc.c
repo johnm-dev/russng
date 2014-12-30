@@ -74,6 +74,115 @@ svc_root_handler(struct russ_sess *sess) {
 	/* auto hanlding in svr */
 }
 
+/* process attributes info */
+#define PATTR_NULL		0
+#define PATTR_PID		1
+#define PATTR_COMM		2
+#define PATTR_CMDLINE		3
+#define PATTR_STATE		4
+#define PATTR_PPID		5
+#define PATTR_PGRP		6
+#define PATTR_SID		7
+#define PATTR_TTY		8
+#define PATTR_TPGID		9
+#define PATTR_FLAGS		10
+#define PATTR_MINFLT		11
+#define PATTR_CMINFLT		12
+#define PATTR_MAJFLT		13
+#define PATTR_CMAJFLT		14
+#define PATTR_UTIME		15
+#define PATTR_STIME		16
+#define PATTR_CUTIME		17
+#define PATTR_CSTIME		18
+#define PATTR_PRIORITY		19
+#define PATTR_NICE		20
+#define PATTR_NUMTHREADS	21
+#define PATTR_ITREALVALUE	22
+#define PATTR_STARTTIME		23
+#define PATTR_VSIZE		24
+#define PATTR_RSS		25
+#define PATTR_RSSLIM		26
+#define PATTR_STARTCODE		27
+#define PATTR_ENDCODE		28
+#define PATTR_STARTSTACK	29
+#define PATTR_KSTKESP		30
+#define PATTR_KSTKEIP		31
+#define PATTR_SIGNAL		32
+#define PATTR_BLOCKED		33
+#define PATTR_SIGIGNORE		34
+#define PATTR_SIGCATCH		35
+#define PATTR_WCHAN		36
+#define PATTR_NSWAP		37
+#define PATTR_CNSWAP		38
+#define PATTR_EXITSIGNAL	39
+#define PATTR_PROCESSOR		40
+#define PATTR_RTPRIORITY	41
+#define PATTR_POLICY		42
+#define PATTR_DELAYACCTBLKIOTICKS	43
+#define PATTR_GUESTTIME		44
+#define PATTR_CGUESTTIME	45
+#define PATTR_UID		46
+#define PATTR_GID		47
+
+struct pattrs {
+	int	value;
+	char	*name;
+};
+
+struct pattrs pattrs[] = {
+	{ PATTR_BLOCKED, "blocked" },
+	{ PATTR_CGUESTTIME, "cguesttime" },
+	{ PATTR_CMAJFLT, "cmajflt" },
+	{ PATTR_CMDLINE, "cmdline" },
+	{ PATTR_CMINFLT, "cminflt" },
+	{ PATTR_CNSWAP, "cnswap" },
+	{ PATTR_COMM, "comm" },
+	{ PATTR_CSTIME, "cstime" },
+	{ PATTR_CUTIME, "cutime" },
+	{ PATTR_DELAYACCTBLKIOTICKS, "delayacctblkioticks" },
+	{ PATTR_ENDCODE, "endcode" },
+	{ PATTR_EXITSIGNAL, "exitsignal" },
+	{ PATTR_FLAGS, "flags" },
+	{ PATTR_GID, "gid" },
+	{ PATTR_GUESTTIME, "guesttime" },
+	{ PATTR_ITREALVALUE, "itrealvalue" },
+	{ PATTR_KSTKEIP, "kstkeip" },
+	{ PATTR_KSTKESP, "kstkesp" },
+	{ PATTR_MAJFLT, "majflt" },
+	{ PATTR_MINFLT, "minflt" },
+	{ PATTR_NICE, "nice" },
+	{ PATTR_NSWAP, "nswap" },
+	{ PATTR_NUMTHREADS, "numthreads" },
+	{ PATTR_PGRP, "pgrp" },
+	{ PATTR_PID, "pid" },
+	{ PATTR_POLICY, "policy" },
+	{ PATTR_PPID, "ppid" },
+	{ PATTR_PRIORITY, "priority" },
+	{ PATTR_PROCESSOR, "processor" },
+	{ PATTR_RSS, "rss" },
+	{ PATTR_RSSLIM, "rsslim" },
+	{ PATTR_RTPRIORITY, "rtpriority" },
+	{ PATTR_SID, "sid" },
+	{ PATTR_SIGCATCH, "sigcatch" },
+	{ PATTR_SIGIGNORE, "sigignore" },
+	{ PATTR_SIGNAL, "signal" },
+	{ PATTR_STARTCODE, "startcode" },
+	{ PATTR_STARTSTACK, "startstack" },
+	{ PATTR_STARTTIME, "starttime" },
+	{ PATTR_STATE, "state" },
+	{ PATTR_STIME, "stime" },
+	{ PATTR_TPGID, "tpgid" },
+	{ PATTR_TTY, "tty" },
+	{ PATTR_UID, "uid" },
+	{ PATTR_UTIME, "utime" },
+	{ PATTR_VSIZE, "vsize" },
+	{ PATTR_WCHAN, "wchan" },
+	{ PATTR_NULL, NULL },
+};
+
+#define PATTR_IDXS_SIZE 256
+typedef int pattr_idxs[PATTR_IDXS_SIZE];
+
 /* linux */
 struct pid_info {
 	pid_t		pid;
@@ -126,6 +235,8 @@ struct pid_info {
 	gid_t		gid;
 };
 #define PID_STAT_FORMAT "%d %255[^ ] %c %d %d %d %*s %*s %*s %*s %*s %*s %*s %lu %lu %ld %ld %*s %*s %*s %*s %llu %lu %ld"
+
+#define DEFAULT_STATUS "pid:ppid:pgrp:sid:uid:gid:state:comm:cmdline"
 
 typedef	int (*get_pid_info_fn)(pid_t, struct pid_info *, int);
 get_pid_info_fn	get_pid_info = NULL;
@@ -180,18 +291,202 @@ linux_get_pid_info(pid_t pid, struct pid_info *pi, int use_long_format) {
 }
 
 int
-dprint_pid_info(int fd, struct pid_info *pi, int use_long_format) {
-	char	*fmt;
+get_pattr_idx(char *s) {
+	int	i;
 
-	if (use_long_format) {
-		fmt = "pid=%d\nppid=%d\npgrp=%d\nsid=%d\nuid=%d\ngid=%d\nstate=%c\ncomm=%s\ncmdline=%s\n";
-	} else {
-		fmt = "%d:%d:%d:%d:%d:%d:%c:%s\n";
+	for (i = 0; pattrs[i].value != PATTR_NULL; i++) {
+		if (strcmp(pattrs[i].name, s) == 0) {
+			break;
+		}
 	}
-	return russ_dprintf(fd, fmt,
-		pi->pid, pi->ppid, pi->pgrp, pi->sid, pi->uid, pi->gid, pi->state, pi->comm, pi->cmdline);
+	return i;
 }
- 
+
+int
+parse_pattr_idxs(char *s, pattr_idxs pattr_idxs) {
+	char	*ps, *pe;
+	int	i;
+
+	s = strdup(s);
+	for (i = 0, ps = s, pe = s; *pe != '\0'; pe++) {
+		if (*pe == ':') {
+			*pe = '\0';
+			pattr_idxs[i++] = get_pattr_idx(ps);
+			ps = pe+1;
+		}
+	}
+	if (ps != pe) {
+		pattr_idxs[i++] = get_pattr_idx(ps);
+	}
+	pattr_idxs[i] = PATTR_NULL;
+	free(s);
+	return 0;
+}
+
+int
+dprint_pid_info(int fd, struct pid_info *pi, pattr_idxs pattr_idxs, int long_format) {
+	int	i, idx;
+
+	for (i = 0, idx = pattr_idxs[i]; idx != PATTR_NULL; i++, idx = pattr_idxs[i]) {
+		if ((i) && (!long_format)) {
+			russ_dprintf(fd, ":");
+		}
+
+		switch (pattrs[idx].value) {
+		case PATTR_PID:
+			russ_dprintf(fd, (long_format ? "pid=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_COMM:
+			russ_dprintf(fd, (long_format ? "comm=%s\n": "%s"), pi->comm);
+			break;
+		case PATTR_CMDLINE:
+			russ_dprintf(fd, (long_format ? "cmdline=%s\n": "%s"), pi->cmdline);
+			break;
+		case PATTR_STATE:
+			russ_dprintf(fd, (long_format ? "state=%c\n": "%c"), pi->state);
+			break;
+		case PATTR_PPID:
+			russ_dprintf(fd, (long_format ? "ppid=%d\n": "%d"), pi->ppid);
+			break;
+		case PATTR_PGRP:
+			russ_dprintf(fd, (long_format ? "pgrp=%d\n": "%d"), pi->pgrp);
+			break;
+		case PATTR_SID:
+			russ_dprintf(fd, (long_format ? "sid=%d\n": "%d"), pi->sid);
+			break;
+#if 0
+		case PATTR_TTY:
+			russ_dprintf(fd, (long_format ? "tty=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_TPGID:
+			russ_dprintf(fd, (long_format ? "tpgid=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_FLAGS:
+			russ_dprintf(fd, (long_format ? "flags=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_MINFLT:
+			russ_dprintf(fd, (long_format ? "minflt=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_CMINFLT:
+			russ_dprintf(fd, (long_format ? "cminflt=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_MAJFLT:
+			russ_dprintf(fd, (long_format ? "majflt=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_CMAJFLT:
+			russ_dprintf(fd, (long_format ? "cmajflt=%d\n": "%d"), pi->pid);
+			break;
+#endif
+		case PATTR_UTIME:
+			russ_dprintf(fd, (long_format ? "utime=%lu\n": "%lu"), pi->utime);
+			break;
+		case PATTR_STIME:
+			russ_dprintf(fd, (long_format ? "stime=%lu\n": "%lu"), pi->stime);
+			break;
+		case PATTR_CUTIME:
+			russ_dprintf(fd, (long_format ? "cutime=%ld\n": "%ld"), pi->cutime);
+			break;
+		case PATTR_CSTIME:
+			russ_dprintf(fd, (long_format ? "cstime=%ld\n": "%ld"), pi->cstime);
+			break;
+#if 0
+		case PATTR_PRIORITY:
+			russ_dprintf(fd, (long_format ? "priority=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_NICE:
+			russ_dprintf(fd, (long_format ? "nice=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_NUMTHREADS:
+			russ_dprintf(fd, (long_format ? "numthreads=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_ITREALVALUE:
+			russ_dprintf(fd, (long_format ? "itrealvalue=%d\n": "%d"), pi->pid);
+			break;
+#endif
+		case PATTR_STARTTIME:
+			russ_dprintf(fd, (long_format ? "starttime=%llu\n": "%llu"), pi->starttime);
+			break;
+		case PATTR_VSIZE:
+			russ_dprintf(fd, (long_format ? "vsize=%lu\n": "%d"), pi->vsize);
+			break;
+		case PATTR_RSS:
+			russ_dprintf(fd, (long_format ? "rss=%ld\n": "%d"), pi->rss);
+			break;
+#if 0
+		case PATTR_RSSLIM:
+			russ_dprintf(fd, (long_format ? "rsslim=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_STARTCODE:
+			russ_dprintf(fd, (long_format ? "startcode=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_ENDCODE:
+			russ_dprintf(fd, (long_format ? "endcode=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_STARTSTACK:
+			russ_dprintf(fd, (long_format ? "startstack=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_KSTKESP:
+			russ_dprintf(fd, (long_format ? "kstkesp=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_KSTKEIP:
+			russ_dprintf(fd, (long_format ? "kstkeip=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_SIGNAL:
+			russ_dprintf(fd, (long_format ? "signal=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_BLOCKED:
+			russ_dprintf(fd, (long_format ? "blocked=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_SIGIGNORE:
+			russ_dprintf(fd, (long_format ? "sigignore=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_SIGCATCH:
+			russ_dprintf(fd, (long_format ? "sigcatch=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_WCHAN:
+			russ_dprintf(fd, (long_format ? "wchan=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_NSWAP:
+			russ_dprintf(fd, (long_format ? "nswap=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_CNSWAP:
+			russ_dprintf(fd, (long_format ? "cnswap=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_EXITSIGNAL:
+			russ_dprintf(fd, (long_format ? "exitsignal=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_PROCESSOR:
+			russ_dprintf(fd, (long_format ? "processor=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_RTPRIORITY:
+			russ_dprintf(fd, (long_format ? "rtpriority=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_POLICY:
+			russ_dprintf(fd, (long_format ? "policy=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_DELAYACCTBLKIOTICKS:
+			russ_dprintf(fd, (long_format ? "delayacctblkioticks=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_GUESTTIME:
+			russ_dprintf(fd, (long_format ? "guesttime=%d\n": "%d"), pi->pid);
+			break;
+		case PATTR_CGUESTTIME:
+			russ_dprintf(fd, (long_format ? "cguesttime=%d\n": "%d"), pi->pid);
+			break;
+#endif
+		case PATTR_UID:
+			russ_dprintf(fd, (long_format ? "uid=%d\n": "%d"), pi->uid);
+			break;
+		case PATTR_GID:
+			russ_dprintf(fd, (long_format ? "gid=%d\n": "%d"), pi->gid);
+			break;
+		}
+	}
+	if (!long_format) {
+		russ_dprintf(fd, "\n");
+	}
+}
+
 void
 svc_n_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
@@ -208,9 +503,11 @@ svc_n_status_handler(struct russ_sess *sess) {
 	pid_t			pid;
 	DIR			*dirp;
 	struct dirent		*entry;
+	pattr_idxs		pattr_idxs;
 	int			use_long_format;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		parse_pattr_idxs(DEFAULT_STATUS, pattr_idxs);
 		use_long_format = (req->argv) && (strcmp(req->argv[0], "-l") == 0);
 		if ((dirp = opendir("/proc")) == NULL) {
 			russ_sconn_fatal(sconn, "error: could not get process list", RUSS_EXIT_FAILURE);
@@ -221,7 +518,7 @@ svc_n_status_handler(struct russ_sess *sess) {
 				|| (get_pid_info(pid, &pi, use_long_format) < 0)) {
 				continue;
 			}
-			if (dprint_pid_info(sconn->fds[1], &pi, use_long_format) < 0) {
+			if (dprint_pid_info(sconn->fds[1], &pi, pattr_idxs, use_long_format) < 0) {
 				break;
 			}
 		}
@@ -262,16 +559,18 @@ svc_p_pid_status_handler(struct russ_sess *sess) {
 	pid_t			pid;
 	struct pid_info		pi;
 	char			*fmt;
+	pattr_idxs		pattr_idxs;
 	int			use_long_format;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		parse_pattr_idxs(DEFAULT_STATUS, pattr_idxs);
 		use_long_format = (req->argv) && (strcmp(req->argv[0], "-l") == 0);
 		if ((sscanf(req->spath, "/p/%d", &pid) < 0)
 			|| (get_pid_info(pid, &pi, use_long_format) < 0)) {
 			russ_sconn_fatal(sconn, "error: invalid pid", RUSS_EXIT_FAILURE);
 			exit(0);
 		}
-		dprint_pid_info(sconn->fds[1], &pi, use_long_format);
+		dprint_pid_info(sconn->fds[1], &pi, pattr_idxs, use_long_format);
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
