@@ -501,7 +501,8 @@ gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
 	char			path[PATH_MAX];
 	pid_t			pid;
 	struct pid_info		pi;
-	char			*fmt;
+	char			fmt[1024];
+	char			*scanfmt;
 	pattr_idxs		pattr_idxs;
 	int			use_long_format;
 	struct stat		st;
@@ -509,7 +510,6 @@ gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
 	gid_t			gid;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
-		parse_pattr_idxs(DEFAULT_STATUS, pattr_idxs);
 		use_long_format = (req->argv) && (strcmp(req->argv[0], "-l") == 0);
 		if (gnu == 'u') {
 			if (sscanf(req->spath, "/u/%d", &uid) < 0) {
@@ -517,12 +517,23 @@ gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
 				russ_sconn_close(sconn);
 				exit(0);
 			}
+			scanfmt = "/u/%*d/status/%1024s";
 		} else if (gnu == 'g') {
 			if (sscanf(req->spath, "/g/%d", &gid) < 0) {
 				russ_sconn_fatal(sconn, "error: invalid gid", RUSS_EXIT_FAILURE);
 				russ_sconn_close(sconn);
 				exit(0);
 			}
+			scanfmt = "/g/%*d/status/%1024s";
+		} else {
+			scanfmt = "/n/status/%1024s";
+
+		}
+
+		if (sscanf(req->spath, scanfmt, fmt) == 1) {
+			parse_pattr_idxs(fmt, pattr_idxs);
+		} else {
+			parse_pattr_idxs(DEFAULT_STATUS, pattr_idxs);
 		}
 
 		if ((dirp = opendir("/proc")) == NULL) {
@@ -653,17 +664,21 @@ svc_p_pid_status_handler(struct russ_sess *sess) {
 	struct russ_req		*req = sess->req;
 	pid_t			pid;
 	struct pid_info		pi;
-	char			*fmt;
+	char			fmt[1024];
 	pattr_idxs		pattr_idxs;
 	int			use_long_format;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
-		parse_pattr_idxs(DEFAULT_STATUS, pattr_idxs);
 		use_long_format = (req->argv) && (strcmp(req->argv[0], "-l") == 0);
 		if ((sscanf(req->spath, "/p/%d", &pid) < 0)
 			|| (get_pid_info(pid, &pi, use_long_format) < 0)) {
 			russ_sconn_fatal(sconn, "error: invalid pid", RUSS_EXIT_FAILURE);
 			exit(0);
+		}
+		if (sscanf(req->spath, "/p/%*d/status/%1024s", fmt) == 1) {
+			parse_pattr_idxs(fmt, pattr_idxs);
+		} else {
+			parse_pattr_idxs(DEFAULT_STATUS, pattr_idxs);
 		}
 		dprint_pid_info(sconn->fds[1], &pi, pattr_idxs, use_long_format);
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
@@ -757,7 +772,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root, *node;
+	struct russ_svcnode	*root, *node, *node2;
 	struct russ_svr		*svr;
 	struct utsname		utsname;
 
@@ -783,24 +798,28 @@ main(int argc, char **argv) {
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
 		|| ((node = russ_svcnode_add(root, "n", svc_null_handler)) == NULL)
 		//|| ((node = russ_svcnode_add(node, "kill", svc_n_kill_handler)) == NULL)
-		|| ((node = russ_svcnode_add(node, "status", svc_n_status_handler)) == NULL)
+		|| ((node2 = russ_svcnode_add(node, "status", svc_n_status_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node2, 1) < 0)
 
 		|| ((node = russ_svcnode_add(root, "p", svc_p_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_add(node, "kill", svc_p_pid_kill_handler) == NULL)
-		|| (russ_svcnode_add(node, "status", svc_p_pid_status_handler) == NULL)
+		|| ((node2 = russ_svcnode_add(node, "status", svc_p_pid_status_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node2, 1) < 0)
 		|| (russ_svcnode_add(node, "wait", svc_p_pid_wait_handler) == NULL)
 
 		|| ((node = russ_svcnode_add(root, "u", svc_u_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| (russ_svcnode_add(node, "status", svc_u_uid_status_handler) == NULL)
+		|| ((node2 = russ_svcnode_add(node, "status", svc_u_uid_status_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node2, 1) < 0)
 
 		|| ((node = russ_svcnode_add(root, "g", svc_g_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| (russ_svcnode_add(node, "status", svc_g_gid_status_handler) == NULL)
+		|| ((node2 = russ_svcnode_add(node, "status", svc_g_gid_status_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node2, 1) < 0)
 
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
 		|| (russ_svr_set_help(svr, HELP) < 0)) {
