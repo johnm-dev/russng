@@ -493,40 +493,6 @@ dprint_pid_info(int fd, struct pid_info *pi, pattr_idxs pattr_idxs, int long_for
 }
 
 void
-gpu_handler_helper(struct russ_sess *sess, int gpu) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	DIR			*dirp;
-	struct dirent 		*entry;
-	char			path[PATH_MAX];
-	struct stat		st;
-
-	if (req->opnum == RUSS_OPNUM_LIST) {
-		if ((dirp = opendir("/proc")) == NULL) {
-			russ_sconn_fatal(sconn, "error: could not get process list", RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-		for (entry = readdir(dirp); entry != NULL; entry = readdir(dirp)) {
-			if (isdigit(entry->d_name[0])) {
-				if (gpu == 'p') {
-					russ_dprintf(sconn->fds[1], "%s\n", entry->d_name);
-				} else if ((snprintf(path, sizeof(path), "/proc/%s", entry->d_name) < PATH_MAX)
-					&& (stat(path, &st) == 0)) {
-					if (gpu == 'u') {
-						russ_dprintf(sconn->fds[1], "%d\n", st.st_uid);
-					} else {
-						russ_dprintf(sconn->fds[1], "%d\n", st.st_gid);
-					}
-				}
-			}
-		}
-		closedir(dirp);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		exit(0);
-	}
-}
-
-void
 gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
@@ -594,13 +560,67 @@ gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
 }
 
 void
+gpu_handler_helper(struct russ_sess *sess, int gpu) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+	DIR			*dirp;
+	struct dirent 		*entry;
+	char			path[PATH_MAX];
+	struct stat		st;
+
+	if (req->opnum == RUSS_OPNUM_LIST) {
+		if ((dirp = opendir("/proc")) == NULL) {
+			russ_sconn_fatal(sconn, "error: could not get process list", RUSS_EXIT_FAILURE);
+			exit(0);
+		}
+		for (entry = readdir(dirp); entry != NULL; entry = readdir(dirp)) {
+			if (isdigit(entry->d_name[0])) {
+				if (gpu == 'p') {
+					russ_dprintf(sconn->fds[1], "%s\n", entry->d_name);
+				} else if ((snprintf(path, sizeof(path), "/proc/%s", entry->d_name) < PATH_MAX)
+					&& (stat(path, &st) == 0)) {
+					if (gpu == 'u') {
+						russ_dprintf(sconn->fds[1], "%d\n", st.st_uid);
+					} else {
+						russ_dprintf(sconn->fds[1], "%d\n", st.st_gid);
+					}
+				}
+			}
+		}
+		closedir(dirp);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
+}
+
+void
 svc_root_handler(struct russ_sess *sess) {
 	/* auto hanlding in svr */
 }
 
 void
+svc_null_handler(struct russ_sess *sess) {
+	;
+}
+
+void
+svc_g_handler(struct russ_sess *sess) {
+	gpu_handler_helper(sess, 'g');
+}
+
+void
+svc_g_gid_status_handler(struct russ_sess *sess) {
+	gnu_x_status_handler_helper(sess, 'g');
+}
+
+void
 svc_n_status_handler(struct russ_sess *sess) {
 	gnu_x_status_handler_helper(sess, 'n');
+}
+
+void
+svc_p_handler(struct russ_sess *sess) {
+	gpu_handler_helper(sess, 'p');
 }
 
 void
@@ -717,11 +737,6 @@ svc_p_pid_wait_handler(struct russ_sess *sess) {
 }
 
 void
-svc_p_handler(struct russ_sess *sess) {
-	gpu_handler_helper(sess, 'p');
-}
-
-void
 svc_u_handler(struct russ_sess *sess) {
 	gpu_handler_helper(sess, 'u');
 }
@@ -732,27 +747,12 @@ svc_u_uid_status_handler(struct russ_sess *sess) {
 }
 
 void
-svc_g_handler(struct russ_sess *sess) {
-	gpu_handler_helper(sess, 'g');
-}
-
-void
-svc_g_gid_status_handler(struct russ_sess *sess) {
-	gnu_x_status_handler_helper(sess, 'g');
-}
-
-void
 print_usage(char **argv) {
 	fprintf(stderr,
 "usage: rusrv_proc [<conf options>]\n"
 "\n"
 "russ-based server for reporting on and monitoring processes.\n"
 );
-}
-
-void
-svc_null_handler(struct russ_sess *sess) {
-	;
 }
 
 int
