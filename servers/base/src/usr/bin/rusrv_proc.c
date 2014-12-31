@@ -248,7 +248,6 @@ linux_get_pid_info(pid_t pid, struct pid_info *pi, int use_long_format) {
 	FILE		*f;
 	struct stat	st;
 	char		pid_path[1024], stat_path[1024], cmdline_path[1024];
-	char		*p0, *p1;
 	int		sz;
 
 	if ((snprintf(pid_path, sizeof(pid_path), "/proc/%d", pid) < 0)
