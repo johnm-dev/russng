@@ -249,6 +249,7 @@ linux_get_pid_info(pid_t pid, struct pid_info *pi, int use_long_format) {
 	struct stat	st;
 	char		pid_path[1024], stat_path[1024], cmdline_path[1024];
 	char		*p0, *p1;
+	int		sz;
 
 	if ((snprintf(pid_path, sizeof(pid_path), "/proc/%d", pid) < 0)
 		|| (snprintf(stat_path, sizeof(stat_path), "/proc/%d/stat", pid) < 0)) {
@@ -257,7 +258,6 @@ linux_get_pid_info(pid_t pid, struct pid_info *pi, int use_long_format) {
 	if (stat(pid_path, &st) < 0) {
 		return -1;
 	}
-	pi->cmdline[0] = '\0';
 	pi->uid = st.st_uid;
 	pi->gid = st.st_gid;
 	if (((f = fopen(stat_path, "r")) == NULL)
@@ -269,26 +269,30 @@ linux_get_pid_info(pid_t pid, struct pid_info *pi, int use_long_format) {
 		return -1;
 	}
 	fclose(f);
-	if (use_long_format) {
-		if ((snprintf(cmdline_path, sizeof(cmdline_path), "/proc/%d/cmdline", pid) > 0)
-			&& ((f = fopen(cmdline_path, "r")) != NULL)) {
-			char	*ch;
 
-			fread(pi->cmdline, sizeof(pi->cmdline)-1, 1, f);
-			pi->cmdline[sizeof(pi->cmdline)-1] = '\0';
-			for (ch = pi->cmdline; ; ch++) {
-				if (*ch == '\0') {
-					*ch = ' ';
-					if (*(ch+1) == '\0') {
-						break;
-					}
-				} else if (*ch == '\n') {
-					*ch = ' ';
+	pi->cmdline[0] = '\0';
+	f = NULL;
+	if ((snprintf(cmdline_path, sizeof(cmdline_path), "/proc/%d/cmdline", pid) < sizeof(cmdline_path))
+		&& ((f = fopen(cmdline_path, "r")) != NULL)
+		&& ((sz = fread(pi->cmdline, 1, sizeof(pi->cmdline), f)) >= 0)) {
+		int	i;
+		char	*ch;
+
+		for (i = 0, ch = pi->cmdline; i < sz; i++, ch++) {
+			if (*ch == '\0') {
+				if (*(ch+1) == '\0') {
+					/* see proc man page for why */
+					break;
 				}
+				*ch = ' ';
+			} else if ((*ch == '\n') || (*ch == '\r')) {
+				*ch = ' ';
 			}
-			fclose(f);
 		}
+		pi->cmdline[sz] = '\0';
 	}
+	fclose(f);
+
 	return 0;
 }
 
