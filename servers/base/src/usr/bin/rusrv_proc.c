@@ -750,6 +750,11 @@ print_usage(char **argv) {
 );
 }
 
+void
+svc_null_handler(struct russ_sess *sess) {
+	;
+}
+
 int
 main(int argc, char **argv) {
 	struct russ_svcnode	*root, *node;
@@ -776,24 +781,24 @@ main(int argc, char **argv) {
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "n", NULL)) == NULL)
+		|| ((node = russ_svcnode_add(root, "n", svc_null_handler)) == NULL)
 		//|| ((node = russ_svcnode_add(node, "kill", svc_n_kill_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "status", svc_n_status_handler)) == NULL)
 
 		|| ((node = russ_svcnode_add(root, "p", svc_p_handler)) == NULL)
-		|| ((node = russ_svcnode_add(node, "*", NULL)) == NULL)
+		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_add(node, "kill", svc_p_pid_kill_handler) == NULL)
 		|| (russ_svcnode_add(node, "status", svc_p_pid_status_handler) == NULL)
 		|| (russ_svcnode_add(node, "wait", svc_p_pid_wait_handler) == NULL)
 
 		|| ((node = russ_svcnode_add(root, "u", svc_u_handler)) == NULL)
-		|| ((node = russ_svcnode_add(node, "*", NULL)) == NULL)
+		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_add(node, "status", svc_u_uid_status_handler) == NULL)
 
 		|| ((node = russ_svcnode_add(root, "g", svc_g_handler)) == NULL)
-		|| ((node = russ_svcnode_add(node, "*", NULL)) == NULL)
+		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_add(node, "status", svc_g_gid_status_handler) == NULL)
 
