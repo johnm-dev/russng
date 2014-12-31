@@ -796,6 +796,12 @@ main(int argc, char **argv) {
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "g", svc_g_handler)) == NULL)
+		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| ((node2 = russ_svcnode_add(node, "status", svc_g_gid_status_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node2, 1) < 0)
+
 		|| ((node = russ_svcnode_add(root, "n", svc_null_handler)) == NULL)
 		//|| ((node = russ_svcnode_add(node, "kill", svc_n_kill_handler)) == NULL)
 		|| ((node2 = russ_svcnode_add(node, "status", svc_n_status_handler)) == NULL)
@@ -813,12 +819,6 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| ((node2 = russ_svcnode_add(node, "status", svc_u_uid_status_handler)) == NULL)
-		|| (russ_svcnode_set_virtual(node2, 1) < 0)
-
-		|| ((node = russ_svcnode_add(root, "g", svc_g_handler)) == NULL)
-		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
-		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| ((node2 = russ_svcnode_add(node, "status", svc_g_gid_status_handler)) == NULL)
 		|| (russ_svcnode_set_virtual(node2, 1) < 0)
 
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
