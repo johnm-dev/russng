@@ -48,6 +48,9 @@ struct russ_conf	*conf = NULL;
 const char		*HELP = 
 "Report on, monitor, and kill processes.\n"
 "\n"
+"/g/<gid>/status\n"
+"    Return the status of processes owned by a group.\n"
+"\n"
 "/n/kill [<signal>] <pid> [...]\n"
 "    The send the signal to the pids listed.\n"
 "\n"
@@ -68,6 +71,9 @@ const char		*HELP =
 "    Wait for the process to terminate. The status of the process is\n"
 "    checked every interval milliseconds (default/minimum is 1000ms)\n"
 "    for a maximum of timeout milliseconds (default is infinite).\n"
+"\n"
+"/u/<uid>/status\n"
+"    Return the status of processes owned by a user.\n"
 "\n"
 "The default status format is:\n"
 "    "DEFAULT_STATUS"\n";
