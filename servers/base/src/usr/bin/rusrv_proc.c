@@ -831,9 +831,9 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(root, "p", svc_p_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_p_pid_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| ((russ_svcnode_add(node, "kill", svc_p_pid_kill_handler)) == NULL)
-		|| ((russ_svcnode_add(node, "status", svc_p_pid_status_handler)) == NULL)
-		|| ((russ_svcnode_add(node, "wait", svc_p_pid_wait_handler)) == NULL)
+		|| (russ_svcnode_add(node, "kill", svc_p_pid_kill_handler) == NULL)
+		|| (russ_svcnode_add(node, "status", svc_p_pid_status_handler) == NULL)
+		|| (russ_svcnode_add(node, "wait", svc_p_pid_wait_handler) == NULL)
 
 		|| ((node = russ_svcnode_add(root, "u", svc_u_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", NULL)) == NULL)
