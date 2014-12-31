@@ -494,31 +494,94 @@ dprint_pid_info(int fd, struct pid_info *pi, pattr_idxs pattr_idxs, int long_for
 }
 
 void
-svc_root_handler(struct russ_sess *sess) {
-	/* auto hanlding in svr */
+gpu_handler_helper(struct russ_sess *sess, int gpu) {
+	struct russ_sconn	*sconn = sess->sconn;
+	struct russ_req		*req = sess->req;
+	DIR			*dirp;
+	struct dirent 		*entry;
+	char			path[PATH_MAX];
+	struct stat		st;
+
+	if (req->opnum == RUSS_OPNUM_LIST) {
+		if ((dirp = opendir("/proc")) == NULL) {
+			russ_sconn_fatal(sconn, "error: could not get process list", RUSS_EXIT_FAILURE);
+			exit(0);
+		}
+		for (entry = readdir(dirp); entry != NULL; entry = readdir(dirp)) {
+			if (isdigit(entry->d_name[0])) {
+				if (gpu == 'p') {
+					russ_dprintf(sconn->fds[1], "%s\n", entry->d_name);
+				} else if ((snprintf(path, sizeof(path), "/proc/%s", entry->d_name) < PATH_MAX)
+					&& (stat(path, &st) == 0)) {
+					if (gpu == 'u') {
+						russ_dprintf(sconn->fds[1], "%d\n", st.st_uid);
+					} else {
+						russ_dprintf(sconn->fds[1], "%d\n", st.st_gid);
+					}
+				}
+			}
+		}
+		closedir(dirp);
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
 }
 
 void
-svc_n_status_handler(struct russ_sess *sess) {
+gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
-	struct pid_info		pi;
-	pid_t			pid;
 	DIR			*dirp;
 	struct dirent		*entry;
+	char			path[PATH_MAX];
+	pid_t			pid;
+	struct pid_info		pi;
+	char			*fmt;
 	pattr_idxs		pattr_idxs;
 	int			use_long_format;
+	struct stat		st;
+	uid_t			uid;
+	gid_t			gid;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		parse_pattr_idxs(DEFAULT_STATUS, pattr_idxs);
 		use_long_format = (req->argv) && (strcmp(req->argv[0], "-l") == 0);
+		if (gnu == 'u') {
+			if (sscanf(req->spath, "/u/%d", &uid) < 0) {
+				russ_sconn_fatal(sconn, "error: invalid uid", RUSS_EXIT_FAILURE);
+				russ_sconn_close(sconn);
+				exit(0);
+			}
+		} else if (gnu == 'g') {
+			if (sscanf(req->spath, "/g/%d", &gid) < 0) {
+				russ_sconn_fatal(sconn, "error: invalid gid", RUSS_EXIT_FAILURE);
+				russ_sconn_close(sconn);
+				exit(0);
+			}
+		}
+
 		if ((dirp = opendir("/proc")) == NULL) {
 			russ_sconn_fatal(sconn, "error: could not get process list", RUSS_EXIT_FAILURE);
 			exit(0);
 		}
 		for (entry = readdir(dirp); entry != NULL; entry = readdir(dirp)) {
 			if ((sscanf(entry->d_name, "%d", &pid) < 0)
-				|| (get_pid_info(pid, &pi, use_long_format) < 0)) {
+				|| (snprintf(path, sizeof(path), "/proc/%s", entry->d_name) >= sizeof(path))
+				|| (stat(path, &st) < 0)) {
+				continue;
+			}
+			if (gnu == 'n') {
+				;
+			} else if (gnu == 'u') {
+				if (uid != st.st_uid) {
+					continue;
+				}
+			} else if (gnu == 'g') {
+				if (gid != st.st_gid) {
+					continue;
+				}
+			}
+			if  (get_pid_info(pid, &pi, use_long_format) < 0) {
 				continue;
 			}
 			if (dprint_pid_info(sconn->fds[1], &pi, pattr_idxs, use_long_format) < 0) {
@@ -529,6 +592,16 @@ svc_n_status_handler(struct russ_sess *sess) {
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
+}
+
+void
+svc_root_handler(struct russ_sess *sess) {
+	/* auto hanlding in svr */
+}
+
+void
+svc_n_status_handler(struct russ_sess *sess) {
+	gnu_x_status_handler_helper(sess, 'n');
 }
 
 void
@@ -646,142 +719,27 @@ svc_p_pid_wait_handler(struct russ_sess *sess) {
 
 void
 svc_p_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	DIR			*dirp;
-	struct dirent 		*entry;
-
-	if (req->opnum == RUSS_OPNUM_LIST) {
-		if ((dirp = opendir("/proc")) == NULL) {
-			russ_sconn_fatal(sconn, "error: could not get process list", RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-		for (entry = readdir(dirp); entry != NULL; entry = readdir(dirp)) {
-			if (isdigit(entry->d_name[0])) {
-				russ_dprintf(sconn->fds[1], "%s\n", entry->d_name);
-			}
-		}
-		closedir(dirp);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		exit(0);
-	}
-}
-
-void
-svc_ug_handler_helper(struct russ_sess *sess, int ug) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	DIR			*dirp;
-	struct dirent 		*entry;
-	char			path[PATH_MAX];
-	struct stat		st;
-
-	if (req->opnum == RUSS_OPNUM_LIST) {
-		if ((dirp = opendir("/proc")) == NULL) {
-			russ_sconn_fatal(sconn, "error: could not get process list", RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-		for (entry = readdir(dirp); entry != NULL; entry = readdir(dirp)) {
-			if (isdigit(entry->d_name[0])) {
-				if ((snprintf(path, sizeof(path), "/proc/%s", entry->d_name) < PATH_MAX)
-					&& (stat(path, &st) == 0)) {
-					if (ug == 'u') {
-						russ_dprintf(sconn->fds[1], "%d\n", st.st_uid);
-					} else {
-						russ_dprintf(sconn->fds[1], "%d\n", st.st_gid);
-					}
-				}
-			}
-		}
-		closedir(dirp);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		exit(0);
-	}
-}
-
-void
-svc_ug_uidgid_status_handler_helper(struct russ_sess *sess, int ug) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	DIR			*dirp;
-	struct dirent		*entry;
-	char			path[PATH_MAX];
-	pid_t			pid;
-	struct pid_info		pi;
-	char			*fmt;
-	pattr_idxs		pattr_idxs;
-	int			use_long_format;
-	struct stat		st;
-	uid_t			uid;
-	gid_t			gid;
-
-	if (req->opnum == RUSS_OPNUM_EXECUTE) {
-		parse_pattr_idxs(DEFAULT_STATUS, pattr_idxs);
-		use_long_format = (req->argv) && (strcmp(req->argv[0], "-l") == 0);
-		if (ug == 'u') {
-			if (sscanf(req->spath, "/u/%d", &uid) < 0) {
-				russ_sconn_fatal(sconn, "error: invalid uid", RUSS_EXIT_FAILURE);
-				russ_sconn_close(sconn);
-				exit(0);
-			}
-		} else {
-			if (sscanf(req->spath, "/g/%d", &gid) < 0) {
-				russ_sconn_fatal(sconn, "error: invalid gid", RUSS_EXIT_FAILURE);
-				russ_sconn_close(sconn);
-				exit(0);
-			}
-		}
-
-		if ((dirp = opendir("/proc")) == NULL) {
-			russ_sconn_fatal(sconn, "error: could not get process list", RUSS_EXIT_FAILURE);
-			exit(0);
-		}
-		for (entry = readdir(dirp); entry != NULL; entry = readdir(dirp)) {
-			if ((sscanf(entry->d_name, "%d", &pid) < 0)
-				|| (snprintf(path, sizeof(path), "/proc/%s", entry->d_name) >= sizeof(path))
-				|| (stat(path, &st) < 0)) {
-				continue;
-			}
-			if (ug == 'u') {
-				if (uid != st.st_uid) {
-					continue;
-				}
-			} else if (ug == 'g') {
-				if (gid != st.st_gid) {
-					continue;
-				}
-			}
-			if  (get_pid_info(pid, &pi, use_long_format) < 0) {
-				continue;
-			}
-			if (dprint_pid_info(sconn->fds[1], &pi, pattr_idxs, use_long_format) < 0) {
-				break;
-			}
-		}
-		closedir(dirp);
-		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-		exit(0);
-	}
+	gpu_handler_helper(sess, 'p');
 }
 
 void
 svc_u_handler(struct russ_sess *sess) {
-	svc_ug_handler_helper(sess, 'u');
+	gpu_handler_helper(sess, 'u');
 }
 
 void
 svc_u_uid_status_handler(struct russ_sess *sess) {
-	svc_ug_uidgid_status_handler_helper(sess, 'u');
+	gnu_x_status_handler_helper(sess, 'u');
 }
 
 void
 svc_g_handler(struct russ_sess *sess) {
-	svc_ug_handler_helper(sess, 'g');
+	gpu_handler_helper(sess, 'g');
 }
 
 void
 svc_g_gid_status_handler(struct russ_sess *sess) {
-	svc_ug_uidgid_status_handler_helper(sess, 'g');
+	gnu_x_status_handler_helper(sess, 'g');
 }
 
 void
