@@ -41,6 +41,8 @@ extern char **environ;
 
 #include <russ.h>
 
+#define DEFAULT_STATUS "pid:ppid:pgrp:sid:uid:gid:state:comm:cmdline"
+
 /* global */
 struct russ_conf	*conf = NULL;
 const char		*HELP = 
@@ -59,15 +61,16 @@ const char		*HELP =
 "    targetted.\n"
 "\n"
 "/p/<pid>/status [-l]\n"
-"    Return the status of the process. The format is:\n"
-"        pid:ppid:pgrp:sid:state:comm\n"
-"    If -l is specified, a key=value format is used; the full\n"
-"    cmdline is also output.\n"
+"    Return the status of the process. If -l is specified, a\n"
+"    key=value format is used; the full cmdline is also output.\n"
 "\n"
 "/p/<pid>/wait [<interval> [<timeout>]]\n"
 "    Wait for the process to terminate. The status of the process is\n"
 "    checked every interval milliseconds (default/minimum is 1000ms)\n"
-"    for a maximum of timeout milliseconds (default is infinite).\n";
+"    for a maximum of timeout milliseconds (default is infinite).\n"
+"\n"
+"The default status format is:\n"
+"    "DEFAULT_STATUS"\n";
 
 /* process attributes info */
 #define PATTR_NULL		0
@@ -230,8 +233,6 @@ struct pid_info {
 	gid_t		gid;
 };
 #define PID_STAT_FORMAT "%d %255[^ ] %c %d %d %d %*s %*s %*s %*s %*s %*s %*s %lu %lu %ld %ld %*s %*s %*s %*s %llu %lu %ld"
-
-#define DEFAULT_STATUS "pid:ppid:pgrp:sid:uid:gid:state:comm:cmdline"
 
 typedef	int (*get_pid_info_fn)(pid_t, struct pid_info *, int);
 get_pid_info_fn	get_pid_info = NULL;
