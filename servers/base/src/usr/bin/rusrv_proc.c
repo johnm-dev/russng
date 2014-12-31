@@ -488,14 +488,6 @@ svc_root_handler(struct russ_sess *sess) {
 }
 
 void
-svc_n_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-
-	;
-}
-
-void
 svc_n_status_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
@@ -639,14 +631,6 @@ svc_p_pid_wait_handler(struct russ_sess *sess) {
 		russ_sconn_exit(sconn, 2);
 		exit(0);
 	}
-}
-
-void
-svc_p_pid_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-
-	;
 }
 
 void
@@ -824,12 +808,12 @@ main(int argc, char **argv) {
 	}
 
 	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "n", svc_n_handler)) == NULL)
+		|| ((node = russ_svcnode_add(root, "n", NULL)) == NULL)
 		//|| ((node = russ_svcnode_add(node, "kill", svc_n_kill_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "status", svc_n_status_handler)) == NULL)
 
 		|| ((node = russ_svcnode_add(root, "p", svc_p_handler)) == NULL)
-		|| ((node = russ_svcnode_add(node, "*", svc_p_pid_handler)) == NULL)
+		|| ((node = russ_svcnode_add(node, "*", NULL)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_add(node, "kill", svc_p_pid_kill_handler) == NULL)
 		|| (russ_svcnode_add(node, "status", svc_p_pid_status_handler) == NULL)
