@@ -49,7 +49,8 @@ print_dir_list(char *spath) {
 		return -1;
 	} else {
 		while ((dent = readdir(dir)) != NULL) {
-			if (strcmp(dent->d_name, "..") == 0) {
+			if ((strcmp(dent->d_name, ".") == 0)
+				|| (strcmp(dent->d_name, "..") == 0)) {
 				continue;
 			}
 			if (((n = snprintf(path, sizeof(path), "%s/%s", spath, dent->d_name)) < 0)
