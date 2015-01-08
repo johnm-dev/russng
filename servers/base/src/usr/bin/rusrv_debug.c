@@ -70,11 +70,11 @@ const char		*HELP =
 "    Return with given exit value (between 0 and 255).\n"
 "\n"
 "/request\n"
-"    Outputs the request information at the server stdout.\n"
-"\n"
-"/whoami\n"
-"    Outputs uid/gid and euid/egid information of running server\n"
-"    (after user switch).\n";
+"    Outputs the request information at the server stdout.\n";
+//"\n"
+//"/whoami\n"
+//"    Outputs uid/gid and euid/egid information of running server\n"
+//"    (after user switch).\n";
 
 void
 svc_root_handler(struct russ_sess *sess) {
@@ -338,9 +338,9 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_add(root, "env", svc_env_handler) == NULL)
 		|| (russ_svcnode_add(root, "exit", svc_exit_handler) == NULL)
 		|| (russ_svcnode_add(root, "request", svc_request_handler) == NULL)
-		|| (russ_svcnode_add(root, "whoami", svc_whoami_handler) == NULL)
+		//|| (russ_svcnode_add(root, "whoami", svc_whoami_handler) == NULL)
 		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
+		|| ((getuid() == 0) && (russ_svr_set_autoswitchuser(svr, 1) < 0))
 		|| (russ_svr_set_help(svr, HELP) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
