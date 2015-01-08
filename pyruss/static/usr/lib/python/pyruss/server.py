@@ -69,22 +69,34 @@ class ServiceNode:
         return cls(_ptr)
 
     def free(self):
+        """Free underlying object.
+        """
         libruss.russ_svcnode_free(self._ptr)
         self._ptr = None
 
     def add(self, name, handler):
+        """Add handler.
+        """
         return ServiceNode(libruss.russ_svcnode_add(self._ptr, name, get_service_handler(handler)))
 
     def find(self, path):
+        """Find service node corresponding to service path.
+        """
         return ServiceNode(libruss.russ_svcnode_find(self._ptr, path))
 
     def set_autoanswer(self, value):
+        """Set autoanswer state.
+        """
         return libruss.russ_svcnode_set_autoanswer(self._ptr, value)
 
     def set_virtual(self, value):
+        """Set virtual state.
+        """
         return libruss.russ_svcnode_set_virtual(self._ptr, value)
 
     def set_wildcard(self, value):
+        """Set wildcard state.
+        """
         return libruss.russ_svcnode_set_wildcard(self._ptr, value)
 
 class Server:
@@ -102,20 +114,32 @@ class Server:
         return cls(_ptr)
 
     def accept(self, deadline):
+        """Accept connection and return ServerConn object.
+        """
         sconn_ptr = libruss.russ_svr_accept(self._ptr, deadline)
         return bool(sconn_ptr) and ServerConn(sconn_ptr) or None
 
     def free(self):
+        """Free underlying object.
+        """
         libruss.russ_svr_free(self._ptr)
         self._ptr = None
 
     def handler(self, sconn):
+        """Default handler.
+        """
         libruss.russ_svr_handler(self._ptr, sconn._ptr)
 
     def loop(self):
+        """Forking loop.
+        """
         libruss.russ_svr_loop(self._ptr)
 
     def loop_thread(self):
+        """Threaded loop.
+
+        Requires helper.
+        """
         def helper(svr, sconn):
             try:
                 self.handler(sconn)
@@ -137,9 +161,13 @@ class Server:
                 sys.stderr.write("error: cannot spawn thread\n")
 
     def set_autoswitchuser(self, value):
+        """Set autoswitchuser state.
+        """
         return libruss.russ_svr_set_autoswitchuser(self._ptr, value)
 
     def set_help(self, value):
+        """Set help text.
+        """
         return libruss.russ_svr_set_help(self._ptr, value)
 
 class Sess:
@@ -153,13 +181,21 @@ class Sess:
         self._ptr = None
 
     def get_sconn(self):
+        """Return ServerConn object.
+        """
         return self._ptr.contents.sconn and ServerConn(self._ptr.contents.sconn) or None
 
     def get_svr(self):
+        """Return Server object.
+        """
         return self._ptr.contents.svr and Server(self._ptr.contents.svr) or None
 
     def get_request(self):
+        """Return Request object.
+        """
         return self._ptr.contents.req and Request(self._ptr.contents.req) or None
 
     def get_spath(self):
+        """Return service path.
+        """
         return self._ptr.contents.spath

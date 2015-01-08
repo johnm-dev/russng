@@ -50,6 +50,8 @@ def list_of_strings_to_c_string_array(l):
     return c_strings
 
 def convert_dial_attrs_args(attrs, args):
+    """Convert attrs and args to C string arrays.
+    """
     if attrs == None:
         attrs = {}
     attrs_list = ["%s=%s" % (k, v) for k, v in attrs.items()]
@@ -78,12 +80,16 @@ def dialv(deadline, op, spath, attrs, args):
 dial = dialv
 
 def dialv_wait(deadline, op, spath, attrs, args):
+    """Convenience function.
+    """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
     exitst = ctypes.c_int()
     rv = libruss.russ_dialv_wait(deadline, op, spath, c_attrs, c_argv, ctypes.byref(exitst))
     return rv, int(exitst.value)
 
 def dialv_wait_inouterr(deadline, op, spath, attrs, args, stdin, stdout_size, stderr_size):
+    """Convenience function.
+    """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
     exitst = ctypes.c_int()
 
@@ -123,9 +129,13 @@ def execv(deadline, spath, attrs, args):
     return dialv(deadline, "execute", spath, attrs, args)
 
 def gettime():
+    """Get clock time (corresponds to a deadline).
+    """
     return libruss.russ_gettime()
 
 def switch_user(uid, gid, gids):
+    """Change process uid/gid.
+    """
     if gids:
         _gids = (ctypes.c_int*len(gids))(gids)
     else:
@@ -133,9 +143,13 @@ def switch_user(uid, gid, gids):
     return libruss.russ_switch_user(uid, gid, len(gids), _gids)
 
 def to_deadline(timeout):
+    """Convert timeout (ms) to deadline.
+    """
     return libruss.russ_to_deadline(timeout)
 
 def to_timeout(deadline):
+    """Convert deadline to timeout (ms).
+    """
     return libruss.russ_to_timeout(deadline)
 
 def unlink(path):
@@ -188,18 +202,26 @@ class Request:
         return attrs
 
     def get_op(self):
+        """Return op string.
+        """
         return self._ptr.contents.op
     op = property(get_op, None)
 
     def get_opnum(self):
+        """Return op number.
+        """
         return self._ptr.contents.opnum
     opnum = property(get_opnum, None)
 
     def get_protocolstring(self):
+        """Return protocol string.
+        """
         return self._ptr.contents.protocolstring
     protocolstring = property(get_protocolstring, None)
 
     def get_spath(self):
+        """Return service path.
+        """
         return self._ptr.contents.spath
     spath = property(get_spath, None)
 
@@ -216,15 +238,23 @@ class Conn:
         self.owned = owned
 
     def get_fd(self, i):
+        """Return fd by index.
+        """
         return self._ptr.contents.fds[i]
 
     def get_fds(self):
+        """Return list of fds.
+        """
         return [self._ptr.contents.fds[i] for i in range(RUSS_CONN_NFDS)]
 
     def get_sd(self):
+        """Return socket descriptor.
+        """
         return self._ptr.contents.sd
 
     def set_fd(self, i, value):
+        """Set fd by index.
+        """
         self._ptr.contents.fds[i] = value
         
 class ClientConn(Conn):
@@ -237,16 +267,24 @@ class ClientConn(Conn):
         self._ptr = None
 
     def close(self):
+        """Close connection.
+        """
         libruss.russ_cconn_close(self._ptr)
 
     def close_fd(self, i):
+        """Close fd by index.
+        """
         return libruss.russ_cconn_close_fd(self._ptr, i)
 
     def free(self):
+        """Free underlying connection object.
+        """
         libruss.russ_cconn_free(self._ptr)
         self._ptr = None
 
     def wait(self, deadline):
+        """Wait for exit value.
+        """
         exitst = ctypes.c_int()
         return libruss.russ_cconn_wait(self._ptr, deadline, ctypes.byref(exitst)), exitst.value
 
@@ -272,20 +310,30 @@ class ServerConn(Conn):
         self._ptr = None
 
     def close(self):
+        """Close connection.
+        """
         libruss.russ_sconn_close(self._ptr)
 
     def close_fd(self, i):
+        """Close fd by index.
+        """
         return libruss.russ_sconn_close_fd(self._ptr, i)
 
     def free(self):
+        """Free underlying connection object.
+        """
         libruss.russ_sconn_free(self._ptr)
         self._ptr = None
 
     def get_creds(self):
+        """Get connection credentials.
+        """
         creds = self._ptr.contents.creds
         return Credentials(creds.uid, creds.gid, creds.pid)
 
     def answer(self, nfds, cfds):
+        """Send fds to client as response.
+        """
         if nfds:
             _cfds = (ctypes.c_int*nfds)(*tuple(cfds))
             rv = libruss.russ_sconn_answer(self._ptr, nfds,
@@ -297,19 +345,32 @@ class ServerConn(Conn):
             return libruss.russ_sconn_answer(self._ptr, 0, None)
 
     def await_request(self, deadline):
+        """Wait for incoming request.
+        """
         return Request(libruss.russ_sconn_await_req(self._ptr, deadline))
 
     def exit(self, exitst):
+        """Send exit value.
+        """
         return libruss.russ_sconn_exit(self._ptr, exitst)
 
     def fatal(self, msg, exitst):
+        """Send (usually non-0) exit value and message on stderr stream.
+        """
         return libruss.russ_sconn_fatal(self._ptr, msg, exitst)
 
     def redialandsplice(self, deadline, cconn):
+        """Dial another service and pass the received fds to the
+        client.
+        """
         return libruss.russ_sconn_redialandsplice(self._ptr, deadline, cconn._ptr)
 
     def splice(self, cconn):
+        """Pass dialed connection fds to server client.
+        """
         return libruss.russ_sconn_splice(self._ptr, cconn._ptr)
 
     def answerhandler(self):
+        """Default answer handler.
+        """
         return libruss.russ_sconn_answerhandler(self._ptr)
