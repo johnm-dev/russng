@@ -628,10 +628,12 @@ load_targetsfile(char *filename) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_pnet [<conf options>] -- <targetsfile>\n"
+"usage: rusrv_pnet [<conf options>]\n"
 "\n"
 "Routes connections over the network to a fixed set of targets\n"
 "identified by index or hostname.\n"
+"\n"
+"Targets file is set in targets:filename configuration.\n"
 );
 }
 
@@ -639,6 +641,7 @@ int
 main(int argc, char **argv) {
 	struct russ_svcnode	*root, *node;
 	struct russ_svr		*svr;
+	char			*targetsfilename;
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -653,16 +656,11 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (argc < 2) {
-		fprintf(stderr, "error: missing targets file\n");
+	if (((targetsfilename = russ_conf_get(conf, "targets", "filename", NULL)) == NULL)
+		|| (load_targetsfile(targetsfilename) < 0)) {
+		fprintf(stderr, "error: missing or bad targets file\n");
 		exit(1);
 	}
-	targetsfilename = argv[1];
-	if (load_targetsfile(targetsfilename) < 0) {
-		fprintf(stderr, "error: could not load targets file\n");
-		exit(1);
-	}
-
 	if (russ_conf_getint(conf, "targets", "fastlocalhost", 0) == 1) {
 		set_fqlocalhostname();
 	}
