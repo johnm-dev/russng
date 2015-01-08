@@ -120,9 +120,24 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	struct russ_req		*req = sess->req;
 	char	*args[1024];
 	int	nargs;
+	char	*uhp_user, *uhp_host, *uhp_port;
 	int	i, status, pid;
 
 	switch_user(sconn);
+
+	/* parse out user, host, and port */
+	uhp_user = strdup(userhost);
+	if ((uhp_host = strstr(uhp_user, "@")) != NULL) {
+		*uhp_host = '\0';
+		uhp_host++;
+	} else {
+		uhp_host = uhp_user;
+		uhp_user = NULL;
+	}
+	if ((uhp_port = strstr(uhp_host, ":")) != NULL) {
+		*uhp_port = '\0';
+		uhp_port++;
+	}
 
 	/* build args array */
 	nargs = 0;
@@ -133,7 +148,15 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	args[nargs++] = "BatchMode=yes";
 	args[nargs++] = "-o";
 	args[nargs++] = "LogLevel=QUIET";
-	args[nargs++] = userhost;
+	if (uhp_user) {
+		args[nargs++] = "-u";
+		args[nargs++] = uhp_user;
+	}
+	if (uhp_port) {
+		args[nargs++] = "-p";
+		args[nargs++] = uhp_port;
+	}
+	args[nargs++] = uhp_host;
 	args[nargs++] = RUDIAL_EXEC;
 	if ((req->attrv != NULL) && (req->attrv[0] != NULL)) {
 		for (i = 0; req->attrv[i] != NULL; i++) {
