@@ -222,8 +222,10 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	sess.req = req;
 
 	/* call handler, if available */
-	if ((node) && (node->handler)) {
-		node->handler(&sess);
+	if (node) {
+		if (node->handler) {
+			node->handler(&sess);
+		}
 	} else {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 	}
