@@ -297,7 +297,7 @@ class ServerConn(Conn):
             return libruss.russ_sconn_answer(self._ptr, 0, None)
 
     def await_request(self, deadline):
-        return libruss.russ_sconn_await_req(self._ptr, deadline)
+        return Request(libruss.russ_sconn_await_req(self._ptr, deadline))
 
     def exit(self, exitst):
         return libruss.russ_sconn_exit(self._ptr, exitst)
