@@ -663,7 +663,7 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (russ_conf_getint(conf, "other", "fastlocalhost", 0) == 1) {
+	if (russ_conf_getint(conf, "targets", "fastlocalhost", 0) == 1) {
 		set_fqlocalhostname();
 	}
 
