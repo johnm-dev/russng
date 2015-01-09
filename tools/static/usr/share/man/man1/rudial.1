@@ -1,4 +1,4 @@
-.TH RUDIAL "1" "" "russ 3.x" ""
+.TH RUDIAL "1" "" "russ 5.x" ""
 .SH NAME
 rudial, ruexec, ruhelp, ruls \- Client-side tools for accessing russ servers
 
@@ -30,8 +30,9 @@ returned depends on the service.)
 .PP
 The standard exit code mechanism functions as usual and, in most
 cases, is returned by the service. Common exit codes are 0 for
-success, 1 for error. When there is a problem with the dial step,
-and exit code of 126 or 127 may be returned.
+success, 1 for general error. When there is a problem with the dial
+step, and exit code of 126 (could not establish connection) or 127
+(server-side problem) may be returned.
 
 .PP
 Options:
