@@ -17,14 +17,14 @@ all:
 	(cd servers; $(MAKE))
 	(cd tools; $(MAKE))
 	(cd pyruss; $(MAKE))
-	(cd tests; $(MAKE))
+	#(cd tests; $(MAKE))
 
 clean:
 	(cd library; $(MAKE) clean)
 	(cd servers; $(MAKE) clean)
 	(cd tools; $(MAKE) clean)
 	(cd pyruss; $(MAKE) clean)
-	(cd tests; $(MAKE) clean)
+	#(cd tests; $(MAKE) clean)
 
 doc:
 	(cd library; $(MAKE) doc)
