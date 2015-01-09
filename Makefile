@@ -18,7 +18,6 @@ all:
 	(cd tools; $(MAKE))
 	(cd pyruss; $(MAKE))
 	(cd tests; $(MAKE))
-	#(cd rbruss; $(MAKE))
 
 clean:
 	(cd library; $(MAKE) clean)
@@ -26,14 +25,12 @@ clean:
 	(cd tools; $(MAKE) clean)
 	(cd pyruss; $(MAKE) clean)
 	(cd tests; $(MAKE) clean)
-	#(cd rbruss; $(MAKE) clean)
 
 doc:
 	(cd library; $(MAKE) doc)
 	#(cd servers; $(MAKE) doc)
 	#(cd tools; $(MAKE) doc)
 	#(cd pyruss; $(MAKE) doc)
-	#(cd rbruss; $(MAKE) doc)
 
 install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
@@ -43,4 +40,3 @@ install:
 	(cd servers; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd tools; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
 	(cd pyruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	#(cd rbruss; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
