@@ -77,7 +77,7 @@ extern "C" {
 #define RUSS_MSG_NOEXIT		"error: no exit status"
 #define RUSS_MSG_NOLIST		"info: list not available"
 #define RUSS_MSG_NOSERVICE	"error: no service"
-#define RUSS_MSG_NOSWITCHUSER	"error: cannot switch user"
+#define RUSS_MSG_NOSWITCHUSER	"error: service cannot switch user"
 #define RUSS_MSG_UNDEFSERVICE	"warning: undefined service"
 
 #define RUSS_OPNUM_NOTSET	0
