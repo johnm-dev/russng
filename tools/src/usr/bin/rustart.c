@@ -37,10 +37,10 @@ print_usage(char *prog_name) {
 "created and the listener socket is passed to the server.\n"
 "\n"
 "Where:\n"
-"-f <path>\n"
-"	Load configuration file.\n"
 "-c <name>=<value>\n"
 "	Set configuration attribute.\n"
+"-f <path>\n"
+"	Load configuration file.\n"
 "-- ...	Arguments to pass to the server program.\n"
 );
 }

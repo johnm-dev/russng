@@ -140,13 +140,13 @@ print_usage(char *prog_name) {
 "    Pass a 'name=value' string to the service.\n"
 "-b <bufsize>\n" \
 "    Set buffer size for reading/writing.\n"
-"-t|--timeout <seconds>\n" \
-"    Allow a given amount of time to connect before aborting.\n"
 "--stats\n"
 "--statsfd <fd>\n"
 "    Output statistics for each read and write operation. The\n"
 "    default is to output to stderr (fd=2). For 'execute' operation\n"
 "    only.\n"
+"-t|--timeout <seconds>\n" \
+"    Allow a given amount of time to connect before aborting.\n"
 );
 }
 
