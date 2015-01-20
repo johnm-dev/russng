@@ -226,13 +226,14 @@ main(int argc, char **argv) {
 			}
 		} else if (((strcmp(arg, "--timeout") == 0) || (strcmp(arg, "-t") == 0))
 			&& (argi < argc)) {
+			float	f;
 
 			arg = argv[argi++];
-			if (sscanf(arg, "%d", (int *)&timeout) < 0) {
+			if (sscanf(arg, "%f", (float *)&f) < 0) {
 				fprintf(stderr, "error: bad timeout value\n");
 				exit(1);
 			}
-			timeout *= 1000;
+			timeout = f*1000;
 			deadline = russ_to_deadline(timeout);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BADARGS);
