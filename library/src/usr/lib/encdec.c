@@ -135,7 +135,7 @@ russ_dec_int64(char *b, int64_t *v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_dec_char(char *b, char **bp) {
+russ_dec_bytes(char *b, char **bp) {
 	int	count;
 
 	if (((b = russ_dec_int32(b, &count)) == NULL)
@@ -157,7 +157,7 @@ russ_dec_char(char *b, char **bp) {
 */
 char *
 russ_dec_s(char *b, char **bp) {
-	return russ_dec_char(b, bp);
+	return russ_dec_bytes(b, bp);
 }
 
 /**
@@ -264,7 +264,7 @@ russ_dec_req(char *b, struct russ_req **v) {
 	if (((b = russ_dec_int32(b, &sz)) == NULL)
 		|| ((b = russ_dec_s(b, &(req->protocolstring))) == NULL)
 		|| (strcmp(RUSS_REQ_PROTOCOLSTRING, req->protocolstring) != 0)
-		|| ((b = russ_dec_char(b, &dummy)) == NULL)
+		|| ((b = russ_dec_bytes(b, &dummy)) == NULL)
 		|| ((b = russ_dec_s(b, &(req->spath))) == NULL)
 		|| ((b = russ_dec_s(b, &(req->op))) == NULL)
 		|| ((b = russ_dec_sarray0(b, &(req->attrv), &sz)) == NULL)
@@ -417,7 +417,7 @@ russ_enc_int64(char *b, char *bend, int64_t v) {
 * @return		new buffer position; NULL if failure
 */
 char *
-russ_enc_char(char *b, char *bend, char *v, int alen) {
+russ_enc_bytes(char *b, char *bend, char *v, int alen) {
 	if ((bend-b) < 4+alen) {
 		return NULL;
 	}
@@ -440,7 +440,7 @@ russ_enc_char(char *b, char *bend, char *v, int alen) {
 */
 char *
 russ_enc_s(char *b, char *bend, char *v) {
-	return russ_enc_char(b, bend, v, strlen(v)+1);
+	return russ_enc_bytes(b, bend, v, strlen(v)+1);
 }
 
 /**
@@ -522,7 +522,7 @@ russ_enc_req(char *b, char *bend, struct russ_req *v) {
 	if ((v == NULL)
 		|| ((b = russ_enc_int32(b, bend, 0)) == NULL)
 		|| ((b = russ_enc_s(b, bend, v->protocolstring)) == NULL)
-		|| ((b = russ_enc_char(b, bend, NULL, 0)) == NULL) /* dummy */
+		|| ((b = russ_enc_bytes(b, bend, NULL, 0)) == NULL) /* dummy */
 		|| ((b = russ_enc_s(b, bend, v->spath)) == NULL)
 		|| ((b = russ_enc_s(b, bend, v->op)) == NULL)
 		|| ((b = russ_enc_sarray0(b, bend, v->attrv)) == NULL)
