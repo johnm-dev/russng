@@ -189,8 +189,8 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		russ_sconn_fatal(sconn, RUSS_MSG_BADOP, RUSS_EXIT_SYSFAILURE);
 		goto cleanup;
 	}
-	/* validate spath: must be absolute */
-	if ((req->spath[0] != '/') || (req->spath[0] == '\0')) {
+	/* validate spath: must be absolute or empty */
+	if ((req->spath[0] != '/') && (req->spath[0] != '\0')) {
 		/* invalid spath */
 		goto cleanup;
 	}
