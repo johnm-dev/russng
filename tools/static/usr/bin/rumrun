@@ -104,7 +104,9 @@ Options:
 --rurun <options>
 	Option arguments to pass to rurun. Enclose in quotes arguments
 	necessary.
-"
+-t|--timeout <seconds>
+    Allow a given amount of time to connect before aborting.
+    Defaults to \${RURUN_TIMEOUT} if set."
 }
 
 RURUN_EXEC=${RURUN_EXEC:-/usr/bin/rurun}
@@ -132,6 +134,10 @@ while [ $# -gt 0 ]; do
 	--rurun)
 		shift 1
 		rurun_opts="$1"; shift 1
+		;;
+	-t|--timeout)
+		shift 1
+		export RURUN_TIMEOUT=$1; shift 1
 		;;
 	--*)
 		echo "error: bad/missing arguments" 1>&2

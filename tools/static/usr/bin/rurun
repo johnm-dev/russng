@@ -47,7 +47,10 @@ Options:
 	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
 --relay <name>
 	Use a given relay service. Defaults to \${RURUN_RELAY} or
-	\"${RURUN_RELAY_DEFAULT}\"."
+	\"${RURUN_RELAY_DEFAULT}\".
+-t|--timeout <seconds>
+    Allow a given amount of time to connect before aborting.
+    Defaults to \${RURUN_TIMEOUT} if set."
 }
 
 # defaults (null or unset)
@@ -111,6 +114,10 @@ while [ $# -gt 0 ]; do
 	--simple)
 		shift 1
 		RURUN_EXEC_METHOD=simple
+		;;
+	-t|--timeout)
+		shift 1
+		RURUN_TIMEOUT="$1"; shift 1
 		;;
 	--wrap)
 		shift 1
@@ -196,6 +203,11 @@ else
 	path="${RURUN_PNET_ADDR}/run/${colon}${target}/${RURUN_EXEC_METHOD}"
 fi
 
+# set timeout clause
+if [ -n "${RURUN_TIMEOUT}" ]; then
+	timeoutcl="-t ${RURUN_TIMEOUT}"
+fi
+
 # mpirun-specific
 # TODO: eliminate
 if [ "${HYDRA_LAUNCHER}" = "ssh" ]; then
@@ -205,6 +217,6 @@ fi
 
 # execute
 if [ -n "${RURUN_DEBUG}" ]; then
-	echo exec ruexec "${env[@]}" "${attrs[@]}" "${path}" "$*"
+	echo exec ruexec "${timeoutcl}" "${env[@]}" "${attrs[@]}" "${path}" "$*"
 fi
-exec ruexec "${env[@]}" "${attrs[@]}" "${path}" "$*"
+exec ruexec "${timeoutcl}" "${env[@]}" "${attrs[@]}" "${path}" "$*"
