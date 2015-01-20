@@ -72,7 +72,7 @@ extern "C" {
 /* common messages */
 #define RUSS_MSG_BADARGS	"error: bad/missing arguments"
 #define RUSS_MSG_BADCONNEVENT	"error: unexpected connection event"
-#define RUSS_MSG_BADOP		"error: unsupported operation"
+#define RUSS_MSG_BADOP		"error: operation unsupported by service"
 #define RUSS_MSG_NODIAL		"error: cannot dial service"
 #define RUSS_MSG_NOEXIT		"error: no exit status"
 #define RUSS_MSG_NOLIST		"info: list not available"
