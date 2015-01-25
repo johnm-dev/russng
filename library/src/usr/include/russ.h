@@ -73,6 +73,7 @@ extern "C" {
 #define RUSS_MSG_BADARGS	"error: bad/missing arguments"
 #define RUSS_MSG_BADCONNEVENT	"error: unexpected connection event"
 #define RUSS_MSG_BADOP		"error: operation unsupported by service"
+#define RUSS_MSG_BADSITUATION	"error: unexpected situation"
 #define RUSS_MSG_NOACCESS	"error: insufficient privilege"
 #define RUSS_MSG_NODIAL		"error: cannot dial service"
 #define RUSS_MSG_NOEXIT		"error: no exit status"
