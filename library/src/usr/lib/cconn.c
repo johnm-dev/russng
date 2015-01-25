@@ -150,14 +150,12 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exitst) {
 	poll_fds[0].fd = self->sysfds[RUSS_CONN_SYSFD_EXIT];
 	poll_fds[0].events = POLLIN;
 	while (1) {
-		rv = poll(poll_fds, 1, russ_to_deadline(deadline));
+		rv = russ_poll_deadline(deadline, poll_fds, 1);
 		if (rv == 0) {
 			/* timeout */
 			return RUSS_WAIT_TIMEOUT;
 		} else if (rv < 0) {
-			if (errno != EINTR) {
-				return RUSS_WAIT_FAILURE;
-			}
+			return RUSS_WAIT_FAILURE;
 		} else {
 			if (poll_fds[0].revents & POLLIN) {
 				// TODO: should this be a byte or integer?
