@@ -56,6 +56,7 @@ RUSS_EXIT_SYSFAILURE = 127
 
 RUSS_MSG_BADARGS = "error: bad/missing arguments"
 RUSS_MSG_BADOP = "error: unsupported operation"
+RUSS_MSG_NOACCESS = "error: insufficient privilege"
 RUSS_MSG_NODIAL = "error: cannot dial service"
 RUSS_MSG_NOEXIT = "error: no exit status"
 RUSS_MSG_NOLIST = "info: list not available"
