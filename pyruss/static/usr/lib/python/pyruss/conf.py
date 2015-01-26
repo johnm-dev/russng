@@ -25,16 +25,16 @@
 
 # system imports
 try:
-    from ConfigParser import ConfigParser
+    from ConfigParser import RawConfigParser
 except:
-    from configparser import ConfigParser
+    from configparser import RawConfigParser
 import os
 import sys
 import traceback
 
-class Conf(ConfigParser):
-    """New ConfigParser which support an optional default value
-    parameter like dict.get().
+class Conf(RawConfigParser):
+    """New RawConfigParser (no interpolation) which supports an
+    optional default value parameter like dict.get().
     """
 
     def init(self, args):
@@ -43,6 +43,7 @@ class Conf(ConfigParser):
         those used. "--" stops processing (and is not returned in
         args list).
         """
+        RawConfigParser.__init__(self)
         args = args[:]
         while args:
             arg = args.pop(0)
@@ -64,25 +65,25 @@ class Conf(ConfigParser):
 
     def get(self, section, option, default=None):
         try:
-            return ConfigParser.get(self, section, option)
+            return RawConfigParser.get(self, section, option)
         except:
             return default
 
     def getboolean(self, section, option, default=None):
         try:
-            return ConfigParser.getboolean(self, section, option)
+            return RawConfigParser.getboolean(self, section, option)
         except:
             return default
 
     def getint(self, section, option, default=None):
         try:
-            return ConfigParser.getint(self, section, option)
+            return RawConfigParser.getint(self, section, option)
         except:
             return default
 
     def getfloat(self, section, option, default=None):
         try:
-            return ConfigParser.getfloat(self, section, option)
+            return RawConfigParser.getfloat(self, section, option)
         except:
             return default
 
