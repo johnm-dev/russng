@@ -219,4 +219,4 @@ fi
 if [ -n "${RURUN_DEBUG}" ]; then
 	echo exec ruexec "${timeoutcl}" "${env[@]}" "${attrs[@]}" "${path}" "$*"
 fi
-exec ruexec "${timeoutcl}" "${env[@]}" "${attrs[@]}" "${path}" "$*"
+exec ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "$*"
