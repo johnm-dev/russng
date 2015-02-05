@@ -70,7 +70,7 @@ def announce(path, mode, uid, gid):
     lisd = libruss.russ_announce(path, mode, uid, gid)
     return lisd
 
-def dialv(deadline, op, spath, attrs, args):
+def dialv(deadline, op, spath, attrs=None, args=None):
     """Dial a service.
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
@@ -79,7 +79,7 @@ def dialv(deadline, op, spath, attrs, args):
 
 dial = dialv
 
-def dialv_wait(deadline, op, spath, attrs, args):
+def dialv_wait(deadline, op, spath, attrs=None, args=None):
     """Convenience function.
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
@@ -87,7 +87,7 @@ def dialv_wait(deadline, op, spath, attrs, args):
     rv = libruss.russ_dialv_wait(deadline, op, spath, c_attrs, c_argv, ctypes.byref(exitst))
     return rv, int(exitst.value)
 
-def dialv_wait_inouterr(deadline, op, spath, attrs, args, stdin, stdout_size, stderr_size):
+def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
     """Convenience function.
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
@@ -123,7 +123,7 @@ def dialv_wait_inouterr(deadline, op, spath, attrs, args, stdin, stdout_size, st
 
     return rv, int(exitst.value), stdout, stderr
 
-def execv(deadline, spath, attrs, args):
+def execv(deadline, spath, attrs=None, args=None):
     """ruexec a service.
     """
     return dialv(deadline, "execute", spath, attrs, args)
