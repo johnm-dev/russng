@@ -155,7 +155,7 @@ class russ_svr_Structure(ctypes.Structure):
         ("root", ctypes.POINTER(russ_svcnode_Structure)),
         ("type", ctypes.c_int),
         ("saddr", ctypes.c_char_p),
-        ("lisd", ctypes.c_int),
+        ("sd", ctypes.c_int),
         ("accepttimeout", ctypes.c_int),
         ("awaittimeout", ctypes.c_int),
         ("autoswitchuser", ctypes.c_int),

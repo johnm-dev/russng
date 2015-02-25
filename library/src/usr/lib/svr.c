@@ -46,11 +46,11 @@
 *
 * @param root		root service node object
 * @param type		server type (see RUSS_SVR_TYPE_*)
-* @param lisd		initial listener descriptor
+* @param sd		initial socket descriptor
 * @return		russ_svr object; NULL on failure
 */
 struct russ_svr *
-russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
+russ_svr_new(struct russ_svcnode *root, int type, int sd) {
 	struct russ_svr	*self;
 
 	if ((self = malloc(sizeof(struct russ_svr))) == NULL) {
@@ -61,7 +61,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	self->mpid = getpid();
 	self->ctime = russ_gettime();
 	self->saddr = NULL;
-	self->lisd = lisd;
+	self->sd = sd;
 	self->accepthandler = russ_sconn_accepthandler;
 	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
 	self->answerhandler = russ_sconn_answerhandler;
@@ -82,7 +82,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 */
 struct russ_sconn *
 russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
-	return self->accepthandler(deadline, self->lisd);
+	return self->accepthandler(deadline, self->sd);
 }
 
 /**
@@ -345,7 +345,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	}
 
 	while (1) {
-		if ((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd)) == NULL) {
+		if ((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->sd)) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
 			sleep(1);
 			continue;
@@ -354,7 +354,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 			setsid();
 			signal(SIGHUP, SIG_IGN);
 
-			russ_fds_close(&self->lisd, 1);
+			russ_fds_close(&self->sd, 1);
 			if (fork() == 0) {
 				russ_svr_handler(self, sconn);
 

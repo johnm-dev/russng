@@ -200,7 +200,7 @@ struct russ_svr {
 	pid_t			mpid;
 	long			ctime;
 	char			*saddr;
-	int			lisd;
+	int			sd;
 	russ_accepthandler	accepthandler;
 	int			accepttimeout;
 	russ_answerhandler	answerhandler;
