@@ -155,6 +155,45 @@ russ_svr_set_help(struct russ_svr *self, const char *help) {
 }
 
 /**
+* Set the service tree root node.
+*
+* @param self		server object
+* @param root		root service node
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_root(struct russ_svr *self, struct russ_svcnode *root) {
+	self->root = root;
+	return 0;
+}
+
+/**
+* Set the socket descriptor for receiving connections.
+*
+* @param self		server object
+* @param sd		socket descriptor
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_sd(struct russ_svr *self, int sd) {
+	self->sd = sd;
+	return 0;
+}
+
+/**
+* Set server type.
+*
+* @param self		server object
+* @param type		server type (e.g., RUSS_SVR_TYPE_FORK)
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_type(struct russ_svr *self, int type) {
+	self->type = type;
+	return 0;
+}
+
+/**
 * Find service handler and it invoke it.
 *
 * Special cases:

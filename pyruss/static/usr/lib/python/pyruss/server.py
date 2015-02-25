@@ -170,6 +170,21 @@ class Server:
         """
         return libruss.russ_svr_set_help(self._ptr, value)
 
+    def set_root(self, root):
+        """Set root ServiceNode.
+        """
+        return libruss.russ_svr_set_root(self._ptr, root._ptr)
+
+    def set_sd(self, sd):
+        """Set socket descriptor.
+        """
+        return libruss.russ_svr_set_sd(self._ptr, sd)
+
+    def set_type(self, stype):
+        """Set server type.
+        """
+        return libruss.russ_svr_set_type(self._ptr, stype)
+
 class Sess:
     """Wrapper for russ_sess.
     """

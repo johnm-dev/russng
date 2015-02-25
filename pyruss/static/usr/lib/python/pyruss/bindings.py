@@ -435,6 +435,24 @@ libruss.russ_svr_set_help.argtypes = [
 ]
 libruss.russ_svr_set_help.restype = ctypes.c_int
 
+libruss.russ_svr_set_root.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctypes.POINTER(russ_svcnode_Structure),
+]
+libruss.russ_svr_set_root.restype = ctypes.c_int
+
+libruss.russ_svr_set_sd.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctypes.c_int,
+]
+libruss.russ_svr_set_sd.restype = ctypes.c_int
+
+libruss.russ_svr_set_type.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctypes.c_int,
+]
+libruss.russ_svr_set_type.restype = ctypes.c_int
+
 libruss.russ_svr_loop.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
 ]
