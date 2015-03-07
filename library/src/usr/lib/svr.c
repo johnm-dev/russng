@@ -73,6 +73,23 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 }
 
 /**
+* Free russ_svr object.
+*
+* @param		russ_svr object
+* @return		NULL
+*/
+struct russ_svr *
+russ_svr_free(struct russ_svr *self) {
+	if (self) {
+		/* TODO: only the root node is freed */
+		self->root = russ_svcnode_free(self->root);
+		self->saddr = russ_free(self->saddr);
+		self->help = russ_free(self->help);
+	}
+	return NULL;
+}
+
+/**
 * Accept connection from server listen socket.
 *
 * Wrapper for calling registered accept handler.

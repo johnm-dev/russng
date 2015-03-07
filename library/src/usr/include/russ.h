@@ -359,6 +359,7 @@ int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
 
 /* svr.c */
 struct russ_svr *russ_svr_new(struct russ_svcnode *, int, int);
+struct russ_svr *russ_svr_free(struct russ_svr *);
 struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
