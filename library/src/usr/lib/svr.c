@@ -361,47 +361,6 @@ cleanup:
 }
 
 /**
-* Server one shot via accepted socket descriptor.
-*
-* @param self		server object
-* @param asd		accept()ed socket descriptor
-*/
-void
-russ_svr_once(struct russ_svr *self, int asd) {
-	struct russ_sconn	*sconn;
-	pid_t			pid, wpid;
-	int			wst;
-
-	if (self == NULL) {
-		return;
-	}
-
-	if (((sconn = russ_sconn_new()) == NULL)
-		|| ((sconn->sd = asd) < 0)
-		|| (russ_get_creds(sconn->sd, &(sconn->creds)) < 0)) {
-		fprintf(stderr, "error: cannot accept connection\n");
-		exit(0);
-	}
-	if ((pid = fork()) == 0) {
-		setsid();
-		signal(SIGHUP, SIG_IGN);
-
-		if (fork() == 0) {
-			russ_svr_handler(self, sconn);
-
-			/* failsafe exit info (if not provided) */
-			russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
-			sconn = russ_sconn_free(sconn);
-			exit(0);
-		}
-		exit(0);
-	}
-	russ_sconn_close(sconn);
-	sconn = russ_sconn_free(sconn);
-	wpid = waitpid(pid, &wst, 0);
-}
-
-/**
 * Dispatches to specific server loop by server type.
 *
 * @param self		server object
