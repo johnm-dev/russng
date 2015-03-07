@@ -156,6 +156,7 @@ class russ_svr_Structure(ctypes.Structure):
         ("type", ctypes.c_int),
         ("saddr", ctypes.c_char_p),
         ("lisd", ctypes.c_int),
+        ("closeonaccept", ctypes.c_int),
         ("accepttimeout", ctypes.c_int),
         ("awaittimeout", ctypes.c_int),
         ("autoswitchuser", ctypes.c_int),
@@ -428,6 +429,12 @@ libruss.russ_svr_set_autoswitchuser.argtypes = [
     ctypes.c_int,
 ]
 libruss.russ_svr_set_autoswitchuser.restype = ctypes.c_int
+
+libruss.russ_svr_set_closeonaccept.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctypes.c_int,
+]
+libruss.russ_svr_set_closeonaccept.restype = ctypes.c_int
 
 libruss.russ_svr_set_help.argtypes = [
     ctypes.POINTER(russ_svr_Structure),

@@ -41,6 +41,24 @@ import pyruss
 from pyruss import libruss, SVCHANDLER_FUNC
 from pyruss import Request, ServerConn
 
+def init(conf):
+    """Create a Server
+    """
+    if conf == None:
+        return None
+
+    sd = conf.getint("server", "sd", pyruss.RUSS_SVR_LIS_SD_DEFAULT)
+    closeonaccept = conf.getint("server", "closeonaccept", 0)
+    root = ServiceNode.new("", None)
+    if root == None:
+        return None
+    svr = Server.new(root, 0, sd)
+    if svr == None:
+        return None
+    if svr.set_closeonaccept(closeonaccept) < 0:
+        return None
+    return svr
+
 class ServiceHandler:
     def __init__(self, handler):
         self.handler = handler
@@ -125,6 +143,12 @@ class Server:
         libruss.russ_svr_free(self._ptr)
         self._ptr = None
 
+    def get_closeonaccept(self):
+        return self._ptr.contents.closeonaccept
+
+    def get_lisd(self):
+        return self._ptr.contents.lisd
+
     def handler(self, sconn):
         """Default handler.
         """
@@ -152,8 +176,12 @@ class Server:
         while True:
             sconn = self.accept(self._ptr.contents.accepttimeout)
             if not sconn:
+                if self.get_lisd() < 0:
+                    break
                 sys.stderr.write("error: cannot accept connection\n")
                 continue
+            if self.get_closeonaccept():
+                self.set_lisd(-1)
             th = threading.Thread(target=helper, args=(self, sconn))
             if th:
                 th.start()
@@ -164,6 +192,11 @@ class Server:
         """Set autoswitchuser state.
         """
         return libruss.russ_svr_set_autoswitchuser(self._ptr, value)
+
+    def set_closeonaccept(self, value):
+        """Set closeonaccept flag.
+        """
+        return libruss.russ_svr_set_closeonaccept(self._ptr, value)
 
     def set_help(self, value):
         """Set help text.
