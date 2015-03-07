@@ -276,6 +276,7 @@ struct russ_cconn *russ_execl(russ_deadline, const char *, char **, ...);
 struct russ_cconn *russ_help(russ_deadline, const char *);
 struct russ_cconn *russ_info(russ_deadline, const char *);
 struct russ_cconn *russ_list(russ_deadline, const char *);
+struct russ_svr *russ_init(int, char **);
 int russ_start(int, char **);
 int russ_startl(char *, ...);
 

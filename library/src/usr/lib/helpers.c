@@ -272,6 +272,40 @@ russ_list(russ_deadline deadline, const char *spath) {
 }
 
 /**
+* Initialize server according to configuration settings. Returns
+* a russ_svr object initialized with a default root russ_svcnode
+* and NULL handler.
+*
+* @param argc		number of arguments
+* @param argv		argument list
+* @return		russ_svr object; NULL on failure
+*/
+struct russ_svr *
+russ_init(int argc, char **argv) {
+	struct russ_svr		*svr = NULL;
+	struct russ_conf	*conf = NULL;
+	struct russ_svcnode	*root = NULL;
+	int			sd;
+	int			loopcount;
+
+	if ((conf = russ_conf_load(&argc, argv)) == NULL) {
+		goto fail;
+	}
+	sd = (int)russ_conf_getint(conf, "server", "sd", RUSS_SVR_LIS_SD_DEFAULT);
+	loopcount =  (int)russ_conf_getint(conf, "server", "loopcount", 0);
+	if (((root = russ_svcnode_new("", NULL)) == NULL)
+		|| ((svr = russ_svr_new(root, 0, sd)) == NULL)) {
+		goto fail;
+	}
+	return svr;
+fail:
+	conf = russ_conf_free(conf);
+	root = russ_svcnode_free(root);
+	svr = russ_svr_free(svr);
+	return NULL;
+}
+
+/**
 * Start a server using arguments as provide from the command line.
 * Configuration and non-configuration (i.e., after the --) may be
 * provided.
