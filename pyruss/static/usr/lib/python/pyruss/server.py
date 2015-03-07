@@ -206,15 +206,15 @@ class Server:
         """
         return libruss.russ_svr_set_help(self._ptr, value)
 
-    def set_root(self, root):
-        """Set root ServiceNode.
-        """
-        return libruss.russ_svr_set_root(self._ptr, root._ptr)
-
     def set_lisd(self, lisd):
         """Set socket descriptor.
         """
         return libruss.russ_svr_set_lisd(self._ptr, lisd)
+
+    def set_root(self, root):
+        """Set root ServiceNode.
+        """
+        return libruss.russ_svr_set_root(self._ptr, root._ptr)
 
     def set_type(self, stype):
         """Set server type.
@@ -231,22 +231,22 @@ class Sess:
     def __del__(self):
         self._ptr = None
 
-    def get_sconn(self):
-        """Return ServerConn object.
-        """
-        return self._ptr.contents.sconn and ServerConn(self._ptr.contents.sconn) or None
-
-    def get_svr(self):
-        """Return Server object.
-        """
-        return self._ptr.contents.svr and Server(self._ptr.contents.svr) or None
-
     def get_request(self):
         """Return Request object.
         """
         return self._ptr.contents.req and Request(self._ptr.contents.req) or None
 
+    def get_sconn(self):
+        """Return ServerConn object.
+        """
+        return self._ptr.contents.sconn and ServerConn(self._ptr.contents.sconn) or None
+
     def get_spath(self):
         """Return service path.
         """
         return self._ptr.contents.spath
+
+    def get_svr(self):
+        """Return Server object.
+        """
+        return self._ptr.contents.svr and Server(self._ptr.contents.svr) or None
