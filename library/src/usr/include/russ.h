@@ -201,6 +201,7 @@ struct russ_svr {
 	long			ctime;
 	char			*saddr;
 	int			lisd;
+	int			closeonaccept;
 	russ_accepthandler	accepthandler;
 	int			accepttimeout;
 	russ_answerhandler	answerhandler;
@@ -366,6 +367,7 @@ void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
 int russ_svr_set_answerhandler(struct russ_svr *, russ_answerhandler);
 int russ_svr_set_autoswitchuser(struct russ_svr *, int);
+int russ_svr_set_closeonaccept(struct russ_svr *, int);
 int russ_svr_set_help(struct russ_svr *, const char *);
 int russ_svr_set_root(struct russ_svr *, struct russ_svcnode *);
 int russ_svr_set_sd(struct russ_svr *, int);

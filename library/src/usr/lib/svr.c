@@ -156,6 +156,22 @@ russ_svr_set_autoswitchuser(struct russ_svr *self, int value) {
 }
 
 /**
+* Set to close listen socket after 1 successful accept.
+*
+* @param self		russ server object
+* @param value		0 to disable; 1 to enable
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_closeonaccept(struct russ_svr *self, int value) {
+	if (self == NULL) {
+		return -1;
+	}
+	self->closeonaccept = value;
+	return 0;
+}
+
+/**
 * Set (make copy) the server help string.
 *
 * @param self		server object

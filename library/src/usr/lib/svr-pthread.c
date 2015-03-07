@@ -106,6 +106,9 @@ russ_svr_loop_thread(struct russ_svr *self) {
 			sleep(1);
 			continue;
 		}
+		if (self->closeonaccept) {
+			russ_fds_close(&self->lisd, 1);
+		}
 		data->svr = self;
 		data->sconn = sconn;
 		if (pthread_create(&th, NULL, (void *)russ_svr_handler_helper, (void *)data) < 0) {

@@ -53,6 +53,9 @@ russ_svr_loop_fork(struct russ_svr *self) {
 			sleep(1);
 			continue;
 		}
+		if (self->closeonaccept) {
+			russ_fds_close(&self->lisd, 1);
+		}
 		if ((pid = fork()) == 0) {
 			setsid();
 			signal(SIGHUP, SIG_IGN);

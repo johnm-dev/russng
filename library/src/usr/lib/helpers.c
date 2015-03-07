@@ -286,15 +286,17 @@ russ_init(int argc, char **argv) {
 	struct russ_conf	*conf = NULL;
 	struct russ_svcnode	*root = NULL;
 	int			sd;
-	int			loopcount;
+	int			closeonaccept, loopcount;
 
 	if ((conf = russ_conf_load(&argc, argv)) == NULL) {
 		goto fail;
 	}
 	sd = (int)russ_conf_getint(conf, "server", "sd", RUSS_SVR_LIS_SD_DEFAULT);
 	loopcount =  (int)russ_conf_getint(conf, "server", "loopcount", 0);
+	closeonaccept = (int)russ_conf_getint(conf, "server", "closeonaccept", 0);
 	if (((root = russ_svcnode_new("", NULL)) == NULL)
-		|| ((svr = russ_svr_new(root, 0, sd)) == NULL)) {
+		|| ((svr = russ_svr_new(root, 0, sd)) == NULL)
+		|| (russ_svr_set_closeonaccept(svr, closeonaccept) < 0)) {
 		goto fail;
 	}
 	return svr;
