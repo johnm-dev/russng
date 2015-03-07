@@ -155,9 +155,12 @@ class Server:
         libruss.russ_svr_handler(self._ptr, sconn._ptr)
 
     def loop(self):
-        """Forking loop.
+        """Dispath to appropriate server loop.
         """
-        libruss.russ_svr_loop(self._ptr)
+        if self._ptr.contents.type == pyruss.RUSS_SVR_TYPE_THREAD:
+            self.loop_thread()
+        else:
+            libruss.russ_svr_loop(self._ptr)
 
     def loop_thread(self):
         """Threaded loop.
