@@ -190,7 +190,7 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (((svr = russ_init(argc, argv)) == NULL)
+	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)
 

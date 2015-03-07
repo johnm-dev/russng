@@ -276,23 +276,19 @@ russ_list(russ_deadline deadline, const char *spath) {
 * a russ_svr object initialized with a default root russ_svcnode
 * and NULL handler.
 *
-* @param argc		number of arguments
-* @param argv		argument list
+* @param conf		russ_conf object
 * @return		russ_svr object; NULL on failure
 */
 struct russ_svr *
-russ_init(int argc, char **argv) {
+russ_init(struct russ_conf *conf) {
 	struct russ_svr		*svr = NULL;
-	struct russ_conf	*conf = NULL;
 	struct russ_svcnode	*root = NULL;
-	int			sd;
-	int			closeonaccept, loopcount;
+	int			sd, closeonaccept;
 
-	if ((conf = russ_conf_load(&argc, argv)) == NULL) {
-		goto fail;
+	if (conf == NULL) {
+		return NULL;
 	}
 	sd = (int)russ_conf_getint(conf, "server", "sd", RUSS_SVR_LIS_SD_DEFAULT);
-	loopcount =  (int)russ_conf_getint(conf, "server", "loopcount", 0);
 	closeonaccept = (int)russ_conf_getint(conf, "server", "closeonaccept", 0);
 	if (((root = russ_svcnode_new("", NULL)) == NULL)
 		|| ((svr = russ_svr_new(root, 0, sd)) == NULL)
@@ -301,7 +297,6 @@ russ_init(int argc, char **argv) {
 	}
 	return svr;
 fail:
-	conf = russ_conf_free(conf);
 	root = russ_svcnode_free(root);
 	svr = russ_svr_free(svr);
 	return NULL;
