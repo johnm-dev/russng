@@ -52,7 +52,7 @@ struct russ_conf {
 };
 
 struct russ_conf *russ_conf_new(void);
-void russ_conf_free(struct russ_conf *);
+struct russ_conf *russ_conf_free(struct russ_conf *);
 struct russ_conf *russ_conf_load(int *, char **);
 struct russ_conf *russ_conf_init(int *, char **);
 

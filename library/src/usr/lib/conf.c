@@ -43,12 +43,14 @@
 * Free item object.
 *
 * @param self		item object
+* @return		NULL
 */
-static void
+static struct russ_confitem *
 __russ_confitem_free(struct russ_confitem *self) {
 	self->option = russ_free(self->option);
 	self->value = russ_free(self->value);
 	self = russ_free(self);
+	return NULL;
 }
 
 /**
@@ -113,8 +115,9 @@ free_all:
 * Free section object.
 *
 * @param self		section object
+* @return		NULL
 */
-static void
+static struct russ_confsection *
 __russ_confsection_free(struct russ_confsection *self) {
 	int	i;
 
@@ -124,6 +127,7 @@ __russ_confsection_free(struct russ_confsection *self) {
 	self->name = russ_free(self->name);
 	self->items = russ_free(self->items);
 	self = russ_free(self);
+	return NULL;
 }
 
 /**
@@ -233,8 +237,9 @@ free_all:
 * Free russ_conf object (and all contents).
 *
 * @param self		russ_conf object
+* @return		NULL
 */
-void
+struct russ_conf *
 russ_conf_free(struct russ_conf *self) {
 	int	i;
 
@@ -243,6 +248,7 @@ russ_conf_free(struct russ_conf *self) {
 	}
 	self->sections = russ_free(self->sections);
 	self = russ_free(self);
+	return NULL;
 }
 
 /**
