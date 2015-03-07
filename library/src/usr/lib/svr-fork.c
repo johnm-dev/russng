@@ -46,6 +46,9 @@ russ_svr_loop_fork(struct russ_svr *self) {
 
 	while (1) {
 		if ((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd)) == NULL) {
+			if (self->lisd < 0) {
+				break;
+			}
 			fprintf(stderr, "error: cannot accept connection\n");
 			sleep(1);
 			continue;

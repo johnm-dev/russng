@@ -99,6 +99,9 @@ russ_svr_loop_thread(struct russ_svr *self) {
 				russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
 				russ_sconn_free(sconn);
 			}
+			if (self->lisd < 0) {
+				break;
+			}
 			fprintf(stderr, "error: cannot accept connection\n");
 			continue;
 		}
