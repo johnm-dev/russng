@@ -10,13 +10,16 @@ SRCS=buf.c cconn.c conf.c encdec.c fd.c \
 	sarray0.c sconn.c socket.c spath.c str.c svcnode.c svr.c \
 	time.c
 	#experimental.c
-SRCS_PTHREAD=svr-pthread.c
+SRCS_FORK=$(SRCS) svr-fork.c
+SRCS_PTHREAD=$(SRCS) svr-pthread.c
+
 OBJS=buf.o cconn.o conf.o encdec.o fd.o \
 	helpers.o io.o misc.o optable.o relay.o req.o \
 	sarray0.o sconn.o socket.o spath.o str.o svcnode.o svr.o \
 	time.o
 	#experimental.o
-OBJS_PTHREAD=svr-pthread.o
+OBJS_FORK=$(OBJS) svr-fork.o
+OBJS_PTHREAD=$(OBJS) svr-pthread.o
 LIBS=$(LIBS_PLAT)
 
 all: libruss.a libruss.so libruss-pthread.a libruss-pthread.so
@@ -31,18 +34,18 @@ install:
 		(cp libruss.so $(INSTALL_DIR)/usr/lib); \
 	fi
 
-libruss.a: $(SRCS)
-	$(CC) $(CFLAGS) -fPIC -c -I../include $(SRCS)
-	$(AR) rv $@ $(OBJS)
+libruss.a: $(SRCS_FORK)
+	$(CC) $(CFLAGS) -fPIC -c -I../include $(SRCS_FORK)
+	$(AR) rv $@ $(OBJS) $(OBJS_FORK)
 
 libruss.so:	libruss.a
 	@if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
-		$(CC) -shared -o $@ $(OBJS) $(LIBS); \
+		$(CC) -shared -o $@ $(OBJS_FORK) $(LIBS); \
 	fi
 
 libruss-pthread.a: $(SRCS_PTHREAD)
 	$(CC) $(CFLAGS) -fPIC -c -I../include $(SRCS_PTHREAD)
-	$(AR) rv $@ $(OBJS)
+	$(AR) rv $@ $(OBJS_PTHREAD)
 
 libruss-pthread.so:	libruss-pthread.a
 	@if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
