@@ -72,20 +72,12 @@ russ_svr_loop_fork(struct russ_svr *self) {
 }
 
 /**
-* Dispatches to specific server loop by server type.
+* Dummy function for non-threaded russ library.
 *
 * @param self		server object
 */
 void
-russ_svr_loop(struct russ_svr *self) {
-	if (self == NULL) {
-		return;
-	}
-
-	if (self->type == RUSS_SVR_TYPE_FORK) {
-		russ_svr_loop_fork(self);
-	} else if (self->type == RUSS_SVR_TYPE_THREAD) {
-		fprintf(stderr, "error: use threaded libruss\n");
-		exit(1);
-	}
+russ_svr_loop_thread(struct russ_svr *self) {
+	fprintf(stderr, "error: use threaded libruss\n");
+	exit(1);
 }

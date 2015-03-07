@@ -367,3 +367,21 @@ russ_svr_once(struct russ_svr *self, int asd) {
 	sconn = russ_sconn_free(sconn);
 	wpid = waitpid(pid, &wst, 0);
 }
+
+/**
+* Dispatches to specific server loop by server type.
+*
+* @param self		server object
+*/
+void
+russ_svr_loop(struct russ_svr *self) {
+	if (self == NULL) {
+		return;
+	}
+
+	if (self->type == RUSS_SVR_TYPE_FORK) {
+		russ_svr_loop_fork(self);
+	} else if (self->type == RUSS_SVR_TYPE_THREAD) {
+		russ_svr_loop_thread(self);
+	}
+}

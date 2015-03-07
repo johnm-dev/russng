@@ -68,6 +68,17 @@ russ_svr_handler_helper(void *data) {
 }
 
 /**
+* Dummy function for non-forking russ library
+*
+* @param self		server object
+*/
+void
+russ_svr_loop_fork(struct russ_svr *self) {
+	fprintf(stderr, "error: use forking libruss\n");
+	exit(1);
+}
+
+/**
 * Server loop for threaded servers.
 *
 * Calls helper to simplify argument passing, object creation (data
@@ -96,19 +107,5 @@ russ_svr_loop_thread(struct russ_svr *self) {
 		if (pthread_create(&th, NULL, (void *)russ_svr_handler_helper, (void *)data) < 0) {
 			fprintf(stderr, "error: cannot spawn thread\n");
 		}
-	}
-}
-
-/**
-* Dispatches to specific server loop by server type.
-*
-* @param self		server object
-*/
-void
-russ_svr_loop(struct russ_svr *self) {
-	if (self->type == RUSS_SVR_TYPE_FORK) {
-		russ_svr_loop_fork(self);
-	} else if (self->type == RUSS_SVR_TYPE_THREAD) {
-		russ_svr_loop_thread(self);
 	}
 }
