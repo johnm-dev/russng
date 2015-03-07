@@ -554,7 +554,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root, *node;
+	struct russ_svcnode	*node;
 	struct russ_svr		*svr;
 
 	signal(SIGPIPE, SIG_IGN);
@@ -576,18 +576,18 @@ main(int argc, char **argv) {
 		fprintf(stderr, "warning: cannot find cgroup spath\n");
 	}
 
-	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "cgroup", svc_cgroup_handler)) == NULL)
+	if (((svr = russ_init(argc, argv)) == NULL)
+		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
+		|| (russ_svr_set_help(svr, HELP) < 0)
+		|| ((node = russ_svcnode_add(svr->root, "cgroup", svc_cgroup_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_cgroup_path_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_add(node, "login", svc_cgroup_path_loginshellsimple_handler) == NULL)
 		|| (russ_svcnode_add(node, "shell", svc_cgroup_path_loginshellsimple_handler) == NULL)
 		|| (russ_svcnode_add(node, "simple", svc_cgroup_path_loginshellsimple_handler) == NULL)
-		|| ((node = russ_svcnode_add(root, "login", svc_loginshell_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "shell", svc_loginshell_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "simple", svc_simple_handler)) == NULL)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_help(svr, HELP) < 0)) {
+		|| ((node = russ_svcnode_add(svr->root, "login", svc_loginshell_handler)) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "shell", svc_loginshell_handler)) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "simple", svc_simple_handler)) == NULL)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}

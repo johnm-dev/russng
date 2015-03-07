@@ -318,7 +318,6 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root;
 	struct russ_svr		*svr;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -329,19 +328,19 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| (russ_svcnode_add(root, "chargen", svc_chargen_handler) == NULL)
-		|| (russ_svcnode_add(root, "conn", svc_conn_handler) == NULL)
-		|| (russ_svcnode_add(root, "daytime", svc_daytime_handler) == NULL)
-		|| (russ_svcnode_add(root, "discard", svc_discard_handler) == NULL)
-		|| (russ_svcnode_add(root, "echo", svc_echo_handler) == NULL)
-		|| (russ_svcnode_add(root, "env", svc_env_handler) == NULL)
-		|| (russ_svcnode_add(root, "exit", svc_exit_handler) == NULL)
-		|| (russ_svcnode_add(root, "request", svc_request_handler) == NULL)
-		//|| (russ_svcnode_add(root, "whoami", svc_whoami_handler) == NULL)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
+	if (((svr = russ_init(argc, argv)) == NULL)
+		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
+		|| (russ_svr_set_help(svr, HELP) < 0)
 		|| ((getuid() == 0) && (russ_svr_set_autoswitchuser(svr, 1) < 0))
-		|| (russ_svr_set_help(svr, HELP) < 0)) {
+		|| (russ_svcnode_add(svr->root, "chargen", svc_chargen_handler) == NULL)
+		|| (russ_svcnode_add(svr->root, "conn", svc_conn_handler) == NULL)
+		|| (russ_svcnode_add(svr->root, "daytime", svc_daytime_handler) == NULL)
+		|| (russ_svcnode_add(svr->root, "discard", svc_discard_handler) == NULL)
+		|| (russ_svcnode_add(svr->root, "echo", svc_echo_handler) == NULL)
+		|| (russ_svcnode_add(svr->root, "env", svc_env_handler) == NULL)
+		|| (russ_svcnode_add(svr->root, "exit", svc_exit_handler) == NULL)
+		//|| (russ_svcnode_add(svr->root, "whoami", svc_whoami_handler) == NULL)
+		|| (russ_svcnode_add(svr->root, "request", svc_request_handler) == NULL)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}

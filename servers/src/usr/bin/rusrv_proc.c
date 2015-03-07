@@ -783,7 +783,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root, *node, *node2;
+	struct russ_svcnode	*node, *node2;
 	struct russ_svr		*svr;
 	struct utsname		utsname;
 
@@ -806,21 +806,24 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "g", svc_g_handler)) == NULL)
+	if (((svr = russ_init(argc, argv)) == NULL)
+		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
+		|| (russ_svr_set_help(svr, HELP) < 0)
+
+		|| ((node = russ_svcnode_add(svr->root, "g", svc_g_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| ((node2 = russ_svcnode_add(node, "status", svc_g_gid_status_handler)) == NULL)
 		|| ((node2 = russ_svcnode_add(node2, "*", svc_g_gid_status_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node2, 1) < 0)
 
-		|| ((node = russ_svcnode_add(root, "n", svc_null_handler)) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "n", svc_null_handler)) == NULL)
 		//|| ((node = russ_svcnode_add(node, "kill", svc_n_kill_handler)) == NULL)
 		|| ((node2 = russ_svcnode_add(node, "status", svc_n_status_handler)) == NULL)
 		|| ((node2 = russ_svcnode_add(node2, "*", svc_n_status_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node2, 1) < 0)
 
-		|| ((node = russ_svcnode_add(root, "p", svc_p_handler)) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "p", svc_p_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_add(node, "kill", svc_p_pid_kill_handler) == NULL)
@@ -829,15 +832,12 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_set_wildcard(node2, 1) < 0)
 		|| (russ_svcnode_add(node, "wait", svc_p_pid_wait_handler) == NULL)
 
-		|| ((node = russ_svcnode_add(root, "u", svc_u_handler)) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "u", svc_u_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_null_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| ((node2 = russ_svcnode_add(node, "status", svc_u_uid_status_handler)) == NULL)
 		|| ((node2 = russ_svcnode_add(node2, "*", svc_u_uid_status_handler)) == NULL)
-		|| (russ_svcnode_set_wildcard(node2, 1) < 0)
-
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_help(svr, HELP) < 0)) {
+		|| (russ_svcnode_set_wildcard(node2, 1) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 	}
 	russ_svr_loop(svr);

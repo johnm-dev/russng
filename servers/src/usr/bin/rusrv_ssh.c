@@ -306,7 +306,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root, *node;
+	struct russ_svcnode	*node;
 	struct russ_svr		*svr;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -317,14 +317,17 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "*", svc_userhostport_handler)) == NULL)
+	if (((svr = russ_init(argc, argv)) == NULL)
+		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
+		|| (russ_svr_set_help(svr, HELP) < 0)
+
+		|| (russ_svcnode_set_handler(svr->root, svc_root_handler) < 0)
+
+		|| ((node = russ_svcnode_add(svr->root, "*", svc_userhostport_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| ((node = russ_svcnode_add(node, "*", svc_userhostport_other_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_help(svr, HELP) < 0)) {
+		|| (russ_svcnode_set_virtual(node, 1) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 	}
 	russ_svr_loop(svr);

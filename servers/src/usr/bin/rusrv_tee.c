@@ -239,7 +239,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root, *node;
+	struct russ_svcnode	*node;
 	struct russ_svr		*svr;
 
 	signal(SIGPIPE, SIG_IGN);
@@ -254,14 +254,15 @@ main(int argc, char **argv) {
 
 	init_fds();
 
-	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| ((node = russ_svcnode_add(root, "*", svc_attr_handler)) == NULL)
-		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		//|| (russ_svcnode_set_autoanswer(node, 0) < 0)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
+	if (((svr = russ_init(argc, argv)) == NULL)
+		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
 		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
-		|| (russ_svr_set_help(svr, HELP) < 0)) {
+		|| (russ_svr_set_help(svr, HELP) < 0)
+
+		|| ((node = russ_svcnode_add(svr->root, "*", svc_attr_handler)) == NULL)
+		|| (russ_svcnode_set_wildcard(node, 1) < 0)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)) {
+		//|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}
