@@ -45,7 +45,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 	}
 
 	while (1) {
-		if ((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->sd)) == NULL) {
+		if ((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd)) == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
 			sleep(1);
 			continue;
@@ -54,7 +54,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 			setsid();
 			signal(SIGHUP, SIG_IGN);
 
-			russ_fds_close(&self->sd, 1);
+			russ_fds_close(&self->lisd, 1);
 			if (fork() == 0) {
 				russ_svr_handler(self, sconn);
 

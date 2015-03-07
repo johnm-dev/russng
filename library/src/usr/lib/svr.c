@@ -46,11 +46,11 @@
 *
 * @param root		root service node object
 * @param type		server type (see RUSS_SVR_TYPE_*)
-* @param sd		initial socket descriptor
+* @param lisd		initial listening socket descriptor
 * @return		russ_svr object; NULL on failure
 */
 struct russ_svr *
-russ_svr_new(struct russ_svcnode *root, int type, int sd) {
+russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	struct russ_svr	*self;
 
 	if ((self = malloc(sizeof(struct russ_svr))) == NULL) {
@@ -61,7 +61,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int sd) {
 	self->mpid = getpid();
 	self->ctime = russ_gettime();
 	self->saddr = NULL;
-	self->sd = sd;
+	self->lisd = lisd;
 	self->accepthandler = russ_sconn_accepthandler;
 	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
 	self->answerhandler = russ_sconn_answerhandler;
@@ -82,7 +82,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int sd) {
 */
 struct russ_sconn *
 russ_svr_accept(struct russ_svr *self, russ_deadline deadline) {
-	return self->accepthandler(deadline, self->sd);
+	return self->accepthandler(deadline, self->lisd);
 }
 
 /**
@@ -171,12 +171,12 @@ russ_svr_set_root(struct russ_svr *self, struct russ_svcnode *root) {
 * Set the socket descriptor for receiving connections.
 *
 * @param self		server object
-* @param sd		socket descriptor
+* @param lisd		listening socket descriptor
 * @return		0 on success; -1 on failure
 */
 int
-russ_svr_set_sd(struct russ_svr *self, int sd) {
-	self->sd = sd;
+russ_svr_set_lisd(struct russ_svr *self, int lisd) {
+	self->lisd = lisd;
 	return 0;
 }
 

@@ -155,7 +155,7 @@ class russ_svr_Structure(ctypes.Structure):
         ("root", ctypes.POINTER(russ_svcnode_Structure)),
         ("type", ctypes.c_int),
         ("saddr", ctypes.c_char_p),
-        ("sd", ctypes.c_int),
+        ("lisd", ctypes.c_int),
         ("accepttimeout", ctypes.c_int),
         ("awaittimeout", ctypes.c_int),
         ("autoswitchuser", ctypes.c_int),
@@ -441,11 +441,11 @@ libruss.russ_svr_set_root.argtypes = [
 ]
 libruss.russ_svr_set_root.restype = ctypes.c_int
 
-libruss.russ_svr_set_sd.argtypes = [
+libruss.russ_svr_set_lisd.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
     ctypes.c_int,
 ]
-libruss.russ_svr_set_sd.restype = ctypes.c_int
+libruss.russ_svr_set_lisd.restype = ctypes.c_int
 
 libruss.russ_svr_set_type.argtypes = [
     ctypes.POINTER(russ_svr_Structure),

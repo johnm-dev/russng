@@ -107,8 +107,8 @@ class Server:
         self._ptr = _ptr
 
     @classmethod
-    def new(cls, root, typ, sd):
-        _ptr = libruss.russ_svr_new(root._ptr, typ, sd)
+    def new(cls, root, typ, lisd):
+        _ptr = libruss.russ_svr_new(root._ptr, typ, lisd)
         if not bool(_ptr):
             raise Exception("could not create Server")
         return cls(_ptr)
@@ -175,10 +175,10 @@ class Server:
         """
         return libruss.russ_svr_set_root(self._ptr, root._ptr)
 
-    def set_sd(self, sd):
+    def set_lisd(self, lisd):
         """Set socket descriptor.
         """
-        return libruss.russ_svr_set_sd(self._ptr, sd)
+        return libruss.russ_svr_set_lisd(self._ptr, lisd)
 
     def set_type(self, stype):
         """Set server type.
