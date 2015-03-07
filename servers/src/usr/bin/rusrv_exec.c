@@ -417,11 +417,6 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 }
 
 void
-svc_root_handler(struct russ_sess *sess) {
-	/* auto handling in svr */
-}
-
-void
 svc_loginshell_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;

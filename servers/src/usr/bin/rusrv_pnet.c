@@ -134,18 +134,6 @@ set_fqlocalhostname(void) {
 }
 
 /**
-* Handler for the / service.
-*
-* Provides HELP.
-*
-* @param sess		session object
-*/
-void
-svc_root_handler(struct russ_sess *sess) {
-	/* auto handling in svr */
-}
-
-/**
 * Handler for the /count service.
 *
 * Output the number of targets.

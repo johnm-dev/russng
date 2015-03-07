@@ -616,11 +616,6 @@ gpu_handler_helper(struct russ_sess *sess, int gpu) {
 }
 
 void
-svc_root_handler(struct russ_sess *sess) {
-	/* auto hanlding in svr */
-}
-
-void
 svc_null_handler(struct russ_sess *sess) {
 	;
 }
