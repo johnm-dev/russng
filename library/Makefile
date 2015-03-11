@@ -20,6 +20,7 @@ doc:
 		echo "warning: doxygen not available to produce documentation"; \
 		exit 0; \
 	else \
+		mkdir -p doc/doxygen; \
 		(doxygen doxygen.conf); \
 	fi
 

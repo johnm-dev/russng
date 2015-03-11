@@ -30,7 +30,7 @@ doc:
 	(cd library; $(MAKE) doc)
 	#(cd servers; $(MAKE) doc)
 	#(cd tools; $(MAKE) doc)
-	#(cd pyruss; $(MAKE) doc)
+	(export LD_LIBRARY_PATH=${RUSS_LIB_DIR}:$LD_LIBRARY_PATH; cd pyruss; $(MAKE) doc)
 
 install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
