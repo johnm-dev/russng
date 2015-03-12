@@ -6,10 +6,10 @@
 HERE_FILE:="$(CURDIR)/$(strip $(MAKEFILE_LIST))"
 HERE_DIR:=$(shell dirname $(HERE_FILE))
 
-.PHONY:	doc install
+.PHONY:	all clean doc install
 
 all:
-	(cd src/usr/bin; $(MAKE))
+	(cd src/usr/bin; $(MAKE) all)
 
 clean:
 	(rm -rf doc)

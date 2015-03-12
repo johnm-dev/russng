@@ -22,6 +22,8 @@ OBJS_FORK=$(OBJS) svr-fork.o
 OBJS_PTHREAD=$(OBJS) svr-pthread.o
 LIBS=$(LIBS_PLAT)
 
+.PHONY: all clean install
+
 all: libruss.a libruss.so libruss-pthread.a libruss-pthread.so
 
 clean:
@@ -29,9 +31,9 @@ clean:
 
 install:
 	mkdir -p $(INSTALL_DIR)/usr/lib
-	(cp libruss.a $(INSTALL_DIR)/usr/lib)
+	(cp libruss.a libruss-pthread.a $(INSTALL_DIR)/usr/lib)
 	@if [ "$(UNAME_SYSTEM)" != "AIX" ]; then \
-		(cp libruss.so $(INSTALL_DIR)/usr/lib); \
+		(cp libruss.so libruss-pthread.so $(INSTALL_DIR)/usr/lib); \
 	fi
 
 libruss.a: $(SRCS_FORK)

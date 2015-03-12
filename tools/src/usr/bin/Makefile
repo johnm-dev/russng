@@ -18,7 +18,7 @@ ifndef RUSS_LIB_DIR
 	$(error "error: missing RUSS_LIB_DIR")
 endif
 
-.PHONY:	install
+.PHONY:	all clean install
 
 all:	$(BINS)
 
