@@ -9,14 +9,23 @@ HERE_DIR:=$(shell dirname $(HERE_FILE))
 export RUSS_INCLUDE_DIR:=$(HERE_DIR)/library/src/usr/include
 export RUSS_LIB_DIR:=$(HERE_DIR)/library/src/usr/lib
 
-.PHONY:	doc install
+.PHONY:	library servers tools pyruss doc install
 
-all:
+all: library servers tools pyruss doc
+
+library:
 	(cd library; $(MAKE))
-	(cd library; $(MAKE) doc)
+
+servers:
 	(cd servers; $(MAKE))
+
+tools:
 	(cd tools; $(MAKE))
+
+pyruss:
 	(cd pyruss; $(MAKE))
+
+test:
 	#(cd tests; $(MAKE))
 
 clean:

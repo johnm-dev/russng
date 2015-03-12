@@ -16,8 +16,12 @@ clean:
 
 doc:
 	# with epydoc
-	mkdir -p doc/epydoc
-	(cd doc/epydoc; epydoc $(HERE_DIR)/static/usr/lib/python/pyruss)
+	if ! which epydoc > /dev/null 2>&1; then \
+		echo "warning: epydoc not available" ; \
+	else \
+		mkdir -p doc/epydoc ; \
+		(cd doc/epydoc; epydoc $(HERE_DIR)/static/usr/lib/python/pyruss) ; \
+	fi
 
 	# with pydoc
 	#mkdir -p doc/pydoc
