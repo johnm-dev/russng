@@ -44,6 +44,7 @@ class Conf(RawConfigParser):
         args list).
         """
         RawConfigParser.__init__(self)
+        self.optionxform = lambda option: option
         args = args[:]
         while args:
             arg = args.pop(0)
