@@ -14,16 +14,40 @@
 
 RUN_DIR="/var/run/russ"
 
-case "$1" in
-start)
-	echo "Setup for standard russ servers"
+start() {
+	# ensure working directories
 	mkdir -m 0755 -p "${RUN_DIR}"
 	mkdir -m 0755 -p "${RUN_DIR}/services"
+
+	# start services
+	for name in $(ruservice list); do
+		ruservice ${name} start
+	done
+}
+
+stop() {
+	for name in $(ruservice list); do
+		ruservice ${name} stop
+	done
+}
+
+case "$1" in
+restart)
+	stop
+	sleep 1
+	start
+	;;
+start)
+	start
+	;;
+status)
+	ruservice statusall
 	;;
 stop)
+	stop
 	;;
 *)
-	echo "Usage: /etc/init.d/russ start"
+	echo "Usage: /etc/init.d/russ start|stop|restart|status"
 	exit 2
 	;;
 esac
