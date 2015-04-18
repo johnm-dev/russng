@@ -1,0 +1,159 @@
+#! /bin/bash
+#
+# ruservice
+
+ETC_DIR=/etc/russ
+RUN_DIR=/var/run/russ
+CONF_DIR=${ETC_DIR}/conf
+PID_DIR=${RUN_DIR}
+
+function getconfnames {
+	local filename name names
+
+	names=()
+	for filename in $(cd "${CONF_DIR}"; ls); do
+		name="${filename%%.conf}"
+		if [ "${name}" != "${filename}" ]; then
+			names+=("${name}")
+		fi
+	done
+	echo "${names[*]}"
+}
+
+function getpid {
+	local name pid pidpath
+
+	name=$1; shift 1
+
+	pidpath="${PID_DIR}/${name}.pid"
+	pid=$(cat "${pidpath}" 2> /dev/null) && $(kill -0 ${pid} 2> /dev/null)
+	echo "${pid}"
+}
+
+function list {
+	names=$(getconfnames)
+	if [ -n "${names}" ]; then
+		echo "${names}"
+	fi
+}
+
+function status {
+	if [ -n "$(getpid ${conf})" ]; then
+		echo "RUNNING"
+		exit 0
+	else
+		echo "NOT RUNNING"
+		exit 1
+	fi
+}
+
+function statusall {
+	names=$(getconfnames)
+	for name in ${names}; do
+		echo -n "${name} ... "
+		if [ -n "$(getpid ${name})" ]; then
+			echo "RUNNING"
+		else
+			echo "NOT RUNNING"
+		fi
+	done
+}
+
+function restart {
+	stop && sleep 1 && start
+}
+
+function start {
+	echo -n "starting server (${conf}) ... "
+	pid=$(cat "${pidpath}" 2> /dev/null) && $(kill -0 ${pid} 2> /dev/null)
+	if [ $? -eq 0 ]; then
+		echo "RUNNING"
+		exit 1
+	fi
+	rustart -f ${confpath} < /dev/null > /dev/null 2>&1 & pid=$!
+	echo ${pid} > "${pidpath}"
+	kill -0 ${pid} && echo "OK" || { echo "FAILED"; exit 1;}
+}
+
+function stop {
+	echo -n "stopping server (${conf}) ... "
+	pid=$(cat "${pidpath}" 2> /dev/null)
+	if [ $? -ne 0 ]; then
+		echo "NOT RUNNING"
+		exit 0
+	fi
+	kill ${pid} 2> /dev/null
+	[ $? -eq 0 ] && echo "OK" || echo "FAILED"
+	rm -f "${pidpath}" 2> /dev/null
+}
+
+function print_usage {
+	echo "\
+usage: $PROGNAME <conf> {start|stop|restart|status}
+       $PROGNAME list|statusall
+       $PROGNAME -h|--help|help
+
+Manage system configured RUSS servers. Configurations must be in
+${CONF_DIR}.
+
+Where:
+<conf>		Configuration name (not including .conf)"
+}
+
+PROGNAME=$(basename $0)
+
+if [ $# -eq 1 ]; then
+	conf=
+	cmd=$1; shift 1
+
+	case "${cmd}" in
+	-h|--help|help)
+		print_usage
+		exit 0
+		;;
+	list)
+		list
+		;;
+	statusall)
+		statusall
+		;;
+	*)
+		echo "error: bad/missing arguments"
+		exit 1
+		;;
+	esac
+elif [ $# -eq 2 ]; then
+	conf=$1; shift 1
+	cmd=$1; shift 1
+
+	if [ "${conf}" != "$(basename ${conf})" ]; then
+		echo "error: bad configuration name" 1>&2
+		exit 1
+	fi
+
+	confpath="${CONF_DIR}/${conf}.conf"
+	pidpath="${PID_DIR}/${conf}.pid"
+
+	if [ ! -r "${confpath}" ]; then
+		echo "error: cannot find configuration" 1>&2
+		exit 1
+	fi
+
+	case "${cmd}" in
+	status)
+		status
+		;;
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	esac
+else
+	echo "error: bad/missing arguments" 1>&2
+	exit 1
+fi
