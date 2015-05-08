@@ -149,7 +149,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	args[nargs++] = "-o";
 	args[nargs++] = "LogLevel=QUIET";
 	if (uhp_user) {
-		args[nargs++] = "-u";
+		args[nargs++] = "-l";
 		args[nargs++] = uhp_user;
 	}
 	if (uhp_port) {
