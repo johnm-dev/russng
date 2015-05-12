@@ -92,7 +92,7 @@ function stop {
 function print_usage {
 	echo "\
 usage: $PROGNAME <conf> {start|stop|restart|status}
-       $PROGNAME list|statusall
+       $PROGNAME list|status
        $PROGNAME -h|--help|help
 
 Manage system configured RUSS servers. Configurations must be in
@@ -116,7 +116,7 @@ if [ $# -eq 1 ]; then
 	list)
 		list
 		;;
-	statusall)
+	status)
 		statusall
 		;;
 	*)
