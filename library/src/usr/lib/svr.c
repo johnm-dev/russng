@@ -62,6 +62,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	self->ctime = russ_gettime();
 	self->saddr = NULL;
 	self->lisd = lisd;
+	self->closeonaccept = 0;
 	self->accepthandler = russ_sconn_accepthandler;
 	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
 	self->answerhandler = russ_sconn_answerhandler;
