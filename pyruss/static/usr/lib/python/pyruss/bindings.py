@@ -216,7 +216,7 @@ libruss.russ_cconn_close_fd.argtypes = [
 ]
 libruss.russ_cconn_close_fd.restype = ctypes.c_int
 
-libruss.russ_cconn_wait.argstypes = [
+libruss.russ_cconn_wait.argtypes = [
     ctypes.POINTER(russ_cconn_Structure),
     russ_deadline,
     ctypes.POINTER(ctypes.c_int),
