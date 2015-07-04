@@ -44,37 +44,12 @@
 int
 russ_dprintf(int fd, const char *format, ...) {
 	va_list	ap;
-	char	_buf[8192];
-	char	*buf;
-	int	n, bufsz;
+	int	rv;
 
-	buf = _buf;
-	bufsz = sizeof(_buf);
-	while (1) {
-		va_start(ap, format);
-		n = vsnprintf(buf, bufsz, format, ap);
-		va_end(ap);
-		if (n < 0) {
-			goto free_buf;
-		} else if (n < bufsz) {
-			break;
-		}
-
-		/* allocate */
-		bufsz = n+1; /* include \0 */
-		if ((buf = malloc(bufsz)) == NULL) {
-			goto free_buf;
-		}
-	}
-	if (russ_writen(fd, buf, n) < n) {
-		n = -1;
-	}
-	/* fallthrough */
-free_buf:
-	if (buf != _buf) {
-		buf = russ_free(buf);
-	}
-	return n;
+	va_start(ap, format);
+	rv = russ_vdprintf(fd, format, ap);
+	va_end(ap);
+	return rv;
 }
 
 /**
@@ -236,6 +211,50 @@ russ_user2uid(char *user) {
 		uid = ((pw = getpwnam(user)) == NULL) ? -1 : pw->pw_uid;
 	}
 	return (uid >= 0) ? uid : -1;
+}
+
+/**
+* va_list-based fprintf-like for descriptor instead of FILE *.
+*
+* @param fd		descriptor
+* @param format		printf-style format string
+* @param ap		va_list of arguments
+* @return		# of bytes written; -1 on error
+*/
+int
+russ_vdprintf(int fd, const char *format, va_list ap) {
+	va_list	aq;
+	char	_buf[8192];
+	char	*buf;
+	int	n, bufsz;
+
+	buf = _buf;
+	bufsz = sizeof(_buf);
+	while (1) {
+		va_copy(aq, ap);
+		n = vsnprintf(buf, bufsz, format, aq);
+		va_end(aq);
+		if (n < 0) {
+			goto free_buf;
+		} else if (n < bufsz) {
+			break;
+		}
+
+		/* allocate */
+		bufsz = n+1; /* include \0 */
+		if ((buf = malloc(bufsz)) == NULL) {
+			goto free_buf;
+		}
+	}
+	if (russ_writen(fd, buf, n) < n) {
+		n = -1;
+	}
+	/* fallthrough */
+free_buf:
+	if (buf != _buf) {
+		buf = russ_free(buf);
+	}
+	return n;
 }
 
 /**
