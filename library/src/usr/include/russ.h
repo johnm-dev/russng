@@ -294,6 +294,7 @@ ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
 /* misc.c */
 int russ_dprintf(int, const char *, ...);
 void *russ_free(void *);
+int russ_lprintf(const char *, const char *, const char *, ...);
 void *russ_malloc(size_t);
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
 int russ_unlink(const char *);

@@ -22,13 +22,16 @@
 # license--end
 */
 
+#include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "russ_priv.h"
@@ -86,6 +89,43 @@ russ_group2gid(char *group) {
 		gid = ((gr = getgrnam(group)) == NULL) ? -1 : gr->gr_gid;
 	}
 	return (gid >= 0) ? gid : -1;
+}
+
+/**
+* fprintf-like for filename instead of FILE *.
+*
+* @param path		filename
+* @param dformat	strftime-style format string
+* @param format		printf-style format string
+* @param ...		variadic list of arguments
+* @return		# of bytes written; -1 on error
+*/
+int
+russ_lprintf(const char *path, const char *dformat, const char *format, ...) {
+	va_list	ap;
+	FILE	*f;
+	int	rv;
+
+	if ((f = fopen(path, "a")) == NULL) {
+		return -1;
+	}
+	if (dformat) {
+		char		buf[128];
+		time_t		t;
+		struct tm	*tm;
+
+		t = time(NULL);
+		tm = localtime(&t);
+		if (strftime(buf, sizeof(buf), dformat, tm)) {
+			fprintf(f, "%s", buf);
+		}
+	}
+	va_start(ap, format);
+	rv = vfprintf(f, format, ap);
+	va_end(ap);
+	fflush(f);
+	fclose(f);
+	return rv;
 }
 
 /**
