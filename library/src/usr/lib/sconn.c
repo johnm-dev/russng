@@ -64,8 +64,9 @@ russ_sconn_new(void) {
 	sconn->creds.pid = -1;
 	sconn->creds.uid = -1;
 	sconn->creds.gid = -1;
-	sconn->sd = -1;
+	russ_fds_init(sconn->sysfds, RUSS_CONN_NSYSFDS, -1);
 	russ_fds_init(sconn->fds, RUSS_CONN_NFDS, -1);
+	sconn->sd = -1;
 
 	return sconn;
 }
