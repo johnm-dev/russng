@@ -61,8 +61,8 @@ russ_relaystream_init(struct russ_relaystream *self, int rfd, int wfd, int bufsi
 	/* stats */
 	self->rlast = 0;
 	self->wlast = 0;
-	self->nrbytes;
-	self->nwbytes;
+	self->nrbytes = 0;
+	self->nwbytes = 0;
 	self->nreads = 0;
 	self->nwrites = 0;
 
@@ -124,8 +124,8 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int closeonexit, russ_relays
 	/* stats */
 	self->rlast = 0;
 	self->wlast = 0;
-	self->nrbytes;
-	self->nwbytes;
+	self->nrbytes = 0;
+	self->nwbytes = 0;
 	self->nreads = 0;
 	self->nwrites = 0;
 
