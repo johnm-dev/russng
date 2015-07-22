@@ -6,7 +6,8 @@
 include ../../../../Makefile.inc
 
 BINS=rusrv_debug rusrv_exec rusrv_proc rusrv_pnet \
-	rusrv_set rusrv_ssh rusrv_super rusrv_tee
+	rusrv_redir rusrv_set rusrv_ssh \
+	rusrv_super rusrv_tee
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
@@ -40,6 +41,9 @@ rusrv_proc:	rusrv_proc.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 rusrv_pnet:	rusrv_pnet.c
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
+
+rusrv_redir:	rusrv_redir.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 rusrv_set:	rusrv_set.c
