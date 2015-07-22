@@ -90,6 +90,18 @@ russ_dialv_wait(russ_deadline deadline, const char *op, const char *spath, char 
 }
 
 /**
+* Timeout-based helper corresponding to russ_dialv_wait.
+*
+* @param timeout	timeout value
+*
+* @see russ_dialv_wait()
+*/
+int
+russ_dialv_wait_timeout(int timeout, const char *op, const char *spath, char **attrv, char **argv, int *exitst) {
+	return russ_dialv_wait(russ_to_deadline(timeout), op, spath, attrv, argv, exitst);
+}
+
+/**
 * Helper to dial, auto perform I/O, and get exit value all in one.
 * An object with the I/O data and exit value is returned.
 *
@@ -182,6 +194,19 @@ close_fd:
 	}
 	russ_cconn_close(cconn);
 	return wrv;
+}
+
+/**
+* Timeout-based helper corresponding to russ_dialv_wait_inouterr.
+*
+* @param timeout	timeout value
+*
+* @see russ_dialv_wait_inouterr()
+*/
+int
+russ_dialv_wait_inouterr_timeout(int timeout, const char *op, const char *spath, char **attrv, char **argv,
+	int *exitst, struct russ_buf **rbufs) {
+	return russ_dialv_wait_inouterr(russ_to_deadline(timeout), op, spath, attrv, argv, exitst, rbufs);
 }
 
 /**

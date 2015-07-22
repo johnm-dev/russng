@@ -270,7 +270,9 @@ struct russ_cconn *russ_diall(russ_deadline, const char *, const char *, char **
 
 /* helpers.c */
 int russ_dialv_wait(russ_deadline, const char *, const char *, char **, char **, int *);
+int russ_dialv_wait_timeout(int, const char *, const char *, char **, char **, int *);
 int russ_dialv_wait_inouterr(russ_deadline, const char *, const char *, char **, char **, int *, struct russ_buf **);
+int russ_dialv_wait_inouterr_timeout(int, const char *, const char *, char **, char **, int *, struct russ_buf **);
 int russ_dialv_wait_inouterr3(russ_deadline, const char *, const char *, char **, char **, int *, struct russ_buf *, struct russ_buf *, struct russ_buf *);
 struct russ_cconn *russ_execv(russ_deadline, const char *, char **, char **);
 struct russ_cconn *russ_execl(russ_deadline, const char *, char **, ...);
