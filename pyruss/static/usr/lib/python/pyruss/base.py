@@ -87,6 +87,9 @@ def dialv_wait(deadline, op, spath, attrs=None, args=None):
     rv = libruss.russ_dialv_wait(deadline, op, spath, c_attrs, c_argv, ctypes.byref(exitst))
     return rv, int(exitst.value)
 
+def dialv_wait_timeout(timeout, op, spath, attrs=None, args=None):
+    return dialv_wait(to_deadline(timeout), op, spath, attrs, args)
+
 def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
     """Convenience function.
     """
@@ -122,6 +125,9 @@ def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, 
         libruss.russ_buf_free(rbufs[i])
 
     return rv, int(exitst.value), stdout, stderr
+
+def dialv_wait_inouterr_timeout(timeout, op, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
+    return dialv_wait_inouterr(to_deadline(timeout), op, spath, attrs, args, stdin, stdout_size, stderr_size)
 
 def execv(deadline, spath, attrs=None, args=None):
     """ruexec a service.
