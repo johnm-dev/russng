@@ -37,6 +37,211 @@
 #include "russ_priv.h"
 
 /**
+* accept() with automatic restart on EINTR.
+*
+* @param sd		socket descriptor
+* @param addr		socket address structure
+* @param addrlen[in,out]	socket address structure length
+* @param deadline	deadline to complete operation
+* @return		value as returned from accept; -1 on failure
+*/
+int
+russ_accept_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, socklen_t *addrlen) {
+	struct pollfd	pollfds[1];
+	int		rv;
+
+#if 0
+	/* catch fd<0 before calling into poll() */
+	if (sd < 0) {
+		return -1;
+	}
+#endif
+
+	pollfds[0].fd = sd;
+	pollfds[0].events = POLLIN;
+	while (1) {
+#if 0
+		if ((rv = poll(pollfds, 1, russ_to_timeout(deadline))) > 0) {
+			return accept(sd, addr, addrlen);
+		} else if (rv == 0) {
+			errno = 0; /* reset */
+			return -1;
+		} else if (errno != EINTR) {
+			return -1;
+		}
+#endif
+		if (((rv = accept(sd, addr, addrlen)) >= 0)
+			|| (errno != EINTR)) {
+			return rv;
+		}
+	}
+}
+
+/**
+* Announce service as a socket file.
+*
+* If the address already exists (EADDRINUSE), then we check to see
+* if anything is actually using it. If not, we remove it and try to
+* set it up. If the address cannot be "bind"ed, then we exit with
+* NULL.
+*
+* The only way to claim an address that is in use it to forcibly
+* remove it from the filesystem first (unlink), then call here.
+*
+* @param saddr		socket address
+* @param mode		file mode of path
+* @param uid		owner of path
+* @param gid		group owner of path
+* @return		listener socket descriptor
+*/
+int
+russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
+	struct sockaddr_un	servaddr;
+	int			lisd;
+
+	if ((saddr == NULL) || ((saddr = russ_spath_resolve(saddr)) == NULL)) {
+		return -1;
+	}
+
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sun_family = AF_UNIX;
+	strcpy(servaddr.sun_path, saddr);
+	if ((lisd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		goto free_saddr;
+	}
+	if (bind(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+		if ((errno == EADDRINUSE)
+			&& (connect(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
+			/* is something listening? */
+			if (errno != ECONNREFUSED) {
+				goto close_lisd;
+			} else if ((unlink(saddr) < 0)
+				|| (bind(lisd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)) {
+				goto close_lisd;
+			}
+		} else {
+			goto close_lisd;
+		}
+	}
+	if ((chmod(saddr, mode) < 0)
+		|| (chown(saddr, uid, gid) < 0)
+		|| (listen(lisd, RUSS_LISTEN_BACKLOG) < 0)) {
+		goto close_lisd;
+	}
+	saddr = russ_free(saddr);
+	return lisd;
+
+close_lisd:
+	russ_close(lisd);
+free_saddr:
+	saddr = russ_free(saddr);
+	return -1;
+}
+
+/**
+* connect() with automatic restart on EINTR.
+*
+* @param deadline	deadline to complete operation
+* @param sd		socket descriptor
+* @param addr		sockaddr structure
+* @param addrlen	sockaddr structure length
+* @return		0 on success; -1 on error
+*/
+int
+russ_connect_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, socklen_t addrlen) {
+	struct pollfd		pollfds[1];
+	int			flags;
+
+	/* catch fd<0 before calling into poll() */
+	if (sd < 0) {
+		return -1;
+	}
+
+	/* save and set non-blocking */
+	if (((flags = fcntl(sd, F_GETFL)) < 0)
+		|| (fcntl(sd, F_SETFL, flags|O_NONBLOCK) < 0)) {
+		return -1;
+	}
+	if (connect(sd, addr, addrlen) < 0) {
+		if ((errno == EINTR) || (errno == EINPROGRESS)) {
+			pollfds[0].fd = sd;
+			pollfds[0].events = POLLIN;
+			if (russ_poll_deadline(deadline, pollfds, 1) < 0) {
+				return -1;
+			}
+		}
+	}
+	/* restore */
+	if (fcntl(sd, F_SETFL, flags) < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+/**
+* Special connect() for AF_UNIX socket, SOCK_STREAM, with automatic
+* restart on EINTR, wait for EINPROGRESS, and retry on EAGAIN.
+*
+* @param deadline	deadline to complete operation
+* @param path		path to socket file
+* @return		socket descriptor; -1 on error
+*/
+int
+russ_connectunix_deadline(russ_deadline deadline, char *path) {
+	struct sockaddr_un	servaddr;
+	socklen_t		addrlen;
+	struct pollfd		pollfds[1];
+	int			flags, sd;
+
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sun_family = AF_UNIX;
+	if (strlen(path) >= sizeof(servaddr.sun_path)) {
+		return -1;
+	}
+	strcpy(servaddr.sun_path, path);
+
+retry:
+	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		return -1;
+	}
+
+	/* set to non-blocking */
+	if (((flags = fcntl(sd, F_GETFL)) < 0)
+		|| (fcntl(sd, F_SETFL, flags|O_NONBLOCK) < 0)) {
+		goto cleanup;
+	}
+
+	if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+		if ((errno == EINTR) || (errno == EINPROGRESS) || (errno == EAGAIN)) {
+			pollfds[0].fd = sd;
+			pollfds[0].events = POLLIN;
+			if (russ_poll_deadline(deadline, pollfds, 1) < 0) {
+				goto cleanup;
+			}
+			if (errno == EAGAIN) {
+				/* SUSv3: close and retry */
+				close(sd);
+				goto retry;
+			}
+		} else {
+			goto cleanup;
+		}
+	}
+
+	/* restore blocking */
+	if (fcntl(sd, F_SETFL, flags) < 0) {
+		goto cleanup;
+	}
+	return sd;
+
+cleanup:
+	if (sd >= 0) {
+		close(sd);
+	}
+	return -1;
+}
+
+/**
 * Get credentials from socket file.
 *
 * Supports:
@@ -183,4 +388,25 @@ russ_send_fd(int sd, int fd) {
 	((int *)CMSG_DATA(cmsgh))[0] = fd;
 
 	return sendmsg(sd, &msgh, 0);
+}
+
+/**
+* Unlink/remove an existing socket file.
+*
+* Resolves the address and unlinks the file.
+*
+* @param saddr		socket address
+* @return		0 on success; -1 on failure
+*/
+int
+russ_unlink(const char *saddr) {
+	if ((saddr = russ_spath_resolve(saddr)) == NULL) {
+		return -1;
+	}
+	if (unlink(saddr) < 0) {
+		saddr = russ_free((char *)saddr);
+		return -1;
+	}
+	saddr = russ_free((char *)saddr);
+	return 0;
 }

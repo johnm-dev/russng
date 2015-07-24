@@ -71,29 +71,27 @@ char *russ_enc_exit(char *, char *, int);
 char *russ_enc_req(char *, char *, struct russ_req *);
 
 /* fd.c */
+int russ_test_fd(int, int);
 void russ_fds_init(int *, int, int);
 void russ_fds_close(int *, int);
 int russ_make_pipes(int, int *, int *);
-
-/* io.c */
-int russ_accept_deadline(russ_deadline, int, struct sockaddr *, socklen_t *);
-int russ_connect_deadline(russ_deadline, int sd, struct sockaddr *, socklen_t);
-int russ_connectunix_deadline(russ_deadline, char *);
 int russ_poll_deadline(russ_deadline, struct pollfd *, int);
-
-/* misc.c */
-gid_t russ_group2gid(char *);
-int russ_test_fd(int, int);
-uid_t russ_user2uid(char *);
 
 /* req.c */
 struct russ_req *russ_req_new(const char *, const char *, const char *, char **, char **);
 struct russ_req *russ_req_free(struct russ_req *);
 
 /* socket.c */
+int russ_accept_deadline(russ_deadline, int, struct sockaddr *, socklen_t *);
+int russ_connect_deadline(russ_deadline, int, struct sockaddr *, socklen_t);
+int russ_connectunix_deadline(russ_deadline, char *);
 int russ_get_creds(int, struct russ_creds *);
 int russ_recv_fd(int, int *);
 int russ_send_fd(int, int);
+
+/* user.c */
+gid_t russ_group2gid(char *);
+uid_t russ_user2uid(char *);
 
 #ifdef __cplusplus
 }

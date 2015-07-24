@@ -268,6 +268,15 @@ int russ_cconn_wait(struct russ_cconn *, russ_deadline, int *);
 struct russ_cconn *russ_dialv(russ_deadline, const char *, const char *, char **, char **);
 struct russ_cconn *russ_diall(russ_deadline, const char *, const char *, char **, ...);
 
+/* fd.c */
+int russ_close(int);
+ssize_t russ_read(int, void *, size_t);
+ssize_t russ_readline(int, void *, size_t);
+ssize_t russ_readn(int, void *, size_t);
+ssize_t russ_readn_deadline(russ_deadline, int, void *, size_t);
+ssize_t russ_writen(int, void *, size_t);
+ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
+
 /* helpers.c */
 int russ_dialv_wait(russ_deadline, const char *, const char *, char **, char **, int *);
 int russ_dialv_wait_timeout(int, const char *, const char *, char **, char **, int *);
@@ -284,23 +293,15 @@ int russ_start(int, char **);
 int russ_startl(char *, ...);
 
 /* io.c */
-int russ_announce(char *, mode_t, uid_t, gid_t);
-int russ_close(int);
-ssize_t russ_read(int, void *, size_t);
-ssize_t russ_readline(int, void *, size_t);
-ssize_t russ_readn(int, void *, size_t);
-ssize_t russ_readn_deadline(russ_deadline, int, void *, size_t);
-ssize_t russ_writen(int, void *, size_t);
-ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
+int russ_dprintf(int, const char *, ...);
+int russ_lprintf(const char *, const char *, const char *, ...);
+int russ_vdprintf(int, const char *, va_list);
+
+/* memory.c */
+void *russ_free(void *);
+void *russ_malloc(size_t);
 
 /* misc.c */
-int russ_dprintf(int, const char *, ...);
-void *russ_free(void *);
-int russ_lprintf(const char *, const char *, const char *, ...);
-void *russ_malloc(size_t);
-int russ_switch_user(uid_t, gid_t, int, gid_t *);
-int russ_unlink(const char *);
-int russ_vdprintf(int, const char *, va_list);
 int russ_write_exit(int, int);
 
 /* optable.c */
@@ -317,8 +318,6 @@ int russ_relay_find(struct russ_relay *, int, int);
 int russ_relay_remove(struct russ_relay *, int, int);
 int russ_relay_poll(struct russ_relay *, int);
 int russ_relay_serve(struct russ_relay *, int, int);
-
-/* req.c */
 
 /* sarray0.c */
 char **russ_sarray0_free(char **);
@@ -342,6 +341,10 @@ int russ_sconn_fatal(struct russ_sconn *, const char *, int);
 int russ_sconn_redialandsplice(struct russ_sconn *, russ_deadline, struct russ_req *);
 int russ_sconn_send_fds(struct russ_sconn *, int, int *);
 int russ_sconn_splice(struct russ_sconn *, struct russ_cconn *);
+
+/* socket.c */
+int russ_announce(char *, mode_t, uid_t, gid_t);
+int russ_unlink(const char *);
 
 /* spath.c */
 int russ_spath_split(const char *, char **, char **);
@@ -382,6 +385,9 @@ russ_deadline russ_gettime(void); /* internal */
 russ_deadline russ_to_deadline(int);
 russ_deadline russ_to_deadlinediff(russ_deadline);
 int russ_to_timeout(russ_deadline);
+
+/* user.c */
+int russ_switch_user(uid_t, gid_t, int, gid_t *);
 
 #ifdef __cplusplus
 }

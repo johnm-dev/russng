@@ -1,5 +1,5 @@
 /*
-* lib/misc.c
+* lib/memory.c
 */
 
 /*
@@ -24,23 +24,30 @@
 
 #include <stdlib.h>
 
-#include "russ_priv.h"
+/**
+* Free memory _and_ return NULL.
+*
+* This consolidates into one call the good practice of resetting
+* a pointer to NULL after free().
+*
+* @param p		pointer to malloc'd memory
+* @return		NULL
+*/
+void *
+russ_free(void *p) {
+	free(p);
+	return NULL;
+}
 
 /**
-* Write an (encoded) exit status to an fd.
+* Wrapper for malloc to support 0-sized malloc requests
+* (see AIX malloc()).
 *
-* @param fd		file descriptor (presumably the exit fd)
-* @param exitst		exit status to encode and write
-* @return		0 on success; -1 on failure
-*
+* @param size		number of bytes
+* @return		pointer to allocated memory
 */
-int
-russ_write_exit(int fd, int exitst) {
-	char	buf[16], *bp;
-
-	if (((bp = russ_enc_exit(buf, buf+sizeof(buf), exitst)) == NULL)
-		|| (russ_writen(fd, buf, bp-buf) < bp-buf)) {
-		return -1;
-	}
-	return 0;
+void *
+russ_malloc(size_t size) {
+	size = (size == 0) ? 1 : size;
+	return malloc(size);
 }
