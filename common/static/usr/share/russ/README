@@ -1,4 +1,4 @@
-RUSS is a framework for building services over domain/UNIX socket.
+RUSS is a framework and protocol for building services over domain/UNIX socket.
 
 Components:
 * documentation
@@ -7,5 +7,5 @@ Components:
 * tools
 
 Author: John Marshall
-Web:    http://russng.org/
+Web:    https://expl.info/display/RUSS
 Groups: http://groups.google.com/group/russng-users
