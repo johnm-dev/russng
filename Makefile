@@ -11,7 +11,7 @@ export RUSS_LIB_DIR:=$(HERE_DIR)/library/src/usr/lib
 
 .PHONY:	library servers tools pyruss doc install
 
-all: library servers tools pyruss doc
+all: library servers tools pyruss
 
 library:
 	(cd library; $(MAKE))
