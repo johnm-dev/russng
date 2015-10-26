@@ -140,13 +140,20 @@ def gettime():
     return libruss.russ_gettime()
 
 def switch_user(uid, gid, gids):
-    """Change process uid/gid.
+    """Change process uid/gid/supplemental gids.
+
+    See also switch_userinitgroups().
     """
     if gids:
         _gids = (ctypes.c_int*len(gids))(gids)
     else:
         _gids = None
     return libruss.russ_switch_user(uid, gid, len(gids), _gids)
+
+def switch_userinitgroups(uid, gid):
+    """Change process uid/gid/supplemental gids; use initgroups().
+    """
+    return libruss.russ_switch_userinitgroups(uid, gid)
 
 def to_deadline(timeout):
     """Convert timeout (ms) to deadline.

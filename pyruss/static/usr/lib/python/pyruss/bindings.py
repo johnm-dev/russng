@@ -275,6 +275,12 @@ libruss.russ_switch_user.argtypes = [
 ]
 libruss.russ_switch_user.restype = ctypes.c_int
 
+libruss.russ_switch_userinitgroups.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+]
+libruss.russ_switch_userinitgroups.restype = ctypes.c_int
+
 libruss.russ_unlink.argtypes = [
     ctypes.c_char_p,
 ]
