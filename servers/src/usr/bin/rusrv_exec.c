@@ -355,7 +355,7 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
-	if (russ_switch_user(sconn->creds.uid, sconn->creds.gid, 0, NULL) < 0) {
+	if (russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0) {
 		russ_sconn_fatal(sconn, "error: cannot set up", RUSS_EXIT_FAILURE);
 		return;
 	}

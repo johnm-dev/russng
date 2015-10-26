@@ -391,7 +391,7 @@ russ_sconn_redialandsplice(struct russ_sconn *self, russ_deadline deadline, stru
 	struct russ_cconn	*cconn;
 
 	/* switch user */
-	if (russ_switch_user(self->creds.uid, self->creds.gid, 0, NULL) < 0) {
+	if (russ_switch_userinitgroups(self->creds.uid, self->creds.gid) < 0) {
 		russ_sconn_answerhandler(self);
 		russ_sconn_fatal(self, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 		return -1;

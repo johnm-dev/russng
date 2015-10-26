@@ -86,7 +86,7 @@ switch_user(struct russ_sconn *sconn) {
 	}
 
 	/* switch user */
-	if (russ_switch_user(uid, gid, 0, NULL) < 0) {
+	if (russ_switch_userinitgroups(uid, gid) < 0) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
