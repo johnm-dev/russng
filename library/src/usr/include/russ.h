@@ -388,6 +388,7 @@ int russ_to_timeout(russ_deadline);
 
 /* user.c */
 int russ_switch_user(uid_t, gid_t, int, gid_t *);
+int russ_switch_userinitgroups(uid_t, gid_t);
 
 #ifdef __cplusplus
 }

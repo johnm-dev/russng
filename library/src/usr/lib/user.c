@@ -53,29 +53,32 @@ russ_group2gid(char *group) {
 }
 
 /**
-* Switch user (uid, gid, supplemental groups).
+* Base switch user (uid, gid, supplemental groups).
 *
-* This will succeed for non-root trying to setuid/setgid to own
-* credentials (a noop and gids is ignored). As root, this should
-* always succeed.
-*
-* Supplemental groups require attention so that root supplemental
-* group entry of 0 does not get carried over. No supplemental
-* group information is set up (only erased).
+* If doinitgroups is non-zero, initgroups() is called to set the
+* supplemental groups apart from the gids provided. Otherwise, the
+* gids provided (if any) are used.
 *
 * @param uid		user id
 * @param gid		group id
 * @param ngids		number of supplemental groups in list
 * @param gids		list of supplemental gids
+* @param doinitgroups	flag to use (non-zero) initgroups() to set
+*			supplemental groups
 * @return		0 on success; -1 on failure
 */
-int
-russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
-	gid_t	_gid, *_gids;
-	int	_ngids;
+static int
+_russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids, int doinitgroups) {
+	struct passwd	*pw;
+	uid_t		_uid;
+	gid_t		_gid, *_gids;
+	int		_ngids;
 
-	if ((uid == getuid()) && (gid == getgid())) {
-	    return 0;
+	_uid = getuid();
+	_gid = getgid();
+
+	if ((uid == _uid) && (gid == _gid)) {
+		return 0;
 	}
 
 	/* save settings */
@@ -85,13 +88,25 @@ russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
 	if (((_ngids = getgroups(0, NULL)) < 0)
 		|| ((_gids = malloc(sizeof(gid_t)*_ngids)) == NULL)
 		|| (getgroups(_ngids, _gids) < 0)) {
+		if (_gids) {
+			_gids = russ_free(_gids);
+		}
 		return -1;
 	}
 
-	if ((setgroups(ngids, gids) < 0)
-		|| (setgid(gid) < 0)
-		|| (setuid(uid) < 0)) {
-		goto restore;
+	if (doinitgroups) {
+		if (((pw = getpwuid(uid)) == NULL)
+			|| (initgroups(pw->pw_name, gid) < 0)
+			|| (setgid(gid) < 0)
+			|| (setuid(uid) < 0)) {
+			goto restore;
+		}
+	} else {
+		if ((setgroups(ngids, gids) < 0)
+			|| (setgid(gid) < 0)
+			|| (setuid(uid) < 0)) {
+			goto restore;
+		}
 	}
 	_gids = russ_free(_gids);
 	return 0;
@@ -102,6 +117,45 @@ restore:
 	setgid(_gid);
 	/* no need to restore uid */
 	return -1;
+}
+
+/**
+* Switch user (uid, gid, supplemental groups).
+*
+* This will succeed for non-root trying to setuid/setgid to own
+* credentials (a noop and gids is ignored). As root, this should
+* always succeed.
+*
+* Supplemental groups require attention so that root supplemental
+* group entry of 0 does not get carried over. No supplemental
+* group information is set up (only erased).
+*
+* @see russ_switch_userinitgroups().
+*
+* @param uid		user id
+* @param gid		group id
+* @param ngids		number of supplemental groups in list
+* @param gids		list of supplemental gids
+* @return		0 on success; -1 on failure
+*/
+int
+russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids) {
+	return _russ_switch_user(uid, gid, ngids, gids, 0);
+}
+
+/**
+* Switch user (uid, gid) and initialize supplemental groups.
+*
+* Like russ_switch_user() but with supplemental groups obtained from
+* the system.
+*
+* @param uid		user id
+* @param gid		group id
+* @return		0 on success; -1 on failure
+*/
+int
+russ_switch_userinitgroups(uid_t uid, gid_t gid) {
+	return _russ_switch_user(uid, gid, 0, NULL, 1);
 }
 
 /**
