@@ -65,6 +65,7 @@ russ_svr_loop_fork(struct russ_svr *self) {
 
 			russ_fds_close(&self->lisd, 1);
 			if (fork() == 0) {
+				setsid();
 				signal(SIGHUP, sigh);
 
 				russ_svr_handler(self, sconn);
