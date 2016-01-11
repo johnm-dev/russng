@@ -29,6 +29,8 @@
 
 #include "russ_priv.h"
 
+typedef void (*sighandler_t)(int);
+
 /**
 * Server loop for forking servers.
 *
@@ -37,6 +39,7 @@
 void
 russ_svr_loop_fork(struct russ_svr *self) {
 	struct russ_sconn	*sconn;
+	sighandler_t		sigh;
 	pid_t			pid, wpid;
 	int			wst;
 
@@ -58,10 +61,12 @@ russ_svr_loop_fork(struct russ_svr *self) {
 		}
 		if ((pid = fork()) == 0) {
 			setsid();
-			signal(SIGHUP, SIG_IGN);
+			sigh = signal(SIGHUP, SIG_IGN);
 
 			russ_fds_close(&self->lisd, 1);
 			if (fork() == 0) {
+				signal(SIGHUP, sigh);
+
 				russ_svr_handler(self, sconn);
 
 				/* failsafe exit info (if not provided) */
