@@ -14,4 +14,5 @@ services over domain/UNIX sockets.
 
 * Author: John Marshall
 * Groups: http://groups.google.com/group/russ-users
+* Repository: https://bitbucket.org/russng/russng
 * Web: https://expl.info/display/RUSS
