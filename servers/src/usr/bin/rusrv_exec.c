@@ -394,6 +394,7 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 			(dup2(sconn->fds[1], 1) >= 0) &&
 			(dup2(sconn->fds[2], 2) >= 0)) {
 
+			setsid();
 			chdir(cwd);
 			russ_sconn_close(sconn);
 			execve(cmd, argv, envp2);
