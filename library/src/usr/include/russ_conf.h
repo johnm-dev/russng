@@ -57,6 +57,7 @@ struct russ_conf *russ_conf_load(int *, char **);
 struct russ_conf *russ_conf_init(int *, char **);
 
 int russ_conf_add_section(struct russ_conf *, const char *);
+int russ_conf_dup_section(struct russ_conf *, const char *, const char *);
 int russ_conf_has_section(struct russ_conf *, const char *);
 int russ_conf_has_option(struct russ_conf *, const char *, const char *);
 

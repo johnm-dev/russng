@@ -418,6 +418,40 @@ russ_conf_add_section(struct russ_conf *self, const char *section_name) {
 }
 
 /**
+* Duplicate all options and values from one section to another.
+* Existing items in the destination section will be overwritten.
+*
+* @param self		russ_conf object
+* @param src_section_name
+*			source section name
+* @param dst_section_name
+*			destination section name
+* @return		0 on success; -1 on failure
+*/
+int
+russ_conf_dup_section(struct russ_conf *self, const char *src_section_name, const char *dst_section_name) {
+	struct russ_confsection	*section;
+	struct russ_confitem	*item;
+	int			i;
+
+	if ((section = __russ_conf_find_section(self, src_section_name)) == NULL) {
+		return 0;
+	}
+	if (__russ_conf_find_section(self, dst_section_name) == NULL) {
+		if (russ_conf_add_section(self, dst_section_name) < 0) {
+			return -1;
+		}
+	}
+	for (i = 0; i < section->len; i++) {
+		item = section->items[i];
+		if (russ_conf_set(self, dst_section_name, item->option, item->value) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+/**
 * Test that section exists.
 *
 * @param self		russ_conf object
