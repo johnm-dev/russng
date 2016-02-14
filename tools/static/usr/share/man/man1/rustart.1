@@ -19,7 +19,7 @@ Where:
 .TP
 .B -c <name>=<value>
 Set an attribute. The name is composed of a section name and an
-attribute name separated by a ":" (e.g., server:addr=+/debug).
+attribute name separated by a ":" (e.g., main:addr=+/debug).
 
 .TP
 .B -f <path>
@@ -30,10 +30,10 @@ Load a configuration file.
 The configuration file uses an INI-style with multiple sections
 containing simple name=value attributes.
 
-Only the server section is used by rustart. Supported attributes
+Only the main section is used by rustart. Supported attributes
 are:
 
-.SS Basic Server Sectin Attributes
+.SS Basic main Section Attributes
 
 .TP
 .B addr=<address>
@@ -69,7 +69,7 @@ Path to the server executable to be started.
 The user under which the server should run. Default is that of the
 calling user. Be very careful.
 
-.SS Other Server Section Attributes
+.SS Other main Section Attributes
 
 .TP
 .B hide_conf=0|1
@@ -86,7 +86,7 @@ The debug.conf file typically looks like:
 
 .RS
 .nf
-[server]
+[main]
 path=/usr/bin/rusrv_debug
 addr=+/debug
 file_mode=0777

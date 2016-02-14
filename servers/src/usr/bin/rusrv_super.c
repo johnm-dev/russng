@@ -68,11 +68,11 @@ start_server(char *svrname) {
 	if ((sprintf(lockpath, "%s/.lock.%s", trackdir, svrname+1) < 0)
 		|| (sprintf(pidpath, "%s/.pid.%s", trackdir, svrname+1) < 0)
 		|| (sprintf(sockpath, "%s/%s", trackdir, svrname+1) < 0)
-		|| (sprintf(serveraddr, "server:addr=%s", sockpath) < 0)) {
+		|| (sprintf(serveraddr, "main:addr=%s", sockpath) < 0)) {
 		return -1;
 	}
 	if (((execfile = russ_conf_get(conf, svrname, "execfile", NULL)) != NULL)
-		&& (sprintf(serverpath, "server:path=%s", execfile) < 0)) {
+		&& (sprintf(serverpath, "main:path=%s", execfile) < 0)) {
 		goto error;
 	}
 	if (((conffile = russ_conf_get(conf, svrname, "conffile", NULL)) == NULL)
@@ -169,7 +169,7 @@ setup_announce_paths(void) {
 	char	**sections, *section;
 	int	cnt = 0, i, n;
 
-	superpath = russ_conf_get(conf, "server", "path", NULL);
+	superpath = russ_conf_get(conf, "main", "path", NULL);
 	if ((sections = russ_conf_sections(conf)) == NULL) {
 		return -1;
 	}

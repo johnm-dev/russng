@@ -313,8 +313,8 @@ russ_init(struct russ_conf *conf) {
 	if (conf == NULL) {
 		return NULL;
 	}
-	sd = (int)russ_conf_getint(conf, "server", "sd", RUSS_SVR_LIS_SD_DEFAULT);
-	closeonaccept = (int)russ_conf_getint(conf, "server", "closeonaccept", 0);
+	sd = (int)russ_conf_getint(conf, "main", "sd", RUSS_SVR_LIS_SD_DEFAULT);
+	closeonaccept = (int)russ_conf_getint(conf, "main", "closeonaccept", 0);
 	if (((root = russ_svcnode_new("", NULL)) == NULL)
 		|| ((svr = russ_svr_new(root, 0, sd)) == NULL)
 		|| (russ_svr_set_closeonaccept(svr, closeonaccept) < 0)) {
@@ -361,18 +361,18 @@ russ_start(int argc, char **argv) {
 	}
 
 	/* get settings */
-	path = russ_conf_get(conf, "server", "path", NULL);
-	addr = russ_conf_get(conf, "server", "addr", NULL);
-	file_mode = russ_conf_getsint(conf, "server", "file_mode", 0666);
-	file_uid = (file_user = russ_conf_get(conf, "server", "file_user", NULL)) \
+	path = russ_conf_get(conf, "main", "path", NULL);
+	addr = russ_conf_get(conf, "main", "addr", NULL);
+	file_mode = russ_conf_getsint(conf, "main", "file_mode", 0666);
+	file_uid = (file_user = russ_conf_get(conf, "main", "file_user", NULL)) \
 		? russ_user2uid(file_user) : getuid();
-	file_gid = (file_group = russ_conf_get(conf, "server", "file_group", NULL)) \
+	file_gid = (file_group = russ_conf_get(conf, "main", "file_group", NULL)) \
 		? russ_group2gid(file_group) : getgid();
-	uid = (user = russ_conf_get(conf, "server", "user", NULL)) \
+	uid = (user = russ_conf_get(conf, "main", "user", NULL)) \
 		? russ_user2uid(user) : getuid();
-	gid = (group = russ_conf_get(conf, "server", "group", NULL)) \
+	gid = (group = russ_conf_get(conf, "main", "group", NULL)) \
 		? russ_group2gid(group) : getgid();
-	hide_conf = russ_conf_getint(conf, "server", "hide_conf", 0);
+	hide_conf = russ_conf_getint(conf, "main", "hide_conf", 0);
 
 	/* close fds >= 3 */
 	for (i = 3; i < 1024; i++) {

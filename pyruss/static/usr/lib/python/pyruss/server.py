@@ -47,8 +47,8 @@ def init(conf):
     if conf == None:
         return None
 
-    sd = conf.getint("server", "sd", pyruss.RUSS_SVR_LIS_SD_DEFAULT)
-    closeonaccept = conf.getint("server", "closeonaccept", 0)
+    sd = conf.getint("main", "sd", pyruss.RUSS_SVR_LIS_SD_DEFAULT)
+    closeonaccept = conf.getint("main", "closeonaccept", 0)
     root = ServiceNode.new("", None)
     if root == None:
         return None

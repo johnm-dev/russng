@@ -96,7 +96,7 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	logfilename = russ_conf_get(conf, "server", "logfile", NULL);
+	logfilename = russ_conf_get(conf, "main", "logfile", NULL);
 
 	if ((spath_prefix = russ_conf_get(conf, "next", "spath", NULL)) == NULL) {
 		fprintf(stderr, "error: bad configuration\n");
