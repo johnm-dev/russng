@@ -386,10 +386,10 @@ russ_start(int argc, char **argv) {
 		exit(1);
 	}
 
-	/* listen socket is at fd lisd */
-	setgid(gid);
-	setuid(uid);
-	execv(argv[0], hide_conf ? argv : oargv);
+	/* change uid/gid then exec; listen socket is at fd lisd */
+	if ((setgid(gid) == 0) && (setuid(uid) == 0)) {
+		execv(argv[0], hide_conf ? argv : oargv);
+	}
 	return -1;
 }
 
