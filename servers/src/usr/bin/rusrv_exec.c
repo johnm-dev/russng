@@ -384,7 +384,7 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	*	umask
 	*/
 	chdir("/");
-	umask(0);
+	umask(022);
 
 	/* execute */
 	signal(SIGCHLD, SIG_DFL);
