@@ -76,7 +76,7 @@ stats_callback(struct russ_relaystream *self, int dir, void *cbarg) {
 	russ_deadline	last;
 	int		fd, id;
 
-	id = (int)cbarg;
+	id = (int)((intptr_t)cbarg);
 	fd = (id>>16)&0xffff;
 	id = id&0xffff;
 	last = (dir == 0) ? self->rlast : self->wlast;
@@ -303,9 +303,9 @@ main(int argc, char **argv) {
 			}
 
 			relay = russ_relay_new(3);
-			russ_relay_addwithcallback(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1, cb, (void *)(cbfd<<16|0));
-			russ_relay_addwithcallback(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 0, cb, (void *)(cbfd<<16|1));
-			russ_relay_addwithcallback(relay, cconn->fds[2], STDERR_FILENO, bufsize, 0, cb, (void *)(cbfd<<16|2));
+			russ_relay_addwithcallback(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1, cb, (void *)((intptr_t)cbfd<<16|0));
+			russ_relay_addwithcallback(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 0, cb, (void *)((intptr_t)cbfd<<16|1));
+			russ_relay_addwithcallback(relay, cconn->fds[2], STDERR_FILENO, bufsize, 0, cb, (void *)((intptr_t)cbfd<<16|2));
 
 			cconn->fds[0] = -1;
 			cconn->fds[1] = -1;

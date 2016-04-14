@@ -109,7 +109,7 @@ tee_callback(struct russ_relaystream *self, int dir, void *cbarg) {
 
 	if (dir == 0) {
 		/* only capture on input */
-		i = (int)cbarg;
+		i = (int)((intptr_t)cbarg);
 		if (russ_writen(fds[i], self->rbuf->data, self->rbuf->len) < 0) {
 			/* problem */
 			/* remove from fds */

@@ -103,9 +103,9 @@ main(int argc, char **argv) {
 		russ_relaystream_callback	cb = NULL;
 
 		relay = russ_relay_new(3);
-		russ_relay_addwithcallback(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1, cb, (void *)(cbfd<<16|0));
-		russ_relay_addwithcallback(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 0, cb, (void *)(cbfd<<16|1));
-		russ_relay_addwithcallback(relay, cconn->fds[2], STDERR_FILENO, bufsize, 0, cb, (void *)(cbfd<<16|2));
+		russ_relay_addwithcallback(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1, cb, (void *)((intptr_t)cbfd<<16|0));
+		russ_relay_addwithcallback(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 0, cb, (void *)((intptr_t)cbfd<<16|1));
+		russ_relay_addwithcallback(relay, cconn->fds[2], STDERR_FILENO, bufsize, 0, cb, (void *)((intptr_t)cbfd<<16|2));
 
 		cconn->fds[0] = -1;
 		cconn->fds[1] = -1;
