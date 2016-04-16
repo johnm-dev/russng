@@ -64,6 +64,13 @@ extern "C" {
 
 #define RUSS_DEADLINE_NEVER	INT64_MAX
 
+/* common error values */
+#define RUSS_ERR_OK		0
+#define RUSS_ERR_FAILURE	-1
+#define RUSS_ERR_BADFD		-2
+#define RUSS_ERR_TIMEOUT	-3
+#define RUSS_ERR_HUP		-4
+
 /* common exit status values */
 #define RUSS_EXIT_SUCCESS	0
 #define RUSS_EXIT_FAILURE	1
