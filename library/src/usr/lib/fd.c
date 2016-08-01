@@ -363,15 +363,21 @@ close_fds:
 * @param deadline	deadline to complete operation
 * @param pollfds	array of pollfd
 * @param nfds		# of descriptors in pollfds
-* @return		value as returned by system poll
+* @return		0 if deadline passed; otherwise, value as returned by system poll
 */
 int
 russ_poll_deadline(russ_deadline deadline, struct pollfd *pollfds, int nfds) {
+	int	timeout;
 	int	rv;
 
 	while (1) {
 //fprintf(stderr, "russ_poll rv (%d) errno (%d)\n", rv, errno);
-		if (((rv = poll(pollfds, nfds, russ_to_timeout(deadline))) >= 0)
+		if ((timeout = russ_to_timeout(deadline)) == 0) {
+			/* timeout */
+			rv = 0;
+			break;
+		}
+		if (((rv = poll(pollfds, nfds, timeout)) >= 0)
 			|| (errno != EINTR)) {
 			/* data (>0), timeout (0), non-EINTR error */
 			break;
