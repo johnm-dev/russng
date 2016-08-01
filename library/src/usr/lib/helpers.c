@@ -27,7 +27,8 @@
 
 #include "russ_priv.h"
 
-#define POLLHEN	(POLLHUP|POLLERR|POLLNVAL)
+#define POLLHEN		(POLLHUP|POLLERR|POLLNVAL)
+#define POLLIHEN	(POLLIN|POLLHUP|POLLERR|POLLNVAL)
 
 /*
 * Convert variadic argument list of "char *" to argv array.
@@ -183,7 +184,7 @@ close_fd:
 			}
 		}
 		/* special case exit fd */
-		if (pollfds[3].revents & POLLIN) {
+		if (pollfds[3].revents & POLLIHEN) {
 			wrv = russ_cconn_wait(cconn, deadline, exitst);
 			openfds--;
 		}
