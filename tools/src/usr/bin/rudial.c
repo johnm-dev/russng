@@ -307,7 +307,6 @@ main(int argc, char **argv) {
 			struct russ_relay		*relay;
 			russ_relaystream_callback	cb = NULL;
 
-		
 			if ((strcmp(op, "execute") == 0) && (show_stats)) {
 				cb = stats_callback;
 				if ((cbfd < 0) || ((cbfd = dup(cbfd)) < 0)) {
