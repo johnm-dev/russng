@@ -96,6 +96,7 @@ RUSS_WAIT_OK = 0
 RUSS_WAIT_FAILURE = -1
 RUSS_WAIT_BADFD = -2
 RUSS_WAIT_TIMEOUT = -3
+RUSS_WAIT_HUP = -4
 
 # typedef aliases
 russ_deadline = ctypes.c_int64

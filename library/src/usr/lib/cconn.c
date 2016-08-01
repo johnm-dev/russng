@@ -170,7 +170,7 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exitst) {
 				/* TODO: exit_string is ignored */
 				break;
 			} else if (poll_fds[0].revents & POLLHUP) {
-				return RUSS_WAIT_BADFD;
+				return RUSS_WAIT_HUP;
 			}
 		}
 	}

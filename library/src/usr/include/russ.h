@@ -118,6 +118,7 @@ extern "C" {
 #define RUSS_WAIT_FAILURE	-1
 #define RUSS_WAIT_BADFD		-2
 #define RUSS_WAIT_TIMEOUT	-3
+#define RUSS_WAIT_HUP		-4
 
 typedef uint32_t	russ_opnum;
 
