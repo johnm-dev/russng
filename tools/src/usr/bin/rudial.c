@@ -23,6 +23,7 @@
 */
 
 #include <dirent.h>
+#include <fcntl.h>
 #include <libgen.h>
 #include <pthread.h>
 #include <signal.h>
@@ -30,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #include <russ.h>
 
@@ -140,6 +142,8 @@ print_usage(char *prog_name) {
 "    Pass a 'name=value' string to the service.\n"
 "-b <bufsize>\n" \
 "    Set buffer size for reading/writing.\n"
+"-i <path>\n" \
+"    Read from file instead of stdin.\n"
 "--stats\n"
 "--statsfd <fd>\n"
 "    Output statistics for each read and write operation. The\n"
@@ -161,6 +165,8 @@ main(int argc, char **argv) {
 	char			*op, *spath, *arg;
 	char			*attrv[RUSS_REQ_ATTRS_MAX];
 	int			argi, attrc;
+	char			*ipath;
+	int			ifd;
 	int			bufsize, exitst;
 	int			show_stats;
 	int			cbfd;
@@ -178,6 +184,8 @@ main(int argc, char **argv) {
 	argi = 1;
 	attrc = 0;
 	attrv[0] = NULL;
+	ipath = NULL;
+	ifd = -1;
 
 	/* options */
 	while (argi < argc) {
@@ -215,6 +223,12 @@ main(int argc, char **argv) {
 		} else if ((strcmp(arg, "-h") == 0) || (strcmp(arg, "--help") == 0)) {
 			print_usage(prog_name);
 			exit(0);
+		} else if ((strcmp(arg, "-i") == 0) && (argi < argc) && (ipath == NULL)) {
+			ipath = argv[argi++];
+			if ((ifd = open(ipath, O_RDONLY)) < 0) {
+				fprintf(stderr, "error: cannot open input file\n");
+				exit(1);
+			}
 		} else if (strcmp(arg, "--stats") == 0) {
 			show_stats = 1;
 			cbfd = 2;
@@ -303,7 +317,8 @@ main(int argc, char **argv) {
 			}
 
 			relay = russ_relay_new(3);
-			russ_relay_addwithcallback(relay, STDIN_FILENO, cconn->fds[0], bufsize, 1, cb, (void *)((intptr_t)cbfd<<16|0));
+			ifd = (ifd < 0) ? STDIN_FILENO : ifd;
+			russ_relay_addwithcallback(relay, ifd, cconn->fds[0], bufsize, 1, cb, (void *)((intptr_t)cbfd<<16|0));
 			russ_relay_addwithcallback(relay, cconn->fds[1], STDOUT_FILENO, bufsize, 0, cb, (void *)((intptr_t)cbfd<<16|1));
 			russ_relay_addwithcallback(relay, cconn->fds[2], STDERR_FILENO, bufsize, 0, cb, (void *)((intptr_t)cbfd<<16|2));
 
