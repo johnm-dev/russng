@@ -186,6 +186,8 @@ close_fd:
 		/* special case exit fd */
 		if (pollfds[3].revents & POLLIHEN) {
 			wrv = russ_cconn_wait(cconn, deadline, exitst);
+			/* update in case of change */
+			pollfds[3].fd = cconn->sysfds[RUSS_CONN_SYSFD_EXIT];
 			openfds--;
 		}
 	}
