@@ -154,6 +154,10 @@ elif [ $# -eq 2 ]; then
 	restart)
 		restart
 		;;
+	*)
+		echo "error: bad/missing arguments"
+		exit 1
+		;;
 	esac
 else
 	echo "error: bad/missing arguments" 1>&2
