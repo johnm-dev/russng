@@ -60,7 +60,7 @@ def convert_dial_attrs_args(attrs, args):
     c_attrs = list_of_strings_to_c_string_array(list(attrs_list)+[None])
     c_argv = list_of_strings_to_c_string_array(list(args)+[None])
     return c_attrs, c_argv
-        
+
 #
 # Application-facing functions, classes, and more
 #
@@ -276,7 +276,7 @@ class ClientConn(Conn):
 
     def __del__(self):
         if self.owned:
-            libruss.russ_cconn_free(self._ptr)            
+            libruss.russ_cconn_free(self._ptr)
         self._ptr = None
 
     def close(self):
@@ -319,7 +319,7 @@ class ServerConn(Conn):
 
     def __del__(self):
         if self.owned:
-            libruss.russ_sconn_free(self._ptr)            
+            libruss.russ_sconn_free(self._ptr)
         self._ptr = None
 
     def close(self):
