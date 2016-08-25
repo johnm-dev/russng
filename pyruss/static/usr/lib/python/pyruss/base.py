@@ -265,11 +265,26 @@ class Conn:
         """
         return self._ptr.contents.sd
 
+    def get_sysfd(self, i):
+        """Return sysfd by index.
+        """
+        return self._ptr.contents.sysfds[i]
+
+    def get_sysfds(self):
+        """Return list of sysfds.
+        """
+        return [self._ptr.contents.sysfds[i] for i in range(RUSS_CONN_NSYSFDS)]
+
     def set_fd(self, i, value):
         """Set fd by index.
         """
         self._ptr.contents.fds[i] = value
-        
+
+    def set_sysfd(self, i, value):
+        """Set sysfd by index.
+        """
+        self._ptr.contents.sysfds[i] = value
+
 class ClientConn(Conn):
     """Client connection.
     """
