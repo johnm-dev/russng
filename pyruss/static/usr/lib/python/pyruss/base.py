@@ -34,6 +34,10 @@ import sys
 #
 from pyruss.bindings import *
 
+# constants
+STDOUT_SIZE_DEFAULT = 1<<20
+STDERR_SIZE_DEFAULT = 1<<18
+
 #
 # python-based helpers
 #
@@ -90,7 +94,7 @@ def dialv_wait(deadline, op, spath, attrs=None, args=None):
 def dialv_wait_timeout(timeout, op, spath, attrs=None, args=None):
     return dialv_wait(to_deadline(timeout), op, spath, attrs, args)
 
-def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
+def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
     """Convenience function.
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
@@ -126,7 +130,7 @@ def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, 
 
     return rv, int(exitst.value), stdout, stderr
 
-def dialv_wait_inouterr_timeout(timeout, op, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
+def dialv_wait_inouterr_timeout(timeout, op, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
     return dialv_wait_inouterr(to_deadline(timeout), op, spath, attrs, args, stdin, stdout_size, stderr_size)
 
 def execv(deadline, spath, attrs=None, args=None):
@@ -140,10 +144,10 @@ def execv_wait(deadline, spath, attrs=None, args=None):
 def execv_wait_timeout(timeout, spath, attrs=None, args=None):
     return dialv_wait_timeout(timeout, "execute", spath, attrs, args)
 
-def execv_wait_inouterr(deadline, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
+def execv_wait_inouterr(deadline, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
     return dialv_wait_inouterr(deadline, "execute", spath, attrs, args, stdin, stdout_size, stderr_size)
 
-def execv_wait_inouterr_timeout(timeout, op, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
+def execv_wait_inouterr_timeout(timeout, op, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
     return dialv_wait_inouterr_timeout(timeout, "execute", spath, attrs, args, stdin, stdout_size, stderr_size)
 
 def gettime():
