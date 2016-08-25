@@ -253,6 +253,8 @@ class Conn:
     def get_fd(self, i):
         """Return fd by index.
         """
+        if (i < 0) or (i >= RUSS_CONN_NFDS):
+            raise Exception("bad fd index")
         return self._ptr.contents.fds[i]
 
     def get_fds(self):
@@ -268,6 +270,8 @@ class Conn:
     def get_sysfd(self, i):
         """Return sysfd by index.
         """
+        if (i < 0) or (i >= RUSS_CONN_NSYSFDS):
+            raise Exception("bad sysfd index")
         return self._ptr.contents.sysfds[i]
 
     def get_sysfds(self):
@@ -278,11 +282,15 @@ class Conn:
     def set_fd(self, i, value):
         """Set fd by index.
         """
+        if (i < 0) or (i >= RUSS_CONN_NFDS):
+            raise Exception("bad fd index")
         self._ptr.contents.fds[i] = value
 
     def set_sysfd(self, i, value):
         """Set sysfd by index.
         """
+        if (i < 0) or (i >= RUSS_CONN_NSYSFDS):
+            raise Exception("bad sysfd index")
         self._ptr.contents.sysfds[i] = value
 
 class ClientConn(Conn):
