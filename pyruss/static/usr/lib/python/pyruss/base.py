@@ -134,6 +134,18 @@ def execv(deadline, spath, attrs=None, args=None):
     """
     return dialv(deadline, "execute", spath, attrs, args)
 
+def execv_wait(deadline, spath, attrs=None, args=None):
+    return dialv_wait(deadline, "execute", spath, attrs, args)
+
+def execv_wait_timeout(timeout, spath, attrs=None, args=None):
+    return dialv_wait_timeout(timeout, "execute", spath, attrs, args)
+
+def execv_wait_inouterr(deadline, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
+    return dialv_wait_inouterr(deadline, "execute", spath, attrs, args, stdin, stdout_size, stderr_size)
+
+def execv_wait_inouterr_timeout(timeout, op, spath, attrs=None, args=None, stdin=None, stdout_size=1<<20, stderr_size=1<<18):
+    return dialv_wait_inouterr_timeout(timeout, "execute", spath, attrs, args, stdin, stdout_size, stderr_size)
+
 def gettime():
     """Get clock time (corresponds to a deadline).
     """
