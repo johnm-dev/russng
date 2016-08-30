@@ -53,7 +53,7 @@ struct russ_svr *
 russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	struct russ_svr	*self;
 
-	if ((self = malloc(sizeof(struct russ_svr))) == NULL) {
+	if ((self = russ_malloc(sizeof(struct russ_svr))) == NULL) {
 		return NULL;
 	}
 	self->root = root;

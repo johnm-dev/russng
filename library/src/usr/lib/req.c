@@ -45,7 +45,7 @@ russ_req_new(const char *protocolstring, const char *op, const char *spath, char
 	struct russ_req	*self;
 	int		i;
 
-	if ((self = malloc(sizeof(struct russ_req))) == NULL) {
+	if ((self = russ_malloc(sizeof(struct russ_req))) == NULL) {
 		return NULL;
 	}
 	self->protocolstring = NULL;

@@ -86,7 +86,7 @@ _russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids, int doinitgroups
 	_ngids = 0;
 	_gids = NULL;
 	if (((_ngids = getgroups(0, NULL)) < 0)
-		|| ((_gids = malloc(sizeof(gid_t)*_ngids)) == NULL)
+		|| ((_gids = russ_malloc(sizeof(gid_t)*_ngids)) == NULL)
 		|| (getgroups(_ngids, _gids) < 0)) {
 		if (_gids) {
 			_gids = russ_free(_gids);

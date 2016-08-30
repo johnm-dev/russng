@@ -140,7 +140,7 @@ svc_attr_handler(struct russ_sess *sess) {
 		spath = req->spath;
 		if (((attr = russ_str_dup_comp(spath, '/', 1)) == NULL)
 			|| ((attrlen = strlen(attr)) < 0)
-			|| ((attreq = malloc(attrlen+2)) == NULL)
+			|| ((attreq = russ_malloc(attrlen+2)) == NULL)
 			|| (sprintf(attreq, "%s=", attr) < 0)) {
 			goto badattr;
 		}

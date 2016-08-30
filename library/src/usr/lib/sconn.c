@@ -58,7 +58,7 @@ struct russ_sconn *
 russ_sconn_new(void) {
 	struct russ_sconn	*sconn;
 
-	if ((sconn = malloc(sizeof(struct russ_sconn))) == NULL) {
+	if ((sconn = russ_malloc(sizeof(struct russ_sconn))) == NULL) {
 		return NULL;
 	}
 	sconn->creds.pid = -1;

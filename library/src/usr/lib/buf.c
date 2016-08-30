@@ -42,7 +42,7 @@ russ_buf_init(struct russ_buf *self, char *data, int cap, int len) {
 	if (self == NULL) {
 		return -1;
 	}
-	if ((data == NULL) && (cap > 0) && ((data = malloc(sizeof(char)*cap)) == NULL)) {
+	if ((data == NULL) && (cap > 0) && ((data = russ_malloc(sizeof(char)*cap)) == NULL)) {
 		return -1;
 	}
 	self->data = russ_free(self->data);
@@ -69,8 +69,8 @@ struct russ_buf *
 russ_buf_new(int cap) {
 	struct russ_buf	*self;
 
-	if (((self = malloc(sizeof(struct russ_buf))) == NULL)
-		|| ((self->data = malloc(cap)) == NULL)) {
+	if (((self = russ_malloc(sizeof(struct russ_buf))) == NULL)
+		|| ((self->data = russ_malloc(cap)) == NULL)) {
 		goto free_buf;
 	}
 	self->cap = cap;

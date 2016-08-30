@@ -164,7 +164,7 @@ svc_discard_handler(struct russ_sess *sess) {
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		/* 8MB */
 		buf_size = 1<<23;
-		if ((buf = malloc(buf_size)) == NULL) {
+		if ((buf = russ_malloc(buf_size)) == NULL) {
 			russ_sconn_fatal(sconn, "error: cannot allocate buffer", RUSS_EXIT_FAILURE);
 			exit(0);
 		}

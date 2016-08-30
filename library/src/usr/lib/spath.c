@@ -294,7 +294,7 @@ russ_spath_split(const char *spath, char **saddr, char **spath2) {
 
 	/* copy into target */
 	if (((*saddr = strdup(spath)) == NULL)
-		|| ((*spath2 = malloc(strlen(p)+1+1)) == NULL)
+		|| ((*spath2 = russ_malloc(strlen(p)+1+1)) == NULL)
 		|| (snprintf(*spath2, RUSS_REQ_SPATH_MAX, "/%s", p) < 0)) {
 		goto free_saddr;
 	}

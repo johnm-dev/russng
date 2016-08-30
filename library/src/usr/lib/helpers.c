@@ -48,7 +48,7 @@ __russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 	va_end(ap);
 
 	/* create argv (with space for NULL)*/
-	if ((argv = malloc(sizeof(char *)*(i+1))) == NULL) {
+	if ((argv = russ_malloc(sizeof(char *)*(i+1))) == NULL) {
 		return NULL;
 	}
 	*argc = i;

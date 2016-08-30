@@ -94,7 +94,7 @@ russ_svr_loop_thread(struct russ_svr *self) {
 
 	while (1) {
 		if (((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd)) == NULL)
-			|| ((data = malloc(sizeof(struct helper_data))) != NULL)) {
+			|| ((data = russ_malloc(sizeof(struct helper_data))) != NULL)) {
 			if (sconn) {
 				russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
 				russ_sconn_free(sconn);

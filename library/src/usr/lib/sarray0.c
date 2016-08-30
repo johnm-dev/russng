@@ -42,7 +42,7 @@ russ_sarray0_new(int n, ...) {
 	char	**self, *s;
 	int	i;
 
-	if ((self = malloc(sizeof(char *)*(n+1))) == NULL) {
+	if ((self = russ_malloc(sizeof(char *)*(n+1))) == NULL) {
 		return NULL;
 	}
 	for (i = 0; i < n; i++) {
@@ -122,7 +122,7 @@ russ_sarray0_dup(char **arr, int max_cnt) {
 	}
 	cnt++;
 
-	if ((dst = malloc(sizeof(char *)*(cnt))) == NULL) {
+	if ((dst = russ_malloc(sizeof(char *)*(cnt))) == NULL) {
 		return NULL;
 	}
 	for (i = 0; i < cnt; i++) {

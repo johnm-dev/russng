@@ -58,7 +58,7 @@ struct russ_cconn *
 russ_cconn_new(void) {
 	struct russ_cconn	*cconn;
 
-	if ((cconn = malloc(sizeof(struct russ_cconn))) == NULL) {
+	if ((cconn = russ_malloc(sizeof(struct russ_cconn))) == NULL) {
 		return NULL;
 	}
 	cconn->sd = -1;
@@ -284,7 +284,7 @@ russ_diall(russ_deadline deadline, const char *op, const char *spath, char **att
 	va_end(ap);
 
 	/* create argv */
-	if ((argv = malloc(sizeof(char *)*argc)) == NULL) {
+	if ((argv = russ_malloc(sizeof(char *)*argc)) == NULL) {
 		return NULL;
 	}
 	va_start(ap, attrv);

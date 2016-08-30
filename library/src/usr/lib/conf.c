@@ -66,7 +66,7 @@ static struct russ_confitem *
 __russ_confitem_new(const char *option, const char *value) {
 	struct russ_confitem	*self;
 
-	if ((self = malloc(sizeof(struct russ_confitem))) == NULL) {
+	if ((self = russ_malloc(sizeof(struct russ_confitem))) == NULL) {
 		return NULL;
 	}
 	self->option = NULL;
@@ -95,7 +95,7 @@ static struct russ_confsection *
 __russ_confsection_new(const char *section_name) {
 	struct russ_confsection	*self;
 
-	if ((self = malloc(sizeof(struct russ_confsection))) == NULL) {
+	if ((self = russ_malloc(sizeof(struct russ_confsection))) == NULL) {
 		return NULL;
 	}
 	self->name = NULL;
@@ -103,7 +103,7 @@ __russ_confsection_new(const char *section_name) {
 	self->len = 0;
 	self->cap = 10;
 	if (((self->name = strdup(section_name)) == NULL)
-		|| ((self->items = malloc(sizeof(struct russ_confitem *)*self->cap)) == NULL)) {
+		|| ((self->items = russ_malloc(sizeof(struct russ_confitem *)*self->cap)) == NULL)) {
 		goto free_all;
 	}
 	return self;
@@ -223,12 +223,12 @@ struct russ_conf *
 russ_conf_new(void) {
 	struct russ_conf	*self;
 
-	if ((self = malloc(sizeof(struct russ_conf))) == NULL) {
+	if ((self = russ_malloc(sizeof(struct russ_conf))) == NULL) {
 		return NULL;
 	}
 	self->len = 0;
 	self->cap = 10;
-	if ((self->sections = malloc(sizeof(struct russ_confsection *)*self->cap)) == NULL) {
+	if ((self->sections = russ_malloc(sizeof(struct russ_confsection *)*self->cap)) == NULL) {
 		goto free_all;
 	}
 	return self;
@@ -657,7 +657,7 @@ russ_conf_options(struct russ_conf *self, const char *section_name) {
 	int			i;
 
 	if (((section = __russ_conf_find_section(self, section_name)) == NULL) 
-		|| ((sarray0 = malloc(sizeof(char *)*(section->len+1))) == NULL)) {
+		|| ((sarray0 = russ_malloc(sizeof(char *)*(section->len+1))) == NULL)) {
 		return NULL;
 	}
 	memset(sarray0, 0, sizeof(char *)*(section->len+1));
@@ -781,7 +781,7 @@ russ_conf_sections(struct russ_conf *self) {
 	char	**sarray0;
 	int	i;
 
-	if ((sarray0 = malloc(sizeof(char *)*(self->len+1))) == NULL) {
+	if ((sarray0 = russ_malloc(sizeof(char *)*(self->len+1))) == NULL) {
 		return NULL;
 	}
 	memset(sarray0, 0, sizeof(char *)*(self->len+1));

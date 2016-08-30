@@ -108,7 +108,7 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int closeonexit, russ_relays
 #endif
 		return NULL;
 	}
-	if (((self = malloc(sizeof(struct russ_relaystream))) == NULL)
+	if (((self = russ_malloc(sizeof(struct russ_relaystream))) == NULL)
 		|| ((self->rbuf = russ_buf_new(bufsize)) == NULL)) {
 		self = russ_free(self);
 		return NULL;
@@ -219,7 +219,7 @@ russ_relay_new(int n) {
 	struct russ_relay	*self;
 	int			i;
 
-	if ((self = malloc(sizeof(struct russ_relay))) == NULL) {
+	if ((self = russ_malloc(sizeof(struct russ_relay))) == NULL) {
 		return NULL;
 	}
 
@@ -227,8 +227,8 @@ russ_relay_new(int n) {
 	self->exitfd = -1;
 	self->pollfds = NULL;
 
-	if (((self->streams = malloc(sizeof(struct russ_relaystream *)*n)) == NULL)
-		|| ((self->pollfds = malloc(sizeof(struct pollfd)*(n+1))) == NULL)) {
+	if (((self->streams = russ_malloc(sizeof(struct russ_relaystream *)*n)) == NULL)
+		|| ((self->pollfds = russ_malloc(sizeof(struct pollfd)*(n+1))) == NULL)) {
 		goto free_relay;
 	}
 	for (i = 0; i < n; i++) {

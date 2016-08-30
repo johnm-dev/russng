@@ -94,7 +94,7 @@ escape_special(char *s) {
 	char	*s2;
 	char	*a, *b;
 
-	if ((s2 = malloc(2*(strlen(s))+1)) == NULL) {
+	if ((s2 = russ_malloc(2*(strlen(s))+1)) == NULL) {
 		return NULL;
 	}
 	for (a = s, b = s2; *a != '\0'; a++, b++) {

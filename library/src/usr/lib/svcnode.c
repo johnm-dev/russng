@@ -47,7 +47,7 @@ struct russ_svcnode *
 russ_svcnode_new(const char *name, russ_svchandler handler) {
 	struct russ_svcnode	*self;
 
-	if ((self = malloc(sizeof(struct russ_svcnode))) == NULL) {
+	if ((self = russ_malloc(sizeof(struct russ_svcnode))) == NULL) {
 		return NULL;
 	}
 	if ((self->name = strdup(name)) == NULL) {

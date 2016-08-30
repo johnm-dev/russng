@@ -119,7 +119,7 @@ russ_vdprintf(int fd, const char *format, va_list ap) {
 
 		/* allocate */
 		bufsz = n+1; /* include \0 */
-		if ((buf = malloc(bufsz)) == NULL) {
+		if ((buf = russ_malloc(bufsz)) == NULL) {
 			goto free_buf;
 		}
 	}

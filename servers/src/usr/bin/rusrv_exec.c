@@ -104,7 +104,7 @@ get_user_info(uid_t uid, char **username, char **shell, char **lshell, char **ho
 	}
 	if (((_username = strdup(pwd->pw_name)) == NULL)
 		|| ((_shell = strdup(pwd->pw_shell)) == NULL)
-		|| ((_lshell = malloc(strlen(pwd->pw_shell)+1+1)) == NULL)
+		|| ((_lshell = russ_malloc(strlen(pwd->pw_shell)+1+1)) == NULL)
 		|| (strcpy(&(_lshell[1]), pwd->pw_shell) == NULL)
 		|| ((_home = strdup(pwd->pw_dir)) == NULL)) {
 		goto free_strings;
@@ -253,7 +253,7 @@ char *
 squote_string(char *s) {
 	char	*s2;
 
-	if (((s2 = malloc(strlen(s)+1+2)) == NULL)
+	if (((s2 = russ_malloc(strlen(s)+1+2)) == NULL)
 		|| (sprintf(s2, "'%s'", s) < 0)) {
 		return NULL;
 	}
@@ -308,13 +308,13 @@ dup_envp_plus(char **envp, char *username, char *home) {
 	count++;
 
 	/* allocate space (including for LOGNAME, USER, HOME) */
-	if (((envp2 = malloc(sizeof(char *)*(3+count))) == NULL)
+	if (((envp2 = russ_malloc(sizeof(char *)*(3+count))) == NULL)
 		|| (memset(envp2, 3+count, sizeof(char *)) == NULL)) {
 		goto free_envp2;
 	}
-	if (((envp2[0] = malloc(7+1+strlen(username)+1)) == NULL)
-		|| ((envp2[1] = malloc(4+1+strlen(username)+1)) == NULL)
-		|| ((envp2[2] = malloc(4+1+strlen(home)+1)) == NULL)) {
+	if (((envp2[0] = russ_malloc(7+1+strlen(username)+1)) == NULL)
+		|| ((envp2[1] = russ_malloc(4+1+strlen(username)+1)) == NULL)
+		|| ((envp2[2] = russ_malloc(4+1+strlen(home)+1)) == NULL)) {
 		goto free_envp2_items;
 	}
 
@@ -430,7 +430,7 @@ svc_loginshell_handler(struct russ_sess *sess) {
 			exit(0);
 		}
 		/* argv[] = {shell, "-c", cmd, NULL} */
-		if ((argv = malloc(sizeof(char *)*4)) == NULL) {
+		if ((argv = russ_malloc(sizeof(char *)*4)) == NULL) {
 			russ_sconn_fatal(sconn, "error: could not run", RUSS_EXIT_FAILURE);
 			exit(0);
 		}
