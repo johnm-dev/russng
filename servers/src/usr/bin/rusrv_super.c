@@ -47,6 +47,77 @@ const char		*HELP =
 "Super server.\n";
 
 /**
+* Create a lock (using a file object).
+*
+* @param path		path to use for lock
+* @param inter		retry interval
+* @param timeout	maximum time (ms) to retry
+* @return		0 on success; -1 on failure
+*/
+int
+lock_file(char *path, int inter, int timeout) {
+	for (; timeout > 0; timeout -= RUSS__MIN(timeout,inter)) {
+		if (mkdir(path, 700) == 0) {
+			return 0;
+		}
+		usleep(inter*1000);
+	}
+	return -1;
+}
+
+/**
+* Remove lock (created with lock_file).
+*
+* @param path		path of the lock
+* @return		0 on success; -1 on failure
+*/
+int
+unlock_file(char *path) {
+	return (rmdir(path) == 0) ? 0 : -1;
+}
+
+/**
+* Get pid from file.
+*
+* @param path		file with pid
+* @return		pid value; -1 on failure
+*/
+int
+get_pid(char *path) {
+	FILE	*f;
+	int	pid;
+
+	if (((f = fopen(path, "r")) == NULL)
+		|| (fscanf(f, "%d", &pid) < 0)) {
+		pid = -1;
+	}
+	if (f != NULL) {
+		fclose(f);
+	}
+	return pid;
+}
+
+/**
+* Store pid to a file.
+*
+* @param path		file for pid
+* @return		0 on success; -1 on failure
+*/
+int
+put_pid(char *path, int pid) {
+	FILE	*f;
+
+	if (((f = fopen(path, "w+")) == NULL)
+		|| (fprintf(f, "%d", pid) < 0)) {
+		pid = -1;
+	}
+	if (f != NULL) {
+		fclose(f);
+	}
+	return (pid < 0) ? -1 : pid;
+}
+
+/**
 * Start server identified by server name.
 *
 * A lock file is used to prevent multiple concurrent attempts to
@@ -251,77 +322,6 @@ clean_trackdir(void) {
 	}
 	closedir(dirp);
 	return 0;
-}
-
-/**
-* Create a lock (using a file object).
-*
-* @param path		path to use for lock
-* @param inter		retry interval
-* @param timeout	maximum time (ms) to retry
-* @return		0 on success; -1 on failure
-*/
-int
-lock_file(char *path, int inter, int timeout) {
-	for (; timeout > 0; timeout -= RUSS__MIN(timeout,inter)) {
-		if (mkdir(path, 700) == 0) {
-			return 0;
-		}
-		usleep(inter*1000);
-	}
-	return -1;
-}
-
-/**
-* Remove lock (created with lock_file).
-*
-* @param path		path of the lock
-* @return		0 on success; -1 on failure
-*/
-int
-unlock_file(char *path) {
-	return (rmdir(path) == 0) ? 0 : -1;
-}
-
-/**
-* Get pid from file.
-*
-* @param path		file with pid
-* @return		pid value; -1 on failure
-*/
-int
-get_pid(char *path) {
-	FILE	*f;
-	int	pid;
-
-	if (((f = fopen(path, "r")) == NULL)
-		|| (fscanf(f, "%d", &pid) < 0)) {
-		pid = -1;
-	}
-	if (f != NULL) {
-		fclose(f);
-	}
-	return pid;
-}
-
-/**
-* Store pid to a file.
-*
-* @param path		file for pid
-* @return		0 on success; -1 on failure
-*/
-int
-put_pid(char *path, int pid) {
-	FILE	*f;
-
-	if (((f = fopen(path, "w+")) == NULL)
-		|| (fprintf(f, "%d", pid) < 0)) {
-		pid = -1;
-	}
-	if (f != NULL) {
-		fclose(f);
-	}
-	return (pid < 0) ? -1 : pid;
 }
 
 /**

@@ -22,6 +22,7 @@
 # license--end
 */
 
+#include <ctype.h>
 #include <netdb.h>
 #include <signal.h>
 #include <stdio.h>

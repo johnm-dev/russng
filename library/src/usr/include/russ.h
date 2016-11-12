@@ -286,6 +286,7 @@ ssize_t russ_read(int, void *, size_t);
 ssize_t russ_readline(int, void *, size_t);
 ssize_t russ_readn(int, void *, size_t);
 ssize_t russ_readn_deadline(russ_deadline, int, void *, size_t);
+ssize_t russ_write(int, void *, size_t);
 ssize_t russ_writen(int, void *, size_t);
 ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
 
@@ -383,6 +384,7 @@ int russ_svcnode_set_wildcard(struct russ_svcnode *, int);
 struct russ_svr *russ_svr_new(struct russ_svcnode *, int, int);
 struct russ_svr *russ_svr_free(struct russ_svr *);
 struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
+void russ_svr_handler(struct russ_svr *, struct russ_sconn *);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
 int russ_svr_set_answerhandler(struct russ_svr *, russ_answerhandler);

@@ -89,6 +89,12 @@ int russ_get_creds(int, struct russ_creds *);
 int russ_recv_fd(int, int *);
 int russ_send_fd(int, int);
 
+/* svr-fork.c */
+void russ_svr_loop_fork(struct russ_svr *);
+
+/* svr-pthread.c */
+void russ_svr_loop_thread(struct russ_svr *);
+
 /* user.c */
 gid_t russ_group2gid(char *);
 uid_t russ_user2uid(char *);

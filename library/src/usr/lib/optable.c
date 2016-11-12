@@ -22,6 +22,8 @@
 # license--end
 */
 
+#include <string.h>
+
 #include "russ_priv.h"
 
 struct russ_optable russ_optable[] = {
