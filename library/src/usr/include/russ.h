@@ -279,6 +279,7 @@ struct russ_cconn *russ_diall(russ_deadline, const char *, const char *, char **
 
 /* env.c */
 int russ_clearenv(void);
+int russ_env_update(char **);
 
 /* fd.c */
 int russ_close(int);

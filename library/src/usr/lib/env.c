@@ -67,3 +67,21 @@ russ_clearenv(void) {
 	return clearenv();
 #endif
 }
+
+/**
+* Export environ-like list to environment.
+*
+* @param envp		list of name=value strings list environ
+* @return		0 on success; -1 on failure
+*/
+int
+russ_env_update(char **envp) {
+	if (envp) {
+		for (; *envp; envp++) {
+			if (putenv(*envp) < 0) {
+				return -1;
+			}
+		}
+	}
+	return 0;
+}
