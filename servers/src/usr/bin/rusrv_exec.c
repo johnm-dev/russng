@@ -81,31 +81,6 @@ const char		*HELP =
 "reasons, some attributes are not passed to the environment (e.g.,\n"
 "LD_PRELOAD).\n";
 
-/**
-* Export PAM loaded environment variables to environ.
-*
-* putenv() may cause a minor memory leak, but this is a one time
-* event.
-*
-* @param pamh		pam handle object
-* @return		0 on success, -1 on failure
-*/
-int
-export_pamenv(pam_handle_t *pamh) {
-	char	**pam_env;
-
-	if ((pam_env = pam_getenvlist(pamh)) == NULL) {
-		return 0;
-	}
-
-	for (; *pam_env; pam_env++) {
-		if (putenv(*pam_env) < 0) {
-			return -1;
-		}
-	}
-	return 0;
-}
-
 /*
 * Given a uid, return username, shell path, shell path with - prefix
 * (indicating login), and user home.
@@ -166,6 +141,7 @@ int
 setup_by_pam(char *service_name, char *username) {
 	pam_handle_t	*pamh;
 	struct pam_conv	pamc;
+	char		**envp;
 	int		rv;
 
 	pamc.conv = &misc_conv;
@@ -180,7 +156,10 @@ setup_by_pam(char *service_name, char *username) {
 		goto pam_end;
 	}
 
-	if ((rv = export_pamenv(pamh)) < 0) {
+	envp = pam_getenvlist(pamh);
+	rv = russ_env_update(envp);
+	envp = russ_sarray0_free(envp);
+	if (rv < 0) {
 		goto pam_end;
 	}
 
@@ -317,10 +296,11 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	if ((russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0)
 		|| (russ_clearenv() < 0)
 		|| (setup_by_pam(pam_confname, username) < 0)
-		|| (chdir("/") < 0)
 		|| (setenv("HOME", home, 1) < 0)
 		|| (setenv("LOGNAME", username, 1) < 0)
-		|| (setenv("USER", username, 1) < 0)) {
+		|| (setenv("USER", username, 1) < 0)
+		|| (russ_env_update(envp) < 0)
+		|| (chdir("/") < 0)) {
 		russ_sconn_fatal(sconn, "error: cannot set up", RUSS_EXIT_FAILURE);
 		return;
 	}
