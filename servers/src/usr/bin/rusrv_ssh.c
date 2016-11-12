@@ -46,19 +46,6 @@ const char		*HELP =
 "/[<user>@]<host>[:<port>]/... <args>\n"
 "    Connect to service ... at <user>@<host>:<port> using ssh.\n";
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
-/*
-** simple, minimal replacement for clearenv which does not actually
-** free the environ strings; use recommended for forking situations
-** only
-*/
-int
-clearenv(void) {
-	*environ = NULL;
-	return 0;
-}
-#endif
-
 int
 switch_user(struct russ_sconn *sconn) {
 	uid_t	uid;
@@ -76,7 +63,7 @@ switch_user(struct russ_sconn *sconn) {
 
 	/* set up env */
 	if ((chdir("/") < 0)
-		|| (clearenv() < 0)) {
+		|| (russ_clearenv() < 0)) {
 		russ_sconn_fatal(sconn, "error: cannot set environment", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
