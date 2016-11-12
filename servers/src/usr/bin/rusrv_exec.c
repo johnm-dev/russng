@@ -53,6 +53,7 @@ struct container {
 };
 
 char			*cgroup_base, *cgroup_spath;
+char			*pam_confname;
 struct russ_conf	*conf = NULL;
 struct container	cont;
 const char		*HELP =
@@ -315,7 +316,7 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	/* TODO: this may have to move to support job service */
 	if ((russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0)
 		|| (russ_clearenv() < 0)
-		|| (setup_by_pam("rusrv_exec", username) < 0)
+		|| (setup_by_pam(pam_confname, username) < 0)
 		|| (chdir("/") < 0)
 		|| (setenv("HOME", home, 1) < 0)
 		|| (setenv("LOGNAME", username, 1) < 0)
@@ -524,6 +525,7 @@ main(int argc, char **argv) {
 	if ((cgroup_spath = russ_conf_get(conf, "cgroup", "spath", NULL)) == NULL) {
 		fprintf(stderr, "warning: cannot find cgroup spath\n");
 	}
+	pam_confname = russ_conf_get(conf, "main", "pam_confname", "rusrv_exec");
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
