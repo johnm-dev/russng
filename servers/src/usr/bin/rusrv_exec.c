@@ -302,59 +302,6 @@ get_cg_path(char **attrv) {
 	return NULL;
 }
 
-/**
-* Duplicate envp and enhance with LOGNAME, USER, and HOME.
-*
-* @param envp		initial env settings
-* @param username	user name
-* @param home		home path
-* @return		duplicated and enhanced envp; NULL on failure
-*/
-char **
-dup_envp_plus(char **envp, char *username, char *home) {
-	char	*_envp[1] = {NULL};
-	char	**envp2;
-	int	i, count;
-
-	/* count items (including NULL) */
-	if (envp == NULL) {
-		envp = _envp;
-	}
-	for (count = 0; envp[count] != NULL; count++);
-	count++;
-
-	/* allocate space (including for LOGNAME, USER, HOME) */
-	if (((envp2 = russ_malloc(sizeof(char *)*(3+count))) == NULL)
-		|| (memset(envp2, 3+count, sizeof(char *)) == NULL)) {
-		goto free_envp2;
-	}
-	if (((envp2[0] = russ_malloc(7+1+strlen(username)+1)) == NULL)
-		|| ((envp2[1] = russ_malloc(4+1+strlen(username)+1)) == NULL)
-		|| ((envp2[2] = russ_malloc(4+1+strlen(home)+1)) == NULL)) {
-		goto free_envp2_items;
-	}
-
-	/* set and copy members */
-	if ((sprintf(envp2[0], "LOGNAME=%s", username) < 0)
-		|| (sprintf(envp2[1], "USER=%s", username) < 0)
-		|| (sprintf(envp2[2], "HOME=%s", home) < 0)) {
-		goto free_envp2_items;
-	}
-	for (i = 0; i < count; i++) {
-		envp2[3+i] = envp[i];
-
-	}
-	return envp2;
-
-free_envp2_items:
-	envp2[0] = russ_free(envp2[0]);
-	envp2[1] = russ_free(envp2[1]);
-	envp2[2] = russ_free(envp2[2]);
-free_envp2:
-	envp2 = russ_free(envp2);
-	return NULL;
-}
-
 void
 execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd, char **argv, char **envp) {
 	struct russ_sconn	*sconn = sess->sconn;
@@ -364,17 +311,19 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	int			fd;
 	int			status;
 
-	if (setup_by_pam("rusrv_exec", username) < 0) {
-		russ_sconn_fatal(sconn, "error: could not set up for user", RUSS_EXIT_FAILURE);
-		return;
-	}
-
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
-	if (russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0) {
+	if ((russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0)
+		|| (russ_clearenv() < 0)
+		|| (setup_by_pam("rusrv_exec", username) < 0)
+		|| (chdir("/") < 0)
+		|| (setenv("HOME", home, 1) < 0)
+		|| (setenv("LOGNAME", username, 1) < 0)
+		|| (setenv("USER", username, 1) < 0)) {
 		russ_sconn_fatal(sconn, "error: cannot set up", RUSS_EXIT_FAILURE);
 		return;
 	}
+	umask(022);
 
 	switch (cont.type) {
 	case CONTAINER_TYPE_NONE:
@@ -390,18 +339,6 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 		return;
 	}
 
-
-	if ((envp2 = dup_envp_plus(envp, username, home)) == NULL) {
-		russ_sconn_fatal(sconn, "error: could not set up env", RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-
-	/* TODO: set minimal settings:
-	*	umask
-	*/
-	chdir("/");
-	umask(022);
-
 	/* execute */
 	signal(SIGCHLD, SIG_DFL);
 	if ((pid = fork()) == 0) {
@@ -413,7 +350,7 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 			setsid();
 			chdir(cwd);
 			russ_sconn_close(sconn);
-			execve(cmd, argv, envp2);
+			execv(cmd, argv);
 		}
 
 		/* should not get here! */
