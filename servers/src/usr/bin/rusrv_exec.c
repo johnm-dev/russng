@@ -80,6 +80,31 @@ const char		*HELP =
 "reasons, some attributes are not passed to the environment (e.g.,\n"
 "LD_PRELOAD).\n";
 
+/**
+* Export PAM loaded environment variables to environ.
+*
+* putenv() may cause a minor memory leak, but this is a one time
+* event.
+*
+* @param pamh		pam handle object
+* @return		0 on success, -1 on failure
+*/
+int
+export_pamenv(pam_handle_t *pamh) {
+	char	**pam_env;
+
+	if ((pam_env = pam_getenvlist(pamh)) == NULL) {
+		return 0;
+	}
+
+	for (; *pam_env; pam_env++) {
+		if (putenv(*pam_env) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
 /*
 * Given a uid, return username, shell path, shell path with - prefix
 * (indicating login), and user home.
@@ -151,6 +176,10 @@ setup_by_pam(char *service_name, char *username) {
 
 	if (((rv = pam_open_session(pamh, PAM_SILENT)) != PAM_SUCCESS)
 		|| ((rv = pam_close_session(pamh, PAM_SILENT)) != PAM_SUCCESS)) {
+		goto pam_end;
+	}
+
+	if ((rv = export_pamenv(pamh)) < 0) {
 		goto pam_end;
 	}
 
