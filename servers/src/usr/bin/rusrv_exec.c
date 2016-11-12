@@ -294,7 +294,7 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
 	if ((russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0)
-		|| (russ_clearenv() < 0)
+		|| (russ_env_clear() < 0)
 		|| (setup_by_pam(pam_confname, username) < 0)
 		|| (setenv("HOME", home, 1) < 0)
 		|| (setenv("LOGNAME", username, 1) < 0)

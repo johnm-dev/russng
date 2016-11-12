@@ -33,7 +33,7 @@ extern char	**environ;
 * @return		0 on success, -1 on failure
 */
 int
-russ_clearenv(void) {
+russ_env_clear(void) {
 #if defined(__APPLE__) || defined(__FreeBSD__)
 	char	name[256], *_name = NULL;
 	char	*ch;

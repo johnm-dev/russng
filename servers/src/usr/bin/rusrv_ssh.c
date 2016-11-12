@@ -63,7 +63,7 @@ switch_user(struct russ_sconn *sconn) {
 
 	/* set up env */
 	if ((chdir("/") < 0)
-		|| (russ_clearenv() < 0)) {
+		|| (russ_env_clear() < 0)) {
 		russ_sconn_fatal(sconn, "error: cannot set environment", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
