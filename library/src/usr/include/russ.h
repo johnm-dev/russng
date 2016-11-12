@@ -277,6 +277,9 @@ int russ_cconn_wait(struct russ_cconn *, russ_deadline, int *);
 struct russ_cconn *russ_dialv(russ_deadline, const char *, const char *, char **, char **);
 struct russ_cconn *russ_diall(russ_deadline, const char *, const char *, char **, ...);
 
+/* env.c */
+int russ_clearenv(void);
+
 /* fd.c */
 int russ_close(int);
 ssize_t russ_read(int, void *, size_t);
