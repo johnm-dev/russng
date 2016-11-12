@@ -148,24 +148,11 @@ setup_by_pam(char *service_name, char *username) {
 	if ((rv = pam_start(service_name, username, &pamc, &pamh)) != PAM_SUCCESS) {
 		goto pam_end;
 	}
-#if 0
-	if (((rv = pam_acct_mgmt(pamh, PAM_SILENT)) != PAM_SUCCESS) {
-		goto pam_end;
-	}
-#endif
 
 	if (((rv = pam_open_session(pamh, PAM_SILENT)) != PAM_SUCCESS)
 		|| ((rv = pam_close_session(pamh, PAM_SILENT)) != PAM_SUCCESS)) {
 		goto pam_end;
 	}
-
-#if 0
-{
-	struct rlimit	rlim;
-	getrlimit(RLIMIT_NOFILE, &rlim);
-	fprintf(stderr, "no file hard (%ld) soft (%ld)\n", (long)rlim.rlim_max, (long)rlim.rlim_cur);
-}
-#endif
 
 pam_end:
 	pam_end(pamh, rv);
