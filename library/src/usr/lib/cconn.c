@@ -63,6 +63,7 @@ russ_cconn_new(void) {
 	}
 	cconn->sd = -1;
 	russ_fds_init(cconn->fds, RUSS_CONN_NFDS, -1);
+	cconn->nevbuf = 0;
 	return cconn;
 }
 
@@ -140,10 +141,12 @@ russ_cconn_close(struct russ_cconn *self) {
 int
 russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exitst) {
 	struct pollfd	poll_fds[1];
-	char		buf[1024];
 	int		rv, _exitst;
 
 	if (self->sysfds[RUSS_CONN_SYSFD_EXIT] < 0) {
+		if (self->nevbuf == 4) {
+			goto set_exitst;
+		}
 		return RUSS_WAIT_BADFD;
 	}
 
@@ -159,22 +162,28 @@ russ_cconn_wait(struct russ_cconn *self, russ_deadline deadline, int *exitst) {
 		} else {
 			if (poll_fds[0].revents & POLLIN) {
 				// TODO: should this be a byte or integer?
-				if (russ_read(self->sysfds[RUSS_CONN_SYSFD_EXIT], buf, 4) < 0) {
+				rv = russ_read(self->sysfds[RUSS_CONN_SYSFD_EXIT],
+					&self->evbuf[self->nevbuf], 4-self->nevbuf);
+				if (rv < 0) {
 					/* serious error; close fd? */
 					return RUSS_WAIT_FAILURE;
 				}
-				russ_dec_exit(buf, &_exitst);
-				if (exitst != NULL) {
-					*exitst = _exitst;
+				self->nevbuf += rv;
+				if (self->nevbuf == 4) {
+					break;
 				}
-				/* TODO: exit_string is ignored */
-				break;
 			} else if (poll_fds[0].revents & POLLHUP) {
 				return RUSS_WAIT_HUP;
 			}
 		}
 	}
 	russ_fds_close(&self->sysfds[RUSS_CONN_SYSFD_EXIT], 1);
+
+set_exitst:
+	russ_dec_exit(self->evbuf, &_exitst);
+	if (exitst) {
+		*exitst = _exitst;
+	}
 	return RUSS_WAIT_OK;
 }
 

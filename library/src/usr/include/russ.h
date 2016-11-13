@@ -168,6 +168,8 @@ struct russ_cconn {
 	int			sd;		/**< socket descriptor */
 	int			fds[RUSS_CONN_NFDS];		/**< array of fds */
 	int			sysfds[RUSS_CONN_NSYSFDS];	/**< array of system fds */
+	int			nevbuf;		/**< number of bytes read into evbuf */
+	char			evbuf[4];	/**< buffer for exit status */
 };
 
 struct russ_sconn {

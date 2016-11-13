@@ -133,6 +133,8 @@ class russ_cconn_Structure(ctypes.Structure):
         ("sd", ctypes.c_int),
         ("fds", ctypes.c_int*RUSS_CONN_NFDS),
         ("sysfds", ctypes.c_int*RUSS_CONN_NSYSFDS),
+        ("nevbuf", ctypes.c_int),
+        ("evbuf", ctypes.c_char*4),
     ]
 
 class russ_sconn_Structure(ctypes.Structure):
