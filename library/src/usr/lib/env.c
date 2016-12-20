@@ -100,9 +100,15 @@ russ_env_reset(void) {
 */
 int
 russ_env_update(char **envp) {
+	char	*s;
+
 	if (envp) {
 		for (; *envp; envp++) {
-			if (putenv(*envp) < 0) {
+			if ((s = strdup(*envp)) == NULL) {
+				return -1;
+			}
+			if (putenv(s) < 0) {
+				free(s);
 				return -1;
 			}
 		}
