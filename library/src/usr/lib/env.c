@@ -22,8 +22,11 @@
 # license--end
 */
 
+#include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 extern char	**environ;
 
@@ -66,6 +69,27 @@ russ_env_clear(void) {
 #else
 	return clearenv();
 #endif
+}
+
+/**
+* Reset environ.
+*
+* Clear and set basic settings: HOME, LOGNAME, USER.
+*
+* @return		0 on success; -1 on failure
+*/
+int
+russ_env_reset(void) {
+	struct passwd	*pw;
+
+	if (((pw = getpwuid(getuid())) == NULL)
+		|| (russ_env_clear() < 0)
+		|| (setenv("HOME", pw->pw_dir, 1) < 0)
+		|| (setenv("LOGNAME", pw->pw_name, 1) < 0)
+		|| (setenv("USER", pw->pw_name, 1) < 0)) {
+		return -1;
+	}
+	return 0;
 }
 
 /**
