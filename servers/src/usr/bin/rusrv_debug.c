@@ -45,22 +45,22 @@ const char		*HELP =
 "stdin, stdout, and stderr all refer to the file descriptor triple\n"
 "that is returned from a russ_dial call.\n"
 "\n"
-"/chargen\n"
+"/chargen[/...]\n"
 "    Character generator outputting to stdout; follows the RFC 864\n"
 "    the RFC 864 protocol sequence.\n"
 "\n"
-"/conn\n"
+"/conn[/...]\n"
 "    Outputs russ connection information.\n"
 "\n"
 "/daytime\n"
 "    Outputs the date and time to the stdout.\n"
 "\n"
-"/discard [--perf]\n"
+"/discard[/...] [--perf]\n"
 "    Discards all data received from stdin; if --perf is specified,\n"
 "    performance feedback is provide to stderr, otherwise there is\n"
 "    none.\n"
 "\n"
-"/echo\n"
+"/echo[/...]\n"
 "    Simple echo service; receives from stdin and outputs to stdout.\n"
 "\n"
 "/env\n"
@@ -347,11 +347,15 @@ main(int argc, char **argv) {
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)
 		|| ((getuid() == 0) && (russ_svr_set_autoswitchuser(svr, 1) < 0))
-		|| (russ_svcnode_add(svr->root, "chargen", svc_chargen_handler) == NULL)
-		|| (russ_svcnode_add(svr->root, "conn", svc_conn_handler) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "chargen", svc_chargen_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
+		|| ((node = russ_svcnode_add(svr->root, "conn", svc_conn_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| (russ_svcnode_add(svr->root, "daytime", svc_daytime_handler) == NULL)
-		|| (russ_svcnode_add(svr->root, "discard", svc_discard_handler) == NULL)
-		|| (russ_svcnode_add(svr->root, "echo", svc_echo_handler) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "discard", svc_discard_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
+		|| ((node = russ_svcnode_add(svr->root, "echo", svc_echo_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| (russ_svcnode_add(svr->root, "env", svc_env_handler) == NULL)
 		|| (russ_svcnode_add(svr->root, "exit", svc_exit_handler) == NULL)
 		//|| (russ_svcnode_add(svr->root, "whoami", svc_whoami_handler) == NULL)
