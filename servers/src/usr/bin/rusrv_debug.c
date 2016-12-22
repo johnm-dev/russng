@@ -69,7 +69,7 @@ const char		*HELP =
 "/exit <value>\n"
 "    Return with given exit value (between 0 and 255).\n"
 "\n"
-"/request\n"
+"/request[/...]\n"
 "    Outputs the request information at the server stdout.\n";
 //"\n"
 //"/whoami\n"
@@ -318,6 +318,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
+	struct russ_svcnode	*node;
 	struct russ_svr		*svr;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -340,7 +341,8 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_add(svr->root, "env", svc_env_handler) == NULL)
 		|| (russ_svcnode_add(svr->root, "exit", svc_exit_handler) == NULL)
 		//|| (russ_svcnode_add(svr->root, "whoami", svc_whoami_handler) == NULL)
-		|| (russ_svcnode_add(svr->root, "request", svc_request_handler) == NULL)) {
+		|| ((node = russ_svcnode_add(svr->root, "request", svc_request_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}
