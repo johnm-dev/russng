@@ -106,10 +106,24 @@ void
 svc_conn_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = sess->sconn;
 	struct russ_req		*req = sess->req;
+	int			outfd;
+	int			i;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
-		russ_dprintf(sconn->fds[1], "uid (%d)\ngid (%d)\npid (%d)\n",
+		outfd = sconn->fds[1];
+
+		russ_dprintf(outfd, "uid (%d)\ngid (%d)\npid (%d)\n",
 			sconn->creds.uid, sconn->creds.gid, sconn->creds.pid);
+		russ_dprintf(outfd, "nsysfds (%d)\nsysfds", RUSS_CONN_NSYSFDS);
+		for (i = 0; i < RUSS_CONN_NSYSFDS; i++) {
+			russ_dprintf(outfd, " (%d)", sconn->sysfds[i]);
+		}
+		russ_dprintf(outfd, "\n");
+		russ_dprintf(outfd, "nfds (%d)\nfds", RUSS_CONN_NFDS);
+		for (i = 0; i < RUSS_CONN_NFDS; i++) {
+			russ_dprintf(outfd, " (%d)", sconn->fds[i]);
+		}
+		russ_dprintf(outfd, "\n");
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
