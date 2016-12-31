@@ -306,6 +306,7 @@ main(int argc, char **argv) {
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
+		|| (russ_svr_set_autoswitchuser(svr, 0) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)
 
 		|| (russ_svcnode_set_handler(svr->root, svc_root_handler) < 0)
