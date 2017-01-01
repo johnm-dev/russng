@@ -24,6 +24,8 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "russ_priv.h"
 
@@ -353,6 +355,7 @@ russ_start(int argc, char **argv) {
 	gid_t			file_gid, gid;
 	int			hide_conf;
 	int			i;
+	mode_t			main_umask;
 
 	/* duplicate args and load conf */
 	oargc = argc;
@@ -377,11 +380,15 @@ russ_start(int argc, char **argv) {
 	gid = (group = russ_conf_get(conf, "main", "group", NULL)) \
 		? russ_group2gid(group) : getgid();
 	hide_conf = russ_conf_getint(conf, "main", "hide_conf", 0);
+	main_umask = (mode_t)russ_conf_getsint(conf, "main", "umask", 022);
 
 	/* close fds >= 3 */
 	for (i = 3; i < 1024; i++) {
 		close(i);
 	}
+
+	/* set up */
+	umask(main_umask);
 
 	/* set up socket */
 	argv[0] = path;
