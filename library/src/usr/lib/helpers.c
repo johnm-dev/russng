@@ -349,15 +349,16 @@ russ_start(int argc, char **argv) {
 	int			lisd;
 	int			oargc;
 	char			**oargv;
-	char			*file_user, *file_group, *user, *group;
-	char			*path, *addr;
-	mode_t			file_mode;
+	char			*main_path, *main_addr;
+	char			*main_cwd;
+	mode_t			main_file_mode;
+	char			*main_file_user, *main_file_group;
+	int			main_hide_conf;
+	char			*main_user, *main_group;
+	mode_t			main_umask;
 	uid_t			file_uid, uid;
 	gid_t			file_gid, gid;
-	int			hide_conf;
 	int			i;
-	char			*main_cwd;
-	mode_t			main_umask;
 
 	/* duplicate args and load conf */
 	oargc = argc;
@@ -370,20 +371,20 @@ russ_start(int argc, char **argv) {
 	}
 
 	/* get settings */
-	path = russ_conf_get(conf, "main", "path", NULL);
-	addr = russ_conf_get(conf, "main", "addr", NULL);
-	file_mode = russ_conf_getsint(conf, "main", "file_mode", 0666);
-	file_uid = (file_user = russ_conf_get(conf, "main", "file_user", NULL)) \
-		? russ_user2uid(file_user) : getuid();
-	file_gid = (file_group = russ_conf_get(conf, "main", "file_group", NULL)) \
-		? russ_group2gid(file_group) : getgid();
-	uid = (user = russ_conf_get(conf, "main", "user", NULL)) \
-		? russ_user2uid(user) : getuid();
-	gid = (group = russ_conf_get(conf, "main", "group", NULL)) \
-		? russ_group2gid(group) : getgid();
-	hide_conf = russ_conf_getint(conf, "main", "hide_conf", 0);
+	main_path = russ_conf_get(conf, "main", "path", NULL);
+	main_addr = russ_conf_get(conf, "main", "addr", NULL);
 	main_cwd = russ_conf_get(conf, "main", "cwd", "/");
 	main_umask = (mode_t)russ_conf_getsint(conf, "main", "umask", 022);
+	main_file_mode = russ_conf_getsint(conf, "main", "file_mode", 0666);
+	file_uid = (main_file_user = russ_conf_get(conf, "main", "file_user", NULL)) \
+		? russ_user2uid(main_file_user) : getuid();
+	file_gid = (main_file_group = russ_conf_get(conf, "main", "file_group", NULL)) \
+		? russ_group2gid(main_file_group) : getgid();
+	uid = (main_user = russ_conf_get(conf, "main", "user", NULL)) \
+		? russ_user2uid(main_user) : getuid();
+	gid = (main_group = russ_conf_get(conf, "main", "group", NULL)) \
+		? russ_group2gid(main_group) : getgid();
+	main_hide_conf = russ_conf_getint(conf, "main", "hide_conf", 0);
 
 	/* close fds >= 3 */
 	for (i = 3; i < 1024; i++) {
@@ -404,14 +405,15 @@ russ_start(int argc, char **argv) {
 	}
 
 	/* set up socket */
-	argv[0] = path;
-	if ((argv[0] == NULL) || ((lisd = russ_announce(addr, file_mode, file_uid, file_gid)) < 0)) {
+	argv[0] = main_path;
+	if ((argv[0] == NULL)
+		|| ((lisd = russ_announce(main_addr, main_file_mode, file_uid, file_gid)) < 0)) {
 		fprintf(stderr, "error: cannot set up socket\n");
 		exit(1);
 	}
 
 	/* exec server itself */
-	if (execv(argv[0], hide_conf ? argv : oargv) < 0) {
+	if (execv(argv[0], main_hide_conf ? argv : oargv) < 0) {
 		fprintf(stderr, "error: cannot exec server\n");
 		exit(1);
 	}
