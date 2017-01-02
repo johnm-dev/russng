@@ -397,6 +397,12 @@ russ_start(int argc, char **argv) {
 		exit(1);
 	}
 
+	/* change uid/gid then exec; listen socket is at fd lisd */
+	if ((setgid(gid) < 0) || (setuid(uid) < 0)) {
+		fprintf(stderr, "error: cannot switch user\n");
+		exit(1);
+	}
+
 	/* set up socket */
 	argv[0] = path;
 	if ((argv[0] == NULL) || ((lisd = russ_announce(addr, file_mode, file_uid, file_gid)) < 0)) {
@@ -404,10 +410,12 @@ russ_start(int argc, char **argv) {
 		exit(1);
 	}
 
-	/* change uid/gid then exec; listen socket is at fd lisd */
-	if ((setgid(gid) == 0) && (setuid(uid) == 0)) {
-		execv(argv[0], hide_conf ? argv : oargv);
+	/* exec server itself */
+	if (execv(argv[0], hide_conf ? argv : oargv) < 0) {
+		fprintf(stderr, "error: cannot exec server\n");
+		exit(1);
 	}
+
 	return -1;
 }
 
