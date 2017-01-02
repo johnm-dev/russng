@@ -399,7 +399,7 @@ russ_start(int argc, char **argv) {
 	}
 
 	/* change uid/gid then exec; listen socket is at fd lisd */
-	if ((setgid(gid) < 0) || (setuid(uid) < 0)) {
+	if (russ_switch_userinitgroups(uid, gid) < 0) {
 		fprintf(stderr, "error: cannot switch user\n");
 		exit(1);
 	}
