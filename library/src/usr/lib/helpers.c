@@ -406,7 +406,7 @@ russ_start(int argc, char **argv) {
 	/* set up socket */
 	argv[0] = path;
 	if ((argv[0] == NULL) || ((lisd = russ_announce(addr, file_mode, file_uid, file_gid)) < 0)) {
-		fprintf(stderr, "error: cannot set up server\n");
+		fprintf(stderr, "error: cannot set up socket\n");
 		exit(1);
 	}
 
