@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "russ_priv.h"
 
@@ -355,6 +356,7 @@ russ_start(int argc, char **argv) {
 	gid_t			file_gid, gid;
 	int			hide_conf;
 	int			i;
+	char			*main_cwd;
 	mode_t			main_umask;
 
 	/* duplicate args and load conf */
@@ -380,6 +382,7 @@ russ_start(int argc, char **argv) {
 	gid = (group = russ_conf_get(conf, "main", "group", NULL)) \
 		? russ_group2gid(group) : getgid();
 	hide_conf = russ_conf_getint(conf, "main", "hide_conf", 0);
+	main_cwd = russ_conf_get(conf, "main", "cwd", "/");
 	main_umask = (mode_t)russ_conf_getsint(conf, "main", "umask", 022);
 
 	/* close fds >= 3 */
@@ -389,6 +392,10 @@ russ_start(int argc, char **argv) {
 
 	/* set up */
 	umask(main_umask);
+	if (chdir(main_cwd) < 0) {
+		fprintf(stderr, "error: cannot change directory\n");
+		exit(1);
+	}
 
 	/* set up socket */
 	argv[0] = path;
