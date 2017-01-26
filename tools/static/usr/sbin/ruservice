@@ -8,16 +8,25 @@ CONF_DIR=${ETC_DIR}/conf
 PID_DIR=${RUN_DIR}
 
 function getconfnames {
-	local filename name names
+	local confname confnames filename filenames
 
-	names=()
-	for filename in $(cd "${CONF_DIR}"; ls); do
-		name="${filename%%.conf}"
-		if [ "${name}" != "${filename}" ]; then
-			names+=("${name}")
+	confname=$1; shift 1
+
+	confnames=()
+	if [ -d "${CONF_DIR}/${confname}" ]; then
+		filenames=$(cd "${CONF_DIR}"; find "${confname}")
+	elif [ -e "${CONF_DIR}/${confname}.conf" ]; then
+		filenames="${confname}.conf"
+	else
+		filenames=""
+	fi
+	for filename in ${filenames}; do
+		confname=${filename%.conf}
+		if [ "${confname}" != "${filename}" ]; then
+			confnames+=("${confname#./}")
 		fi
 	done
-	echo "${names[*]}"
+	echo "${confnames[*]}"
 }
 
 function getpid {
@@ -25,37 +34,47 @@ function getpid {
 
 	name=$1; shift 1
 
-	pidpath="${PID_DIR}/${name}.pid"
+	pidpath=$(getpidpath ${name})
 	pid=$(cat "${pidpath}" 2> /dev/null) && $(kill -0 ${pid} 2> /dev/null)
 	echo "${pid}"
 }
 
+function getpidpath {
+	local confname
+
+	confname=$1; shift 1
+
+	confname=$(echo ${confname} | sed 's/\//__/g')
+	echo "${PID_DIR}/${confname}.pid"
+}
+
 function list {
-	names=$(getconfnames)
-	if [ -n "${names}" ]; then
-		echo "${names}"
+	local confnames
+
+	confnames=$(getconfnames .)
+	if [ -n "${confnames}" ]; then
+		echo "${confnames}"
 	fi
 }
 
 function status {
-	if [ -n "$(getpid ${conf})" ]; then
+	echo -n "[${confname}] "
+	pid=$(getpid ${confname})
+	if [ -n "${pid}" ] && kill -0 ${pid} 2> /dev/null; then
 		echo "RUNNING"
-		exit 0
+		return 0
 	else
 		echo "NOT RUNNING"
-		exit 1
+		return 1
 	fi
 }
 
 function statusall {
-	names=$(getconfnames)
-	for name in ${names}; do
-		echo -n "${name} ... "
-		if [ -n "$(getpid ${name})" ]; then
-			echo "RUNNING"
-		else
-			echo "NOT RUNNING"
-		fi
+	local confname confnames
+
+	confnames=$(getconfnames .)
+	for confname in ${confnames}; do
+		status
 	done
 }
 
@@ -66,7 +85,10 @@ function restart {
 }
 
 function start {
-	echo -n "starting server (${conf}) ... "
+	local pid
+
+	#echo -n "starting server (${confname}) ... "
+	echo -n "[${confname}] "
 	pid=$(cat "${pidpath}" 2> /dev/null) && $(kill -0 ${pid} 2> /dev/null)
 	if [ $? -eq 0 ]; then
 		echo "RUNNING"
@@ -74,24 +96,27 @@ function start {
 	fi
 	rustart -f ${confpath} < /dev/null > /dev/null 2>&1 & pid=$!
 	echo ${pid} > "${pidpath}"
-	kill -0 ${pid} && echo "OK" || { echo "FAILED"; exit 1;}
+	kill -0 ${pid} && echo "STARTED" || { echo "START FAILED"; return 1;}
 }
 
 function stop {
-	echo -n "stopping server (${conf}) ... "
+	local pid
+
+	#echo -n "stopping server (${confname}) ... "
+	echo -n "[${confname}] "
 	pid=$(cat "${pidpath}" 2> /dev/null)
 	if [ $? -ne 0 ]; then
 		echo "NOT RUNNING"
 		return
 	fi
 	kill ${pid} 2> /dev/null
-	[ $? -eq 0 ] && echo "OK" || echo "FAILED"
 	rm -f "${pidpath}" 2> /dev/null
+	[ $? -eq 0 ] && echo "STOPPED" || { echo "STOP FAILED"; return 1;}
 }
 
 function print_usage {
 	echo "\
-usage: $PROGNAME <conf> {start|stop|restart|status}
+usage: $PROGNAME <confname> {start|stop|restart|status|list}
        $PROGNAME list|status
        $PROGNAME -h|--help|help
 
@@ -99,13 +124,15 @@ Manage system configured RUSS servers. Configurations must be in
 ${CONF_DIR}.
 
 Where:
-<conf>		Configuration name (not including .conf)"
+<confname>	Configuration name which may be a directory or file
+		(not including .conf). confname of \".\" means all
+		configuration names."
 }
 
 PROGNAME=$(basename $0)
 
 if [ $# -eq 1 ]; then
-	conf=
+	confname=
 	cmd=$1; shift 1
 
 	case "${cmd}" in
@@ -125,40 +152,43 @@ if [ $# -eq 1 ]; then
 		;;
 	esac
 elif [ $# -eq 2 ]; then
-	conf=$1; shift 1
+	confname=$1; shift 1
 	cmd=$1; shift 1
 
-	if [ "${conf}" != "$(basename ${conf})" ]; then
-		echo "error: bad configuration name" 1>&2
-		exit 1
+	confnames=$(getconfnames ${confname})
+	if [ "${cmd}" = "list" ]; then
+		if [ -n "${confnames}" ]; then
+			echo ${confnames}
+		fi
+		exit 0
 	fi
+	for confname in ${confnames}; do
+		confpath="${CONF_DIR}/${confname}.conf"
+		pidpath=$(getpidpath ${confname})
 
-	confpath="${CONF_DIR}/${conf}.conf"
-	pidpath="${PID_DIR}/${conf}.pid"
-
-	if [ ! -r "${confpath}" ]; then
-		echo "error: cannot find configuration" 1>&2
-		exit 1
-	fi
-
-	case "${cmd}" in
-	status)
-		status
-		;;
-	start)
-		start
-		;;
-	stop)
-		stop
-		;;
-	restart)
-		restart
-		;;
-	*)
-		echo "error: bad/missing arguments"
-		exit 1
-		;;
-	esac
+		if [ ! -r "${confpath}" ]; then
+			echo "error: cannot find configuration" 1>&2
+		else
+			case "${cmd}" in
+			status)
+				status
+				;;
+			start)
+				start
+				;;
+			stop)
+				stop
+				;;
+			restart)
+				restart
+				;;
+			*)
+				echo "error: bad/missing arguments"
+				exit 1
+				;;
+			esac
+		fi
+	done
 else
 	echo "error: bad/missing arguments" 1>&2
 	exit 1
