@@ -49,8 +49,8 @@ Options:
 	Use a given relay service. Defaults to \${RURUN_RELAY} or
 	\"${RURUN_RELAY_DEFAULT}\".
 -t|--timeout <seconds>
-    Allow a given amount of time to connect before aborting.
-    Defaults to \${RURUN_TIMEOUT} if set."
+	Allow a given amount of time to connect before aborting.
+	Defaults to \${RURUN_TIMEOUT} if set."
 }
 
 # defaults (null or unset)

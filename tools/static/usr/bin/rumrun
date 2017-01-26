@@ -105,10 +105,11 @@ Options:
 	Option arguments to pass to rurun. Enclose in quotes arguments
 	necessary.
 -t|--timeout <seconds>
-    Allow a given amount of time to connect before aborting.
-    Defaults to \${RURUN_TIMEOUT} if set."
+	Allow a given amount of time to connect before aborting.
+	Defaults to \${RURUN_TIMEOUT} if set."
 }
 
+PROG_NAME=$(basename $0)
 RURUN_EXEC=${RURUN_EXEC:-/usr/bin/rurun}
 	
 if [ $# -gt 0 ]; then
