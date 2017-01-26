@@ -49,9 +49,11 @@ function getpidpath {
 }
 
 function list {
-	local confnames
+	local confname confnames
 
-	confnames=$(getconfnames .)
+	confname=$1; shift 1
+
+	confnames=$(getconfnames ${confname})
 	if [ -n "${confnames}" ]; then
 		echo "${confnames}"
 	fi
@@ -67,15 +69,6 @@ function status {
 		echo "NOT RUNNING"
 		return 1
 	fi
-}
-
-function statusall {
-	local confname confnames
-
-	confnames=$(getconfnames .)
-	for confname in ${confnames}; do
-		status
-	done
 }
 
 function restart {
@@ -141,10 +134,10 @@ if [ $# -eq 1 ]; then
 		exit 0
 		;;
 	list)
-		list
+		$0 . list
 		;;
 	status)
-		statusall
+		$0 . status
 		;;
 	*)
 		echo "error: bad/missing arguments"
@@ -155,13 +148,12 @@ elif [ $# -eq 2 ]; then
 	confname=$1; shift 1
 	cmd=$1; shift 1
 
-	confnames=$(getconfnames ${confname})
 	if [ "${cmd}" = "list" ]; then
-		if [ -n "${confnames}" ]; then
-			echo ${confnames}
-		fi
+		list "${confname}"
 		exit 0
 	fi
+
+	confnames=$(getconfnames ${confname})
 	for confname in ${confnames}; do
 		confpath="${CONF_DIR}/${confname}.conf"
 		pidpath=$(getpidpath ${confname})
