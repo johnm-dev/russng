@@ -411,11 +411,11 @@ class ServerConn(Conn):
         """
         return libruss.russ_sconn_fatal(self._ptr, msg, exitst)
 
-    def redialandsplice(self, deadline, cconn):
+    def redialandsplice(self, deadline, req):
         """Dial another service and pass the received fds to the
         client.
         """
-        return libruss.russ_sconn_redialandsplice(self._ptr, deadline, cconn._ptr)
+        return libruss.russ_sconn_redialandsplice(self._ptr, deadline, req._ptr)
 
     def splice(self, cconn):
         """Pass dialed connection fds to server client.
