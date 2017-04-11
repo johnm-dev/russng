@@ -65,6 +65,18 @@ __russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
 }
 
 /**
+* Timeout-based helper corresponding to russ_dialv().
+*
+* @param timeout	timeout value
+*
+* @see russ_dialv()
+*/
+struct russ_cconn *
+russ_dialv_timeout(int timeout, const char *op, const char *spath, char **attrv, char **argv) {
+	return russ_dialv(russ_to_deadline(timeout), op, spath, attrv, argv);
+}
+
+/**
 * Helper to dial and wait for exit value. I/O for connection stdin,
 * stdout, and stderr comes from/goes to 0 capacity buffers
 * effectively mimicking /dev/null.
@@ -242,6 +254,18 @@ russ_dialv_wait_inouterr3(russ_deadline deadline, const char *op, const char *sp
 struct russ_cconn *
 russ_execv(russ_deadline deadline, const char *spath, char **attrv, char **argv) {
 	return russ_dialv(deadline, "execute", spath, attrv, argv);
+}
+
+/**
+* execv helper corresponding to russ_dialv_timeout().
+*
+* @param timeout	timeout value
+*
+* @see russ_dialv_timeout()
+*/
+struct russ_cconn *
+russ_execv_timeout(int timeout, const char *spath, char **attrv, char **argv) {
+	return russ_dialv_timeout(timeout, "execute", spath, attrv, argv);
 }
 
 /**
