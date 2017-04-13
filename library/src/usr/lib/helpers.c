@@ -22,6 +22,7 @@
 # license--end
 */
 
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -428,15 +429,21 @@ russ_start(int argc, char **argv) {
 		exit(1);
 	}
 
+	/* check for server program */
+	if ((main_path == NULL)
+		|| (access(main_path, R_OK|X_OK))) {
+		fprintf(stderr, "error: cannot access server program\n");
+		exit(1);
+	}
+
 	/* set up socket */
-	argv[0] = main_path;
-	if ((argv[0] == NULL)
-		|| ((lisd = russ_announce(main_addr, main_file_mode, file_uid, file_gid)) < 0)) {
+	if ((lisd = russ_announce(main_addr, main_file_mode, file_uid, file_gid)) < 0) {
 		fprintf(stderr, "error: cannot set up socket\n");
 		exit(1);
 	}
 
 	/* exec server itself */
+	argv[0] = main_path;
 	if (execv(argv[0], main_hide_conf ? argv : oargv) < 0) {
 		fprintf(stderr, "error: cannot exec server\n");
 		exit(1);
