@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -406,6 +407,48 @@ fail:
 }
 
 /**
+* Make directories. For rustart() only.
+*
+* @param dirnames	:-separated list of paths
+* @param mode		file mode
+* @return		0 on success; -1 on failure
+*/
+static int
+_mkdirs(char *dirnames, int mode) {
+	struct stat	st;
+	char		*dname = NULL;
+	char		*p, *q;
+
+	if ((dirnames = strdup(dirnames)) == NULL) {
+		return -1;
+	}
+
+	/* test q before p */
+	for (q = dirnames, p = q; (q != NULL) && (*p != '\0'); p = q+1) {
+		if ((q = strchr(p, ':')) != NULL) {
+			*q = '\0';
+		}
+		dname = russ_spath_resolve(p);
+		if (stat(dname, &st) < 0) {
+			if (mkdir(dname, mode) < 0) {
+				goto fail;
+			}
+		} else if ((S_ISDIR(st.st_mode))
+			&& ((st.st_mode & 0777) != mode)) {
+			/* conflicting mode */
+			goto fail;
+		}
+	}
+	free(dirnames);
+	free(dname);
+	return 0;
+fail:
+	free(dirnames);
+	free(dname);
+	return -1;
+}
+
+/**
 * Start a server using arguments as provide from the command line.
 * Configuration and non-configuration (i.e., after the --) may be
 * provided.
@@ -425,6 +468,8 @@ russ_start(int argc, char **argv) {
 	mode_t			main_file_mode;
 	char			*main_file_user, *main_file_group;
 	int			main_hide_conf;
+	char			*main_mkdirs;
+	int			main_mkdirs_mode;
 	char			*main_user, *main_group;
 	mode_t			main_umask;
 	uid_t			file_uid, uid;
@@ -456,6 +501,8 @@ russ_start(int argc, char **argv) {
 	gid = (main_group = russ_conf_get(conf, "main", "group", NULL)) \
 		? russ_group2gid(main_group) : getgid();
 	main_hide_conf = russ_conf_getint(conf, "main", "hide_conf", 0);
+	main_mkdirs = russ_conf_get(conf, "main", "mkdirs", NULL);
+	main_mkdirs_mode = russ_conf_getsint(conf, "main", "mkdirs_mode", 0755);
 
 	/* close fds >= 3 */
 	for (i = 3; i < 1024; i++) {
@@ -480,6 +527,14 @@ russ_start(int argc, char **argv) {
 		|| (access(main_path, R_OK|X_OK))) {
 		fprintf(stderr, "error: cannot access server program\n");
 		exit(1);
+	}
+
+	/* create directories */
+	if (main_mkdirs) {
+		if (_mkdirs(main_mkdirs, main_mkdirs_mode) < 0) {
+			fprintf(stderr, "error: cannot make directories\n");
+			exit(1);
+		}
 	}
 
 	/* set up socket */
