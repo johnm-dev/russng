@@ -270,6 +270,52 @@ russ_execv_timeout(int timeout, const char *spath, char **attrv, char **argv) {
 }
 
 /**
+* execv helper corresponding to russ_dialv_wait().
+*
+* @see russ_dialv_wait()
+*/
+int
+russ_execv_wait(russ_deadline deadline, const char *spath, char **attrv, char **argv, int *exitst) {
+	return russ_dialv_wait(deadline, "execute", spath, attrv, argv, exitst);
+}
+
+/**
+* execv helper corresponding to russ_dialv_wait_timeout().
+*
+* @param timeout	timeout value
+*
+* @see russ_dialv_wait_timeout()
+*/
+int
+russ_execv_wait_timeout(int timeout, const char *spath, char **attrv, char **argv, int *exitst) {
+	return russ_dialv_wait_timeout(timeout, "execute", spath, attrv, argv, exitst);
+}
+
+/**
+* execv helper corresponding to russ_dialv_wait_inouterr().
+*
+* @see russ_dialv_wait_inouterr()
+*/
+int
+russ_execv_wait_inouterr(russ_deadline deadline, const char *spath, char **attrv, char **argv,
+	int *exitst, struct russ_buf **rbufs) {
+	return russ_dialv_wait_inouterr(deadline, "execute", spath, attrv, argv, exitst, rbufs);
+}
+
+/**
+* execv helper corresponding to russ_dialv_wait_inouterr_timeout().
+*
+* @param timeout	timeout value
+*
+* @see russ_dialv_wait_inouterr_timeout()
+*/
+int
+russ_execv_wait_inouterr_timeout(int timeout, const char *spath, char **attrv, char **argv,
+	int *exitst, struct russ_buf **rbufs) {
+	return russ_dialv_wait_inouterr_timeout(timeout, "execute", spath, attrv, argv, exitst, rbufs);
+}
+
+/**
 * Wrapper for russ_dial with "execute" operation.
 *
 * @see russ_diall()
