@@ -30,6 +30,26 @@
 #include <russ_priv.h>
 
 /**
+* Create empty NULL-terminated string array.
+*
+* @param n		new array size (not including the terminating NULL)
+* @return		new string array; NULL on failure
+*/
+static char **
+_russ_sarray0_new(int n) {
+	char	**self;
+	int	i;
+
+	if ((self = russ_malloc(sizeof(char *)*(n+1))) == NULL) {
+		return NULL;
+	}
+	for (i = 0; i <= n; i++) {
+		self[i] = NULL;
+	}
+	return self;
+}
+
+/**
 * Create NULL-terminated string array.
 *
 * @param n		new array size (not including the terminating NULL)
