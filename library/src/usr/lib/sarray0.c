@@ -45,7 +45,7 @@ russ_sarray0_new(int n, ...) {
 	if ((self = russ_malloc(sizeof(char *)*(n+1))) == NULL) {
 		return NULL;
 	}
-	for (i = 0; i < n; i++) {
+	for (i = 0; i <= n; i++) {
 		self[i] = NULL;
 	}
 	va_start(ap, n);
