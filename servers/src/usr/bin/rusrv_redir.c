@@ -58,8 +58,7 @@ svc_root_handler(struct russ_sess *sess) {
 	char			spath[RUSS_REQ_SPATH_MAX];
 	int			n;
 
-	if (((n = snprintf(spath, sizeof(spath), "%s%s", spath_prefix, req->spath)) < 0)
-		|| (n > sizeof(spath))) {
+	if (russ_snprintf(spath, sizeof(spath), "%s%s", spath_prefix, req->spath) < 0) {
 		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
 			/* fatal */
 			russ_lprintf(logfilename, "[%F %T] ", "req->spath (%s)\n", req->spath);

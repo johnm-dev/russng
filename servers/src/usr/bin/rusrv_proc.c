@@ -261,8 +261,8 @@ linux_get_pid_info(pid_t pid, struct pid_info *pi, int use_long_format) {
 	char		pid_path[1024], stat_path[1024], cmdline_path[1024];
 	int		sz;
 
-	if ((snprintf(pid_path, sizeof(pid_path), "/proc/%d", pid) < 0)
-		|| (snprintf(stat_path, sizeof(stat_path), "/proc/%d/stat", pid) < 0)) {
+	if ((russ_snprintf(pid_path, sizeof(pid_path), "/proc/%d", pid) < 0)
+		|| (russ_snprintf(stat_path, sizeof(stat_path), "/proc/%d/stat", pid) < 0)) {
 		return -1;
 	}
 	if (stat(pid_path, &st) < 0) {
@@ -282,7 +282,7 @@ linux_get_pid_info(pid_t pid, struct pid_info *pi, int use_long_format) {
 
 	pi->cmdline[0] = '\0';
 	f = NULL;
-	if ((snprintf(cmdline_path, sizeof(cmdline_path), "/proc/%d/cmdline", pid) < sizeof(cmdline_path))
+	if ((russ_snprintf(cmdline_path, sizeof(cmdline_path), "/proc/%d/cmdline", pid) >= 0)
 		&& ((f = fopen(cmdline_path, "r")) != NULL)
 		&& ((sz = fread(pi->cmdline, 1, sizeof(pi->cmdline), f)) >= 0)) {
 		int	i;
@@ -553,7 +553,7 @@ gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
 		}
 		for (entry = readdir(dirp); entry != NULL; entry = readdir(dirp)) {
 			if ((sscanf(entry->d_name, "%d", &pid) < 0)
-				|| (snprintf(path, sizeof(path), "/proc/%s", entry->d_name) >= sizeof(path))
+				|| (russ_snprintf(path, sizeof(path), "/proc/%s", entry->d_name) < 0)
 				|| (stat(path, &st) < 0)) {
 				continue;
 			}
@@ -599,7 +599,7 @@ gpu_handler_helper(struct russ_sess *sess, int gpu) {
 			if (isdigit(entry->d_name[0])) {
 				if (gpu == 'p') {
 					russ_dprintf(sconn->fds[1], "%s\n", entry->d_name);
-				} else if ((snprintf(path, sizeof(path), "/proc/%s", entry->d_name) < PATH_MAX)
+				} else if ((russ_snprintf(path, sizeof(path), "/proc/%s", entry->d_name) >= 0)
 					&& (stat(path, &st) == 0)) {
 					if (gpu == 'u') {
 						russ_dprintf(sconn->fds[1], "%d\n", st.st_uid);
@@ -720,7 +720,7 @@ svc_p_pid_wait_handler(struct russ_sess *sess) {
 		deadline = russ_to_deadline(timeout);
 
 		if ((sscanf(req->spath, "/p/%d", &pid) < 0)
-			|| (snprintf(pid_path, sizeof(pid_path), "/proc/%d", pid) < 0)
+			|| (russ_snprintf(pid_path, sizeof(pid_path), "/proc/%d", pid) < 0)
 			|| (stat(pid_path, &st) < 0)) {
 			russ_sconn_fatal(sconn, "error: invalid pid", RUSS_EXIT_FAILURE);
 			exit(0);

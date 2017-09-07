@@ -96,8 +96,7 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 			} else {
 				bp = &buf[3];
 			}
-			if (((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", services_dir, bp)) < 0)
-				|| (n >= sizeof(tmpbuf))
+			if ((russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", services_dir, bp) < 0)
 				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
 				return NULL;
 			}
@@ -114,8 +113,7 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 			if ((uid_p == NULL)
 				|| (getpwuid_r(*uid_p, &pwd, pwd_buf, sizeof(pwd_buf), &result) != 0)
 				|| (result == NULL)
-				|| ((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s/.russ/%s", pwd.pw_dir, bp)) < 0)
-				|| (n >= sizeof(tmpbuf))
+				|| (russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s/.russ/%s", pwd.pw_dir, bp) < 0)
 				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
 				return NULL;
 			}
@@ -145,23 +143,20 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 
 						if ((lnkbuf[0] == '/') || (strncmp(lnkbuf, "+/", 2) == 0)) {
 							/* replace subpath with lnkbuf */
-							if (((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf)) < 0)
-								|| (n >= sizeof(tmpbuf))) {
+							if (russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf) < 0) {
 								return NULL;
 							}
 						} else {
 							if ((bp2 = rindex(buf, '/')) != NULL) {
 								/* append lnkbuf to subpath */
 								*bp2 = '\0';
-								if (((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", buf, lnkbuf)) < 0)
-									|| (n >= sizeof(tmpbuf))) {
+								if (russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", buf, lnkbuf) < 0) {
 									return NULL;
 								}
 								*bp2 = '/';
 							} else {
 								/* replace single component subpath with lnkbuf */
-								if (((n = snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf)) < 0)
-									|| (n >= sizeof(tmpbuf))) {
+								if (russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf) < 0) {
 									return NULL;
 								}
 							}
@@ -172,8 +167,7 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 							strncat(tmpbuf, bp, sizeof(tmpbuf));
 						}
 						/* copy back to buf */
-						if (((n = snprintf(buf, sizeof(buf), "%s", tmpbuf)) < 0)
-							|| (n >= sizeof(buf))) {
+						if (russ_snprintf(buf, sizeof(buf), "%s", tmpbuf) < 0) {
 							return NULL;
 						}
 						changed = 1;

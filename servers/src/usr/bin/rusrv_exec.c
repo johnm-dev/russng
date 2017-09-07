@@ -181,8 +181,7 @@ add_pid_cgroup(int pid, char *cg_path) {
 		char	pidst[16];
 		int	n, exitst;
 
-		if (((n = snprintf(pidst, sizeof(pidst), "%d", pid)) < 0)
-			|| (n > sizeof(pidst))) {
+		if (russ_snprintf(pidst, sizeof(pidst), "%d", pid) < 0) {
 			return -1;
 		}
 
@@ -198,8 +197,7 @@ add_pid_cgroup(int pid, char *cg_path) {
 		int	n;
 		int	fd;
 
-		if (((n = snprintf(path, sizeof(path), "%s/%s/cgroup.procs", cgroup_base, cg_path)) < 0)
-			|| (n > sizeof(path))) {
+		if (russ_snprintf(path, sizeof(path), "%s/%s/cgroup.procs", cgroup_base, cg_path) < 0) {
 			return -1;
 		}
 
@@ -432,8 +430,7 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 
 		/* create container object */
 		cont.type = CONTAINER_TYPE_CGROUP;
-		if (((n = snprintf(cont.path, sizeof(cont.path), "%s", cg_path)) < 0)
-			|| (n > sizeof(cont.path))) {
+		if (russ_snprintf(cont.path, sizeof(cont.path), "%s", cg_path) < 0) {
 			exit(0);
 		}
 

@@ -197,14 +197,12 @@ stop_server(char *svrname) {
 	int		n, pid;
 
 	if (!russ_conf_has_section(conf, svrname)) {
-		if (((n = snprintf(pidpath, sizeof(pidpath)-1, "%s/.pid.%s", trackdir, svrname+1)) < 0)
-			|| (n >= sizeof(pidpath))) {
+		if (russ_snprintf(pidpath, sizeof(pidpath)-1, "%s/.pid.%s", trackdir, svrname+1) < 0) {
 			return -1;
 		}
 		pid = get_pid(pidpath);
 		if ((pid >= 0) && (kill(pid, 0) == 0)) {
-			if (((n = snprintf(sockpath, sizeof(sockpath)-1, "%s%s", trackdir, svrname)) < 0)
-				|| (n >= sizeof(sockpath))) {
+			if (russ_snprintf(sockpath, sizeof(sockpath)-1, "%s%s", trackdir, svrname) < 0) {
 				return -1;
 			}
 			remove(pidpath);
@@ -252,8 +250,7 @@ setup_announce_paths(void) {
 		if ((section[0] != '/')
 			|| ((path = russ_conf_get(conf, section, "path", NULL)) == NULL)
 			|| ((rpath = _russ_spath_resolve(path)) == NULL)
-			|| ((n = snprintf(sympath, sizeof(sympath), "%s%s", superpath, section)) < 0)
-			|| (n >= sizeof(sympath))) {
+			|| (russ_snprintf(sympath, sizeof(sympath), "%s%s", superpath, section) < 0)) {
 			continue;
 		}
 		if ((unlink(rpath) < 0) || (symlink(sympath, rpath) < 0)) {
@@ -313,8 +310,7 @@ clean_trackdir(void) {
 			/* ignore ., .., and hidden files */
 			continue;
 		}
-		if (((n = snprintf(svrname, sizeof(svrname), "/%s", dire->d_name)) < 0)
-			|| (n >= sizeof(svrname))
+		if ((russ_snprintf(svrname, sizeof(svrname), "/%s", dire->d_name) < 0)
 			|| (stop_server(svrname) < 0)) {
 			// bufsize problem or failed; what to do?
 			fprintf(stderr, "warning: failed to stop server (%s)\n", svrname);
@@ -362,8 +358,7 @@ russ_spath_reprefix(char *spath, char *oldpref, char *newpref) {
 	char	buf[RUSS_REQ_SPATH_MAX];
 	int	n;
 
-	if (((n = snprintf(buf, sizeof(buf), "%s/%s", newpref, &spath[strlen(oldpref)])) < 0)
-		|| (n >= sizeof(buf))) {
+	if (russ_snprintf(buf, sizeof(buf), "%s/%s", newpref, &spath[strlen(oldpref)]) < 0) {
 		return NULL;
 	}
 	return strdup(buf);
@@ -481,8 +476,7 @@ svc_server_handler(struct russ_sess *sess) {
 	if ((svrname = match_svrname(req->spath)) == NULL) {
 		goto no_service;
 	}
-	if (((n = snprintf(buf, sizeof(buf), "%s%s", trackdir, req->spath)) < 0)
-		|| (n >= sizeof(buf))
+	if ((russ_snprintf(buf, sizeof(buf), "%s%s", trackdir, req->spath) < 0)
 		|| ((spath = strdup(buf)) == NULL)) {
 		goto no_service;
 	}

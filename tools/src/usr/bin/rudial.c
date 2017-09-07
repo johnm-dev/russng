@@ -55,8 +55,7 @@ print_dir_list(char *spath) {
 				|| (strcmp(dent->d_name, "..") == 0)) {
 				continue;
 			}
-			if (((n = snprintf(path, sizeof(path), "%s/%s", spath, dent->d_name)) < 0)
-				|| (n >= sizeof(path))
+			if ((russ_snprintf(path, sizeof(path), "%s/%s", spath, dent->d_name) < 0)
 				|| (lstat(path, &st) < 0)) {
 				/* problem */
 				continue;
