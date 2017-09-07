@@ -318,6 +318,7 @@ int russ_startl(char *, ...);
 /* io.c */
 int russ_dprintf(int, const char *, ...);
 int russ_lprintf(const char *, const char *, const char *, ...);
+int russ_snprintf(char *, size_t, const char *, ...);
 int russ_vdprintf(int, const char *, va_list);
 
 /* memory.c */

@@ -91,6 +91,30 @@ russ_lprintf(const char *path, const char *dformat, const char *format, ...) {
 }
 
 /**
+* snprintf alternative which returns error if the operation does not
+* fit within buffer.
+*
+* @param buf		buffer
+* @param size		buffer size
+* @param format		printf-style format string
+* @param ...		variadic list of arguments
+* @return		# of bytes used, < 0 on error
+*/
+int
+russ_snprintf(char *buf, size_t size, const char *format, ...) {
+	va_list	ap;
+	int	rv;
+
+	va_start(ap, format);
+	rv = vsnprintf(buf, size, format, ap);
+	va_end(ap);
+	if (rv >= size) {
+		rv = -1;
+	}
+	return rv;
+}
+
+/**
 * va_list-based fprintf-like for descriptor instead of FILE *.
 *
 * @param fd		descriptor
