@@ -62,12 +62,10 @@ russ_sarray0_new(int n, ...) {
 	char	**self, *s;
 	int	i;
 
-	if ((self = russ_malloc(sizeof(char *)*(n+1))) == NULL) {
+	if ((self = _russ_sarray0_new(n)) == NULL) {
 		return NULL;
 	}
-	for (i = 0; i <= n; i++) {
-		self[i] = NULL;
-	}
+
 	va_start(ap, n);
 	for (i = 0; i < n; i++) {
 		if ((s = va_arg(ap, char *)) == NULL) {
