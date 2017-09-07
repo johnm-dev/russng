@@ -89,10 +89,11 @@ freeall:
 *
 * @param s		string to split
 * @param ss		string used for split
+* @param sindex		starting index from which to copy elements
 * @return		new string array; NULL on failure
 */
 char **
-russ_sarray0_new_split(char *s, char *ss) {
+russ_sarray0_new_split(char *s, char *ss, int sindex) {
 	char	**self;
 	char	*p, *pp;
 	int	i, n, ss_len;
@@ -100,21 +101,26 @@ russ_sarray0_new_split(char *s, char *ss) {
 	ss_len = strlen(ss);
 
 	n = russ_str_count_sub(s, ss)+1;
+	n = ((sindex < 0) || (n < sindex)) ? 0 : n-sindex;
 	if ((self = _russ_sarray0_new(n)) == NULL) {
 		return NULL;
 	}
-	for (i = 0, p = s; i < n; i++) {
-		pp = strstr(p, ss);
-		if (pp == NULL) {
-			s = strdup(p);
-		} else {
-			s = strndup(p, pp-p);
-			p = pp+ss_len;
+	if (n > 0) {
+		for (i = -sindex, p = s; i < n; i++) {
+			pp = strstr(p, ss);
+			if (pp == NULL) {
+				s = strdup(p);
+			} else {
+				s = strndup(p, pp-p);
+				p = pp+ss_len;
+			}
+			if (s == NULL) {
+				goto freeall;
+			}
+			if (i >= 0) {
+				self[i] = s;
+			}
 		}
-		if (s == NULL) {
-			goto freeall;
-		}
-		self[i] = s;
 	}
 	return self;
 freeall:
