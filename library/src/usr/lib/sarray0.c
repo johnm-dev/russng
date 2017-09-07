@@ -85,6 +85,43 @@ freeall:
 }
 
 /**
+* Create NULL-terminated string array from split string.
+*
+* @param s		string to split
+* @param ss		string used for split
+* @return		new string array; NULL on failure
+*/
+char **
+russ_sarray0_new_split(char *s, char *ss) {
+	char	**self;
+	char	*p, *pp;
+	int	i, n, ss_len;
+
+	ss_len = strlen(ss);
+
+	n = russ_str_count_sub(s, ss)+1;
+	if ((self = _russ_sarray0_new(n)) == NULL) {
+		return NULL;
+	}
+	for (i = 0, p = s; i < n; i++) {
+		pp = strstr(p, ss);
+		if (pp == NULL) {
+			s = strdup(p);
+		} else {
+			s = strndup(p, pp-p);
+			p = pp+ss_len;
+		}
+		if (s == NULL) {
+			goto freeall;
+		}
+		self[i] = s;
+	}
+	return self;
+freeall:
+	return russ_sarray0_free(self);
+}
+
+/**
 * Free NULL-terminated string array.
 *
 * @param arr		NULL-terminated string array
