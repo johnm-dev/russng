@@ -350,6 +350,7 @@ int russ_sarray0_count(char **, int);
 char **russ_sarray0_dup(char **, int);
 int russ_sarray0_find(char **, char *);
 int russ_sarray0_find_prefix(char **, char *);
+char *russ_sarray0_get_suffix(char **, char *);
 int russ_sarray0_remove(char **, int);
 int russ_sarray0_update(char ***, int, char *);
 

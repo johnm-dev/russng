@@ -242,6 +242,25 @@ russ_sarray0_find_prefix(char **arr, char *prefix) {
 }
 
 /**
+* Get suffix from (first) element with matching prefix.
+*
+* The returned pointer points into the element.
+*
+* @param arr		string array
+* @param prefix		string
+* @return		pointer to value in element; NULL if not found
+*/
+char *
+russ_sarray0_get_suffix(char **arr, char *prefix) {
+	int	i;
+
+	if ((i = russ_sarray0_find_prefix(arr, prefix)) < 0) {
+		return NULL;
+	}
+	return &arr[i][strlen(prefix)];
+}
+
+/**
 * Remove element at index; or, move elements above index to
 * positions one less than they are at.
 *
