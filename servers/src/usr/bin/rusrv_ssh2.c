@@ -22,10 +22,12 @@
 # license--end
 */
 
+#include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -44,8 +46,15 @@ struct russ_conf	*conf = NULL;
 const char		*HELP = 
 "Provides access to remote host using ssh.\n"
 "\n"
-"/[<user>@]<host>[:<port>]/... <args>\n"
-"    Connect to service ... at <user>@<host>:<port> using ssh.\n";
+"/[<user>@]<host>[:<port>][<options>]/... <args>\n"
+"    Connect to service ... at <user>@<host>:<port> using ssh.\n"
+"\n"
+"    Options:\n"
+"    ?controlpersist=<seconds>\n"
+"        Set ControlPersist time in seconds. Default is 1.\n"
+"    ?controltag=<tag>\n"
+"        Used to generate a ControlPath. Required to set up control\n"
+"        master functionality (if available).\n";
 
 char			*tool_type = NULL;
 char			*tool_exec = NULL;
@@ -81,6 +90,33 @@ switch_user(struct russ_sconn *sconn) {
 }
 
 char *
+dup_user_home(void) {
+	struct passwd	*pw;
+
+	if ((pw = getpwuid(getuid())) == NULL) {
+		return NULL;
+	}
+	return strdup(pw->pw_dir);
+}
+
+int
+ensure_mkdir(char *path, mode_t mode) {
+	struct stat	st;
+
+	if (stat(path, &st) < 0) {
+		if (mkdir(path, mode) < 0) {
+			return 0;
+		}
+	} else if (S_ISDIR(st.st_mode)) {
+		if ((st.st_mode == 0700)
+			|| (chmod (path, mode) == 0)) {
+			return 0;
+		}
+	}
+	return -1;
+}
+
+char *
 escape_special(char *s) {
 	char	*s2;
 	char	*a, *b;
@@ -112,7 +148,10 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	struct russ_cconn	*cconn;
 	char	*args[1024];
 	int	nargs;
-	char	*uhp_user, *uhp_host, *uhp_port;
+	char	*uhp_user, *uhp_host, *uhp_port, *uhp_opt;
+	char	**opts;
+	char	controlpathopt[1024], controlpersistopt[32];
+	char	rusrv_ssh_dirpath[1024];
 	int	i, status, pid;
 
 	switch_user(sconn);
@@ -130,6 +169,12 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		*uhp_port = '\0';
 		uhp_port++;
 	}
+	if ((uhp_opt = strstr(uhp_host, "?")) != NULL) {
+		*uhp_opt = '\0';
+		uhp_opt++;
+		/* validate tag */
+		opts = russ_sarray0_new_split(uhp_opt, "?", 0);
+	}
 
 	/* build args array */
 	nargs = 0;
@@ -140,6 +185,37 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	args[nargs++] = "BatchMode=yes";
 	args[nargs++] = "-o";
 	args[nargs++] = "LogLevel=QUIET";
+
+	if (uhp_opt) {
+		char	*controlpersist, *controltag;
+		char	*user_home;
+
+		controltag = russ_sarray0_get_suffix(opts, "controltag=");
+		controlpersist = russ_sarray0_get_suffix(opts, "controlpersist=");
+
+		user_home = dup_user_home();
+
+		if (controltag
+			&& user_home
+			&& (russ_snprintf(rusrv_ssh_dirpath, sizeof(rusrv_ssh_dirpath), "%s/.ssh/rusrv_ssh", user_home) > 0)
+			&& (ensure_mkdir(rusrv_ssh_dirpath, 0700) == 0)
+			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), "ControlPath=%s/%%l-%%r@%%h:%%p-%s", rusrv_ssh_dirpath, controltag) > 0)) {
+
+			fprintf(stderr, "controlpathopt (%s)\n", controlpathopt);
+
+			args[nargs++] = "-o";
+			args[nargs++] = "ControlMaster=auto";
+			args[nargs++] = "-o";
+			args[nargs++] = controlpathopt;
+			args[nargs++] = "-o";
+			args[nargs++] = "ControlPersist=1";
+
+			if (controlpersist && (russ_snprintf(controlpersistopt, sizeof(controlpersistopt), "ControlPersist=%s", controlpersist) > 0)) {
+				args[nargs-1] = controlpersistopt;
+			}
+		}
+		user_home = russ_free(user_home);
+	}
 	if (uhp_user) {
 		args[nargs++] = "-l";
 		args[nargs++] = uhp_user;
