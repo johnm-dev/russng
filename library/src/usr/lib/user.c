@@ -39,7 +39,7 @@
 */
 gid_t
 russ_group2gid(char *group) {
-	struct group	*gr;
+	struct group	*gr = NULL;
 	gid_t	gid;
 
 	if ((group) && ((group[0] >= '0') && (group[0] <= '9'))) {
@@ -69,9 +69,10 @@ russ_group2gid(char *group) {
 */
 static int
 _russ_switch_user(uid_t uid, gid_t gid, int ngids, gid_t *gids, int doinitgroups) {
-	struct passwd	*pw;
+	struct passwd	*pw = NULL;
 	uid_t		_uid;
-	gid_t		_gid, *_gids;
+	gid_t		_gid;
+	gid_t		*_gids = NULL;
 	int		_ngids;
 
 	_uid = getuid();
@@ -166,7 +167,7 @@ russ_switch_userinitgroups(uid_t uid, gid_t gid) {
 */
 uid_t
 russ_user2uid(char *user) {
-	struct passwd	*pw;
+	struct passwd	*pw = NULL;
 	uid_t		uid;
 
 	if ((user) && ((user[0] >= '0') && (user[0] <= '9'))) {

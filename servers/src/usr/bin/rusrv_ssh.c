@@ -87,7 +87,7 @@ switch_user(struct russ_sconn *sconn) {
 
 char *
 dup_user_home(void) {
-	struct passwd	*pw;
+	struct passwd	*pw = NULL;
 
 	if ((pw = getpwuid(getuid())) == NULL) {
 		return NULL;
@@ -114,8 +114,8 @@ ensure_mkdir(char *path, mode_t mode) {
 
 char *
 escape_special(char *s) {
-	char	*s2;
-	char	*a, *b;
+	char	*s2 = NULL;
+	char	*a = NULL, *b = NULL;
 
 	if ((s2 = russ_malloc(2*(strlen(s))+1)) == NULL) {
 		return NULL;
@@ -139,15 +139,18 @@ escape_special(char *s) {
 
 void
 execute(struct russ_sess *sess, char *userhost, char *new_spath) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char	*args[1024];
-	int	nargs;
-	char	*uhp_user, *uhp_host, *uhp_port, *uhp_opt;
-	char	**opts;
-	char	controlpathopt[1024], controlpersistopt[32];
-	char	rusrv_ssh_dirpath[1024];
-	int	i, status, pid;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			*args[1024];
+	char			*uhp_user = NULL, *uhp_host = NULL, *uhp_port = NULL, *uhp_opt = NULL;
+	char			**opts = NULL;
+	char			controlpathopt[1024], controlpersistopt[32];
+	char			rusrv_ssh_dirpath[1024];
+	int			nargs;
+	int			i, status, pid;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	switch_user(sconn);
 
@@ -182,8 +185,8 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	args[nargs++] = "LogLevel=QUIET";
 
 	if (uhp_opt) {
-		char	*controlpersist, *controltag;
-		char	*user_home;
+		char	*controlpersist = NULL, *controltag = NULL;
+		char	*user_home = NULL;
 
 		controltag = russ_sarray0_get_suffix(opts, "controltag=");
 		controlpersist = russ_sarray0_get_suffix(opts, "controlpersist=");
@@ -281,10 +284,13 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 #if 0
 void
 svc_net_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char	*p, *new_spath, *userhost;
-	int	i;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			*p = NULL, *new_spath = NULL, *userhost = NULL;
+	int			i;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	/* extract and validate user@host and new_spath */
 	userhost = &(req->spath[5]);
@@ -301,8 +307,11 @@ svc_net_handler(struct russ_sess *sess) {
 
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
@@ -312,7 +321,7 @@ svc_root_handler(struct russ_sess *sess) {
 
 char *
 get_userhostport(char *spath) {
-	char	*userhostport;
+	char	*userhostport = NULL;
 
 	userhostport = russ_str_dup_comp(spath, '/', 1);
 	return userhostport;
@@ -320,9 +329,12 @@ get_userhostport(char *spath) {
 
 void
 svc_userhostport_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			*userhostport;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			*userhostport = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if ((userhostport = get_userhostport(req->spath)) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -342,9 +354,12 @@ svc_userhostport_handler(struct russ_sess *sess) {
 */
 void
 svc_userhostport_other_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			*userhostport, *new_spath;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			*userhostport = NULL, *new_spath = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if ((userhostport = get_userhostport(req->spath)) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -367,8 +382,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*node;
-	struct russ_svr		*svr;
+	struct russ_svcnode	*node = NULL;
+	struct russ_svr		*svr = NULL;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);

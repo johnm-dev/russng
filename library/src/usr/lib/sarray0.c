@@ -37,7 +37,7 @@
 */
 static char **
 _russ_sarray0_new(int n) {
-	char	**self;
+	char	**self = NULL;
 	int	i;
 
 	if ((self = russ_malloc(sizeof(char *)*(n+1))) == NULL) {
@@ -59,7 +59,7 @@ _russ_sarray0_new(int n) {
 char **
 russ_sarray0_new(int n, ...) {
 	va_list	ap;
-	char	**self, *s;
+	char	**self = NULL, *s = NULL;
 	int	i;
 
 	if ((self = _russ_sarray0_new(n)) == NULL) {
@@ -94,8 +94,8 @@ freeall:
 */
 char **
 russ_sarray0_new_split(char *s, char *ss, int sindex) {
-	char	**self;
-	char	*p, *pp;
+	char	**self = NULL;
+	char	*p = NULL, *pp = NULL;
 	int	i, n, ss_len;
 
 	ss_len = strlen(ss);
@@ -135,7 +135,7 @@ freeall:
 */
 char **
 russ_sarray0_free(char **arr) {
-	char	**p;
+	char	**p = NULL;
 
 	if (arr) {
 		for (p = arr; *p != NULL; p++) {
@@ -174,7 +174,7 @@ russ_sarray0_count(char **arr, int max_cnt) {
 */
 char **
 russ_sarray0_dup(char **arr, int max_cnt) {
-	char	**dst;
+	char	**dst = NULL;
 	int	i, cnt;
 
 	if (((cnt = russ_sarray0_count(arr, max_cnt)) < 0)
@@ -307,7 +307,7 @@ russ_sarray0_remove(char **arr, int index) {
 */
 int
 russ_sarray0_update(char ***arrp, int index, char *s) {
-	char	**arr;
+	char	**arr = NULL;
 	int	len;
 	int	i;
 

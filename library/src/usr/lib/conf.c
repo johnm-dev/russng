@@ -64,7 +64,7 @@ __russ_confitem_free(struct russ_confitem *self) {
 */
 static struct russ_confitem *
 __russ_confitem_new(const char *option, const char *value) {
-	struct russ_confitem	*self;
+	struct russ_confitem	*self = NULL;
 
 	if ((self = russ_malloc(sizeof(struct russ_confitem))) == NULL) {
 		return NULL;
@@ -93,7 +93,7 @@ free_all:
 */
 static struct russ_confsection *
 __russ_confsection_new(const char *section_name) {
-	struct russ_confsection	*self;
+	struct russ_confsection	*self = NULL;
 
 	if ((self = russ_malloc(sizeof(struct russ_confsection))) == NULL) {
 		return NULL;
@@ -178,7 +178,7 @@ __russ_confsection_find_item(struct russ_confsection *self, const char *option) 
 */
 static struct russ_confitem *
 __russ_confsection_set(struct russ_confsection *self, const char *option, const char *value) {
-	struct russ_confitem	**items, *item;
+	struct russ_confitem	**items = NULL, *item = NULL;
 	int			item_pos;
 
 	if ((item = __russ_confitem_new(option, value)) == NULL) {
@@ -221,7 +221,7 @@ free_item:
 */
 struct russ_conf *
 russ_conf_new(void) {
-	struct russ_conf	*self;
+	struct russ_conf	*self = NULL;
 
 	if ((self = russ_malloc(sizeof(struct russ_conf))) == NULL) {
 		return NULL;
@@ -276,9 +276,9 @@ russ_conf_free(struct russ_conf *self) {
 */
 struct russ_conf *
 russ_conf_load(int *argc, char **argv) {
-	struct russ_conf	*self;
+	struct russ_conf	*self = NULL;
+	char			*colonp = NULL, *equalp = NULL;
 	int			i, j;
-	char			*colonp, *equalp;
 
 	if ((self = russ_conf_new()) == NULL) {
 		return NULL;
@@ -385,8 +385,8 @@ __russ_conf_find_section(struct russ_conf *self, const char *section_name) {
 */
 static struct russ_confitem *
 __russ_conf_get_item(struct russ_conf *self, const char *section_name, const char *option) {
-	struct russ_confsection	*section;
-	struct russ_confitem	*item;
+	struct russ_confsection	*section = NULL;
+	struct russ_confitem	*item = NULL;
 
 	if (((section = __russ_conf_find_section(self, section_name)) == NULL)
 		|| ((item = __russ_confsection_find_item(section, option)) == NULL)) {
@@ -404,7 +404,7 @@ __russ_conf_get_item(struct russ_conf *self, const char *section_name, const cha
 */
 int
 russ_conf_add_section(struct russ_conf *self, const char *section_name) {
-	struct russ_confsection	*section, **sections;
+	struct russ_confsection	*section = NULL, **sections = NULL;
 
 	if ((section = __russ_conf_find_section(self, section_name)) != NULL) {
 		/* exists */
@@ -438,8 +438,8 @@ russ_conf_add_section(struct russ_conf *self, const char *section_name) {
 */
 int
 russ_conf_dup_section(struct russ_conf *self, const char *src_section_name, const char *dst_section_name) {
-	struct russ_confsection	*section;
-	struct russ_confitem	*item;
+	struct russ_confsection	*section = NULL;
+	struct russ_confitem	*item = NULL;
 	int			i;
 
 	if ((section = __russ_conf_find_section(self, src_section_name)) == NULL) {
@@ -499,7 +499,7 @@ russ_conf_has_option(struct russ_conf *self, const char *section_name, const cha
 */
 int
 russ_conf_remove_option(struct russ_conf *self, const char *section_name, const char *option) {
-	struct russ_confsection	*section;
+	struct russ_confsection	*section = NULL;
 	int			pos;
 
 	if ((section = __russ_conf_find_section(self, section_name)) == NULL) {
@@ -526,7 +526,7 @@ russ_conf_remove_option(struct russ_conf *self, const char *section_name, const 
 */
 int
 russ_conf_remove_section(struct russ_conf *self, const char *section_name) {
-	struct russ_confsection	*section;
+	struct russ_confsection	*section = NULL;
 	int			pos;
 
 	if ((pos = __russ_conf_find_section_pos(self, section_name)) < 0) {
@@ -554,7 +554,7 @@ russ_conf_remove_section(struct russ_conf *self, const char *section_name) {
 */
 char *
 russ_conf_get(struct russ_conf *self, const char *section_name, const char *option, const char *dvalue) {
-	struct russ_confitem	*item;
+	struct russ_confitem	*item = NULL;
 
 	if ((item = __russ_conf_get_item(self, section_name, option)) == NULL) {
 		if (dvalue == NULL) {
@@ -578,7 +578,7 @@ russ_conf_get(struct russ_conf *self, const char *section_name, const char *opti
 */
 long
 russ_conf_getint(struct russ_conf *self, const char *section_name, const char *option, long dvalue) {
-	struct russ_confitem	*item;
+	struct russ_confitem	*item = NULL;
 	long			value;
 
 	if (((item = __russ_conf_get_item(self, section_name, option)) == NULL)
@@ -600,7 +600,7 @@ russ_conf_getint(struct russ_conf *self, const char *section_name, const char *o
 */
 double
 russ_conf_getfloat(struct russ_conf *self, const char *section_name, const char *option, double dvalue) {
-	struct russ_confitem	*item;
+	struct russ_confitem	*item = NULL;
 	double			value;
 
 	if (((item = __russ_conf_get_item(self, section_name, option)) == NULL)
@@ -623,8 +623,8 @@ russ_conf_getfloat(struct russ_conf *self, const char *section_name, const char 
 */
 long
 russ_conf_getsint(struct russ_conf *self, const char *section_name, const char *option, long dvalue) {
-	struct russ_confitem	*item;
-	char			*fmt;
+	struct russ_confitem	*item = NULL;
+	char			*fmt = NULL;
 	long			value;
 
 	if ((item = __russ_conf_get_item(self, section_name, option)) == NULL) {
@@ -652,8 +652,8 @@ russ_conf_getsint(struct russ_conf *self, const char *section_name, const char *
 */
 char **
 russ_conf_options(struct russ_conf *self, const char *section_name) {
-	struct russ_confsection	*section;
-	char			**sarray0;
+	struct russ_confsection	*section = NULL;
+	char			**sarray0 = NULL;
 	int			i;
 
 	if (((section = __russ_conf_find_section(self, section_name)) == NULL) 
@@ -681,10 +681,11 @@ free_all:
 */
 int
 russ_conf_read(struct russ_conf *self, const char *filename) {
-	struct russ_confsection	*section;
-	FILE			*fp;
-	char			*section_name;
-	char			buf[4096], *p0, *p1;
+	struct russ_confsection	*section = NULL;
+	FILE			*fp = NULL;
+	char			*section_name = NULL;
+	char			buf[4096];
+	char			*p0 = NULL, *p1 = NULL;
 
 	if ((fp = fopen(filename, "r")) == NULL) {
 		return -1;
@@ -759,7 +760,7 @@ free_all:
 */
 void
 russ_conf_sarray0_free(char **sarray0) {
-	char	**p;
+	char	**p = NULL;
 
 	if (sarray0) {
 		for (p = sarray0; *p != NULL; p++) {
@@ -778,7 +779,7 @@ russ_conf_sarray0_free(char **sarray0) {
 */
 char **
 russ_conf_sections(struct russ_conf *self) {
-	char	**sarray0;
+	char	**sarray0 = NULL;
 	int	i;
 
 	if ((sarray0 = russ_malloc(sizeof(char *)*(self->len+1))) == NULL) {
@@ -807,7 +808,7 @@ free_all:
 */
 int
 russ_conf_set(struct russ_conf *self, const char *section_name, const char *option, const char *value) {
-	struct russ_confsection	*section;
+	struct russ_confsection	*section = NULL;
 
 	if (((section = __russ_conf_find_section(self, section_name)) == NULL)
 		|| (__russ_confsection_set(section, option, value) == NULL)) {
@@ -827,7 +828,7 @@ russ_conf_set(struct russ_conf *self, const char *section_name, const char *opti
 */
 int
 russ_conf_set2(struct russ_conf *self, const char *section_name, const char *option, const char *value) {
-	struct russ_confsection	*section;
+	struct russ_confsection	*section = NULL;
 
 	if ((!russ_conf_has_section(self, section_name))
 		&& (russ_conf_add_section(self, section_name) < 0)) {
@@ -850,8 +851,8 @@ russ_conf_set2(struct russ_conf *self, const char *section_name, const char *opt
 */
 int
 russ_conf_write(struct russ_conf *self, FILE *fp) {
-	struct russ_confsection	**sections, *section;
-	struct russ_confitem	**items, *item;
+	struct russ_confsection	**sections = NULL, *section = NULL;
+	struct russ_confitem	**items = NULL, *item = NULL;
 	int			i, j;
 
 	for (i = 0; i < self->len; i++) {

@@ -120,8 +120,8 @@ russ_readline(int fd, void *b, size_t count) {
 */
 ssize_t
 russ_readn(int fd, void *b, size_t count) {
+	void	*bend = NULL;
 	ssize_t	n;
-	void	*bend;
 
 	bend = b+count;
 	while (b < bend) {
@@ -145,9 +145,9 @@ russ_readn(int fd, void *b, size_t count) {
 ssize_t
 russ_readn_deadline(russ_deadline deadline, int fd, void *b, size_t count) {
 	struct pollfd	pollfds[1];
+	void		*bend = NULL;
 	int		rv, due_time;
 	ssize_t		n;
-	void		*bend;
 
 	/* catch fd<0 before calling into poll() */
 	if (fd < 0) {
@@ -226,8 +226,8 @@ russ_write(int fd, void *b, size_t count) {
 */
 ssize_t
 russ_writen(int fd, void *b, size_t count) {
+	void	*bend = NULL;
 	ssize_t	n;
-	void	*bend;
 
 	bend = b+count;
 	while (b < bend) {
@@ -254,9 +254,9 @@ russ_writen(int fd, void *b, size_t count) {
 ssize_t
 russ_writen_deadline(russ_deadline deadline, int fd, void *b, size_t count) {
 	struct pollfd	pollfds[1];
+	void		*bend = NULL;
 	int		rv, due_time;
 	ssize_t		n;
-	void		*bend;
 
 	/* catch fd<0 before calling into poll() */
 	if (fd < 0) {

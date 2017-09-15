@@ -51,7 +51,7 @@
 */
 struct russ_svr *
 russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
-	struct russ_svr	*self;
+	struct russ_svr	*self = NULL;
 
 	if ((self = russ_malloc(sizeof(struct russ_svr))) == NULL) {
 		return NULL;
@@ -244,8 +244,8 @@ russ_svr_set_type(struct russ_svr *self, int type) {
 void
 russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	struct russ_sess	sess;
-	struct russ_req		*req;
-	struct russ_svcnode	*node;
+	struct russ_req		*req = NULL;
+	struct russ_svcnode	*node = NULL;
 
 	if (self == NULL) {
 		return;

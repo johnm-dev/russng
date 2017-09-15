@@ -52,8 +52,8 @@ struct container {
 	long	id;
 };
 
-char			*cgroup_base, *cgroup_spath;
-char			*pam_confname;
+char			*cgroup_base = NULL, *cgroup_spath = NULL;
+char			*pam_confname = NULL;
 struct russ_conf	*conf = NULL;
 struct container	cont;
 const char		*HELP =
@@ -96,7 +96,7 @@ const char		*HELP =
 */
 int
 get_user_info(uid_t uid, char **username, char **shell, char **lshell, char **home) {
-	struct passwd	*pwd;
+	struct passwd	*pwd = NULL;
 	char		*_username = NULL, *_home = NULL;
 	char		*_shell = NULL, *_lshell = NULL;
 
@@ -139,9 +139,9 @@ free_strings:
 #ifdef USE_PAM
 int
 setup_by_pam(char *service_name, char *username) {
-	pam_handle_t	*pamh;
+	pam_handle_t	*pamh = NULL;
 	struct pam_conv	pamc;
-	char		**envp;
+	char		**envp = NULL;
 	int		rv;
 
 	pamc.conv = &misc_conv;
@@ -220,7 +220,7 @@ add_pid_cgroup(int pid, char *cg_path) {
 char *
 find_cgroup_base(void) {
 	struct stat	st;
-	char		*paths, *base, *next;
+	char		*paths = NULL, *base = NULL, *next = NULL;
 
 	if ((paths = russ_conf_get(conf, "cgroup", "base", NULL)) == NULL) {
 		return NULL;
@@ -245,7 +245,7 @@ free_paths:
 
 char *
 squote_string(char *s) {
-	char	*s2;
+	char	*s2 = NULL;
 
 	if (((s2 = russ_malloc(strlen(s)+1+2)) == NULL)
 		|| (sprintf(s2, "'%s'", s) < 0)) {
@@ -282,12 +282,15 @@ get_cg_path(char **attrv) {
 
 void
 execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd, char **argv, char **envp) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			**envp2;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			**envp2 = NULL;
 	pid_t			pid;
 	int			fd;
 	int			status;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	/* change uid/gid ASAP */
 	/* TODO: this may have to move to support job service */
@@ -348,10 +351,14 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 
 void
 svc_loginshell_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			**argv;
-	char			*username, *shell, *lshell, *home;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			**argv = NULL;
+	char			*username = NULL, *home = NULL;
+	char			*shell = NULL, *lshell = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		if (req->argv[0] == NULL) {
@@ -386,9 +393,13 @@ svc_loginshell_handler(struct russ_sess *sess) {
 
 void
 svc_simple_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			*username, *shell, *lshell, *home;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			*username = NULL, *home = NULL;
+	char			*shell = NULL, *lshell = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (get_user_info(sconn->creds.uid, &username, &shell, &lshell, &home) < 0) {
 		russ_sconn_fatal(sconn, "error: could not get user/shell info", RUSS_EXIT_FAILURE);
@@ -404,19 +415,23 @@ svc_simple_handler(struct russ_sess *sess) {
 
 void
 svc_cgroup_path_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 
-	;
+	sconn = sess->sconn;
+	req = sess->req;
 }
 
 void
 svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			*cg_path = NULL;
 	char			*next_spath = NULL;
 	int			n;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		/* find cg_path */
@@ -458,8 +473,11 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 
 void
 svc_cgroup_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
@@ -478,8 +496,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*node;
-	struct russ_svr		*svr;
+	struct russ_svcnode	*node = NULL;
+	struct russ_svr		*svr = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 

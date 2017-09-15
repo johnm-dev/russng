@@ -45,7 +45,7 @@
 */
 static char **
 __russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
-	char	**argv;
+	char	**argv = NULL;
 	int	i;
 
 	/* count args */
@@ -136,9 +136,10 @@ russ_dialv_wait_timeout(int timeout, const char *op, const char *spath, char **a
 int
 russ_dialv_wait_inouterr(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv,
 	int *exitst, struct russ_buf **rbufs) {
-	struct russ_cconn	*cconn;
+	struct russ_cconn	*cconn = NULL;
 	struct pollfd		pollfds[4];
-	char			*buf, dbuf[1<<16];
+	char			*buf = NULL;
+	char			dbuf[1<<16];
 	int			fd, openfds, rv, wrv;
 	int			i, n;
 
@@ -323,9 +324,9 @@ russ_execv_wait_inouterr_timeout(int timeout, const char *spath, char **attrv, c
 */
 struct russ_cconn *
 russ_execl(russ_deadline deadline, const char *spath, char **attrv, ...) {
-	struct russ_cconn	*cconn;
+	struct russ_cconn	*cconn = NULL;
 	va_list			ap, ap2;
-	char			**argv;
+	char			**argv = NULL;
 	int			argc;
 
 	va_start(ap, attrv);
@@ -417,7 +418,7 @@ static int
 _mkdirs(char *dirnames, int mode) {
 	struct stat	st;
 	char		*dname = NULL;
-	char		*p, *q;
+	char		*p = NULL, *q = NULL;
 
 	if ((dirnames = strdup(dirnames)) == NULL) {
 		return -1;
@@ -459,18 +460,18 @@ fail:
 */
 int
 russ_start(int argc, char **argv) {
-	struct russ_conf	*conf;
+	struct russ_conf	*conf = NULL;
 	int			lisd;
 	int			oargc;
-	char			**oargv;
-	char			*main_path, *main_addr;
-	char			*main_cwd;
+	char			**oargv = NULL;
+	char			*main_path = NULL, *main_addr = NULL;
+	char			*main_cwd = NULL;
 	mode_t			main_file_mode;
-	char			*main_file_user, *main_file_group;
+	char			*main_file_user = NULL, *main_file_group = NULL;
 	int			main_hide_conf;
-	char			*main_mkdirs;
+	char			*main_mkdirs = NULL;
 	int			main_mkdirs_mode;
-	char			*main_user, *main_group;
+	char			*main_user = NULL, *main_group = NULL;
 	mode_t			main_umask;
 	uid_t			file_uid, uid;
 	gid_t			file_gid, gid;
@@ -564,7 +565,7 @@ russ_start(int argc, char **argv) {
 int
 russ_startl(char *dummy, ...) {
 	va_list			ap, ap2;
-	char			**argv;
+	char			**argv = NULL;
 	int			argc;
 
 	va_start(ap, dummy);

@@ -256,7 +256,7 @@ get_pid_info_fn	get_pid_info = NULL;
 
 int
 linux_get_pid_info(pid_t pid, struct pid_info *pi, int use_long_format) {
-	FILE		*f;
+	FILE		*f = NULL;
 	struct stat	st;
 	char		pid_path[1024], stat_path[1024], cmdline_path[1024];
 	int		sz;
@@ -320,7 +320,7 @@ get_pattr_idx(char *s) {
 
 int
 parse_pattr_idxs(char *s, pattr_idxs pattr_idxs) {
-	char	*ps, *pe;
+	char	*ps = NULL, *pe = NULL;
 	int	i;
 
 	s = strdup(s);
@@ -505,20 +505,23 @@ dprint_pid_info(int fd, struct pid_info *pi, pattr_idxs pattr_idxs, int long_for
 
 void
 gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	DIR			*dirp;
-	struct dirent		*entry;
-	char			path[PATH_MAX];
-	pid_t			pid;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	struct dirent		*entry = NULL;
 	struct pid_info		pi;
-	char			fmt[1024];
-	char			*scanfmt;
-	pattr_idxs		pattr_idxs;
-	int			use_long_format;
 	struct stat		st;
+	DIR			*dirp = NULL;
+	pid_t			pid;
+	pattr_idxs		pattr_idxs;
+	char			path[PATH_MAX];
+	char			fmt[1024];
+	char			*scanfmt = NULL;
+	int			use_long_format;
 	uid_t			uid;
 	gid_t			gid;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		use_long_format = (req->argv) && (strcmp(req->argv[0], "-l") == 0);
@@ -583,12 +586,15 @@ gnu_x_status_handler_helper(struct russ_sess *sess, int gnu) {
 
 void
 gpu_handler_helper(struct russ_sess *sess, int gpu) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	DIR			*dirp;
-	struct dirent 		*entry;
-	char			path[PATH_MAX];
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	struct dirent 		*entry = NULL;
 	struct stat		st;
+	DIR			*dirp = NULL;
+	char			path[PATH_MAX];
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		if ((dirp = opendir("/proc")) == NULL) {
@@ -642,10 +648,13 @@ svc_p_handler(struct russ_sess *sess) {
 
 void
 svc_p_pid_kill_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	pid_t			pid;
 	int			signum = -SIGTERM;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		if (sscanf(req->spath, "/p/%d", &pid) < 0) {
@@ -666,13 +675,16 @@ svc_p_pid_kill_handler(struct russ_sess *sess) {
 
 void
 svc_p_pid_status_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	pid_t			pid;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	struct pid_info		pi;
-	char			fmt[1024];
+	pid_t			pid;
 	pattr_idxs		pattr_idxs;
+	char			fmt[1024];
 	int			use_long_format;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		use_long_format = (req->argv) && (strcmp(req->argv[0], "-l") == 0);
@@ -694,15 +706,18 @@ svc_p_pid_status_handler(struct russ_sess *sess) {
 
 void
 svc_p_pid_wait_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	pid_t			pid;
-	struct stat		st, st_last;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	struct pollfd		pollfds[1];
+	struct stat		st, st_last;
+	pid_t			pid;
 	russ_deadline		deadline;
 	char			pid_path[1024];
 	int			timeout;
 	int			poll_delay;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		poll_delay = 1000;
@@ -778,8 +793,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*node, *node2;
-	struct russ_svr		*svr;
+	struct russ_svcnode	*node = NULL, *node2 = NULL;
+	struct russ_svr		*svr = NULL;
 	struct utsname		utsname;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {

@@ -128,13 +128,16 @@ tee_callback(struct russ_relaystream *self, int dir, void *cbarg) {
 */
 void
 svc_attr_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	struct russ_cconn	*cconn = NULL;
-	char			*spath;
-	char			*attr, *attreq;
-	char			*name, *value;
+	char			*spath = NULL;
+	char			*attr = NULL, *attreq = NULL;
+	char			*name = NULL, *value = NULL;
 	int			i, attrlen, exitst;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		spath = req->spath;
@@ -178,7 +181,7 @@ svc_attr_handler(struct russ_sess *sess) {
 		}
 
 		{
-			struct russ_relay	*relay;
+			struct russ_relay	*relay = NULL;
 			int			bufsize = BUFSIZE;
 			int			x;
 
@@ -227,8 +230,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*node;
-	struct russ_svr		*svr;
+	struct russ_svcnode	*node = NULL;
+	struct russ_svr		*svr = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 

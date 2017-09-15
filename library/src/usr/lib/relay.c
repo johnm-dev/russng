@@ -43,7 +43,7 @@
 */
 int
 russ_relaystream_init(struct russ_relaystream *self, int rfd, int wfd, int bufsize, int closeonexit) {
-	struct russ_buf	*rbuf;
+	struct russ_buf	*rbuf = NULL;
 
 	if ((self == NULL)
 		|| ((rbuf = russ_buf_new(bufsize)) == NULL)) {
@@ -95,7 +95,7 @@ russ_relaystream_free(struct russ_relaystream *self) {
 */
 struct russ_relaystream *
 russ_relaystream_new(int rfd, int wfd, int bufsize, int closeonexit, russ_relaystream_callback cb, void *cbarg) {
-	struct russ_relaystream	*self;
+	struct russ_relaystream	*self = NULL;
 
 	if ((rfd < 0) || (wfd < 0)) {
 #if 0
@@ -140,7 +140,7 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int closeonexit, russ_relays
 */
 int
 russ_relaystream_read(struct russ_relaystream *self) {
-	struct russ_buf	*rbuf;
+	struct russ_buf	*rbuf = NULL;
 	int		cnt;
 
 	rbuf = self->rbuf;
@@ -166,7 +166,7 @@ russ_relaystream_read(struct russ_relaystream *self) {
 */
 int
 russ_relaystream_write(struct russ_relaystream *self) {
-	struct russ_buf	*rbuf;
+	struct russ_buf	*rbuf = NULL;
 	int		cnt;
 
 	rbuf = self->rbuf;
@@ -216,7 +216,7 @@ russ_relay_free(struct russ_relay *self) {
 */
 struct russ_relay *
 russ_relay_new(int n) {
-	struct russ_relay	*self;
+	struct russ_relay	*self = NULL;
 	int			i;
 
 	if ((self = russ_malloc(sizeof(struct russ_relay))) == NULL) {
@@ -385,9 +385,9 @@ russ_relay_poll(struct russ_relay *self, int timeout) {
 */
 int
 russ_relay_serve(struct russ_relay *self, int timeout, int exitfd) {
-	struct pollfd		*pollfds, *pollfd;
-	struct russ_buf		*rbuf;
-	struct russ_relaystream	*stream, **streams;
+	struct pollfd		*pollfds = NULL, *pollfd = NULL;
+	struct russ_buf		*rbuf = NULL;
+	struct russ_relaystream	*stream = NULL, **streams = NULL;
 	int			events, nevents, revents;
 	int			fd;
 	int			nactive, nstreams;

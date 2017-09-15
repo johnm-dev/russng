@@ -56,7 +56,7 @@ russ_cconn_free(struct russ_cconn *self) {
 */
 struct russ_cconn *
 russ_cconn_new(void) {
-	struct russ_cconn	*cconn;
+	struct russ_cconn	*cconn = NULL;
 
 	if ((cconn = russ_malloc(sizeof(struct russ_cconn))) == NULL) {
 		return NULL;
@@ -89,7 +89,8 @@ russ_cconn_close_fd(struct russ_cconn *self, int index) {
 */
 static int
 russ_cconn_recv_fds(struct russ_cconn *self, russ_deadline deadline, int nfds, int *fds) {
-	char	buf[32+RUSS_CONN_MAX_NFDS], *bp, *bend;
+	char	buf[32+RUSS_CONN_MAX_NFDS];
+	char	*bp = NULL, *bend = NULL;
 	int	recvnfds, i;
 
 	/* recv count of fds and fd statuses */
@@ -199,7 +200,8 @@ set_exitst:
 */
 int
 russ_cconn_send_req(struct russ_cconn *self, russ_deadline deadline, struct russ_req *req) {
-	char	buf[RUSS_REQ_BUF_MAX], *bp = NULL;
+	char	buf[RUSS_REQ_BUF_MAX];
+	char	*bp = NULL;
 
 	if ((req == NULL)
 		|| ((bp = russ_enc_req(buf, buf+sizeof(buf), req)) == NULL)
@@ -224,10 +226,10 @@ russ_cconn_send_req(struct russ_cconn *self, russ_deadline deadline, struct russ
 */
 struct russ_cconn *
 russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **attrv, char **argv) {
-	struct russ_cconn	*cconn;
-	struct russ_req		*req;
-	struct russ_target	*targ;
-	char			*saddr, *spath2;
+	struct russ_cconn	*cconn = NULL;
+	struct russ_req		*req = NULL;
+	struct russ_target	*targ = NULL;
+	char			*saddr = NULL, *spath2 = NULL;
 
 	if (russ_spath_split(spath, &saddr, &spath2) < 0) {
 		return NULL;
@@ -277,11 +279,11 @@ free_saddr:
 */
 struct russ_cconn *
 russ_diall(russ_deadline deadline, const char *op, const char *spath, char **attrv, ...) {
-	struct russ_cconn	*cconn;
+	struct russ_cconn	*cconn = NULL;
 	va_list			ap;
-	void			*p;
+	void			*p = NULL;
 	int			i, argc;
-	char			**argv;
+	char			**argv = NULL;
 
 	/* count args */
 	va_start(ap, attrv);

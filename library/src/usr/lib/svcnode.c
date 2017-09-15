@@ -45,7 +45,7 @@
 */
 struct russ_svcnode *
 russ_svcnode_new(const char *name, russ_svchandler handler) {
-	struct russ_svcnode	*self;
+	struct russ_svcnode	*self = NULL;
 
 	if ((self = russ_malloc(sizeof(struct russ_svcnode))) == NULL) {
 		return NULL;
@@ -91,7 +91,7 @@ russ_svcnode_free(struct russ_svcnode *self) {
 */
 struct russ_svcnode *
 russ_svcnode_add(struct russ_svcnode *self, const char *name, russ_svchandler handler) {
-	struct russ_svcnode	*curr, *last, *node;
+	struct russ_svcnode	*curr = NULL, *last = NULL, *node = NULL;
 	int			cmp;
 
 	if (self == NULL) {
@@ -136,8 +136,8 @@ russ_svcnode_add(struct russ_svcnode *self, const char *name, russ_svchandler ha
 */
 struct russ_svcnode *
 russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int mpath_cap) {
-	struct russ_svcnode	*node;
-	char			*sep;
+	struct russ_svcnode	*node = NULL;
+	char			*sep = NULL;
 	int			len, cmp;
 
 	if (self == NULL) {

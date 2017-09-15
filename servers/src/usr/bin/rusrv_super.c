@@ -84,7 +84,7 @@ unlock_file(char *path) {
 */
 int
 get_pid(char *path) {
-	FILE	*f;
+	FILE	*f = NULL;
 	int	pid;
 
 	if (((f = fopen(path, "r")) == NULL)
@@ -105,7 +105,7 @@ get_pid(char *path) {
 */
 int
 put_pid(char *path, int pid) {
-	FILE	*f;
+	FILE	*f = NULL;
 
 	if (((f = fopen(path, "w+")) == NULL)
 		|| (fprintf(f, "%d", pid) < 0)) {
@@ -235,7 +235,7 @@ int
 setup_announce_paths(void) {
 	char	*path = NULL, *superpath = NULL, *rpath = NULL;
 	char	sympath[PATH_MAX];
-	char	**sections, *section;
+	char	**sections = NULL, *section = NULL;
 	int	cnt = 0, i, n;
 
 	superpath = russ_conf_get(conf, "main", "path", NULL);
@@ -297,8 +297,8 @@ setup_trackdir(void) {
 */
 int
 clean_trackdir(void) {
-	DIR		*dirp;
-	struct dirent	*dire;
+	DIR		*dirp = NULL;
+	struct dirent	*dire = NULL;
 	char		svrname[RUSS_REQ_SPATH_MAX];
 	int		n;
 
@@ -329,7 +329,7 @@ clean_trackdir(void) {
 char *
 match_svrname(char *spath) {
 	char	buf[RUSS_REQ_SPATH_MAX];
-	char	*p;
+	char	*p = NULL;
 
 	if (spath[0] == '\0') {
 		return NULL;
@@ -377,10 +377,13 @@ russ_spath_reprefix(char *spath, char *oldpref, char *newpref) {
 */
 int
 redialandsplice(struct russ_sess *sess, char *svrname) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;	
-	struct russ_cconn	*cconn;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	struct russ_cconn	*cconn = NULL;
 	int			cnt;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	for (cnt = 3; cnt > 0; cnt--) {
 		/* switch user */
@@ -430,9 +433,11 @@ redialandsplice(struct russ_sess *sess, char *svrname) {
 */
 int
 list_servers(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	char			*svrname, **svrnames;
+	struct russ_sconn	*sconn = NULL;
+	char			*svrname = NULL, **svrnames = NULL;
 	int			i;
+
+	sconn = sess->sconn;
 
 	if ((svrnames = russ_conf_sections(conf)) == NULL) {
 		return -1;
@@ -455,8 +460,11 @@ list_servers(struct russ_sess *sess) {
 */
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		list_servers(sess);
@@ -467,11 +475,14 @@ svc_root_handler(struct russ_sess *sess) {
 
 void
 svc_server_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			*svrname = NULL, *spath;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			*svrname = NULL, *spath = NULL;
 	char			buf[RUSS_REQ_SPATH_MAX];
 	int			n;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if ((svrname = match_svrname(req->spath)) == NULL) {
 		goto no_service;
@@ -506,8 +517,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*node;
-	struct russ_svr		*svr;
+	struct russ_svcnode	*node = NULL;
+	struct russ_svr		*svr = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 

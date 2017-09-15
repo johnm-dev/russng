@@ -75,7 +75,8 @@ const char		*HELP =
 */
 int
 update_attrv_argv(struct russ_req *req, char *s) {
-	char	pref[64], *p;
+	char	pref[64];
+	char	*p = NULL;
 	int	index;
 
 	if (((p = strchr(s, '=')) == NULL)
@@ -102,8 +103,11 @@ update_attrv_argv(struct russ_req *req, char *s) {
 
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
@@ -113,11 +117,14 @@ svc_root_handler(struct russ_sess *sess) {
 
 void
 svc_root_value_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	int			attrsz, argvsz;
-	char			*spath = NULL, *p0 = NULL, *p1 = NULL;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	ssize_t			n;
+	char			*spath = NULL, *p0 = NULL, *p1 = NULL;
+	int			attrsz, argvsz;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if ((spath = strdup(req->spath)) == NULL) {
 		goto failed_update;
@@ -179,8 +186,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*node;
-	struct russ_svr		*svr;
+	struct russ_svcnode	*node = NULL;
+	struct russ_svr		*svr = NULL;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);

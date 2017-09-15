@@ -43,8 +43,8 @@ const char		*HELP =
 "/<spath> <args>\n"
 "    Dial service at <spath>.\n";
 
-char			*logfilename = 0;
-char			*spath_prefix;
+char			*logfilename = NULL;
+char			*spath_prefix = NULL;
 
 /**
 * Answer and service request only if it is for "/". Otherwise, pass
@@ -52,11 +52,15 @@ char			*spath_prefix;
 */
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_svr		*svr = sess->svr;
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_svr		*svr = NULL;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			spath[RUSS_REQ_SPATH_MAX];
 	int			n;
+
+	svr = sess->svr;
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (russ_snprintf(spath, sizeof(spath), "%s%s", spath_prefix, req->spath) < 0) {
 		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
@@ -85,7 +89,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svr		*svr;
+	struct russ_svr		*svr = NULL;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);

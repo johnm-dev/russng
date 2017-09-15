@@ -53,8 +53,11 @@ struct helper_data {
 */
 static void
 russ_svr_handler_helper(void *data) {
-	struct russ_svr		*svr = ((struct helper_data *)data)->svr;
-	struct russ_sconn	*sconn = ((struct helper_data *)data)->sconn;
+	struct russ_svr		*svr = NULL;
+	struct russ_sconn	*sconn = NULL;
+
+	svr = ((struct helper_data *)data)->svr;
+	sconn = ((struct helper_data *)data)->sconn;
 
 	russ_svr_handler(svr, sconn);
 
@@ -89,8 +92,8 @@ russ_svr_loop_fork(struct russ_svr *self) {
 */
 void
 russ_svr_loop_thread(struct russ_svr *self) {
-	struct russ_sconn	*sconn;
-	struct helper_data	*data;
+	struct russ_sconn	*sconn = NULL;
+	struct helper_data	*data = NULL;
 	pthread_t		th;
 
 	while (1) {

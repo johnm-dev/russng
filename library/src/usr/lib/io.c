@@ -65,7 +65,7 @@ russ_dprintf(int fd, const char *format, ...) {
 int
 russ_lprintf(const char *path, const char *dformat, const char *format, ...) {
 	va_list	ap;
-	FILE	*f;
+	FILE	*f = NULL;
 	int	rv;
 
 	if ((f = fopen(path, "a")) == NULL) {
@@ -126,7 +126,7 @@ int
 russ_vdprintf(int fd, const char *format, va_list ap) {
 	va_list	aq;
 	char	_buf[8192];
-	char	*buf;
+	char	*buf = NULL;
 	int	n, bufsz;
 
 	buf = _buf;

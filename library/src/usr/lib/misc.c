@@ -36,7 +36,8 @@
 */
 int
 russ_write_exit(int fd, int exitst) {
-	char	buf[16], *bp;
+	char	buf[16];
+	char	*bp = NULL;
 
 	if (((bp = russ_enc_exit(buf, buf+sizeof(buf), exitst)) == NULL)
 		|| (russ_writen(fd, buf, bp-buf) < bp-buf)) {

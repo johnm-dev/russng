@@ -41,8 +41,8 @@
 int
 print_dir_list(char *spath) {
 	struct stat		st;
-	DIR			*dir;
-	struct dirent		*dent;
+	DIR			*dir = NULL;
+	struct dirent		*dent = NULL;
 	char			path[RUSS_REQ_SPATH_MAX];
 	int			n;
 
@@ -155,16 +155,16 @@ print_usage(char *prog_name) {
 
 int
 main(int argc, char **argv) {
-	struct russ_cconn	*cconn;
+	struct russ_cconn	*cconn = NULL;
 	struct stat		st;
 	russ_deadline		deadline;
+	char			*prog_name = NULL;
+	char			*op = NULL, *spath = NULL, *arg = NULL;
+	char			*attrv[RUSS_REQ_ATTRS_MAX];
+	char			*ipath = NULL;
 	int			debug;
 	int			timeout;
-	char			*prog_name;
-	char			*op, *spath, *arg;
-	char			*attrv[RUSS_REQ_ATTRS_MAX];
 	int			argi, attrc;
-	char			*ipath;
 	int			ifd;
 	int			bufsize, exitst;
 	int			show_stats;

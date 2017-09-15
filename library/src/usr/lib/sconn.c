@@ -56,7 +56,7 @@ russ_sconn_free(struct russ_sconn *self) {
 */
 struct russ_sconn *
 russ_sconn_new(void) {
-	struct russ_sconn	*sconn;
+	struct russ_sconn	*sconn = NULL;
 
 	if ((sconn = russ_malloc(sizeof(struct russ_sconn))) == NULL) {
 		return NULL;
@@ -93,7 +93,7 @@ russ_sconn_close_fd(struct russ_sconn *self, int index) {
 */
 struct russ_sconn *
 russ_sconn_accept(russ_deadline deadline, int lisd) {
-	struct russ_sconn	*self;
+	struct russ_sconn	*self = NULL;
 	struct sockaddr_un	servaddr;
 	socklen_t		servaddr_len;
 
@@ -148,7 +148,8 @@ russ_sconn_accepthandler(russ_deadline deadline, int lisd) {
 */
 int
 russ_sconn_send_fds(struct russ_sconn *self, int nfds, int *cfds) {
-	char	buf[32+RUSS_CONN_MAX_NFDS], *bp, *bend;
+	char	buf[32+RUSS_CONN_MAX_NFDS];
+	char	*bp = NULL, *bend = NULL;
 	int	i;
 
 	/* find "real" nfds (where fd>=0) */
@@ -297,8 +298,9 @@ russ_sconn_splice(struct russ_sconn *self, struct russ_cconn *dconn) {
 */
 struct russ_req *
 russ_sconn_await_req(struct russ_sconn *self, russ_deadline deadline) {
-	struct russ_req		*req;
-	char			buf[RUSS_REQ_BUF_MAX], *bp = NULL;
+	struct russ_req		*req = NULL;
+	char			buf[RUSS_REQ_BUF_MAX];
+	char			*bp = NULL;
 	int			size;
 
 	/* need to get request size to load buffer */
@@ -342,7 +344,8 @@ russ_sconn_close(struct russ_sconn *self) {
 */
 int
 russ_sconn_exit(struct russ_sconn *self, int exitst) {
-	char	buf[32], *bp;
+	char	buf[32];
+	char	*bp = NULL;
 
 	/* close all non-sysfds */
 	russ_fds_close(self->fds, RUSS_CONN_NFDS);
@@ -388,7 +391,7 @@ russ_sconn_fatal(struct russ_sconn *self, const char *msg, int exitst) {
 */
 int
 russ_sconn_redialandsplice(struct russ_sconn *self, russ_deadline deadline, struct russ_req *req) {
-	struct russ_cconn	*cconn;
+	struct russ_cconn	*cconn = NULL;
 
 	/* switch user */
 	if ((russ_switch_userinitgroups(self->creds.uid, self->creds.gid) < 0)

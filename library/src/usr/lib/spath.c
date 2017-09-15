@@ -60,9 +60,9 @@ char *
 russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 	struct stat	st;
 	char		buf[RUSS_REQ_SPATH_MAX], lnkbuf[RUSS_REQ_SPATH_MAX], tmpbuf[RUSS_REQ_SPATH_MAX];
-	char		*bp, *bend, *bp2;
-	char		*sfmt, *lfmt;
-	char		*services_dir;
+	char		*bp = NULL, *bend = NULL, *bp2 = NULL;
+	char		*sfmt = NULL, *lfmt = NULL;
+	char		*services_dir = NULL;
 	int		sdlen, cnt, stval;
 	int		changed;
 	int		n, nfollow;
@@ -203,8 +203,8 @@ russ_spath_resolve(const char *spath) {
 */
 char *
 russ_find_socket_addr(const char *spath) {
-	char		*saddr;
 	struct stat	st;
+	char		*saddr = NULL;
 
 	if ((spath = russ_spath_resolve(spath)) != NULL) {
 		saddr = strdup(spath);
@@ -237,9 +237,10 @@ russ_find_socket_addr(const char *spath) {
 */
 int
 russ_spath_split(const char *spath, char **saddr, char **spath2) {
-	struct russ_target	*targ;
+	struct russ_target	*targ = NULL;
 	struct stat		st;
-	char			*p, _spath2[RUSS_REQ_SPATH_MAX];
+	char			*p = NULL;
+	char			_spath2[RUSS_REQ_SPATH_MAX];
 
 	/* initialize */
 	*saddr = NULL;

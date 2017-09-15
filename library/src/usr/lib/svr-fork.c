@@ -40,7 +40,7 @@ typedef void (*sighandler_t)(int);
 */
 void
 russ_svr_loop_fork(struct russ_svr *self) {
-	struct russ_sconn	*sconn;
+	struct russ_sconn	*sconn = NULL;
 	sighandler_t		sigh;
 	pid_t			pid, wpid;
 	int			wst;

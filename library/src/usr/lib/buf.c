@@ -67,7 +67,7 @@ russ_buf_init(struct russ_buf *self, char *data, int cap, int len) {
 */
 struct russ_buf *
 russ_buf_new(int cap) {
-	struct russ_buf	*self;
+	struct russ_buf	*self = NULL;
 
 	if (((self = russ_malloc(sizeof(struct russ_buf))) == NULL)
 		|| ((self->data = russ_malloc(cap)) == NULL)) {

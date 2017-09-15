@@ -55,11 +55,11 @@ print_usage(char *prog_name) {
 
 int
 main(int argc, char **argv) {
-	struct russ_cconn	*cconn;
-	struct russ_sconn	*sconn;
-	struct russ_req		*req;
+	struct russ_cconn	*cconn = NULL;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	russ_deadline		deadline;
-	char			*prog_name;
+	char			*prog_name = NULL;
 	int			bufsize, exitst;
 	int			cbfd;
 
@@ -99,7 +99,7 @@ main(int argc, char **argv) {
 	russ_lprintf("/tmp/tuns.log", NULL, "CCC\n");
 
 	{
-		struct russ_relay		*relay;
+		struct russ_relay		*relay = NULL;
 		russ_relaystream_callback	cb = NULL;
 
 		relay = russ_relay_new(3);

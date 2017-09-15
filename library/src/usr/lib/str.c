@@ -62,7 +62,7 @@ russ_str_count_sub(const char *s, const char *ss) {
 */
 char *
 russ_str_dup_comp(const char *s, char sep, int idx) {
-	char	*p;
+	char	*p = NULL;
 
 	for (; idx > 0; idx--) {
 		if ((s = strchr(s, sep)) == NULL) {
@@ -92,7 +92,7 @@ russ_str_dup_comp(const char *s, char sep, int idx) {
 */
 int
 russ_str_get_comp(const char *s, char sep, int idx, char *b, int sz) {
-	char	*p;
+	char	*p = NULL;
 
 	for(; idx > 0; idx--) {
 		if ((s = strchr(s, sep)) == NULL) {

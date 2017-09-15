@@ -83,10 +83,13 @@ svc_root_handler(struct russ_sess *sess) {
 
 void
 svc_chargen_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			buf[] = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
 	char			off;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		off = 0;
@@ -104,10 +107,13 @@ svc_chargen_handler(struct russ_sess *sess) {
 
 void
 svc_conn_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	int			outfd;
 	int			i;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		outfd = sconn->fds[1];
@@ -131,11 +137,14 @@ svc_conn_handler(struct russ_sess *sess) {
 
 void
 svc_daytime_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			buf[1024];
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	struct tm		*now_tm = NULL;
 	time_t			now;
-	struct tm		*now_tm;
+	char			buf[1024];
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		now = time(NULL);
@@ -166,14 +175,17 @@ gettimeofday_float(void) {
 
 void
 svc_discard_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	struct timeval		tv;
+	char			*buf = NULL;
 	double			t0, t1, last_t1;
-	char			*buf;
 	int			buf_size;
 	long			n, total;
 	int			perf = 0;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		/* 8MB */
@@ -221,10 +233,13 @@ svc_discard_handler(struct russ_sess *sess) {
 
 void
 svc_echo_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			buf[1024];
 	ssize_t			n;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		while ((n = russ_read(sconn->fds[0], buf, sizeof(buf))) > 0) {
@@ -237,9 +252,12 @@ svc_echo_handler(struct russ_sess *sess) {
 
 void
 svc_env_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	int			i;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		for (i = 0; environ[i] != NULL; i++) {
@@ -252,9 +270,12 @@ svc_env_handler(struct russ_sess *sess) {
 
 void
 svc_exit_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	int			ev, rv;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		if ((req->argv == NULL)
@@ -273,10 +294,13 @@ svc_exit_handler(struct russ_sess *sess) {
 
 void
 svc_request_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	int			fd;
 	int			i;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		fd = sconn->fds[1];
@@ -310,8 +334,11 @@ svc_request_handler(struct russ_sess *sess) {
 
 void
 svc_whoami_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		russ_dprintf(sconn->fds[1], "uid (%d) gid (%d)\n", getuid(), getgid());
@@ -332,8 +359,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*node;
-	struct russ_svr		*svr;
+	struct russ_svcnode	*node = NULL;
+	struct russ_svr		*svr = NULL;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);

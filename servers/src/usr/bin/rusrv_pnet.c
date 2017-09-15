@@ -108,7 +108,7 @@ const char		*HELP =
 */
 int
 is_localhost(char *hostname) {
-	struct hostent	*hent;
+	struct hostent	*hent = NULL;
 
 	if (((hent = gethostbyname(hostname)) != NULL)
 		&& (strcmp(fqlocalhostname, hent->h_name) == 0)) {
@@ -122,7 +122,7 @@ is_localhost(char *hostname) {
 */
 void
 set_fqlocalhostname(void) {
-	struct hostent	*hent;
+	struct hostent	*hent = NULL;
 
 	fqlocalhostname[sizeof(fqlocalhostname)-1] = '\0';
 	if ((gethostname(fqlocalhostname, sizeof(fqlocalhostname)-1) < 0)
@@ -143,8 +143,11 @@ set_fqlocalhostname(void) {
 */
 void
 svc_count_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		russ_dprintf(sconn->fds[1], "%d", targetslist.n);
@@ -164,8 +167,11 @@ svc_count_handler(struct russ_sess *sess) {
 */
 void
 svc_first_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	/* NIY */
 	exit(1);
@@ -173,9 +179,12 @@ svc_first_handler(struct russ_sess *sess) {
 
 void
 svc_host_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	int			i;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		if (targetslist.n == 0) {
@@ -192,7 +201,7 @@ svc_host_handler(struct russ_sess *sess) {
 
 char *
 get_userhost(char *spath) {
-	char	*userhost;
+	char	*userhost = NULL;
 
 	userhost = russ_str_dup_comp(spath, '/', 2);
 	return userhost;
@@ -200,7 +209,7 @@ get_userhost(char *spath) {
 
 char *
 get_valid_userhost(char *spath) {
-	char	*userhost;
+	char	*userhost = NULL;
 	int	i;
 
 	if ((userhost = get_userhost(spath)) != NULL) {
@@ -216,9 +225,12 @@ get_valid_userhost(char *spath) {
 
 void
 svc_host_userhost_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			*userhost;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			*userhost = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if ((userhost = get_valid_userhost(req->spath)) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -242,11 +254,14 @@ svc_host_userhost_handler(struct russ_sess *sess) {
 */
 void
 svc_host_userhost_other_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
-	char			*relay_addr, *tail = NULL, *userhost = NULL;
+	char			*relay_addr = NULL, *tail = NULL, *userhost = NULL;
 	int			i, n;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if ((userhost = get_valid_userhost(req->spath)) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -270,9 +285,12 @@ svc_host_userhost_other_handler(struct russ_sess *sess) {
 
 void
 svc_id_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	int			i;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		if (targetslist.n == 0) {
@@ -309,9 +327,12 @@ get_valid_id_index(char *spath, int *idx, int *wrap) {
 
 void
 svc_id_index_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	int			i, idx, wrap;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -334,11 +355,14 @@ svc_id_index_handler(struct russ_sess *sess) {
 */
 void
 svc_id_index_other_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
-	char			*relay_addr, *tail = NULL, *userhost = NULL;
+	char			*relay_addr = NULL, *tail = NULL, *userhost = NULL;
 	int			i, idx, n, wrap = 0;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -378,8 +402,11 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 
 void
 svc_net_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (req->opnum == RUSS_OPNUM_LIST) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
@@ -389,9 +416,12 @@ svc_net_handler(struct russ_sess *sess) {
 
 void
 svc_net_userhost_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
-	char			*userhost;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			*userhost = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if ((userhost = get_userhost(req->spath)) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -415,11 +445,14 @@ svc_net_userhost_handler(struct russ_sess *sess) {
 */
 void
 svc_net_userhost_other_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
-	char			*relay_addr, *tail = NULL, *userhost = NULL;
+	char			*relay_addr = NULL, *tail = NULL, *userhost = NULL;
 	int			n;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if ((userhost = get_userhost(req->spath)) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -454,10 +487,13 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 */
 void
 svc_next_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	int			idx, n;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	idx = targetslist.next;
 	if (russ_snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[6])) < 0) {
@@ -482,10 +518,13 @@ svc_next_handler(struct russ_sess *sess) {
 */
 void
 svc_random_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	int			idx, n;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	idx = (random()/(double)RAND_MAX)*targetslist.n;
 	if (russ_snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[8])) < 0) {
@@ -507,12 +546,15 @@ svc_random_handler(struct russ_sess *sess) {
 */
 void
 svc_run_index_other_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
-	char			*relay_addr, *tail = NULL;
-	char			*userhost = NULL, *cgname = NULL, *exec_spath;
+	char			*relay_addr = NULL, *tail = NULL;
+	char			*userhost = NULL, *cgname = NULL, *exec_spath = NULL;
 	int			i, idx, n, wrap = 0;
+
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -551,7 +593,7 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 
 struct russ_sconn *
 accepthandler(russ_deadline deadline, int lisd) {
-	struct russ_sconn	*sconn;
+	struct russ_sconn	*sconn = NULL;
 
 	if ((sconn = russ_sconn_accept(deadline, lisd)) != NULL) {
 		targetslist.next = (targetslist.next+1 >= targetslist.n) ? 0 : targetslist.next+1;
@@ -568,11 +610,11 @@ accepthandler(russ_deadline deadline, int lisd) {
 */
 int
 load_targetsfile(char *filename) {
-	char	*line, *p;
-	int	i;
+	FILE	*f = NULL;
 	size_t	line_size;
 	ssize_t	nbytes;
-	FILE	*f;
+	char	*line = NULL, *p = NULL;
+	int	i;
 
 	if ((f = fopen(filename, "r")) == NULL) {
 		return -1;
@@ -621,9 +663,9 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*node;
-	struct russ_svr		*svr;
-	char			*targetsfilename;
+	struct russ_svcnode	*node = NULL;
+	struct russ_svr		*svr = NULL;
+	char			*targetsfilename = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 

@@ -82,8 +82,8 @@ russ_dec_uint32(char *b, uint32_t *v) {
 */
 char *
 russ_dec_int32(char *b, int32_t *v) {
+	char		*b2 = NULL;
 	uint32_t	v2;
-	char		*b2;
 
 	b2 = russ_dec_uint32(b, &v2);
 	*v = (int32_t)v2;
@@ -119,8 +119,8 @@ russ_dec_uint64(char *b, uint64_t *v) {
 */
 char *
 russ_dec_int64(char *b, int64_t *v) {
+	char		*b2 = NULL;
 	uint64_t	v2;
-	char		*b2;
 
 	b2 = russ_dec_uint64(b, &v2);
 	*v = (int64_t)v2;
@@ -171,7 +171,7 @@ russ_dec_s(char *b, char **bp) {
 */
 static char *
 _dec_sarray0(char *b, char ***v, int *alen, int append_null) {
-	char	**array, *s;
+	char	**array = NULL, *s = NULL;
 	int	_bcount, i;
 
 	b = russ_dec_int32(b, alen);
@@ -517,8 +517,9 @@ russ_enc_exit(char *b, char *bend, int v) {
 */
 char *
 russ_enc_req(char *b, char *bend, struct russ_req *v) {
-	char	*_b = b;
+	char	*_b = NULL;
 
+	_b = b;
 	if ((v == NULL)
 		|| ((b = russ_enc_int32(b, bend, 0)) == NULL)
 		|| ((b = russ_enc_s(b, bend, v->protocolstring)) == NULL)

@@ -49,9 +49,13 @@ const char		*HELP =
 */
 void
 svc_root_handler(struct russ_sess *sess) {
-	struct russ_svr		*svr = sess->svr;
-	struct russ_sconn	*sconn = sess->sconn;
-	struct russ_req		*req = sess->req;
+	struct russ_svr		*svr = NULL;
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	svr = sess->svr;
+	sconn = sess->sconn;
+	req = sess->req;
 
 	if (strcmp(req->spath, "/") == 0) {
 		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
@@ -84,8 +88,8 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root;
-	struct russ_svr		*svr;
+	struct russ_svcnode	*root = NULL;
+	struct russ_svr		*svr = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 

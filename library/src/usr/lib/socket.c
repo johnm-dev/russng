@@ -28,6 +28,7 @@
 #endif
 
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -312,7 +313,7 @@ int
 russ_recv_fd(int sd, int *fd) {
 	struct msghdr	msgh;
 	struct iovec	iov[1];
-	struct cmsghdr	*cmsgh;
+	struct cmsghdr	*cmsgh = NULL;
 	char		buf[1], cbuf[CMSG_SIZE];
 	int		rv;
 
@@ -359,7 +360,7 @@ int
 russ_send_fd(int sd, int fd) {
 	struct msghdr	msgh;
 	struct iovec	iov[1];
-	struct cmsghdr	*cmsgh;
+	struct cmsghdr	*cmsgh = NULL;
 	char		cbuf[CMSG_SIZE];
 	int		rv;
 

@@ -31,7 +31,7 @@
 
 void
 print_usage(char **argv) {
-	char	*prog_name;
+	char	*prog_name = NULL;
 
 	prog_name = strdup(argv[0]);
 	printf("usage: %s <spath> [...]\n", basename(prog_name));
@@ -40,7 +40,7 @@ print_usage(char **argv) {
 
 int
 main(int argc, char **argv) {
-	char	*res_spath;
+	char	*res_spath = NULL;
 	int	i;
 
 	if (argc == 1) {

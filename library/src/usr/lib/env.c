@@ -38,8 +38,9 @@ extern char	**environ;
 int
 russ_env_clear(void) {
 #if defined(__APPLE__) || defined(__FreeBSD__)
-	char	name[256], *_name = NULL;
-	char	*ch;
+	char	name[256];
+	char	*_name = NULL;
+	char	*ch = NULL;
 	int	pos, rv;
 
 	if (environ == NULL) {
@@ -80,7 +81,7 @@ russ_env_clear(void) {
 */
 int
 russ_env_reset(void) {
-	struct passwd	*pw;
+	struct passwd	*pw = NULL;
 
 	if (((pw = getpwuid(getuid())) == NULL)
 		|| (russ_env_clear() < 0)
@@ -100,7 +101,7 @@ russ_env_reset(void) {
 */
 int
 russ_env_update(char **envp) {
-	char	*s;
+	char	*s = NULL;
 
 	if (envp) {
 		for (; *envp; envp++) {
