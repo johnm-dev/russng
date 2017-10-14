@@ -86,17 +86,12 @@ main(int argc, char **argv) {
 
 	/* dial client */
 	exitst = 0;
-
-	russ_lprintf("/tmp/tuns.log", NULL, "AAA\n");
 	deadline = russ_to_deadline(30000);
-	russ_lprintf("/tmp/tuns.log", NULL, "req op (%s) spath (%s)\n", req->op, req->spath);
 	if ((cconn = russ_dialv(deadline, req->op, req->spath, req->attrv, req->argv)) == NULL) {
 		fprintf(stderr, "%s\n", RUSS_MSG_NODIAL);
 		exit(RUSS_EXIT_CALLFAILURE);
 	}
-	russ_lprintf("/tmp/tuns.log", NULL, "BBB\n");
 	sconn = russ_sconn_free(sconn);
-	russ_lprintf("/tmp/tuns.log", NULL, "CCC\n");
 
 	{
 		struct russ_relay		*relay = NULL;
