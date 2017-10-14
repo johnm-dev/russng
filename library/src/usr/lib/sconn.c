@@ -405,7 +405,10 @@ russ_sconn_redialandsplice(struct russ_sconn *self, russ_deadline deadline, stru
 	/* switch user, dial next service, and splice */
 	if (((cconn = russ_dialv(deadline, req->op, req->spath, req->attrv, req->argv)) == NULL)
 		|| (russ_sconn_splice(self, cconn) < 0)) {
-		russ_cconn_close(cconn);
+		if (cconn != NULL) {
+			russ_cconn_close(cconn);
+			cconn = russ_cconn_free(cconn);
+		}
 		russ_sconn_answerhandler(self);
 		russ_sconn_fatal(self, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		return -1;
