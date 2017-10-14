@@ -234,16 +234,20 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 	if (russ_spath_split(spath, &saddr, &spath2) < 0) {
 		return NULL;
 	}
-	if (((cconn = russ_cconn_new()) == NULL)
-		|| ((cconn->sd = russ_connectunix_deadline(deadline, saddr)) < 0)) {
+	if ((cconn = russ_cconn_new()) == NULL) {
 		goto free_saddr;
+	}
+	if ((cconn->sd = russ_connectunix_deadline(deadline, saddr)) < 0) {
+		goto close_cconn;
 	}
 
 	russ_fds_init(cconn->sysfds, RUSS_CONN_NSYSFDS, -1);
 	russ_fds_init(cconn->fds, RUSS_CONN_NFDS, -1);
 
-	if (((req = russ_req_new(RUSS_REQ_PROTOCOLSTRING, op, spath2, attrv, argv)) == NULL)
-		|| (russ_cconn_send_req(cconn, deadline, req) < 0)
+	if ((req = russ_req_new(RUSS_REQ_PROTOCOLSTRING, op, spath2, attrv, argv)) == NULL) {
+		goto close_cconn;
+	}
+	if ((russ_cconn_send_req(cconn, deadline, req) < 0)
 		|| (russ_cconn_recv_fds(cconn, deadline, RUSS_CONN_NSYSFDS, cconn->sysfds) < 0)
 		|| (russ_cconn_recv_fds(cconn, deadline, RUSS_CONN_NFDS, cconn->fds) < 0)) {
 		goto free_request;
