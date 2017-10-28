@@ -121,6 +121,22 @@ russ_svr_set_accepthandler(struct russ_svr *self, russ_accepthandler handler) {
 }
 
 /**
+* Set timeout for accept call.
+*
+* @param self		russ server object
+* @param value		timeout in milliseconds
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_accepttimeout(struct russ_svr *self, int value) {
+	if (self == NULL) {
+		return -1;
+	}
+	self->accepttimeout = value;
+	return 0;
+}
+
+/**
 * Register an alternative answer handler.
 *
 * @param self		russ server object

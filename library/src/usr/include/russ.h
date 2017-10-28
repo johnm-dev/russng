@@ -394,6 +394,7 @@ struct russ_sconn *russ_svr_accept(struct russ_svr *, russ_deadline);
 void russ_svr_handler(struct russ_svr *, struct russ_sconn *);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
+int russ_svr_set_accepttimeout(struct russ_svr *, int);
 int russ_svr_set_answerhandler(struct russ_svr *, russ_answerhandler);
 int russ_svr_set_autoswitchuser(struct russ_svr *, int);
 int russ_svr_set_closeonaccept(struct russ_svr *, int);
