@@ -60,24 +60,24 @@ russ_accept_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, sock
 
 	pollfds[0].fd = sd;
 	pollfds[0].events = POLLIN;
-	while (1) {
 #if 1
-		if ((rv = poll(pollfds, 1, russ_to_timeout(deadline))) > 0) {
-			return accept(sd, addr, addrlen);
-		} else if (rv == 0) {
-			errno = 0; /* reset */
-			return -1;
-		} else if (errno != EINTR) {
-			return -1;
-		}
+	if ((rv = russ_poll_deadline(deadline, pollfds, 1)) > 0) {
+		return accept(sd, addr, addrlen);
+	} else if (rv == 0) {
+		/* timeout */
+		errno = 0;
+		return -1;
+	}
+	return -1;
 #endif
 #if 0
+	while (1) {
 		if (((rv = accept(sd, addr, addrlen)) >= 0)
 			|| (errno != EINTR)) {
 			return rv;
 		}
-#endif
 	}
+#endif
 }
 
 /**
