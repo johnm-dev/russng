@@ -147,6 +147,56 @@ russ_sarray0_free(char **arr) {
 }
 
 /**
+* Append strings to NULL-terminated string array.
+*
+* @param arrp[inout]	pointer to string array (array may be NULL)
+* @param ...		valist of strings terminated by NULL
+* @return		0 on success; -1 on failure
+*/
+int
+russ_sarray0_append(char ***arrp, ...) {
+	va_list			ap;
+	char			**arr = NULL, *s = NULL;
+	int			narr, narrp;
+	int			i;
+
+	/* count existing items */
+	for (narrp = 0; (*arrp)[narrp] != NULL; narrp++);
+
+	/* count new items */
+	va_start(ap, arrp);
+	for (narr = 0; va_arg(ap, char *) != NULL ; narr++);
+	va_end(ap);
+
+	/* resize */
+	narr += narrp;
+	if ((arr = realloc(*arrp, sizeof(char *)*(narr+1))) == NULL) {
+		return -1;
+	}
+
+	/* append new items */
+	va_start(ap, arrp);
+	for (i = narrp; i < narr; i++) {
+		if ((s = va_arg(ap, char *)) == NULL) {
+			break;
+		}
+		if ((arr[i] = strdup(s)) == NULL) {
+			/* free appended items */
+			for (i--; i > narrp; i--) {
+				arr[i] = russ_free(arr[i]);
+			}
+			arr[i] = NULL;
+			return -1;
+		}
+	}
+	arr[i] = NULL;
+	va_end(ap);
+	*arrp = arr;
+
+	return 0;
+}
+
+/**
 * Count elements of NULL-terminated string array (not including
 * NULL).
 *
