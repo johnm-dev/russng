@@ -388,15 +388,18 @@ struct russ_svr *
 russ_init(struct russ_conf *conf) {
 	struct russ_svr		*svr = NULL;
 	struct russ_svcnode	*root = NULL;
-	int			sd, closeonaccept;
+	int			sd;
+	int			accepttimeout, closeonaccept;
 
 	if (conf == NULL) {
 		return NULL;
 	}
 	sd = (int)russ_conf_getint(conf, "main", "sd", RUSS_SVR_LIS_SD_DEFAULT);
+	accepttimeout = (int)russ_conf_getint(conf, "main", "accepttimeout", RUSS_SVR_TIMEOUT_ACCEPT);
 	closeonaccept = (int)russ_conf_getint(conf, "main", "closeonaccept", 0);
 	if (((root = russ_svcnode_new("", NULL)) == NULL)
 		|| ((svr = russ_svr_new(root, 0, sd)) == NULL)
+		|| (russ_svr_set_accepttimeout(svr, accepttimeout) < 0)
 		|| (russ_svr_set_closeonaccept(svr, closeonaccept) < 0)) {
 		goto fail;
 	}
