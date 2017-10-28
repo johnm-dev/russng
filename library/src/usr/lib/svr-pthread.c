@@ -96,23 +96,24 @@ russ_svr_loop_thread(struct russ_svr *self) {
 	struct helper_data	*data = NULL;
 	pthread_t		th;
 
-	while (1) {
-		if (((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd)) == NULL)
-			|| ((data = russ_malloc(sizeof(struct helper_data))) != NULL)) {
-			if (sconn) {
-				russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
-				russ_sconn_free(sconn);
-			}
-			if (self->lisd < 0) {
-				break;
-			}
-			fprintf(stderr, "error: cannot accept connection\n");
-			sleep(1);
-			continue;
-		}
+	while (self->lisd >= 0) {
+		sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd);
 		if (self->closeonaccept) {
 			russ_fds_close(&self->lisd, 1);
 		}
+		if (sconn == NULL) {
+			fprintf(stderr, "error: cannot accept connection\n");
+			sleep(1);
+			continue;
+		} else if ((data = russ_malloc(sizeof(struct helper_data))) == NULL) {
+			/* successfull accept but no memory */
+			russ_sconn_fatal(sconn, RUSS_MSG_NOEXIT, RUSS_EXIT_SYSFAILURE);
+			russ_sconn_free(sconn);
+			fprintf(stderr, "error: cannot allocate helper_data\n");
+			sleep(1);
+			continue;
+		}
+
 		data->svr = self;
 		data->sconn = sconn;
 		if (pthread_create(&th, NULL, (void *)russ_svr_handler_helper, (void *)data) < 0) {

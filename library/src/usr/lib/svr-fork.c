@@ -49,18 +49,17 @@ russ_svr_loop_fork(struct russ_svr *self) {
 		return;
 	}
 
-	while (1) {
-		if ((sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd)) == NULL) {
-			if (self->lisd < 0) {
-				break;
-			}
+	while (self->lisd >= 0) {
+		sconn = self->accepthandler(russ_to_deadline(self->accepttimeout), self->lisd);
+		if (self->closeonaccept) {
+			russ_fds_close(&self->lisd, 1);
+		}
+		if (sconn == NULL) {
 			fprintf(stderr, "error: cannot accept connection\n");
 			sleep(1);
 			continue;
 		}
-		if (self->closeonaccept) {
-			russ_fds_close(&self->lisd, 1);
-		}
+
 		if ((pid = fork()) == 0) {
 			setsid();
 			sigh = signal(SIGHUP, SIG_IGN);
