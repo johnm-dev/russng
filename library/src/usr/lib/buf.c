@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <russ_priv.h>
+#include <russ/priv.h>
 
 /**
 * Initialize a russ_buf object with new data. Optionally allocate

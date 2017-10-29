@@ -34,7 +34,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 /**
 * Free client connection object.

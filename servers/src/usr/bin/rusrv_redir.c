@@ -33,7 +33,7 @@
 
 extern char **environ;
 
-#include <russ.h>
+#include <russ/russ.h>
 
 /* global */
 struct russ_conf	*conf = NULL;

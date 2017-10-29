@@ -35,7 +35,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <russ_priv.h>
+#include <russ/priv.h>
 
 /**
 * Close fd with auto retry on EINTR.

@@ -1,5 +1,5 @@
 /*
-* include/russ_priv.h
+* include/russ/priv.h
 */
 
 /*
@@ -22,8 +22,8 @@
 # license--end
 */
 
-#ifndef RUSS_PRIV_H
-#define RUSS_PRIV_H
+#ifndef _RUSS_PRIV_H
+#define _RUSS_PRIV_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,7 +35,7 @@ extern "C" {
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "russ.h"
+#include "russ/russ.h"
 
 #define RUSS_REQ_BUF_MAX	262144
 #define RUSS_LISTEN_BACKLOG	1024
@@ -103,4 +103,4 @@ uid_t russ_user2uid(char *);
 }
 #endif
 
-#endif /* RUSS_PRIV_H */
+#endif /* _RUSS_PRIV_H */

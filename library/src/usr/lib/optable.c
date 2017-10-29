@@ -24,7 +24,7 @@
 
 #include <string.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 struct russ_optable russ_optable[] = {
 	{ "execute", RUSS_OPNUM_EXECUTE },

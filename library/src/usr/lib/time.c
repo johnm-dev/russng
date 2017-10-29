@@ -32,7 +32,7 @@
 #include <sys/time.h>
 #endif
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 /**
 * Get current time as deadline value. Meant for internal use.

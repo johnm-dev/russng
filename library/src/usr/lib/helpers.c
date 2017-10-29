@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 #define POLLHEN		(POLLHUP|POLLERR|POLLNVAL)
 #define POLLIHEN	(POLLIN|POLLHUP|POLLERR|POLLNVAL)

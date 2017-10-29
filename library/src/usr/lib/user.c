@@ -29,7 +29,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <russ.h>
+#include <russ/russ.h>
 
 /**
 * Convert group as gid or groupname string into a gid.

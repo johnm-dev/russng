@@ -32,7 +32,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 /**
 * fprintf-like for descriptor instead of FILE *.

@@ -1,5 +1,5 @@
 /*
-* include/russ_conf.h
+* include/russ/conf.h
 */
 
 /*
@@ -22,8 +22,8 @@
 # license--end
 */
 
-#ifndef RUSS_CONF_H
-#define RUSS_CONF_H
+#ifndef _RUSS_CONF_H
+#define _RUSS_CONF_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,4 +80,4 @@ int russ_conf_write(struct russ_conf *, FILE *);
 }
 #endif
 
-#endif /* RUSS_CONF_H */
+#endif /* _RUSS_CONF_H */

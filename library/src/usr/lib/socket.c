@@ -35,7 +35,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 /**
 * accept() with automatic restart on EINTR.

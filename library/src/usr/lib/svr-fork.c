@@ -29,7 +29,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 typedef void (*sighandler_t)(int);
 

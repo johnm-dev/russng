@@ -1,5 +1,5 @@
 /*
-* include/russ.h
+* include/russ/russ.h
 */
 
 /*
@@ -22,8 +22,8 @@
 # license--end
 */
 
-#ifndef RUSS_H
-#define RUSS_H
+#ifndef _RUSS_RUSS_H
+#define _RUSS_RUSS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -417,4 +417,4 @@ int russ_switch_userinitgroups(uid_t, gid_t);
 }
 #endif
 
-#endif /* RUSS_H */
+#endif /* _RUSS_RUSS_H */

@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <russ.h>
+#include <russ/russ.h>
 
 /*
 ** item

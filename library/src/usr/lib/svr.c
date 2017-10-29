@@ -35,7 +35,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX	64

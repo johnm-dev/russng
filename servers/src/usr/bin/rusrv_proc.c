@@ -39,7 +39,7 @@
 
 extern char **environ;
 
-#include <russ.h>
+#include <russ/russ.h>
 
 #define DEFAULT_STATUS "pid:ppid:pgrp:sid:uid:gid:state:comm:cmdline"
 

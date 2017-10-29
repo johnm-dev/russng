@@ -36,7 +36,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 struct helper_data {
 	struct russ_svr		*svr;

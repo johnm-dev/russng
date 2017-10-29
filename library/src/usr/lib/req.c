@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 /**
 * Create new request.

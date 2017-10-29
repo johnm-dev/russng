@@ -35,7 +35,7 @@
 
 extern char **environ;
 
-#include <russ_priv.h>
+#include <russ/priv.h>
 
 #define SSH_EXEC	"/usr/bin/ssh"
 #define RUDIAL_EXEC	"/usr/bin/rudial"

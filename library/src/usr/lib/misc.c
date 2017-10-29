@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 /**
 * Write an (encoded) exit status to an fd.

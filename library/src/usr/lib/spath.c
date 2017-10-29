@@ -32,7 +32,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "russ_priv.h"
+#include "russ/priv.h"
 
 #define RUSS_SPATH_RESOLVE_SYMLINKS_MAX	32
 

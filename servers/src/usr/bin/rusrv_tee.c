@@ -35,7 +35,7 @@
 
 extern char **environ;
 
-#include <russ.h>
+#include <russ/russ.h>
 
 #define DEFAULT_DIAL_TIMEOUT	(30000)
 #define BUFSIZE		(1<<15)

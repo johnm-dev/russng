@@ -39,7 +39,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include <russ.h>
+#include <russ/russ.h>
 
 #define CONTAINER_TYPE_NONE	0
 #define CONTAINER_TYPE_CGROUP	1

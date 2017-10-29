@@ -33,7 +33,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <russ.h>
+#include <russ/russ.h>
 
 #define BUFSIZE		(1<<15)
 #define BUFSIZE_MAX	(1<<20)
