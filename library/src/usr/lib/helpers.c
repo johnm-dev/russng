@@ -36,33 +36,42 @@
 #define POLLIHEN	(POLLIN|POLLHUP|POLLERR|POLLNVAL)
 
 /*
-* Convert variadic argument list of "char *" to argv array.
+* Create NULL-terminated argv array from variadic argument list of
+* "char *". The argv array does not allocate new memory for the
+* individual items, but points to the strings in the va_list. To
+* provide flexibility, an initial size of argv is specified to allow
+* for some argv items to be set after return.
 *
-* @param[out] argc	size of argv array
-* @param ap		va_list for counting args
-* @param ap2		va_list for creating argv array
-* @return		argv array
+* @param maxargc	maximum size of argv
+* @param iargc		initial size of argv (number of leading, unassigned)
+* @param fargc		pointer to final size of argv array, NULL excluded
+* @param ap		va_list
+* @return		NULL-terminated argv array
 */
 static char **
-__russ_variadic_to_argv(int *argc, va_list ap, va_list ap2) {
-	char	**argv = NULL;
+__russ_variadic_to_argv(int maxargc, int iargc, int *fargc, va_list ap) {
+	va_list	ap2;
+	char	**argv;
 	int	i;
 
-	/* count args */
-	for (i = 0; va_arg(ap, char *) != NULL ; i++);
-	va_end(ap);
-
-	/* create argv (with space for NULL)*/
-	if ((argv = russ_malloc(sizeof(char *)*(i+1))) == NULL) {
-		return NULL;
-	}
-	*argc = i;
-	for (i = 0; i < *argc; i++) {
-		argv[i] = va_arg(ap2, char *);
-	}
-	argv[i] = NULL;
+	va_copy(ap2, ap);
+	for (i = iargc; (va_arg(ap2, char *) != NULL) && (i < maxargc); i++);
 	va_end(ap2);
 
+	if (i == maxargc) {
+		return NULL;
+	}
+	if ((argv = malloc(sizeof(char *)*(i+1))) == NULL) {
+		return NULL;
+	}
+
+	*fargc = i;
+	va_copy(ap2, ap);
+	for (i = iargc; i < *fargc; i++) {
+		argv[i] = va_arg(ap, char*);
+	}
+	va_end(ap2);
+	argv[i] = NULL;
 	return argv;
 }
 
@@ -325,15 +334,17 @@ russ_execv_wait_inouterr_timeout(int timeout, const char *spath, char **attrv, c
 struct russ_cconn *
 russ_execl(russ_deadline deadline, const char *spath, char **attrv, ...) {
 	struct russ_cconn	*cconn = NULL;
-	va_list			ap, ap2;
+	va_list			ap;
 	char			**argv = NULL;
 	int			argc;
 
 	va_start(ap, attrv);
-	va_start(ap2, attrv);
-	if ((argv = __russ_variadic_to_argv(&argc, ap, ap2)) == NULL) {
+	argv = __russ_variadic_to_argv(RUSS_REQ_ARGS_MAX, 0, &argc, ap);
+	va_end(ap);
+	if (argv == NULL) {
 		return NULL;
 	}
+
 	cconn = russ_dialv(deadline, "execute", spath, attrv, argv);
 	argv = russ_free(argv);
 
@@ -567,15 +578,17 @@ russ_start(int argc, char **argv) {
 */
 int
 russ_startl(char *dummy, ...) {
-	va_list			ap, ap2;
+	va_list			ap;
 	char			**argv = NULL;
 	int			argc;
 
 	va_start(ap, dummy);
-	va_start(ap2, dummy);
-	if ((argv = __russ_variadic_to_argv(&argc, ap, ap2)) == NULL) {
+	argv = __russ_variadic_to_argv(RUSS_REQ_ARGS_MAX, 0, &argc, ap);
+	va_end(ap);
+	if (argv == NULL) {
 		return -1;
 	}
+
 	russ_start(argc, argv);
 
 	/* should not get here; clean up on failure */
