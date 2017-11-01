@@ -23,11 +23,13 @@
 */
 
 #include <fcntl.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "russ/priv.h"
@@ -461,6 +463,103 @@ fail:
 	free(dirnames);
 	free(dname);
 	return -1;
+}
+
+/**
+* Spawn server using arguments as provided from the command line and
+* return a dynamically created socket file. Configuration and
+* non-configuration (i.e., after the --) may be provided.
+*
+* @param argc		number of arguments
+* @param argv		argument list
+* @return		path to socket file (free by caller); NULL
+*			on failure
+*/
+char *
+russ_spawn(int argc, char **argv) {
+	struct stat	st;
+	char		tmppath[PATH_MAX];
+	char		mainaddr[128];
+	char		**xargv;
+	int		xargc;
+	int		pid, status;
+	int		timeout;
+	int		i;
+
+	if (((xargv = russ_sarray0_dup(argv, argc+1)) == NULL)
+		|| (russ_snprintf(tmppath, sizeof(tmppath), "/tmp/.russ-%d-XXXXXX", getpid()) < 0)
+		|| (mkstemp(tmppath) < 0)) {
+		return NULL;
+	}
+
+	if ((russ_snprintf(mainaddr, sizeof(mainaddr), "main:addr=%s", tmppath) < 0)
+		|| (russ_sarray0_append(&xargv, "-c", mainaddr, NULL) < 0)) {
+		remove(tmppath);
+		return NULL;
+	}
+	xargc = russ_sarray0_count(xargv, 128);
+
+	if (fork() == 0) {
+		setsid();
+
+		/* close and reopen to occupy fds 0-2 */
+		for (i = 0; i < 1024; i++) {
+			close(i);
+		}
+		open("/dev/null", O_WRONLY);
+		open("/dev/null", O_RDONLY);
+		open("/dev/null", O_RDONLY);
+
+		if ((pid = fork()) == 0) {
+			signal(SIGPIPE, SIG_IGN);
+			russ_start(xargc, xargv);
+			exit(1);
+		}
+		waitpid(pid, &status, 0);
+		remove(tmppath);
+		exit(0);
+	}
+	for (timeout = 5000; timeout > 0; timeout -= 1) {
+		if ((stat(tmppath, &st) == 0)
+			&& (S_ISSOCK(st.st_mode))) {
+			break;
+		}
+		usleep(1000);
+	}
+	if (timeout < 0) {
+		return NULL;
+	}
+	return strdup(tmppath);
+}
+
+/**
+* Wrapper for russ_spawn() supporting variadic args.
+*
+* @see russ_spawn()
+*
+* @param arg		argument 0 of NULL-terminated list of strings
+* @return		NULL or russ_spawn()
+*/
+char *
+russ_spawnl(char *dummy, ...) {
+	va_list	ap;
+	char	*saddr = NULL;
+	char	**argv = NULL;
+	int	argc;
+
+	va_start(ap, dummy);
+	argv = __russ_variadic_to_argv(RUSS_REQ_ARGS_MAX, 1, &argc, ap);
+	va_end(ap);
+	if (argv == NULL) {
+		return NULL;
+	}
+
+	/* init argv[0], but it will be replaced */
+	argv[0] = "";
+	saddr = russ_spawn(argc, argv);
+	/* only free argv */
+	free(argv);
+	return saddr;
 }
 
 /**

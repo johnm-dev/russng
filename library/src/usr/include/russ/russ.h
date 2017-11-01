@@ -305,6 +305,8 @@ struct russ_cconn *russ_help(russ_deadline, const char *);
 struct russ_cconn *russ_info(russ_deadline, const char *);
 struct russ_cconn *russ_list(russ_deadline, const char *);
 struct russ_svr *russ_init(struct russ_conf *);
+char *russ_spawn(int, char **);
+char *russ_spawnl(char *, ...);
 int russ_start(int, char **);
 int russ_startl(char *, ...);
 
