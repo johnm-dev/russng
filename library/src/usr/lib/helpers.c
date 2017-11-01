@@ -579,9 +579,6 @@ russ_startl(char *dummy, ...) {
 	russ_start(argc, argv);
 
 	/* should not get here; clean up on failure */
-	for (argc; argc >= 0; argc--) {
-		free(argv[argc]);
-	}
 	free(argv);
 	return -1;
 }
