@@ -31,6 +31,9 @@ extern "C" {
 
 #include <stdio.h>
 
+#define RUSS_CONFFILE_MARKER_FMT	"%5s"
+#define RUSS_CONFFILE_MARKER_STR	"#russ"
+
 struct russ_confitem {
 	char	*option;
 	char	*value;
@@ -50,6 +53,8 @@ struct russ_conf {
 	struct russ_confsection	**sections;
 	int			len, cap;
 };
+
+int russ_is_conffile(char *);
 
 struct russ_conf *russ_conf_new(void);
 struct russ_conf *russ_conf_free(struct russ_conf *);

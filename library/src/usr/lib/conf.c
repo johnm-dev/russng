@@ -32,8 +32,45 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <russ/russ.h>
+
+/*
+* Returns whether the file is a recognized RUSS configuration file.
+*
+* A recognized RUSS configuration starts with '#russ' on the first
+* line.
+*
+* @param		path of the file
+* @return		1 for true; 0 for false
+*/
+int
+russ_is_conffile(char *path) {
+	struct stat	st;
+	FILE		*f = NULL;
+	char		tmp[128];
+	int		rv;
+
+	rv = 0;
+	if ((stat(path, &st) != 0)
+		|| (!S_ISREG(st.st_mode))
+		|| ((f = fopen(path, "r")) == NULL)) {
+		rv = 0;
+		goto cleanup;
+	}
+
+	if ((fscanf(f, RUSS_CONFFILE_MARKER_FMT, tmp) == 1)
+		&& (strstr(tmp, RUSS_CONFFILE_MARKER_STR) != NULL)) {
+		rv = 1;
+	}
+cleanup:
+	if (f != NULL) {
+		fclose(f);
+	}
+	return rv;
+}
 
 /*
 ** item
