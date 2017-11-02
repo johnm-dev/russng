@@ -36,7 +36,7 @@ extern "C" {
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <russ_conf.h>
+#include <russ/conf.h>
 
 /*
 #define DEBUG
