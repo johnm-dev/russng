@@ -27,7 +27,6 @@ Rules:
 * most objects simply wrap C "objects"; this means that C "objects"
 must be explicitly destroyed rather than automatically on the python
 side (e.g., via __del__)
-* 
 * be careful that C "objects" are not referenced multiple times via
 multiple python objects
 """
@@ -48,12 +47,15 @@ def init(conf):
         return None
 
     sd = conf.getint("main", "sd", pyruss.RUSS_SVR_LIS_SD_DEFAULT)
+    accepttimeout = conf.getint("main", "accepttimeout", pyruss.RUSS_SVR_TIMEOUT_ACCEPT)
     closeonaccept = conf.getint("main", "closeonaccept", 0)
     root = ServiceNode.new("", None)
     if root == None:
         return None
     svr = Server.new(root, 0, sd)
     if svr == None:
+        return None
+    if svr.set_accepttimeout(accepttimeout) < 0:
         return None
     if svr.set_closeonaccept(closeonaccept) < 0:
         return None
@@ -176,20 +178,24 @@ class Server:
             except:
                 pass
 
-        while True:
+        while self.get_lisd() >= 0:
             sconn = self.accept(self._ptr.contents.accepttimeout)
+            if self.get_closeonaccept():
+                os.close(self.get_lisd())
+                self.set_lisd(-1)
             if not sconn:
-                if self.get_lisd() < 0:
-                    break
                 sys.stderr.write("error: cannot accept connection\n")
                 continue
-            if self.get_closeonaccept():
-                self.set_lisd(-1)
             th = threading.Thread(target=helper, args=(self, sconn))
             if th:
                 th.start()
             else:
                 sys.stderr.write("error: cannot spawn thread\n")
+
+    def set_accepttimeout(self, value):
+        """Set acceptimeout value.
+        """
+        return libruss.russ_svr_set_accepttimeout(self._ptr, value)
 
     def set_autoswitchuser(self, value):
         """Set autoswitchuser state.
