@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -229,11 +228,25 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 	struct russ_cconn	*cconn = NULL;
 	struct russ_req		*req = NULL;
 	struct russ_target	*targ = NULL;
+	char			*caddr = NULL;
 	char			*saddr = NULL, *spath2 = NULL;
 
 	if (russ_spath_split(spath, &saddr, &spath2) < 0) {
 		return NULL;
 	}
+	if (russ_is_conffile(saddr)) {
+		/* saddr points to configuration */
+		caddr = realpath(saddr, NULL);
+		saddr = russ_spawnl("dummy",
+			"-f", caddr,
+			"-c", "main:closeonaccept=1",
+			"-c", "main:accepttimeout=2500", NULL);
+		caddr = russ_free(caddr);
+		if (saddr == NULL) {
+			goto free_saddr;
+		}
+	}
+
 	if ((cconn = russ_cconn_new()) == NULL) {
 		goto free_saddr;
 	}

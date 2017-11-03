@@ -263,7 +263,7 @@ russ_spath_split(const char *spath, char **saddr, char **spath2) {
 			*p = '\0';
 		}
 		if (lstat(spath, &st) == 0) {
-			if (S_ISSOCK(st.st_mode)) {
+			if ((S_ISSOCK(st.st_mode)) || (S_ISREG(st.st_mode))) {
 				/* found socket; position p to end or next char */
 				if (p == NULL) {
 					p = "\0";
