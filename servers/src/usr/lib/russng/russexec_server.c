@@ -1,5 +1,5 @@
 /*
-** bin/rusrv_exec.c
+** lib/russng/russexec_server.c
 */
 
 /*
@@ -488,7 +488,7 @@ svc_cgroup_handler(struct russ_sess *sess) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_exec [<conf options>]\n"
+"usage: russexec_server [<conf options>]\n"
 "\n"
 "russ-based exec server to execute programs.\n"
 );
@@ -517,7 +517,7 @@ main(int argc, char **argv) {
 	if ((cgroup_spath = russ_conf_get(conf, "cgroup", "spath", NULL)) == NULL) {
 		fprintf(stderr, "warning: cannot find cgroup spath\n");
 	}
-	pam_confname = russ_conf_get(conf, "main", "pam_confname", "rusrv_exec");
+	pam_confname = russ_conf_get(conf, "main", "pam_confname", "russexec");
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)

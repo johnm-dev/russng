@@ -1,5 +1,5 @@
 /*
-** bin/rusrv_tee.c
+** lib/russng/russtee_server.c
 */
 
 /*
@@ -222,7 +222,7 @@ badattr:
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_tee [<conf options>]\n"
+"usage: russtee_server [<conf options>]\n"
 "\n"
 "Captures data transfer between client and server.\n"
 );

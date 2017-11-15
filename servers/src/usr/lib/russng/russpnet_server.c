@@ -1,5 +1,5 @@
 /*
-** bin/rusrv_pnet.c
+** lib/russng/russpnet_server.c
 */
 
 /*
@@ -652,7 +652,7 @@ load_targetsfile(char *filename) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_pnet [<conf options>]\n"
+"usage: russpnet_server [<conf options>]\n"
 "\n"
 "Routes connections over the network to a fixed set of targets\n"
 "identified by index or hostname.\n"

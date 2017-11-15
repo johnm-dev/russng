@@ -1,5 +1,5 @@
 /*
-** bin/rusrv_ssh2.c
+** lib/russng/russssh2_server.c
 */
 
 /*
@@ -150,7 +150,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	char			*uhp_user = NULL, *uhp_host = NULL, *uhp_port = NULL, *uhp_opt = NULL;
 	char			**opts = NULL;
 	char			controlpathopt[1024], controlpersistopt[32];
-	char			rusrv_ssh_dirpath[1024];
+	char			russssh_dirpath[1024];
 	int			nargs;
 	int			i, status, pid;
 
@@ -200,11 +200,11 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 
 		if (controltag
 			&& user_home
-			&& (russ_snprintf(rusrv_ssh_dirpath, sizeof(rusrv_ssh_dirpath), "%s/.ssh/rusrv_ssh", user_home) > 0)
-			&& (ensure_mkdir(rusrv_ssh_dirpath, 0700) == 0)
-			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), "ControlPath=%s/%%l-%%r@%%h:%%p-%s", rusrv_ssh_dirpath, controltag) > 0)) {
+			&& (russ_snprintf(russssh_dirpath, sizeof(russssh_dirpath), "%s/.ssh/russssh", user_home) > 0)
+			&& (ensure_mkdir(russssh_dirpath, 0700) == 0)
+			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), "ControlPath=%s/%%l-%%r@%%h:%%p-%s", russssh_dirpath, controltag) > 0)) {
 
-			fprintf(stderr, "controlpathopt (%s)\n", controlpathopt);
+			//fprintf(stderr, "controlpathopt (%s)\n", controlpathopt);
 
 			args[nargs++] = "-o";
 			args[nargs++] = "ControlMaster=auto";
@@ -429,7 +429,7 @@ svc_userhostport_other_handler(struct russ_sess *sess) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_ssh [<conf options>]\n"
+"usage: russssh_server [<conf options>]\n"
 "\n"
 "russ-based server for ssh-based remote connections. Configuration\n"
 "can be obtained from the conf file if no options are used, otherwise\n"

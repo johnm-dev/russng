@@ -1,5 +1,5 @@
 /*
-** bin/rusrv_debug.c
+** lib/russng/russdebug_server.c
 */
 
 /*
@@ -351,7 +351,7 @@ svc_whoami_handler(struct russ_sess *sess) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_debug [<conf options>]\n"
+"usage: russdebug_server [<conf options>]\n"
 "\n"
 "russ-based server to aid in debugging russ commands.\n"
 );

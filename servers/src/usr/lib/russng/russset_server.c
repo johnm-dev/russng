@@ -1,5 +1,5 @@
 /*
-** bin/rusrv_set.c
+** lib/russng/russset_server.c
 */
 
 /*
@@ -178,7 +178,7 @@ failed_update:
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_set [<conf options>]\n"
+"usage: russset_server [<conf options>]\n"
 "\n"
 "Set/modify attributes and positional arguments.\n"
 );

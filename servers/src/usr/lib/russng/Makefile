@@ -5,9 +5,10 @@
 
 include ../../../../../Makefile.inc
 
-BINS=rusrv_debug rusrv_exec rusrv_proc rusrv_pnet \
-	rusrv_redir rusrv_set rusrv_ssh \
-	rusrv_ssh2 rusrv_super rusrv_tee
+BINS=russdebug_server russexec_server russproc_server \
+	russpnet_server russredir_server russset_server \
+	russssh_server russssh2_server russsuper_server \
+	russtee_server
 
 ifndef RUSS_INCLUDE_DIR
         $(error "error: missing RUSS_INCLUDE_DIR")
@@ -28,35 +29,35 @@ install:
 	mkdir -p $(INSTALL_DIR)/usr/lib/russng
 	(cp $(BINS) $(INSTALL_DIR)/usr/lib/russng)
 
-rusrv_debug:	rusrv_debug.c
+russdebug_server:	russdebug_server.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_exec:	rusrv_exec.c
+russexec_server:	russexec_server.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_pass:	rusrv_pass.c
+russpass_server:	russpass_server.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_proc:	rusrv_proc.c
+russproc_server:	russproc_server.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_pnet:	rusrv_pnet.c
+russpnet_server:	russpnet_server.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_redir:	rusrv_redir.c
+russredir_server:	russredir_server.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_set:	rusrv_set.c
+russset_server:	russset_server.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_ssh:	rusrv_ssh.c
+russssh_server:	russssh_server.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_ssh2:	rusrv_ssh2.c
+russssh2_server:	russssh2_server.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_super:	rusrv_super.c
+russsuper_server:	russsuper_server.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
-rusrv_tee:	rusrv_tee.c
+russtee_server:	russtee_server.c
 	$(CC) $(CFLAGS) -o $@ -I. -I$(RUSS_INCLUDE_DIR) $^ -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)

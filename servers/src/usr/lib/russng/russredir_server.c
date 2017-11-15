@@ -1,11 +1,11 @@
 /*
-** bin/rusrv_pass.c
+** lib/russng/russredir_server.c
 */
 
 /*
 # license--start
 #
-# Copyright 2012 John Marshall
+# Copyright 2015 John Marshall
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,6 +43,9 @@ const char		*HELP =
 "/<spath> <args>\n"
 "    Dial service at <spath>.\n";
 
+char			*logfilename = NULL;
+char			*spath_prefix = NULL;
+
 /**
 * Answer and service request only if it is for "/". Otherwise, pass
 * request on with redial and splice operations.
@@ -52,22 +55,24 @@ svc_root_handler(struct russ_sess *sess) {
 	struct russ_svr		*svr = NULL;
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
+	char			spath[RUSS_REQ_SPATH_MAX];
+	int			n;
 
 	svr = sess->svr;
 	sconn = sess->sconn;
 	req = sess->req;
 
-	if (strcmp(req->spath, "/") == 0) {
+	if (russ_snprintf(spath, sizeof(spath), "%s%s", spath_prefix, req->spath) < 0) {
 		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
 			/* fatal */
+			russ_lprintf(logfilename, "[%F %T] ", "req->spath (%s)\n", req->spath);
 			return;
 		}
-		if (req->opnum == RUSS_OPNUM_HELP) {
-			russ_dprintf(sconn->fds[1], "%s", HELP);
-			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-			russ_sconn_close(sconn);
-		}
+		russ_sconn_fatal(sconn, "error: spath too big", RUSS_EXIT_FAILURE);
+		exit(0);
 	} else {
+		russ_lprintf(logfilename, "[%F %T] ", "res->path (%s) spath (%s)\n", req->spath, spath);
+		req->spath = spath;
 		russ_sconn_redialandsplice(sconn, RUSS_DEADLINE_NEVER, req);
 		exit(0);
 	}
@@ -76,22 +81,15 @@ svc_root_handler(struct russ_sess *sess) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_pass [<conf options>]\n"
+"usage: russredir_server [<conf options>]\n"
 "\n"
-"A sample russ-based server to dial a service and pass the fds of\n"
-"the dialed service back to the original client. This allows for\n"
-"special kinds of services that do something and then get out of\n"
-"the way of the client and the dialed service (e.g., scheduler,\n"
-"redirector, rewriter).\n"
+"Redirect connection by prefixing an spath.\n"
 );
 }
 
 int
 main(int argc, char **argv) {
-	struct russ_svcnode	*root = NULL;
 	struct russ_svr		*svr = NULL;
-
-	signal(SIGPIPE, SIG_IGN);
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
@@ -101,11 +99,21 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (((root = russ_svcnode_new("", svc_root_handler)) == NULL)
-		|| (russ_svcnode_set_autoanswer(root, 0) < 0)
-		|| (russ_svcnode_set_virtual(root, 1) < 0)
-		|| ((svr = russ_svr_new(root, RUSS_SVR_TYPE_FORK, RUSS_SVR_LIS_SD_DEFAULT)) == NULL)
-		|| (russ_svr_set_help(svr, HELP) < 0)) {
+	logfilename = russ_conf_get(conf, "main", "logfile", NULL);
+
+	if ((spath_prefix = russ_conf_get(conf, "next", "spath", NULL)) == NULL) {
+		fprintf(stderr, "error: bad configuration\n");
+		exit(1);
+	}
+
+	if (((svr = russ_init(conf)) == NULL)
+		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
+		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
+		|| (russ_svr_set_help(svr, HELP) < 0)
+
+		|| (russ_svcnode_set_handler(svr->root, svc_root_handler) < 0)
+		|| (russ_svcnode_set_virtual(svr->root, 1) < 0)
+		|| (russ_svcnode_set_autoanswer(svr->root, 0) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}

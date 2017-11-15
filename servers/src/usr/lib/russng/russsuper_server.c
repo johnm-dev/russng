@@ -1,5 +1,5 @@
 /*
-** bin/rusrv_super.c
+** lib/russng/russsuper_server.c
 */
 
 /*
@@ -509,7 +509,7 @@ done:
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_super [<conf options>]\n"
+"usage: russsuper_server [<conf options>]\n"
 "\n"
 "Super server to intercept and route connections to servers.\n"
 );

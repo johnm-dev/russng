@@ -1,5 +1,5 @@
 /*
-** bin/rusrv_proc.c
+** lib/russng/russproc_server.c
 */
 
 /*
@@ -785,7 +785,7 @@ svc_u_uid_status_handler(struct russ_sess *sess) {
 void
 print_usage(char **argv) {
 	fprintf(stderr,
-"usage: rusrv_proc [<conf options>]\n"
+"usage: russproc_server [<conf options>]\n"
 "\n"
 "russ-based server for reporting on and monitoring processes.\n"
 );

@@ -1,5 +1,5 @@
-# pam configuration for the rusrv_exec service
-# (copy to /etc/pam.d/rusrv_exec)
+# pam configuration for the russexec service
+# (copy to /etc/pam.d/russexec)
 
 # for all unix/linux
 @include common-session
