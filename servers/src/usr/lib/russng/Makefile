@@ -1,9 +1,9 @@
 #
-# servers/base/src/usr/bin/Makefile
+# servers/src/usr/lib/russng/Makefile
 #
 # expect INSTALL_DIR
 
-include ../../../../Makefile.inc
+include ../../../../../Makefile.inc
 
 BINS=rusrv_debug rusrv_exec rusrv_proc rusrv_pnet \
 	rusrv_redir rusrv_set rusrv_ssh \
@@ -25,8 +25,8 @@ clean:
 	rm -f $(BINS) *.o
 
 install:
-	mkdir -p $(INSTALL_DIR)/usr/bin
-	(cp $(BINS) $(INSTALL_DIR)/usr/bin)
+	mkdir -p $(INSTALL_DIR)/usr/lib/russng
+	(cp $(BINS) $(INSTALL_DIR)/usr/lib/russng)
 
 rusrv_debug:	rusrv_debug.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
