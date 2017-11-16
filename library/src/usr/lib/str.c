@@ -110,3 +110,23 @@ russ_str_get_comp(const char *s, char sep, int idx, char *b, int sz) {
 	b[p-s] = '\0';
 	return 0;
 }
+
+/**
+* Replace character in string.
+*
+* @param s		string
+* @param oldch		old character
+* @param newch		new character
+* @return		string
+*/
+char *
+russ_str_replace_char(char *s, char oldch, char newch) {
+	if (s != NULL) {
+		for (; *s != '\0'; s++) {
+			if (*s == oldch) {
+				*s = newch;
+			}
+		}
+	}
+	return s;
+}

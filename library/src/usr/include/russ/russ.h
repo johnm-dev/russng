@@ -378,6 +378,7 @@ char *russ_spath_resolvewithuid(const char *, uid_t *, int);
 int russ_str_count_sub(const char *, const char *);
 char *russ_str_dup_comp(const char *, char, int);
 int russ_str_get_comp(const char *, char, int, char *, int);
+char *russ_str_replace_char(char *, char, char);
 
 /* svcnode.c */
 struct russ_svcnode *russ_svcnode_new(const char *, russ_svchandler);
