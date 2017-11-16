@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "russ.h"
+#include "russ/russ.h"
 
 void
 print_usage(char **argv) {
