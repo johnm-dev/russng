@@ -642,7 +642,7 @@ load_targetsfile(char *filename) {
 			}
 		}
 		targetslist.targets[i].userhost = line;
-		targetslist.targets[i].cgroup = p;
+		targetslist.targets[i].cgroup = russ_str_replace_char(p, '/', ':');
 		targetslist.n++;
 	}
 	targetslist.next = -1;
