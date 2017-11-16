@@ -20,12 +20,12 @@ doc:
 		echo "warning: epydoc not available" ; \
 	else \
 		mkdir -p doc/epydoc ; \
-		(cd doc/epydoc; epydoc $(HERE_DIR)/static/usr/lib/python/pyruss) ; \
+		(cd doc/epydoc; epydoc $(HERE_DIR)/static/usr/lib/russng/pyruss) ; \
 	fi
 
 	# with pydoc
 	#mkdir -p doc/pydoc
-	#(cd doc/pydoc; PYTHONPATH=$(HERE_DIR)/static/usr/lib/python pydoc -w pyruss pyruss.base pyruss.bindings pyruss.conf pyruss.server)
+	#(cd doc/pydoc; PYTHONPATH=$(HERE_DIR)/static/usr/lib/russng pydoc -w pyruss pyruss.base pyruss.bindings pyruss.conf pyruss.server)
 	# strip local filename references
 	#(cd doc/pydoc; for n in *.html; do sed -i 's/<a href=\"file.*<\/a>//g' $$n; done)
 
@@ -34,7 +34,7 @@ install:
 	:
 	(mkdir -p $(INSTALL_DIR))
 	(cd static; tar cf - usr/bin usr/lib) | (cd $(INSTALL_DIR); tar xvf -)
-	(mkdir -p $(INSTALL_DIR)/usr/share/doc/pyruss)
+	(mkdir -p $(INSTALL_DIR)/usr/share/doc/russng/pyruss)
 	if [ -d doc ]; then \
-		(cd doc; tar cf - .) | (cd $(INSTALL_DIR)/usr/share/doc/pyruss; tar xvf -) \
+		(cd doc; tar cf - .) | (cd $(INSTALL_DIR)/usr/share/doc/russng/pyruss; tar xvf -) \
 	fi

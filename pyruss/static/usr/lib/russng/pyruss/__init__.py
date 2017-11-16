@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#  lib/pyruss/__init__.py
+#  pyruss/__init__.py
 
 from .bindings import *
 from .conf import *
