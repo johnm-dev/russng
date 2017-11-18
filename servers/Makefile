@@ -6,14 +6,27 @@
 HERE_FILE:="$(CURDIR)/$(strip $(MAKEFILE_LIST))"
 HERE_DIR:=$(shell dirname $(HERE_FILE))
 
-.PHONY:	all clean doc install
+ifndef RUSS_INCLUDE_DIR
+        $(error "error: missing RUSS_INCLUDE_DIR")
+endif
+
+ifndef RUSS_LIB_DIR
+        $(error "error: missing RUSS_LIB_DIR")
+endif
+
+SERVERS=russdebug russexec russpnet russproc russredir \
+	russset russssh russssh2 russsuper russtee
 
 all:
-	(cd src/usr/lib/russng; $(MAKE) all)
+	for name in $(SERVERS); do \
+		(cd src/usr/lib/russng/$${name}; $(MAKE) all) \
+	done
 
 clean:
 	(rm -rf doc)
-	(cd src/usr/lib/russng; $(MAKE) clean)
+	for name in $(SERVERS); do \
+		(cd src/usr/lib/russng/$${name}; $(MAKE) clean) \
+	done
 
 doc:
 	#(doxygen doxygen.conf)
@@ -22,5 +35,7 @@ install:
 	if test "${INSTALL_DIR}" = ""; then echo "error: INSTALL_DIR not defined"; exit 1; fi
 	:
 	(mkdir -p "${INSTALL_DIR}")
-	(cd src/usr/lib/russng; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
+	for name in $(SERVERS); do \
+		(cd src/usr/lib/russng/$${name}; $(MAKE) install INSTALL_DIR=${INSTALL_DIR}) \
+	done
 	(cd static; tar cf - etc usr/share) | (cd $(INSTALL_DIR); tar xvf -)
