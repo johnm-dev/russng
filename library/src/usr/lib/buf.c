@@ -108,8 +108,10 @@ russ_buf_free(struct russ_buf *self) {
 int
 russ_buf_set(struct russ_buf *self, char *buf, int count) {
 	if (count > self->cap) {
-		memcpy(self->data, buf, count);
+		return -1;
 	}
+	memcpy(self->data, buf, count);
 	self->off = 0;
 	self->len = count;
+	return count;
 }
