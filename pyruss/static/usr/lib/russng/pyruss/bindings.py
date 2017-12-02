@@ -21,6 +21,9 @@
 # license--end
 
 """Python bindings to the russ library C API.
+
+* ctypes handles conversion of Python integer to russ_deadline type
+  (e.g., in dialv())
 """
 
 import ctypes
@@ -35,7 +38,7 @@ libruss = ctypes.cdll.LoadLibrary("libruss.so")
 # C library interfaces
 #
 
-# russ.h
+# russ/russ.h
 RUSS_CONN_NFDS = 32
 RUSS_CONN_STD_NFDS = 3
 RUSS_CONN_FD_STDIN = 0
@@ -264,36 +267,20 @@ libruss.russ_dialv_wait_inouterr3.restype = ctypes.c_int
 #
 # from misc.c
 #
-libruss.russ_optable_find_opnum.argtypes = [
-    ctypes.c_void_p,    # pass None for default
-    ctypes.c_char_p,
-]
-libruss.russ_optable_find_opnum.restype = russ_opnum
-
-libruss.russ_switch_user.argtypes = [
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.POINTER(ctypes.c_int),
-]
-libruss.russ_switch_user.restype = ctypes.c_int
-
-libruss.russ_switch_userinitgroups.argtypes = [
-    ctypes.c_int,
-    ctypes.c_int,
-]
-libruss.russ_switch_userinitgroups.restype = ctypes.c_int
-
-libruss.russ_unlink.argtypes = [
-    ctypes.c_char_p,
-]
-libruss.russ_unlink.restype = ctypes.c_int
-
 libruss.russ_write_exit.argtypes = [
     ctypes.c_int,
     ctypes.c_int,
 ]
 libruss.russ_write_exit.restype = ctypes.c_int
+
+#
+# from optable.c
+#
+libruss.russ_optable_find_opnum.argtypes = [
+    ctypes.c_void_p,    # pass None for default
+    ctypes.c_char_p,
+]
+libruss.russ_optable_find_opnum.restype = russ_opnum
 
 #
 # from sconn.c
@@ -371,6 +358,14 @@ libruss.russ_sconn_splice.argtypes = [
     ctypes.POINTER(russ_cconn_Structure),
 ]
 libruss.russ_sconn_splice.restype = ctypes.c_int
+
+#
+# from socket.c
+#
+libruss.russ_unlink.argtypes = [
+    ctypes.c_char_p,
+]
+libruss.russ_unlink.restype = ctypes.c_int
 
 #
 # from svcnode.c
@@ -494,3 +489,20 @@ libruss.russ_to_timeout.argtypes = [
     russ_deadline,
 ]
 libruss.russ_to_timeout.restype = ctypes.c_int
+
+#
+# from user.c
+#
+libruss.russ_switch_user.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+libruss.russ_switch_user.restype = ctypes.c_int
+
+libruss.russ_switch_userinitgroups.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+]
+libruss.russ_switch_userinitgroups.restype = ctypes.c_int
