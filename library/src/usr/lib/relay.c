@@ -170,7 +170,7 @@ russ_relaystream_write(struct russ_relaystream *self) {
 	int		cnt;
 
 	rbuf = self->rbuf;
-	if ((cnt = russ_write(self->wfd, rbuf->data+rbuf->off, rbuf->len)) > 0) {
+	if ((cnt = russ_write(self->wfd, rbuf->data+rbuf->off, rbuf->len-rbuf->off)) > 0) {
 		rbuf->off += cnt;
 		if (rbuf->off == rbuf->len) {
 			rbuf->off = 0;
