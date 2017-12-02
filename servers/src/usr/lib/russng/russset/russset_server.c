@@ -86,12 +86,24 @@ update_attrv_argv(struct russ_req *req, char *s) {
 	}
 	pref[(p+1)-s] = '\0';
 	if (sscanf(pref, "%d=", &index) == 1) {
+		/* create new empty if necessary */
+		if ((req->argv == NULL)
+			&& ((req->argv = russ_sarray0_new(0)) == NULL)) {
+			return -1;
+		}
+
 		/* index=value; index==-1 to append */
 		if ((index < -1) || (russ_sarray0_update(&req->argv, index, p+1) < 0)) {
 			return -1;
 		}
 
 	} else {
+		/* create new empty if necessary */
+		if ((req->attrv == NULL)
+			&& ((req->attrv = russ_sarray0_new(0)) == NULL)) {
+			return -1;
+		}
+
 		/* name=value */
 		index = russ_sarray0_find_prefix(req->attrv, pref);
 		if (russ_sarray0_update(&req->attrv, index, s) < 0) {
