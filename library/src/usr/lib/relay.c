@@ -141,12 +141,13 @@ russ_relaystream_new(int rfd, int wfd, int bufsize, int closeonexit, russ_relays
 int
 russ_relaystream_read(struct russ_relaystream *self) {
 	struct russ_buf	*rbuf = NULL;
-	int		cnt;
+	char		*p = NULL;
+	int		cap, cnt;
 
 	rbuf = self->rbuf;
-	if ((cnt = russ_read(self->rfd, rbuf->data, rbuf->cap)) > 0) {
-		rbuf->len = cnt;
-		rbuf->off = 0;
+	p = russ_buf_getp(rbuf, NULL, &cap);
+	if ((cnt = russ_read(self->rfd, p, cap)) > 0) {
+		russ_buf_adjlen(rbuf, cnt);
 		self->rlast = russ_gettime();
 		self->nrbytes += cnt;
 		self->nreads++;
@@ -167,15 +168,13 @@ russ_relaystream_read(struct russ_relaystream *self) {
 int
 russ_relaystream_write(struct russ_relaystream *self) {
 	struct russ_buf	*rbuf = NULL;
-	int		cnt;
+	char		*p = NULL;
+	int		cnt, navail;
 
 	rbuf = self->rbuf;
-	if ((cnt = russ_write(self->wfd, rbuf->data+rbuf->off, rbuf->len-rbuf->off)) > 0) {
-		rbuf->off += cnt;
-		if (rbuf->off == rbuf->len) {
-			rbuf->off = 0;
-			rbuf->len = 0;
-		}
+	p = russ_buf_getp(rbuf, &navail, NULL);
+	if ((cnt = russ_write(self->wfd, p, navail)) > 0) {
+		navail = russ_buf_repos(rbuf, cnt);
 		self->wlast = russ_gettime();
 		self->nwbytes += cnt;
 		self->nwrites++;
@@ -436,7 +435,8 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exitfd) {
 					/* error; unrecoverable */
 					goto disable_stream;
 				}
-				if (stream->rbuf->len == 0) {
+				if (russ_buf_repos(stream->rbuf, 0) == 0) {
+					russ_buf_reset(stream->rbuf);
 					pollfd->fd = stream->rfd;
 					pollfd->events = POLLIN;
 				}
