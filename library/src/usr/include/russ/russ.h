@@ -261,6 +261,11 @@ int russ_buf_load(struct russ_buf *, char *, int, int);
 int russ_buf_init(struct russ_buf *, char *, int, int);
 struct russ_buf *russ_buf_new(int);
 struct russ_buf *russ_buf_free(struct russ_buf *);
+int russ_buf_adjlen(struct russ_buf *, int);
+char *russ_buf_getp(struct russ_buf *, int *, int *);
+int russ_buf_repos(struct russ_buf *, int);
+void russ_buf_reset(struct russ_buf *);
+int russ_buf_resize(struct russ_buf *, int);
 int russ_buf_set(struct russ_buf *, char *buf, int count);
 
 /* cconn.c */

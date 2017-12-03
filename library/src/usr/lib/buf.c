@@ -97,7 +97,100 @@ russ_buf_free(struct russ_buf *self) {
 	return NULL;
 }
 
-/*
+/**
+* Adjust internal length. Cannot move past 0 or capacity.
+*
+* @param self		russ_buf object
+* @param delta		number of bytes to move internal length
+* @return		# of bytes of capacity available
+*/
+int
+russ_buf_adjlen(struct russ_buf *self, int delta) {
+	if (delta != 0) {
+		self->len += delta;
+		if (self->len < 0) {
+			self->len = 0;
+		} else if (self->len > self->cap) {
+			self->len = self->cap;
+		}
+	}
+	return self->cap-self->len;
+}
+
+/**
+* Return pointer to next available byte.
+*
+* @param self		russ_buf object
+* @param navail (out)	pointer to hold # of data bytes available
+* @param cap (out)	pointer to hold # of data bytes capacity
+* @return		pointer to next byte; NULL if none
+*/
+char *
+russ_buf_getp(struct russ_buf *self, int *navail, int *cap) {
+	if (navail != NULL) {
+		*navail = self->len-self->off;
+	}
+	if (cap != NULL) {
+		*cap = self->cap-self->off;
+	}
+	return self->data+self->off;
+}
+
+/**
+* Reposition/move internal offset. Cannot move past 0 or length.
+*
+* @param self		russ_buf object
+* @param delta		number of bytes to move internal offset
+* @return		# of bytes available
+*/
+int
+russ_buf_repos(struct russ_buf *self, int delta) {
+	if (delta != 0) {
+		self->off += delta;
+		if (self->off < 0) {
+			self->off = 0;
+		} else if (self->off > self->len) {
+			self->off = self->len;
+		}
+	}
+	return self->len-self->off;
+}
+
+/**
+* Reset buffer state to empty.
+*
+* @param self		russ_buf object
+*/
+void
+russ_buf_reset(struct russ_buf *self) {
+	self->off = 0;
+	self->len = 0;
+}
+
+/**
+* Resize buffer capacity. If necessary, offset and length are
+* adjusted to fit within the new capacity.
+*
+* @param self		russ_buf object
+* @param newcap		new capacity
+* @return		0 on success, -1 on failure
+*/
+int
+russ_buf_resize(struct russ_buf *self, int newcap) {
+	if ((self->data = realloc(self->data, newcap)) == NULL) {
+		return -1;
+	}
+	if (self->len > newcap) {
+		self->len = newcap;
+	}
+	if (self->off > self->len) {
+		self->off = self->len;
+	}
+	self->cap = newcap;
+	return 0;
+}
+
+/**
 * Copy to internal buffer.
 *
 * @param self		russ_buf object
