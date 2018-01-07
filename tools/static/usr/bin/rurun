@@ -91,10 +91,6 @@ while [ $# -gt 0 ]; do
 		shift 1
 		RURUN_EXEC_METHOD=$1; shift 1
 		;;
-	--login)
-		shift 1
-		RURUN_EXEC_METHOD=login
-		;;
 	--pnet)
 		shift 1
 		RURUN_PNET_ADDR="$1"; shift 1
@@ -102,14 +98,6 @@ while [ $# -gt 0 ]; do
 	--relay)
 		shift 1
 		RURUN_RELAY="$1"; shift 1
-		;;
-	--shell)
-		shift 1
-		RURUN_EXEC_METHOD=shell
-		;;
-	--simple)
-		shift 1
-		RURUN_EXEC_METHOD=simple
 		;;
 	-t|--timeout)
 		shift 1
