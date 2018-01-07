@@ -95,10 +95,6 @@ while [ $# -gt 0 ]; do
 		shift 1
 		RURUN_EXEC_METHOD=login
 		;;
-	--mpi)
-		shift 1
-		mpi=1
-		;;
 	--pnet)
 		shift 1
 		RURUN_PNET_ADDR="$1"; shift 1
@@ -133,11 +129,6 @@ done
 if [ -z "${RURUN_PNET_ADDR}" ]; then
 	echo "error: RURUN_PNET_ADDR is not set" 1>&2
 	exit 1
-fi
-
-# get different env var list for mpi
-if [ ${mpi} -eq 1 ]; then
-	RURUN_ENV="${RUMPIRUN_ENV}"
 fi
 
 # debugging output

@@ -21,12 +21,10 @@
 # license--end
 
 # optional/required variables:
+# RUMPIRUN_ENV (opt)
 # RUMPIRUN_HOSTFILE (req)
 # RUMPIRUN_LAUNCHER (opt)
 # RUMPIRUN_MPIRUN (opt)
-# RUMPIRUN_ENV (opt)
-# RURUN_PNET_ADDR or RURUN_PNET_DIR or RURUN_PNET_FILE (req)
-# RURUN_EXEC_METHOD (opt)
 
 function print_usage {
 	echo "usage: ${PROG_NAME} [options] ...
@@ -57,58 +55,73 @@ function is_mpich {
 PROG_NAME=`basename $0`
 
 export RUMPIRUN_MPIRUN=${RUMPIRUN_MPIRUN:-mpirun}
-export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun-mpi}
+export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun}
 
+# set RURUN_* based on RUMPIRUN_*
 if [ -n "${RUMPIRUN_ENV}" ]; then
 	export RURUN_ENV="${RUMPIRUN_ENV}"
 fi
 
+# get absolute path
 RUMPIRUN_MPIRUN=`which ${RUMPIRUN_MPIRUN} 2> /dev/null`
 if [ -z "${RUMPIRUN_MPIRUN}" ]; then
 	echo "error: cannot find mpirun" 1>&2
 	exit 1
 fi
 
-if [ "${PROG_NAME}" = "rumpirun" ]; then
+# identify implementation
+case "${PROG_NAME}" in
+rumpirun)
 	if is_openmpi ${RUMPIRUN_MPIRUN}; then
-		PROG_NAME="rumpirun.openmpi"
+		export RUMPIRUN_MPIRUN_IMPL="openmpi"
 	elif is_mpich ${RUMPIRUN_MPIRUN}; then
-		PROG_NAME="rumpirun.mpich"
+		export RUMPIRUN_MPIRUN_IMPL="mpich"
 	fi
-fi
-echo "info: Running as ${PROG_NAME}" 1>&2
+	;;
+rumpirun.mpich)
+	export RUMPIRUN_MPIRUN_IMPL="mpich"
+	;;
+rumpirun.openmpi)
+	export RUMPIRUN_MPIRUN_IMPL="openmpi"
+	;;
+esac
 
-if [ -n "${RURUN_PNET_ADDR}" -o -n "${RURUN_PNET_DIR}" -o -n "${RURUN_PNET_FILE}" ]; then
-	unset PE_HOSTFILE
+echo "info: MPI implementation (${RUMPIRUN_MPIRUN_IMPL})" 1>&2
 
-	if [ "${PROG_NAME}" = "rumpirun.openmpi" ]; then
-		export OMPI_MCA_orte_default_hostfile="${RUMPIRUN_HOSTFILE}"
-		export OMPI_MCA_orte_rsh_agent=${RUMPIRUN_LAUNCHER}
-		export OMPI_MCA_plm_rsh_disable_qrsh=1
+# setup by implementation
+case "${RUMPIRUN_MPIRUN_IMPL}" in
+mpich)
+	export HYDRA_BOOTSTRAP=rsh
+	export HYDRA_BOOTSTRAP_EXEC="${RUMPIRUN_LAUNCHER}"
+	export HYDRA_LAUNCHER=rsh
+	export HYDRA_LAUNCHER_EXEC="${RUMPIRUN_LAUNCHER}"
+	export HYDRA_HOST_FILE="${RUMPIRUN_HOSTFILE}"
+	export HYDRA_LAUNCHER_AUTOFORK=0
 
-		MPIRUN_ARGS=""
+	MPIRUN_ARGS="-disable-hostname-propagation"
 
-		if ! is_openmpi "${RUMPIRUN_MPIRUN}"; then
-			echo "warning: cannot validate mpirun is from openmpi"
-		fi
-
-	elif [ "${PROG_NAME}" = "rumpirun.mpich" ]; then
-		export HYDRA_BOOTSTRAP=rsh
-		export HYDRA_BOOTSTRAP_EXEC=${RUMPIRUN_LAUNCHER}
-		export HYDRA_LAUNCHER=rsh
-		export HYDRA_LAUNCHER_EXEC=${RUMPIRUN_LAUNCHER}
-		export HYDRA_HOST_FILE="${RUMPIRUN_HOSTFILE}"
-		export HYDRA_LAUNCHER_AUTOFORK=0
-
-		MPIRUN_ARGS="-disable-hostname-propagation"
-
-		if ! is_mpich "${RUMPIRUN_MPIRUN}"; then
-			echo "warning: cannot validate mpirun is from mpich" 1>&2
-		fi
-	else
-		echo "error: unknown implementation of mpirun" 1>&2
-		exit 1
+	if ! is_mpich "${RUMPIRUN_MPIRUN}"; then
+		echo "warning: cannot validate mpirun is from mpich" 1>&2
 	fi
-fi
+	;;
+openmpi)
+	export OMPI_MCA_orte_default_hostfile="${RUMPIRUN_HOSTFILE}"
+	export OMPI_MCA_orte_rsh_agent="${RUMPIRUN_LAUNCHER}"
+	export OMPI_MCA_plm_rsh_disable_qrsh=1
 
-exec ${RUMPIRUN_MPIRUN} ${MPIRUN_ARGS} "${@}"
+	MPIRUN_ARGS=""
+
+	if ! is_openmpi "${RUMPIRUN_MPIRUN}"; then
+		echo "warning: cannot validate mpirun is from openmpi"
+	fi
+	;;
+*)
+	echo "error: unknown implementation of mpirun" 1>&2
+	exit 1
+	;;
+esac
+
+# reset some items
+unset PE_HOSTFILE
+
+exec "${RUMPIRUN_MPIRUN}" ${MPIRUN_ARGS} "${@}"
