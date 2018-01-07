@@ -48,6 +48,9 @@ Options:
 --relay <name>
 	Use a given relay service. Defaults to \${RURUN_RELAY} or
 	\"${RURUN_RELAY_DEFAULT}\".
+--shell <path>
+	Alternative shell to run on target. The arguments are passed
+	to it for execution. Forces \"--exec simple\".
 -t|--timeout <seconds>
 	Allow a given amount of time to connect before aborting.
 	Defaults to \${RURUN_TIMEOUT} if set."
@@ -57,6 +60,7 @@ Options:
 PROG_NAME=`basename $0`
 RURUN_EXEC_METHOD_DEFAULT=shell
 RURUN_RELAY_DEFAULT=ssh
+RURUN_SHELL=""
 export RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-${RURUN_EXEC_METHOD_DEFAULT}}
 export RURUN_RELAY=${RURUN_RELAY:-${RURUN_RELAY_DEFAULT}}
 
@@ -99,6 +103,10 @@ while [ $# -gt 0 ]; do
 		shift 1
 		RURUN_RELAY="$1"; shift 1
 		;;
+	--shell)
+		shift 1
+		RURUN_SHELL="$1"; shift 1
+		;;
 	-t|--timeout)
 		shift 1
 		RURUN_TIMEOUT="$1"; shift 1
@@ -128,6 +136,7 @@ if [ -n "${RURUN_DEBUG}" ]; then
 	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
 	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
 	echo "RURUN_RELAY (${RURUN_RELAY})"
+	echo "RURUN_SHELL (${RURUN_SHELL})"
 	echo "-----"
 fi
 
@@ -154,6 +163,12 @@ if [ -n "${RURUN_ENV}" ]; then
 	for name in $(echo ${RURUN_ENV} | tr ',' ' '); do
 		env+=("-a" "${name}=$(printenv ${name})")
 	done
+fi
+
+# select exec method and "shell"
+if [ -n "${RURUN_SHELL}" ]; then
+	# override
+	export RURUN_EXEC_METHOD="simple"
 fi
 
 # set path
@@ -196,6 +211,10 @@ fi
 
 # execute
 if [ -n "${RURUN_DEBUG}" ]; then
-	echo exec ruexec "${timeoutcl}" "${env[@]}" "${attrs[@]}" "${path}" "$*"
+	echo exec ruexec "${timeoutcl}" "${env[@]}" "${attrs[@]}" "${path}" ${RURUN_SHELL} "$*"
 fi
-exec ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "$*"
+if [ -z "${RURUN_SHELL}" ]; then
+	exec ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "$*"
+else
+	exec ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "${RURUN_SHELL}" "$*"
+fi
