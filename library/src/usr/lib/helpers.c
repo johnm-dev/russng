@@ -37,46 +37,6 @@
 #define POLLHEN		(POLLHUP|POLLERR|POLLNVAL)
 #define POLLIHEN	(POLLIN|POLLHUP|POLLERR|POLLNVAL)
 
-/*
-* Create NULL-terminated argv array from variadic argument list of
-* "char *". The argv array does not allocate new memory for the
-* individual items, but points to the strings in the va_list. To
-* provide flexibility, an initial size of argv is specified to allow
-* for some argv items to be set after return.
-*
-* @param maxargc	maximum size of argv
-* @param iargc		initial size of argv (number of leading, unassigned)
-* @param fargc		pointer to final size of argv array, NULL excluded
-* @param ap		va_list
-* @return		NULL-terminated argv array
-*/
-static char **
-__russ_variadic_to_argv(int maxargc, int iargc, int *fargc, va_list ap) {
-	va_list	ap2;
-	char	**argv;
-	int	i;
-
-	va_copy(ap2, ap);
-	for (i = iargc; (va_arg(ap2, char *) != NULL) && (i < maxargc); i++);
-	va_end(ap2);
-
-	if (i == maxargc) {
-		return NULL;
-	}
-	if ((argv = malloc(sizeof(char *)*(i+1))) == NULL) {
-		return NULL;
-	}
-
-	*fargc = i;
-	va_copy(ap2, ap);
-	for (i = iargc; i < *fargc; i++) {
-		argv[i] = va_arg(ap, char*);
-	}
-	va_end(ap2);
-	argv[i] = NULL;
-	return argv;
-}
-
 /**
 * Timeout-based helper corresponding to russ_dialv().
 *

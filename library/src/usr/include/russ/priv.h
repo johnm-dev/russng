@@ -30,6 +30,7 @@ extern "C" {
 #endif
 
 #include <poll.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -39,6 +40,9 @@ extern "C" {
 
 #define RUSS_REQ_BUF_MAX	262144
 #define RUSS_LISTEN_BACKLOG	1024
+
+/* args.c */
+char **__russ_variadic_to_argv(int, int, int *, va_list);
 
 /* cconn.c */
 int russ_cconn_send_req(struct russ_cconn *, russ_deadline, struct russ_req *);
