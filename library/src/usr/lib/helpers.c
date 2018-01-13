@@ -477,27 +477,44 @@ fail:
 */
 char *
 russ_spawn(int argc, char **argv) {
-	struct stat	st;
-	char		tmppath[PATH_MAX];
-	char		mainaddr[128];
-	char		**xargv;
-	int		xargc;
-	int		pid, status;
-	int		timeout;
-	int		i;
+	struct russ_conf	*conf = NULL;
+	struct stat		st;
+	char			**xargv = NULL;
+	int			xargc;
+	char			*main_addr = NULL;
+	char			tmppath[PATH_MAX];
+	char			tmparg[128];
+	int			pid, status;
+	int			timeout;
+	int			i;
 
-	if (((xargv = russ_sarray0_dup(argv, argc+1)) == NULL)
-		|| (russ_snprintf(tmppath, sizeof(tmppath), "/tmp/.russ-%d-XXXXXX", getpid()) < 0)
-		|| (mkstemp(tmppath) < 0)) {
-		return NULL;
+	/* duplicate args and load conf */
+	xargc = argc;
+	if ((xargv = russ_sarray0_dup(argv, argc+1)) == NULL) {
+		fprintf(stderr, "error: cannot duplicate argument list\n");
+		goto fail;
+	} else if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
+		fprintf(stderr, "error: cannot load configuration.\n");
+		goto fail;
 	}
 
-	if ((russ_snprintf(mainaddr, sizeof(mainaddr), "main:addr=%s", tmppath) < 0)
-		|| (russ_sarray0_append(&xargv, "-c", mainaddr, NULL) < 0)) {
-		remove(tmppath);
-		return NULL;
+	if (((main_addr = russ_conf_get(conf, "main", "addr", NULL)) != NULL)
+		&& (strcmp(main_addr, "") == 0)) {
+		main_addr = russ_free(main_addr);
 	}
-	xargc = russ_sarray0_count(xargv, 128);
+	if (main_addr == NULL) {
+		if ((russ_snprintf(tmppath, sizeof(tmppath), "/tmp/.russ-%d-XXXXXX", getpid()) < 0)
+			|| (mkstemp(tmppath) < 0)) {
+			goto fail;
+		}
+		if ((russ_snprintf(tmparg, sizeof(tmparg), "main:addr=%s", tmppath) < 0)
+			|| (russ_sarray0_append(&xargv, "-c", tmparg, NULL) < 0)) {
+			remove(tmppath);
+			goto fail;
+		}
+		xargc = russ_sarray0_count(xargv, 128);
+		main_addr = strdup(tmppath);
+	}
 
 	if (fork() == 0) {
 		setsid();
@@ -516,20 +533,31 @@ russ_spawn(int argc, char **argv) {
 			exit(1);
 		}
 		waitpid(pid, &status, 0);
-		remove(tmppath);
+		remove(main_addr);
 		exit(0);
 	}
 	for (timeout = 5000; timeout > 0; timeout -= 1) {
-		if ((stat(tmppath, &st) == 0)
+		if ((stat(main_addr, &st) == 0)
 			&& (S_ISSOCK(st.st_mode))) {
 			break;
 		}
 		usleep(1000);
 	}
 	if (timeout < 0) {
-		return NULL;
+		goto fail;
 	}
-	return strdup(tmppath);
+
+	conf = russ_conf_free(conf);
+	xargv = russ_sarray0_free(xargv);
+
+	return main_addr;
+
+fail:
+	conf = russ_conf_free(conf);
+	xargv = russ_sarray0_free(xargv);
+	main_addr = russ_free(main_addr);
+
+	return NULL;
 }
 
 /**
