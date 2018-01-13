@@ -1,5 +1,5 @@
 /*
-* lib/helpers.c
+* lib/convenience.c
 */
 
 /*

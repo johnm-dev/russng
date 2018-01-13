@@ -239,7 +239,7 @@ libruss.russ_dialv.argtypes = [
 libruss.russ_dialv.restype = ctypes.POINTER(russ_cconn_Structure)
 
 #
-# from helpers.c
+# from convenience.c
 #
 libruss.russ_dialv_wait.argtypes = [
     russ_deadline,

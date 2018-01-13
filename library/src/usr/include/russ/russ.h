@@ -277,22 +277,7 @@ int russ_cconn_wait(struct russ_cconn *, russ_deadline, int *);
 struct russ_cconn *russ_dialv(russ_deadline, const char *, const char *, char **, char **);
 struct russ_cconn *russ_diall(russ_deadline, const char *, const char *, char **, ...);
 
-/* env.c */
-int russ_env_clear(void);
-int russ_env_reset(void);
-int russ_env_update(char **);
-
-/* fd.c */
-int russ_close(int);
-ssize_t russ_read(int, void *, size_t);
-ssize_t russ_readline(int, void *, size_t);
-ssize_t russ_readn(int, void *, size_t);
-ssize_t russ_readn_deadline(russ_deadline, int, void *, size_t);
-ssize_t russ_write(int, void *, size_t);
-ssize_t russ_writen(int, void *, size_t);
-ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
-
-/* helpers.c */
+/* convenience.c */
 struct russ_cconn *russ_dialv_timeout(int, const char *, const char *, char **, char **);
 int russ_dialv_wait(russ_deadline, const char *, const char *, char **, char **, int *);
 int russ_dialv_wait_timeout(int, const char *, const char *, char **, char **, int *);
@@ -310,6 +295,21 @@ struct russ_cconn *russ_help(russ_deadline, const char *);
 struct russ_cconn *russ_info(russ_deadline, const char *);
 struct russ_cconn *russ_list(russ_deadline, const char *);
 struct russ_svr *russ_init(struct russ_conf *);
+
+/* env.c */
+int russ_env_clear(void);
+int russ_env_reset(void);
+int russ_env_update(char **);
+
+/* fd.c */
+int russ_close(int);
+ssize_t russ_read(int, void *, size_t);
+ssize_t russ_readline(int, void *, size_t);
+ssize_t russ_readn(int, void *, size_t);
+ssize_t russ_readn_deadline(russ_deadline, int, void *, size_t);
+ssize_t russ_write(int, void *, size_t);
+ssize_t russ_writen(int, void *, size_t);
+ssize_t russ_writen_deadline(russ_deadline, int, void *, size_t);
 
 /* io.c */
 int russ_dprintf(int, const char *, ...);
