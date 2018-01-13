@@ -109,9 +109,15 @@ russ_spawn(int argc, char **argv) {
 		goto fail;
 	}
 
-	if (((main_addr = russ_conf_get(conf, "main", "addr", NULL)) != NULL)
-		&& (strcmp(main_addr, "") == 0)) {
+	main_addr = russ_conf_get(conf, "main", "addr", "");
+	if (strcmp(main_addr, "") == 0) {
 		main_addr = russ_free(main_addr);
+	} else {
+		char	*tmp = NULL;
+
+		tmp = main_addr;
+		main_addr = russ_spath_resolve(tmp);
+		tmp = russ_free(tmp);
 	}
 	if (main_addr == NULL) {
 		if ((russ_snprintf(tmppath, sizeof(tmppath), "/tmp/.russ-%d-XXXXXX", getpid()) < 0)
@@ -124,7 +130,6 @@ russ_spawn(int argc, char **argv) {
 			goto fail;
 		}
 		xargc = russ_sarray0_count(xargv, 128);
-		main_addr = strdup(tmppath);
 	}
 
 	main_pgid = russ_conf_getint(conf, "main", "pgid", -1);
