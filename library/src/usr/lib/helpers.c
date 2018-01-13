@@ -482,6 +482,7 @@ russ_spawn(int argc, char **argv) {
 	char			**xargv = NULL;
 	int			xargc;
 	char			*main_addr = NULL;
+	int			main_pgid;
 	char			tmppath[PATH_MAX];
 	char			tmparg[128];
 	int			pid, status;
@@ -516,8 +517,13 @@ russ_spawn(int argc, char **argv) {
 		main_addr = strdup(tmppath);
 	}
 
+	main_pgid = russ_conf_getint(conf, "main", "pgid", -1);
+	if (main_pgid >= 0) {
+		//setsid();
+		setpgid(getpid(), main_pgid);
+	}
+
 	if (fork() == 0) {
-		setsid();
 
 		/* close and reopen to occupy fds 0-2 */
 		for (i = 0; i < 1024; i++) {
@@ -532,6 +538,16 @@ russ_spawn(int argc, char **argv) {
 			russ_start(xargc, xargv);
 			exit(1);
 		}
+
+		/*
+		* stay alive until child exits/is killed
+		* kill process group to clean up
+		*/
+		signal(SIGHUP, SIG_IGN);
+		signal(SIGINT, SIG_IGN);
+		signal(SIGTERM, SIG_IGN);
+		signal(SIGQUIT, SIG_IGN);
+
 		waitpid(pid, &status, 0);
 		remove(main_addr);
 		exit(0);
