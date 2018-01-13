@@ -7,7 +7,7 @@ include ../../../../Makefile.inc
 
 SRCS=args.c buf.c cconn.c conf.c encdec.c env.c fd.c helpers.c io.c \
 	memory.c misc.c optable.c relay.c req.c sarray0.c \
-	sconn.c socket.c spath.c str.c svcnode.c svr.c \
+	sconn.c socket.c spath.c start.c str.c svcnode.c svr.c \
 	time.c user.c
 	#experimental.c
 SRCS_FORK=$(SRCS) svr-fork.c
@@ -15,7 +15,7 @@ SRCS_PTHREAD=$(SRCS) svr-pthread.c
 
 OBJS=args.o buf.o cconn.o conf.o encdec.o env.o fd.o helpers.o io.o \
 	memory.o misc.o optable.o relay.o req.o sarray0.o \
-	sconn.o socket.o spath.o str.o svcnode.o svr.o \
+	sconn.o socket.o spath.o start.o str.o svcnode.o svr.o \
 	time.o user.o
 	#experimental.o
 OBJS_FORK=$(OBJS) svr-fork.o

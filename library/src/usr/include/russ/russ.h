@@ -310,10 +310,6 @@ struct russ_cconn *russ_help(russ_deadline, const char *);
 struct russ_cconn *russ_info(russ_deadline, const char *);
 struct russ_cconn *russ_list(russ_deadline, const char *);
 struct russ_svr *russ_init(struct russ_conf *);
-char *russ_spawn(int, char **);
-char *russ_spawnl(char *, ...);
-int russ_start(int, char **);
-int russ_startl(char *, ...);
 
 /* io.c */
 int russ_dprintf(int, const char *, ...);
@@ -378,6 +374,12 @@ int russ_unlink(const char *);
 int russ_spath_split(const char *, char **, char **);
 char *russ_spath_resolve(const char *);
 char *russ_spath_resolvewithuid(const char *, uid_t *, int);
+
+/* start.c */
+char *russ_spawn(int, char **);
+char *russ_spawnl(char *, ...);
+int russ_start(int, char **);
+int russ_startl(char *, ...);
 
 /* str.c */
 int russ_str_count_sub(const char *, const char *);
