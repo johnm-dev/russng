@@ -245,9 +245,11 @@ russ_sarray0_dup(char **arr, int max_cnt) {
 	}
 	return dst;
 free_dst:
+	/* free only elements already set */
 	for (; i >= 0; i--) {
 		dst[i] = russ_free(dst[i]);
 	}
+	dst = russ_free(dst);
 	return NULL;
 }
 
