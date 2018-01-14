@@ -34,6 +34,23 @@
 #include <russ/priv.h>
 
 /**
+* Signal handler to reap spawned child servers.
+*
+* The child process is killed using the pgid which the reaper
+* handles by this very handler. The kill can only be trigged
+* once.
+*/
+static void
+__reap_sigh(int signum) {
+	static int	called = 0;
+
+	if (called == 0) {
+		kill(-getpgid(0), SIGTERM);
+		called = 1;
+	}
+}
+
+/**
 * Make directories. For rustart() only.
 *
 * @param dirnames	:-separated list of paths
@@ -159,10 +176,10 @@ russ_spawn(int argc, char **argv) {
 		* stay alive until child exits/is killed
 		* kill process group to clean up
 		*/
-		signal(SIGHUP, SIG_IGN);
-		signal(SIGINT, SIG_IGN);
-		signal(SIGTERM, SIG_IGN);
-		signal(SIGQUIT, SIG_IGN);
+		signal(SIGHUP, __reap_sigh);
+		signal(SIGINT, __reap_sigh);
+		signal(SIGTERM, __reap_sigh);
+		signal(SIGQUIT, __reap_sigh);
 
 		waitpid(pid, &status, 0);
 		remove(main_addr);
