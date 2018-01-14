@@ -8,8 +8,8 @@ include ../../../../Makefile.inc
 # rt for clock_gettime()
 #LIBS=-lruss $(LIBS_PLAT)
 LIBS_PTHREAD=-lruss-pthread -lruss -lpthread $(LIBS_PLAT)
-BINS=rudial ruexec ruhelp ruinfo ruls russ_resolve_spath \
-	ruspawn rustart rutuns
+BINS=rudial ruexec ruhelp ruinfo ruls rureap \
+	russ_resolve_spath ruspawn rustart rutuns
 
 ifndef RUSS_INCLUDE_DIR
 	$(error "error: missing RUSS_INCLUDE_DIR")
@@ -47,6 +47,9 @@ ruls: rudial
 
 #rudial2:	rudial2.c
 #	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
+
+rureap:	rureap.c
+	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
 
 russ_resolve_spath:	russ_resolve_spath.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)

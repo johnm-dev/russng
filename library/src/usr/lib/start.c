@@ -157,6 +157,7 @@ russ_spawn(int argc, char **argv) {
 	}
 
 	if (fork() == 0) {
+		char	pidst[16];
 
 		/* close and reopen to occupy fds 0-2 */
 		for (i = 0; i < 1024; i++) {
@@ -172,6 +173,9 @@ russ_spawn(int argc, char **argv) {
 			exit(1);
 		}
 
+		sprintf(pidst, "%d", pid);
+		execlp("rureap", "rureap", pidst, main_addr, NULL);
+#if 0
 		/*
 		* stay alive until child exits/is killed
 		* kill process group to clean up
@@ -183,6 +187,7 @@ russ_spawn(int argc, char **argv) {
 
 		waitpid(pid, &status, 0);
 		remove(main_addr);
+#endif
 		exit(0);
 	}
 	for (timeout = 5000; timeout > 0; timeout -= 1) {
