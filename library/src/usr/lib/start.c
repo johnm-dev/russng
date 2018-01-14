@@ -129,6 +129,7 @@ russ_spawn(int argc, char **argv) {
 			remove(tmppath);
 			goto fail;
 		}
+		main_addr = strdup(tmppath);
 		xargc = russ_sarray0_count(xargv, 128);
 	}
 
