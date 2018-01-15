@@ -22,6 +22,10 @@
 # license--end
 */
 
+#include <fcntl.h> // ruspawn()
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <errno.h>
 #include <libgen.h>
 #include <poll.h>
@@ -237,10 +241,7 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 	if (russ_is_conffile(saddr)) {
 		/* saddr points to configuration */
 		caddr = realpath(saddr, NULL);
-		saddr = russ_spawnl("dummy",
-			"-f", caddr,
-			"-c", "main:closeonaccept=1",
-			"-c", "main:accepttimeout=2500", NULL);
+		saddr = russ_ruspawn(caddr);
 		caddr = russ_free(caddr);
 		if (saddr == NULL) {
 			goto free_saddr;
