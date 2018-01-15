@@ -63,6 +63,7 @@ print_dir_list(char *spath) {
 			if (S_ISDIR(st.st_mode)) {
 				printf("%s/\n", dent->d_name);
 			} else if (S_ISSOCK(st.st_mode)
+				|| (russ_is_conffile(path))
 				|| S_ISLNK(st.st_mode)) {
 				printf("%s\n", dent->d_name);
 			}
@@ -288,7 +289,8 @@ main(int argc, char **argv) {
 	}
 
 	exitst = 0;
-	if ((strcmp(op, "list") == 0) && (stat(spath, &st) == 0) && (!S_ISSOCK(st.st_mode))) {
+	if ((strcmp(op, "list") == 0) && (stat(spath, &st) == 0)
+		&& (!S_ISSOCK(st.st_mode)) && (!russ_is_conffile(spath))) {
 		if (S_ISDIR(st.st_mode)) {
 			exitst = (print_dir_list(spath) == 0) ? 0 : 1;
 		} else {
