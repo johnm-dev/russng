@@ -340,6 +340,7 @@ int russ_relay_poll(struct russ_relay *, int);
 int russ_relay_serve(struct russ_relay *, int, int);
 
 /* sarray0.c */
+char **russ_sarray0_new(int, ...);
 char **russ_sarray0_new_split(char *, char *, int);
 char **russ_sarray0_free(char **);
 int russ_sarray0_append(char ***, ...);
