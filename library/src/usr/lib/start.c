@@ -93,6 +93,50 @@ fail:
 }
 
 /**
+* Spawn server using the "ruspawn" tool.
+*
+* Using the tool has the advantage of a small process footprint and
+* no ties to the calling process.
+*
+* @param caddr		configuration file
+* @return		path to created socket file
+*/
+char *
+russ_ruspawn(char *caddr) {
+	char	outb[1024], *outp;
+	int	pipefd[2];
+	int	ev, pid, status;
+
+	if (pipe(pipefd) < 0) {
+		return NULL;
+	}
+
+	if ((pid = fork()) == 0) {
+		/* TODO: close unneeded fds to avoid leaks */
+		close(pipefd[0]);
+		dup2(pipefd[1], STDOUT_FILENO);
+		close(STDERR_FILENO);
+		open("/dev/null", O_WRONLY);
+
+		execlp("ruspawn", "ruspawn",
+			"-f", caddr,
+			"-c", "main:closeonaccept=1",
+			"-c", "main:accepttimeout=2500",
+			NULL);
+		exit(1);
+	}
+	close(pipefd[1]);
+	if ((waitpid(pid, &status, 0) < 0)
+		|| (read(pipefd[0], outb, sizeof(outb)) < 0)) {
+		outp = NULL;
+	} else {
+		outp = strdup(outb);
+	}
+	close(pipefd[0]);
+	return outp;
+}
+
+/**
 * Spawn server using arguments as provided from the command line and
 * return a dynamically created socket file. Configuration and
 * non-configuration (i.e., after the --) may be provided.
