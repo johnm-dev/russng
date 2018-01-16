@@ -54,6 +54,30 @@ russ_close(int fd) {
 }
 
 /**
+* Close range of fds (inclusive).
+*
+* @param fdlow		starting fd
+* @param fdhi		ending fd; -1 to indicate OPEN_MAX
+*/
+void
+russ_close_range(int fdlow, int fdhi) {
+	int	fd, fdmax;
+
+	fdmax = sysconf(_SC_OPEN_MAX);
+	if (fdlow > fdmax) {
+		return;
+	}
+	if (fdhi == -1) {
+		fdhi = fdmax;
+	} else if (fdhi > fdmax) {
+		fdhi = fdmax;
+	}
+	for (fd = fdlow; fd <= fdhi; fd++) {
+		while ((close(fd) < 0) && (errno == EINTR));
+	}
+}
+
+/**
 * Read bytes with auto retry on EINTR and EAGAIN.
 *
 * @param fd		descriptor

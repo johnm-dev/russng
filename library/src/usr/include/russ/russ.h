@@ -303,6 +303,7 @@ int russ_env_update(char **);
 
 /* fd.c */
 int russ_close(int);
+void russ_close_range(int, int);
 ssize_t russ_read(int, void *, size_t);
 ssize_t russ_readline(int, void *, size_t);
 ssize_t russ_readn(int, void *, size_t);
