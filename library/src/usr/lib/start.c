@@ -204,9 +204,7 @@ russ_spawn(int argc, char **argv) {
 		char	pidst[16];
 
 		/* close and reopen to occupy fds 0-2 */
-		for (i = 0; i < 1024; i++) {
-			close(i);
-		}
+		russ_close_range(0, -1);
 		open("/dev/null", O_WRONLY);
 		open("/dev/null", O_RDONLY);
 		open("/dev/null", O_RDONLY);
@@ -345,9 +343,7 @@ russ_start(int argc, char **argv) {
 	main_mkdirs_mode = russ_conf_getsint(conf, "main", "mkdirs_mode", 0755);
 
 	/* close fds >= 3 */
-	for (i = 3; i < 1024; i++) {
-		close(i);
-	}
+	russ_close_range(3, -1);
 
 	/* set up */
 	umask(main_umask);
