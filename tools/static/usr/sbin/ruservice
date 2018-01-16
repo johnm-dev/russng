@@ -35,7 +35,8 @@ function getpid {
 	name=$1; shift 1
 
 	pidpath=$(getpidpath ${name})
-	pid=$(cat "${pidpath}" 2> /dev/null) && $(kill -0 ${pid} 2> /dev/null)
+	#pid=$(cat "${pidpath}" 2> /dev/null) && $(kill -0 ${pid} 2> /dev/null)
+	pid=$(cat "${pidpath}" 2> /dev/null)
 	echo "${pid}"
 }
 
@@ -60,9 +61,11 @@ function list {
 }
 
 function status {
+	local pgid
+
 	echo -n "[${confname}] "
-	pid=$(getpid ${confname})
-	if [ -n "${pid}" ] && kill -0 ${pid} 2> /dev/null; then
+	pgid=$(getpid ${confname})
+	if [ -n "${pgid}" ] && kill -0 -${pgid} 2> /dev/null; then
 		echo "RUNNING"
 		return 0
 	else
@@ -78,31 +81,34 @@ function restart {
 }
 
 function start {
-	local pid
+	local pgid
 
 	#echo -n "starting server (${confname}) ... "
 	echo -n "[${confname}] "
-	pid=$(cat "${pidpath}" 2> /dev/null) && $(kill -0 ${pid} 2> /dev/null)
-	if [ $? -eq 0 ]; then
+	pgid=$(cat "${pidpath}" 2> /dev/null)
+	if [ -n "${pgid}" ] && kill -0 -${pgid} 2> /dev/null; then
 		echo "RUNNING"
-		return
+		return 0
 	fi
-	rustart -f ${confpath} < /dev/null > /dev/null 2>&1 & pid=$!
-	echo ${pid} > "${pidpath}"
-	kill -0 ${pid} && echo "STARTED" || { echo "START FAILED"; return 1;}
+
+	ruspawn -f ${confpath} -c main:pgid=0 < /dev/null > /dev/null 2>&1 & pgid=$!
+	sleep 0.25
+	echo ${pgid} > "${pidpath}"
+	kill -0 -${pgid} && echo "STARTED" || { echo "START FAILED"; return 1; }
 }
 
 function stop {
-	local pid
+	local pgid
 
 	#echo -n "stopping server (${confname}) ... "
 	echo -n "[${confname}] "
-	pid=$(cat "${pidpath}" 2> /dev/null)
-	if [ $? -ne 0 ]; then
+	pgid=$(cat "${pidpath}" 2> /dev/null)
+	if [ -z "${pgid}" ] || ! kill -0 -${pgid} 2> /dev/null; then
 		echo "NOT RUNNING"
-		return
+		return 1
 	fi
-	kill ${pid} 2> /dev/null
+
+	kill -TERM -${pgid} 2> /dev/null
 	rm -f "${pidpath}" 2> /dev/null
 	[ $? -eq 0 ] && echo "STOPPED" || { echo "STOP FAILED"; return 1;}
 }
