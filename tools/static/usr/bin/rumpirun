@@ -59,11 +59,27 @@ export RUMPIRUN_MPIRUN=${RUMPIRUN_MPIRUN:-mpirun}
 export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun}
 export RUMPIRUN_SHELL=""
 
+# dynamically start pnet server if necessary
+if [ -z "${RUMPIRUN_PNET_ADDR}" ]; then
+	if [ -n "${RUMPIRUN_PNET_TARGETSFILE}" ]; then
+		export RUMPIRUN_PNET_ADDR=$(ruspawn -c main:path=/usr/lib/russng/russpnet/russpnet_server -c "targets:filename=${RUMPIRUN_PNET_TARGETSFILE}" -c "main:pgid=$$")
+	fi
+	if [ -n "${RUMPIRUN_PNET_ADDR}" ]; then
+		# ensure cleanup of pnet server
+		trap "kill -HUP -$$" EXIT
+	else
+		# fallback to RURUN_PNET_ADDR for backward compatibility ... for now
+		echo "warning: RUMPIRUN_PNET_ADDR is not set; falling back to RURUN_PNET_ADDR" 1>&2
+		export RUMPIRUN_PNET_ADDR="${RURUN_PNET_ADDR}"
+	fi
+fi
+
 # set RURUN_* based on RUMPIRUN_*
 if [ -n "${RUMPIRUN_ENV}" ]; then
 	export RURUN_ENV="${RUMPIRUN_ENV}"
 fi
 export RURUN_SHELL="${RUMPIRUN_SHELL}"
+export RURUN_PNET_ADDR="${RUMPIRUN_PNET_ADDR}"
 
 # get absolute path
 RUMPIRUN_MPIRUN=`which ${RUMPIRUN_MPIRUN} 2> /dev/null`
@@ -128,4 +144,4 @@ esac
 # reset some items
 unset PE_HOSTFILE
 
-exec "${RUMPIRUN_MPIRUN}" ${MPIRUN_ARGS} "${@}"
+"${RUMPIRUN_MPIRUN}" ${MPIRUN_ARGS} "${@}"
