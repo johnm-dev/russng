@@ -38,6 +38,10 @@ libruss = ctypes.cdll.LoadLibrary("libruss.so")
 # C library interfaces
 #
 
+# russ/conf.h
+RUSS_CONFFILE_MARKER_FMT = "%5s"
+RUSS_CONFFILE_MARKER_STR = "#russ"
+
 # russ/russ.h
 RUSS_CONN_NFDS = 32
 RUSS_CONN_STD_NFDS = 3
