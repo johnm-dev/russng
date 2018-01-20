@@ -123,9 +123,9 @@ __spawn(int argc, char **argv) {
 
 		/* close and reopen to occupy fds 0-2 */
 		russ_close_range(0, -1);
+		open("/dev/null", O_RDONLY);
 		open("/dev/null", O_WRONLY);
-		open("/dev/null", O_RDONLY);
-		open("/dev/null", O_RDONLY);
+		open("/dev/null", O_WRONLY);
 
 		if ((pid = fork()) == 0) {
 			signal(SIGPIPE, SIG_IGN);
