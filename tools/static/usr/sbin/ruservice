@@ -5,7 +5,7 @@
 ETC_DIR=/etc/russ
 RUN_DIR=/var/run/russ
 CONF_DIR=${ETC_DIR}/conf
-PID_DIR=${RUN_DIR}
+PID_DIR=${RUN_DIR}/pids
 
 function getconfnames {
 	local confname confnames filename filenames

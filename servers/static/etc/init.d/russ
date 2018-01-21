@@ -17,6 +17,7 @@ RUN_DIR="/var/run/russ"
 start() {
 	# ensure working directories
 	mkdir -m 0755 -p "${RUN_DIR}"
+	mkdir -m 0755 -p "${RUN_DIR}/pids"
 	mkdir -m 0755 -p "${RUN_DIR}/services"
 
 	# start services
