@@ -13,8 +13,8 @@ function getconfnames {
 	confname=$1; shift 1
 
 	confnames=()
-	if [ -d "${CONF_DIR}/${confname}" ]; then
-		filenames=$(cd "${CONF_DIR}"; find "${confname}")
+	if [ "${confname}" = "." ]; then
+		filenames=$(cd "${CONF_DIR}"; \ls *.conf)
 	elif [ -e "${CONF_DIR}/${confname}.conf" ]; then
 		filenames="${confname}.conf"
 	else
@@ -30,12 +30,11 @@ function getconfnames {
 }
 
 function getpid {
-	local name pid pidpath
+	local confname pid pidpath
 
-	name=$1; shift 1
+	confname=$1; shift 1
 
-	pidpath=$(getpidpath ${name})
-	#pid=$(cat "${pidpath}" 2> /dev/null) && $(kill -0 ${pid} 2> /dev/null)
+	pidpath=$(getpidpath ${confname})
 	pid=$(cat "${pidpath}" 2> /dev/null)
 	echo "${pid}"
 }
@@ -45,7 +44,6 @@ function getpidpath {
 
 	confname=$1; shift 1
 
-	confname=$(echo ${confname} | sed 's/\//__/g')
 	echo "${PID_DIR}/${confname}.pid"
 }
 
@@ -123,9 +121,8 @@ Manage system configured RUSS servers. Configurations must be in
 ${CONF_DIR}.
 
 Where:
-<confname>	Configuration name which may be a directory or file
-		(not including .conf). confname of \".\" means all
-		configuration names."
+<confname>	Configuration name (not including .conf). confname of
+		\".\" means all configuration names."
 }
 
 PROGNAME=$(basename $0)
