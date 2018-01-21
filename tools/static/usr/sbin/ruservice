@@ -6,6 +6,7 @@ ETC_DIR=/etc/russ
 RUN_DIR=/var/run/russ
 CONF_DIR=${ETC_DIR}/conf
 PID_DIR=${RUN_DIR}/pids
+SERVICES_DIR="${RUN_DIR}/services"
 
 function getconfnames {
 	local confname confnames filename filenames
@@ -47,6 +48,35 @@ function getpidpath {
 	echo "${PID_DIR}/${confname}.pid"
 }
 
+function is_onsocket {
+	local confname line
+
+	confname=$1; shift 1
+	line=$(head -1 "${CONF_DIR}/${confname}.conf" | grep "service=socket")
+	if [ -n "${line}" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+function is_running {
+	local confname pgid
+
+	confname=$1; shift 1
+
+	if [ -e "${SERVICES_DIR}/${confname}" ]; then
+		pgid=$(getpid "${confname}")
+		if [ "${pgid}" = "x" ]; then
+			return 0
+		fi
+		if [ -n "${pgid}" ] && kill -0 -${pgid} 2> /dev/null; then
+			return 0
+		fi
+	fi
+	return 1
+}
+
 function list {
 	local confname confnames
 
@@ -62,8 +92,7 @@ function status {
 	local pgid
 
 	echo -n "[${confname}] "
-	pgid=$(getpid ${confname})
-	if [ -n "${pgid}" ] && kill -0 -${pgid} 2> /dev/null; then
+	if is_running "${confname}"; then
 		echo "RUNNING"
 		return 0
 	else
@@ -83,16 +112,32 @@ function start {
 
 	#echo -n "starting server (${confname}) ... "
 	echo -n "[${confname}] "
-	pgid=$(cat "${pidpath}" 2> /dev/null)
-	if [ -n "${pgid}" ] && kill -0 -${pgid} 2> /dev/null; then
+	if is_running ${confname}; then
 		echo "RUNNING"
 		return 0
 	fi
 
-	ruspawn -f ${confpath} -c main:pgid=0 < /dev/null > /dev/null 2>&1 & pgid=$!
-	sleep 0.25
-	echo ${pgid} > "${pidpath}"
-	kill -0 -${pgid} && echo "STARTED" || { echo "START FAILED"; return 1; }
+	# ensure override main:addr
+	if is_onsocket "${confname}"; then
+		ruspawn -f ${confpath} -c main:pgid=0 -c "main:addr=/+/${confname}"< /dev/null > /dev/null 2>&1 & pgid=$!
+		sleep 0.25
+		echo ${pgid} > "${pidpath}"
+	else
+		cp "${CONF_DIR}/${confname}.conf" "${SERVICES_DIR}/${confname}"
+		echo "
+[main]
+addr=
+" >> "${SERVICES_DIR}/${confname}"
+		echo "x" > "${pidpath}"
+	fi
+
+	if is_running "${confname}"; then
+		echo "STARTED"
+		return 0
+	else
+		echo "START FAILED"
+		return 1
+	fi
 }
 
 function stop {
@@ -100,15 +145,21 @@ function stop {
 
 	#echo -n "stopping server (${confname}) ... "
 	echo -n "[${confname}] "
-	pgid=$(cat "${pidpath}" 2> /dev/null)
-	if [ -z "${pgid}" ] || ! kill -0 -${pgid} 2> /dev/null; then
+	if ! is_running "${confname}"; then
 		echo "NOT RUNNING"
 		return 1
 	fi
 
+	pgid=$(getpid "${confname}")
 	kill -TERM -${pgid} 2> /dev/null
 	rm -f "${pidpath}" 2> /dev/null
-	[ $? -eq 0 ] && echo "STOPPED" || { echo "STOP FAILED"; return 1;}
+	if ! is_running; then
+		echo "STOPPED"
+		return 0
+	else
+		echo "STOP FAILED"
+		return 1
+	fi
 }
 
 function print_usage {
