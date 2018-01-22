@@ -16,15 +16,13 @@ function getconfnames {
 	confnames=()
 	if [ "${confname}" = "." ]; then
 		filenames=$(cd "${CONF_DIR}"; \ls *.conf)
-	elif [ -e "${CONF_DIR}/${confname}.conf" ]; then
-		filenames="${confname}.conf"
 	else
-		filenames=""
+		filenames=$(cd "${CONF_DIR}"; \ls ${confname}.conf ${confname}.*.conf 2>/dev/null)
 	fi
 	for filename in ${filenames}; do
 		confname=${filename%.conf}
 		if [ "${confname}" != "${filename}" ]; then
-			confnames+=("${confname#./}")
+			confnames+=("${confname}")
 		fi
 	done
 	echo "${confnames[*]}"
@@ -169,7 +167,9 @@ usage: $PROGNAME <confname> {start|stop|restart|status|list}
        $PROGNAME -h|--help|help
 
 Manage system configured RUSS servers. Configurations must be in
-${CONF_DIR}.
+	${CONF_DIR}
+The server address will be set to the configuration name (and
+override any main:addr setting in the original configuration).
 
 Where:
 <confname>	Configuration name (not including .conf). confname of
