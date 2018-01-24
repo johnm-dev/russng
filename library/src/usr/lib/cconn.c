@@ -241,6 +241,9 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 	if (russ_is_conffile(saddr)) {
 		/* saddr points to configuration */
 		caddr = realpath(saddr, NULL);
+		saddr = russ_free(saddr);
+
+		/* use saddr to point to spawned socket */
 		saddr = russ_ruspawn(caddr);
 		caddr = russ_free(caddr);
 		if (saddr == NULL) {
