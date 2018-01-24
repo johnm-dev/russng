@@ -86,9 +86,9 @@ fail:
 */
 char *
 russ_ruspawn(char *caddr) {
-	char	outb[1024], *outp;
+	char	outb[1024], *outp = NULL;
 	int	pipefd[2];
-	int	ev, pid, status;
+	int	ev, n, pid, status;
 
 	if (pipe(pipefd) < 0) {
 		return NULL;
@@ -109,11 +109,16 @@ russ_ruspawn(char *caddr) {
 		exit(1);
 	}
 	close(pipefd[1]);
-	if ((waitpid(pid, &status, 0) < 0)
-		|| (read(pipefd[0], outb, sizeof(outb)) < 0)) {
+	if (waitpid(pid, &status, 0) < 0) {
 		outp = NULL;
 	} else {
-		outp = strdup(outb);
+		n = read(pipefd[0], outb, sizeof(outb));
+		if ((n < 0) || (n == sizeof(outb))) {
+			outp = NULL;
+		} else {
+			outb[n] = '\0';
+			outp = strdup(outb);
+		}
 	}
 	close(pipefd[0]);
 	return outp;
