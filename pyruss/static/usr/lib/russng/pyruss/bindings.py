@@ -408,13 +408,13 @@ libruss.russ_svcnode_set_virtual.argtypes = [
     ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_int,
 ]
-libruss.russ_svcnode_set_virtual.restype = ctypes.POINTER(russ_svcnode_Structure)
+libruss.russ_svcnode_set_virtual.restype = ctypes.c_int
 
 libruss.russ_svcnode_set_wildcard.argtypes = [
     ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_int,
 ]
-libruss.russ_svcnode_set_wildcard.restype = ctypes.POINTER(russ_svcnode_Structure)
+libruss.russ_svcnode_set_wildcard.restype = ctypes.c_int
 
 #
 # from svr.c
