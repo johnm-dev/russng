@@ -164,12 +164,17 @@ class russ_svr_Structure(ctypes.Structure):
     _fields_ = [
         ("root", ctypes.POINTER(russ_svcnode_Structure)),
         ("type", ctypes.c_int),
+        ("mpid", ctypes.c_int),
+        ("ctime", ctypes.c_long),
         ("saddr", ctypes.c_char_p),
         ("lisd", ctypes.c_int),
         ("closeonaccept", ctypes.c_int),
+        ("accepthandler", ctypes.c_void_p), # cheating to get pointer
         ("accepttimeout", ctypes.c_int),
+        ("answerhandler", ctypes.c_void_p), # cheating to get pointer
         ("awaittimeout", ctypes.c_int),
         ("autoswitchuser", ctypes.c_int),
+        ("help", ctypes.c_char_p),
     ]
 
 russ_sess_Structure._fields_ = [
