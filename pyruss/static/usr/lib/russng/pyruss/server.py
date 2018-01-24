@@ -179,7 +179,7 @@ class Server:
                 pass
 
         while self.get_lisd() >= 0:
-            sconn = self.accept(self._ptr.contents.accepttimeout)
+            sconn = self.accept(pyruss.to_deadline(self._ptr.contents.accepttimeout))
             if self.get_closeonaccept():
                 os.close(self.get_lisd())
                 self.set_lisd(-1)
