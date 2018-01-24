@@ -398,6 +398,12 @@ libruss.russ_svcnode_find.argtypes = [
 ]
 libruss.russ_svcnode_find.restype = ctypes.POINTER(russ_svcnode_Structure)
 
+libruss.russ_svcnode_set_autoanswer.argtypes = [
+    ctypes.POINTER(russ_svcnode_Structure),
+    ctypes.c_int,
+]
+libruss.russ_svcnode_set_autoanswer.restype = ctypes.c_int
+
 libruss.russ_svcnode_set_virtual.argtypes = [
     ctypes.POINTER(russ_svcnode_Structure),
     ctypes.c_int,
