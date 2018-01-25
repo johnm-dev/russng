@@ -34,7 +34,7 @@ print_usage(char *prog_name) {
 	printf(
 "usage: rustart (-f <path>|-c <name>=<value>) [...] [-- ...]\n"
 "\n"
-"Start a uss server. Using the configuration, a socket file is\n"
+"Start a russ server. Using the configuration, a socket file is\n"
 "created and the listener socket is passed to the server.\n"
 "\n"
 "Where:\n"
