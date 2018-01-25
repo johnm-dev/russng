@@ -25,10 +25,10 @@ function getconfnames {
 	if [ "${confname}" = "." ]; then
 		filenames=$(cd "${CONF_DIR}"; \ls *.conf)
 	else
-		filenames=$(cd "${CONF_DIR}"; \ls ${confname}.conf ${confname}.*.conf 2>/dev/null)
+		filenames=$(cd "${CONF_DIR}"; \ls "${confname}.conf" "${confname}".*.conf 2>/dev/null)
 	fi
 	for filename in ${filenames}; do
-		confname=${filename%.conf}
+		confname="${filename%.conf}"
 		if [ "${confname}" != "${filename}" ]; then
 			confnames+=("${confname}")
 		fi
@@ -41,7 +41,7 @@ function getpid {
 
 	confname=$1; shift 1
 
-	pidpath=$(getpidpath ${confname})
+	pidpath=$(getpidpath "${confname}")
 	pid=$(cat "${pidpath}" 2> /dev/null)
 	echo "${pid}"
 }
@@ -76,7 +76,7 @@ function is_running {
 		if [ "${pgid}" = "x" ]; then
 			return 0
 		fi
-		if [ -n "${pgid}" ] && kill -0 -${pgid} 2> /dev/null; then
+		if [ -n "${pgid}" ] && kill -0 "-${pgid}" 2> /dev/null; then
 			return 0
 		fi
 	fi
@@ -88,7 +88,7 @@ function list {
 
 	confname=$1; shift 1
 
-	confnames=$(getconfnames ${confname})
+	confnames=$(getconfnames "${confname}")
 	if [ -n "${confnames}" ]; then
 		echo "${confnames}"
 	fi
@@ -118,7 +118,7 @@ function start {
 
 	#echo -n "starting server (${confname}) ... "
 	echo -n "[${confname}] "
-	if is_running ${confname}; then
+	if is_running "${confname}"; then
 		echo "RUNNING"
 		return 0
 	fi
@@ -133,9 +133,9 @@ addr=
 " >> "${SERVICES_DIR}/${confname}"
 		echo "x" > "${pidpath}"
 	else
-		ruspawn -f ${confpath} -c main:pgid=0 -c "main:addr=/+/${confname}"< /dev/null > /dev/null 2>&1 & pgid=$!
+		ruspawn -f "${confpath}" -c "main:pgid=0" -c "main:addr=/+/${confname}"< /dev/null > /dev/null 2>&1 & pgid=$!
 		sleep 0.25
-		echo ${pgid} > "${pidpath}"
+		echo "${pgid}" > "${pidpath}"
 	fi
 
 	if is_running "${confname}"; then
@@ -158,7 +158,7 @@ function stop {
 	fi
 
 	pgid=$(getpid "${confname}")
-	kill -TERM -${pgid} 2> /dev/null
+	kill -TERM "-${pgid}" 2> /dev/null
 	rm -f "${pidpath}" 2> /dev/null
 	if ! is_running; then
 		echo "STOPPED"
@@ -189,7 +189,7 @@ Where:
 PROGNAME=$(basename $0)
 
 if [ $# -eq 1 ]; then
-	confname=
+	confname=""
 	cmd=$1; shift 1
 
 	case "${cmd}" in
@@ -217,10 +217,10 @@ elif [ $# -eq 2 ]; then
 		exit 0
 	fi
 
-	confnames=$(getconfnames ${confname})
+	confnames=$(getconfnames "${confname}")
 	for confname in ${confnames}; do
 		confpath="${CONF_DIR}/${confname}.conf"
-		pidpath=$(getpidpath ${confname})
+		pidpath=$(getpidpath "${confname}")
 
 		if [ ! -r "${confpath}" ]; then
 			echo "error: cannot find configuration" 1>&2
