@@ -46,11 +46,11 @@ function getpidpath {
 	echo "${PID_DIR}/${confname}.pid"
 }
 
-function is_onsocket {
+function is_onconffile {
 	local confname line
 
 	confname=$1; shift 1
-	line=$(head -1 "${CONF_DIR}/${confname}.conf" | grep "service=socket")
+	line=$(head -1 "${CONF_DIR}/${confname}.conf" | grep "service=conffile")
 	if [ -n "${line}" ]; then
 		return 0
 	else
@@ -116,17 +116,17 @@ function start {
 	fi
 
 	# ensure override main:addr
-	if is_onsocket "${confname}"; then
-		ruspawn -f ${confpath} -c main:pgid=0 -c "main:addr=/+/${confname}"< /dev/null > /dev/null 2>&1 & pgid=$!
-		sleep 0.25
-		echo ${pgid} > "${pidpath}"
-	else
+	if is_onconffile "${confname}"; then
 		cp "${CONF_DIR}/${confname}.conf" "${SERVICES_DIR}/${confname}"
 		echo "
 [main]
 addr=
 " >> "${SERVICES_DIR}/${confname}"
 		echo "x" > "${pidpath}"
+	else
+		ruspawn -f ${confpath} -c main:pgid=0 -c "main:addr=/+/${confname}"< /dev/null > /dev/null 2>&1 & pgid=$!
+		sleep 0.25
+		echo ${pgid} > "${pidpath}"
 	fi
 
 	if is_running "${confname}"; then
