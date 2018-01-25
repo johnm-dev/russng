@@ -67,7 +67,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
 	self->answerhandler = russ_sconn_answerhandler;
 	self->awaittimeout = RUSS_SVR_TIMEOUT_AWAIT;
-	self->autoswitchuser = 0;
+	self->autoswitchuser = 1;
 	self->help = NULL;
 
 	return self;
