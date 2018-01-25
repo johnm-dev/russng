@@ -8,6 +8,14 @@ CONF_DIR=${ETC_DIR}/conf
 PID_DIR=${RUN_DIR}/pids
 SERVICES_DIR="${RUN_DIR}/services"
 
+function clean_servicefile {
+	local confname
+
+	confname=$1; shift 1
+
+	rm -f "${SERVICES_DIR}/${confname}" 2> /dev/null
+}
+
 function getconfnames {
 	local confname confnames filename filenames
 
@@ -116,6 +124,7 @@ function start {
 	fi
 
 	# ensure override main:addr
+	clean_servicefile "${confname}"
 	if is_onconffile "${confname}"; then
 		cp "${CONF_DIR}/${confname}.conf" "${SERVICES_DIR}/${confname}"
 		echo "
@@ -153,6 +162,7 @@ function stop {
 	rm -f "${pidpath}" 2> /dev/null
 	if ! is_running; then
 		echo "STOPPED"
+		clean_servicefile "${confname}"
 		return 0
 	else
 		echo "STOP FAILED"
