@@ -236,6 +236,9 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 	char			*saddr = NULL, *spath2 = NULL;
 
 	if (russ_spath_split(spath, &saddr, &spath2) < 0) {
+		if (getenv("RUSS_DEBUG_russ_dialv")) {
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:russ_spath_split() < 0\n");
+		}
 		return NULL;
 	}
 	if (russ_is_conffile(saddr)) {
@@ -247,14 +250,25 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 		saddr = russ_ruspawn(caddr);
 		caddr = russ_free(caddr);
 		if (saddr == NULL) {
+			if (getenv("RUSS_DEBUG_russ_dialv")) {
+				fprintf(stderr, "RUSS_DEBUG_russ_dialv:saddr == NULL\n");
+			}
 			goto free_saddr;
 		}
 	}
 
 	if ((cconn = russ_cconn_new()) == NULL) {
+		if (getenv("RUSS_DEBUG_russ_dialv")) {
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:russ_cconn_new() == NULL\n");
+		}
 		goto free_saddr;
 	}
 	if ((cconn->sd = russ_connectunix_deadline(deadline, saddr)) < 0) {
+		if (getenv("RUSS_DEBUG_russ_dialv")) {
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:russ_to_timeout() = %d\n", russ_to_timeout(deadline));
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:russ_gettime() = %ld\n", russ_gettime());
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:russ_connectunix_deadline(%ld, \"%s\") < 0\n", deadline, saddr);
+		}
 		goto close_cconn;
 	}
 
@@ -262,11 +276,17 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 	russ_fds_init(cconn->fds, RUSS_CONN_NFDS, -1);
 
 	if ((req = russ_req_new(RUSS_REQ_PROTOCOLSTRING, op, spath2, attrv, argv)) == NULL) {
+		if (getenv("RUSS_DEBUG_russ_dialv")) {
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:req == NULL\n");
+		}
 		goto close_cconn;
 	}
 	if ((russ_cconn_send_req(cconn, deadline, req) < 0)
 		|| (russ_cconn_recv_fds(cconn, deadline, RUSS_CONN_NSYSFDS, cconn->sysfds) < 0)
 		|| (russ_cconn_recv_fds(cconn, deadline, RUSS_CONN_NFDS, cconn->fds) < 0)) {
+		if (getenv("RUSS_DEBUG_russ_dialv")) {
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:russ_cconn_send_req() < 0\n");
+		}
 		goto free_request;
 	}
 	saddr = russ_free(saddr);
