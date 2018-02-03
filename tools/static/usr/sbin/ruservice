@@ -16,6 +16,18 @@ function clean_servicefile {
 	rm -f "${SERVICES_DIR}/${confname}" 2> /dev/null
 }
 
+function create_dirs {
+	for path in "${PIDS_DIR}" "${SERVICES_DIR}"; do
+		if [ ! -d "${path}" ]; then
+			mkdir -m 0755 -p "${path}"
+			if [ $? -ne 0 ]; then
+				echo "error: cannot create working directory (${path})" 1>&2
+				exit 1
+			fi
+		fi
+	done
+}
+
 function getconfnames {
 	local confname confnames filename filenames
 
@@ -115,6 +127,9 @@ function restart {
 
 function start {
 	local pgid
+
+	# ensure required working dirs
+	create_dirs
 
 	#echo -n "starting server (${confname}) ... "
 	echo -n "[${confname}] "
