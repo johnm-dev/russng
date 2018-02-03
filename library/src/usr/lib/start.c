@@ -183,16 +183,16 @@ russ_start(int argc, char **argv) {
 	/* close fds >= 3 */
 	russ_close_range(3, -1);
 
-	/* set up */
-	umask(main_umask);
-	if (chdir(main_cwd) < 0) {
-		fprintf(stderr, "error: cannot change directory\n");
-		exit(1);
-	}
-
 	/* change uid/gid then exec; listen socket is at fd lisd */
 	if (russ_switch_userinitgroups(uid, gid) < 0) {
 		fprintf(stderr, "error: cannot switch user\n");
+		exit(1);
+	}
+
+	umask(main_umask);
+
+	if (chdir(main_cwd) < 0) {
+		fprintf(stderr, "error: cannot change directory\n");
 		exit(1);
 	}
 
