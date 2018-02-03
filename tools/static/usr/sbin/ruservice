@@ -5,7 +5,7 @@
 ETC_DIR=/etc/russ
 RUN_DIR=/var/run/russ
 CONF_DIR=${ETC_DIR}/conf
-PID_DIR=${RUN_DIR}/pids
+PIDS_DIR=${RUN_DIR}/pids
 SERVICES_DIR="${RUN_DIR}/services"
 
 function clean_servicefile {
@@ -51,7 +51,7 @@ function getpidpath {
 
 	confname=$1; shift 1
 
-	echo "${PID_DIR}/${confname}.pid"
+	echo "${PIDS_DIR}/${confname}.pid"
 }
 
 function is_onconffile {
