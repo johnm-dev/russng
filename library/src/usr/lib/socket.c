@@ -126,9 +126,15 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 			goto close_lisd;
 		}
 	}
-	if ((chmod(saddr, mode) < 0)
+
+	/*
+	* (RUSSNG_858) bind affected by umask; chmod not affected by
+	* umask; file mode of non-0 indicates socket listen()-ing
+	*/
+	if ((chmod(saddr, 0) < 0)
 		|| (chown(saddr, uid, gid) < 0)
-		|| (listen(lisd, RUSS_LISTEN_BACKLOG) < 0)) {
+		|| (listen(lisd, RUSS_LISTEN_BACKLOG) < 0)
+		|| (chmod(saddr, mode) < 0)) {
 		goto close_lisd;
 	}
 	saddr = russ_free(saddr);

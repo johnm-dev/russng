@@ -211,11 +211,13 @@ russ_start(int argc, char **argv) {
 		}
 	}
 
-	/* set up socket */
+	/* (RUSSNG-858) set up socket; non-0 file mode indicates listen() called */
+	umask(0777);
 	if ((lisd = russ_announce(main_addr, main_file_mode, file_uid, file_gid)) < 0) {
 		fprintf(stderr, "error: cannot set up socket\n");
 		exit(1);
 	}
+	umask(main_umask);
 
 	/* exec server itself */
 	argv[0] = main_path;

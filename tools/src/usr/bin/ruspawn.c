@@ -152,7 +152,8 @@ __spawn(int argc, char **argv) {
 	}
 	for (timeout = 5000; timeout > 0; timeout -= 1) {
 		if ((stat(main_addr, &st) == 0)
-			&& (S_ISSOCK(st.st_mode))) {
+			&& (S_ISSOCK(st.st_mode))
+			&& ((st.st_mode & 0777) != 0)) {
 			break;
 		}
 		usleep(1000);
