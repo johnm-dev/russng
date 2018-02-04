@@ -110,7 +110,7 @@ Options:
 }
 
 PROG_NAME=$(basename $0)
-RURUN_EXEC=${RURUN_EXEC:-/usr/bin/rurun}
+RURUN_EXEC="${RURUN_EXEC:-rurun}"
 	
 if [ $# -gt 0 ]; then
 	if [ "$1" = "-h" -o "$1" = "--help" ]; then
