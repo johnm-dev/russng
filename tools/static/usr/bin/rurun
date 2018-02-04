@@ -154,16 +154,8 @@ if [ -n "${RURUN_DEBUG}" ]; then
 fi
 
 if [ -n "${count_opt}" ]; then
-	if [ -f "${RURUN_PNET_ADDR}" ]; then
-		count=`wc -l "${RURUN_PNET_ADDR}"`
-		ev=$?
-	elif [ -d "${RURUN_PNET_ADDR}" ]; then
-		count=`ls -1 "${RURUN_PNET_ADDR}" | wc -l`
-		ev=$?
-	else
-		count=`ruexec "${RURUN_PNET_ADDR}/count"`
-		ev=$?
-	fi
+	count=$(ruexec "${RURUN_PNET_ADDR}/count")
+	ev=$?
 	if [ ${ev} -eq 0 ]; then
 		echo ${count}
 	fi
@@ -185,30 +177,7 @@ if [ -n "${RURUN_SHELL}" ]; then
 fi
 
 # set path
-if [ -f "${RURUN_PNET_ADDR}" ]; then
-	lineno=$((target+1))
-	line=`tail -n +${lineno} ${RURUN_PNET_ADDR} | head -1`
-	if [ -z "${line}" ]; then
-		echo "error: cannot find target" 1>&2
-		exit 1
-	fi
-	host=${line% *}
-	container=""
-	if [ "${host}" != "${line}" ]; then
-		container=${line#* }
-	fi
-	if [ -n "${container}" ]; then
-		path="+/${RURUN_RELAY}/${host}/+/exec/cgroup/${container}/${RURUN_EXEC_METHOD}"
-	else
-		path="+/${RURUN_RELAY}/${host}/+/exec/${RURUN_EXEC_METHOD}"
-	fi
-elif [ -d "${RURUN_PNET_ADDR}" ]; then
-	# does not support containers
-	path="${RURUN_PNET_ADDR}/${target}/+/exec/${RURUN_EXEC_METHOD}"
-else
-	# target details in pnet
-	path="${RURUN_PNET_ADDR}/run/${colon}${target}/${RURUN_EXEC_METHOD}"
-fi
+path="${RURUN_PNET_ADDR}/run/${colon}${target}/${RURUN_EXEC_METHOD}"
 
 # set timeout clause
 if [ -n "${RURUN_TIMEOUT}" ]; then
