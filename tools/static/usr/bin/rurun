@@ -57,7 +57,7 @@ Options:
 }
 
 # defaults (null or unset)
-PROG_NAME=`basename $0`
+PROG_NAME=$(basename $0)
 RURUN_EXEC_METHOD_DEFAULT=shell
 RURUN_RELAY_DEFAULT=ssh
 RURUN_SHELL=""

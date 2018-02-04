@@ -49,7 +49,7 @@ function get_target_ids {
 		fi
 		if [ "${end}" = "" ]; then
 			# implicit use of RURUN_PNET_ADDR
-			end=`rurun --count`
+			end=$(rurun --count)
 			if [ $? -ne 0 ]; then
 				echo "error: bad end" 1>&2
 				exit 1
@@ -151,7 +151,7 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-targets=`get_target_ids "${targetspec}"`
+targets=$(get_target_ids "${targetspec}")
 
 if [ -n "${RURUN_DEBUG}" ]; then
 	echo "-----"

@@ -37,7 +37,7 @@ senses and calls mpirun of openmpi or mpich."
 function is_openmpi {
 	local name=$1
 
-	st=`${name} -V 2>&1`
+	st=$(${name} -V 2>&1)
 	[ "${st#*Open MPI}" != "${st}" ]
 	return $?
 }
@@ -45,7 +45,7 @@ function is_openmpi {
 function is_mpich {
 	local name=$1
 
-	st=`${name} --info 2>&1`
+	st=$(${name} --info 2>&1)
 	return $?
 }
 
@@ -53,7 +53,7 @@ function is_mpich {
 # main
 #
 
-PROG_NAME=`basename $0`
+PROG_NAME=$(basename $0)
 
 export RUMPIRUN_MPIRUN=${RUMPIRUN_MPIRUN:-mpirun}
 export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun}
@@ -82,7 +82,7 @@ export RURUN_SHELL="${RUMPIRUN_SHELL}"
 export RURUN_PNET_ADDR="${RUMPIRUN_PNET_ADDR}"
 
 # get absolute path
-RUMPIRUN_MPIRUN=`which ${RUMPIRUN_MPIRUN} 2> /dev/null`
+RUMPIRUN_MPIRUN=$(which ${RUMPIRUN_MPIRUN} 2> /dev/null)
 if [ -z "${RUMPIRUN_MPIRUN}" ]; then
 	echo "error: cannot find mpirun" 1>&2
 	exit 1
