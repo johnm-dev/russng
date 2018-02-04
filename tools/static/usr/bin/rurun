@@ -20,15 +20,86 @@
 #
 # license--end
 
+# given a targets specification, generate a list of the individual
+# target ids. target spec:
+# a - individual item
+# a:b - range a to b (non-inclusive), step 1
+# a:b:c - range a to b (non-inclusive), step c (where c is positive)
+function get_target_ids {
+	local target_ids=""
+	local head rest start end step
+
+	head=""
+	rest=$1; shift 1
+	while [ -n "${rest}" ]; do
+		head=${rest%%,*}
+		if [ "${head}" = "${rest}" ]; then
+			rest=""
+		else
+			rest=${rest#*,}
+		fi
+		start=${head%%:*}
+		endstep=${head#*:}
+		end=${endstep%%:*}
+		step=${endstep#*:}
+
+		# replace strings with integers
+		if [ "${start}" = "" ]; then
+			start=0
+		fi
+		if [ "${end}" = "" ]; then
+			# implicit use of RURUN_PNET_ADDR
+			end=$(rurun --count)
+			if [ $? -ne 0 ]; then
+				echo "error: bad end" 1>&2
+				exit 1
+			fi
+		fi
+		if [ "${step}" = "" ]; then
+			step=1
+		fi
+
+		# validate
+		if [ "${start}" = "${head}" -a "${end}" = "${head}" ]; then
+			# single item
+			target_ids="${target_ids} ${start}"
+		else
+			if [ "${step}" = "${endstep}" -a "${end}" = "${endstep}" ]; then
+				step=1
+			fi
+			# range (expect integers)
+			if [ ${start} -gt ${end} ]; then
+				echo "error: bad range (${start}:${end})" 1>&2
+				exit 1
+			elif [ ${step} -le 0 ]; then
+				echo "error: bad step (${step})" 1>&2
+				exit 1
+			fi
+			while [ ${start} -lt ${end} ]; do
+				target_ids="${target_ids} ${start}"
+				((start=start+step))
+			done
+		fi
+	done
+	echo ${target_ids}
+}
+
 function print_usage {
 	echo "\
-usage: ${PROG_NAME} [options] <target> <arg> ...
+usage: ${PROG_NAME} [options] <targetspec> <arg> ...
        ${PROG_NAME} [--pnet <addr>] --count
 
-Launch a program on a pnet target. If a pnet server specified
-(command line or environment variable), the local host will be used.
+Launch a program on one or more pnet targets. If multiple targets
+are specified, that last non-0 exit value will be returned;
+otherwise a exit value of 0 is returned.
 
 If --count is specified, then the number of pnet targets is printed.
+
+targetspec is a comma separated list of one or more of:
+* value (e.g., 10)
+* start:end (e.g., 0:3 which is equivalent to 0,1,2)
+* start:end:step (e.g., 0:4:2 which is equivalent to 0,2)
+where start must be less than end, and step must be positive.
 
 Options:
 -a|--attr <name>=<value>
@@ -116,11 +187,13 @@ while [ $# -gt 0 ]; do
 		colon=":"
 		;;
 	*)
-		target=$1; shift 1
+		targetspec=$1; shift 1
 		break
 		;;
 	esac
 done
+
+targets=$(get_target_ids "${targetspec}")
 
 if [ -z "${RURUN_PNET_ADDR}" ]; then
 	echo "error: RURUN_PNET_ADDR is not set" 1>&2
@@ -143,7 +216,8 @@ fi
 # debugging output
 if [ -n "${RURUN_DEBUG}" ]; then
 	echo "-----"
-	echo "target (${target})"
+	echo "targetspec (${targetspec})"
+	echo "targets (${targets})"
 	echo "RUMPIRUN_ENV (${RUMPIRUN_ENV})"
 	echo "RURUN_ENV (${RURUN_ENV})"
 	echo "RURUN_EXEC_METHOD (${RURUN_EXEC_METHOD})"
@@ -176,9 +250,6 @@ if [ -n "${RURUN_SHELL}" ]; then
 	export RURUN_EXEC_METHOD="simple"
 fi
 
-# set path
-path="${RURUN_PNET_ADDR}/run/${colon}${target}/${RURUN_EXEC_METHOD}"
-
 # set timeout clause
 if [ -n "${RURUN_TIMEOUT}" ]; then
 	timeoutcl="-t ${RURUN_TIMEOUT}"
@@ -191,12 +262,23 @@ if [ "${HYDRA_LAUNCHER}" = "ssh" ]; then
 	shift 1
 fi
 
-# execute
-if [ -n "${RURUN_DEBUG}" ]; then
-	echo exec ruexec "${timeoutcl}" "${env[@]}" "${attrs[@]}" "${path}" ${RURUN_SHELL} "$*"
-fi
-if [ -z "${RURUN_SHELL}" ]; then
-	ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "$*"
-else
-	ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "${RURUN_SHELL}" "$*"
-fi
+finalev=0
+for target in ${targets}; do
+	# set path
+	path="${RURUN_PNET_ADDR}/run/${colon}${target}/${RURUN_EXEC_METHOD}"
+
+	# execute
+	if [ -n "${RURUN_DEBUG}" ]; then
+		echo "[${target}] exec ruexec \"${timeoutcl}\" \"${env[@]}\" \"${attrs[@]}\" \"${path}\" ${RURUN_SHELL} \"$*\""
+	fi
+	if [ -z "${RURUN_SHELL}" ]; then
+		ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "$*"
+	else
+		ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "${RURUN_SHELL}" "$*"
+	fi
+	ev=$?
+	if [ ${ev} -ne 0 ]; then
+		finalev=${ev}
+	fi
+done
+exit ${finalev}
