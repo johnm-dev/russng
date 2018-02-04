@@ -195,18 +195,13 @@ done
 
 targets=$(get_target_ids "${targetspec}")
 
-if [ -z "${RURUN_PNET_ADDR}" ]; then
-	echo "error: RURUN_PNET_ADDR is not set" 1>&2
-	exit 1
-fi
-
 # dynamically start pnet server if necessary
 if [ -z "${RURUN_PNET_ADDR}" ]; then
 	if [ -n "${RURUN_PNET_TARGETSFILE}" ]; then
 		export RURUN_PNET_ADDR=$(ruspawn -c main:path=/usr/lib/russng/russpnet/russpnet_server -c "targets:filename=${RURUN_PNET_TARGETSFILE}" -c "main:pgid=$$")
 	fi
 	if [ -z "${RURUN_PNET_ADDR}" ]; then
-		echo "error: RURUN_PNET_ADDR is not set" 1>&2
+		echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_TARGETSFILE are set" 1>&2
 		exit 1
 	fi
 	# ensure cleanup of pnet server
