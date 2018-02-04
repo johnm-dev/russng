@@ -114,6 +114,8 @@ Options:
 	shell - shell with basic environment
 	login - shell with login environment
 	Defaults to \$RURUN_EXEC_METHOD or \"${RURUN_EXEC_METHOD_DEFAULT}\".
+-n <maxtasks>
+	Set number of concurrently running tasks. Default is ${RURUN_NRUNNING_MAX}.
 --pnet <addr>
 	Use a given pnet address. Defaults to \$RURUN_PNET_ADDR.
 --relay <name>
@@ -130,6 +132,7 @@ Options:
 # defaults (null or unset)
 PROG_NAME=$(basename $0)
 RURUN_EXEC_METHOD_DEFAULT=shell
+RURUN_NRUNNING_MAX=1
 RURUN_RELAY_DEFAULT=ssh
 RURUN_SHELL=""
 export RURUN_EXEC_METHOD=${RURUN_EXEC_METHOD:-${RURUN_EXEC_METHOD_DEFAULT}}
@@ -146,6 +149,7 @@ elif [ $# -lt 2 ]; then
 fi
 
 attrs=()
+nrunningmax=${RURUN_NRUNNING_MAX}
 mpi=0
 
 while [ $# -gt 0 ]; do
@@ -165,6 +169,10 @@ while [ $# -gt 0 ]; do
 	--exec)
 		shift 1
 		RURUN_EXEC_METHOD=$1; shift 1
+		;;
+	-n)
+		shift 1
+		nrunningmax=$1; shift
 		;;
 	--pnet)
 		shift 1
@@ -257,6 +265,11 @@ if [ "${HYDRA_LAUNCHER}" = "ssh" ]; then
 	shift 1
 fi
 
+# ensure self and all children are killed/cleaned up
+trap '' HUP
+trap 'exit 1' INT TERM
+
+nrunning=0
 finalev=0
 for target in ${targets}; do
 	# set path
@@ -267,13 +280,31 @@ for target in ${targets}; do
 		echo "[${target}] exec ruexec \"${timeoutcl}\" \"${env[@]}\" \"${attrs[@]}\" \"${path}\" ${RURUN_SHELL} \"$*\""
 	fi
 	if [ -z "${RURUN_SHELL}" ]; then
-		ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "$*"
+		ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "$*" &
 	else
-		ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "${RURUN_SHELL}" "$*"
+		ruexec ${timeoutcl} "${env[@]}" "${attrs[@]}" "${path}" "${RURUN_SHELL}" "$*" &
 	fi
+	nrunning=$((nrunning+1))
+
+	# reap child processes if nrunning maxxed out
+	if [ ${nrunning} -eq ${nrunningmax} ]; then
+		wait -n
+		ev=$?
+		if [ ${ev} -ne 0 ]; then
+			finalev=${ev}
+		fi
+		nrunning=$((nrunning-1))
+	fi
+done
+
+# reap remaining child processes
+while [ ${nrunning} -gt 0 ]; do
+	wait -n
 	ev=$?
 	if [ ${ev} -ne 0 ]; then
 		finalev=${ev}
 	fi
+	nrunning=$((nrunning-1))
 done
+
 exit ${finalev}
