@@ -55,6 +55,16 @@ class Conf(RawConfigParser):
                     self.set2(section, option, value)
                 except:
                     raise Exception()
+            elif arg == "-d" and args:
+                try:
+                    section = args.pop(0)
+                    if ":" in section:
+                        section, option = section.split(":", 1)
+                        self.remove_option(section, option)
+                    else:
+                        self.remove_section(section)
+                except:
+                    pass
             elif arg == "-f" and args:
                 try:
                     self.read(args.pop(0))

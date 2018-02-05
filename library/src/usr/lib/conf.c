@@ -300,9 +300,14 @@ russ_conf_free(struct russ_conf *self) {
 * To help provide a standard command-line usage for russ servers,
 * the command line args (argc, argv) are passed to this function
 * which looks for:
-* -f <filename>
 * -c <section>:<option>=<value>
+* -d <section>
+* -d <section>:<option>
+* -f <filename>
 * -- terminates the processing
+*
+* Where -c adds an option, -d deletes a section or option, -f loads
+* a file.
 *
 * The argc and argv are updated at return time; unused args are
 * left in argv.
@@ -335,6 +340,16 @@ russ_conf_load(int *argc, char **argv) {
 				*equalp = '=';
 				goto bad_args;
 			}
+		} else if ((strcmp(argv[i], "-d") == 0) && (i+1 < *argc)) {
+			i++;
+			if ((colonp = strchr(argv[i], ':')) == NULL) {
+				russ_conf_remove_section(self, argv[i]);
+			} else {
+				*colonp = '\0';
+				russ_conf_remove_option(self, argv[i], colonp+1);
+			}
+			/* restore */
+			*colonp = ':';
 		} else if ((strcmp(argv[i], "-f") == 0) && (i+1 < *argc)) {
 			i++;
 			if (russ_conf_read(self, argv[i]) < 0) {
