@@ -335,7 +335,7 @@ russ_sarray0_remove(char **arr, int index) {
 	if (arr == NULL) {
 		return -1;
 	}
-	for (i = 0; i <= index; i++) {
+	for (i = 0; i < index; i++) {
 		if (arr[i] == NULL) {
 			return -1;
 		}
