@@ -74,9 +74,17 @@ __spawn(int argc, char **argv) {
 	int			main_pgid;
 	char			tmppath[PATH_MAX];
 	char			tmparg[128];
-	int			pid, status;
+	int			pid, reappid, status;
 	int			timeout;
+	int			withpids = 0;
 	int			i;
+
+	/* special handling of --withpids */
+	if (strcmp(argv[1], "--withpids") == 0) {
+		withpids = 1;
+		russ_sarray0_remove(argv, 1);
+		argc--;
+	}
 
 	/* duplicate args and load conf */
 	xargc = argc;
@@ -118,7 +126,7 @@ __spawn(int argc, char **argv) {
 		setpgid(getpid(), main_pgid);
 	}
 
-	if (fork() == 0) {
+	if ((reappid = fork()) == 0) {
 		char	pidst[16];
 
 		/* close and reopen to occupy fds 0-2 */
@@ -165,6 +173,10 @@ __spawn(int argc, char **argv) {
 
 	conf = russ_conf_free(conf);
 	xargv = russ_sarray0_free(xargv);
+
+	if (withpids) {
+		printf("%d:%d:", reappid, main_pgid);
+	}
 
 	return main_addr;
 
