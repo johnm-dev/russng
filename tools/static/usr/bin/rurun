@@ -138,6 +138,8 @@ Options:
 --shell <path>
 	Alternative shell to run on target. The arguments are passed
 	to it for execution. Forces \"--exec simple\".
+--targetsfile <path>
+	Use targets file. Defaults \${RURUN_PNET_TARGETSFILE}.
 -t|--timeout <seconds>
 	Allow a given amount of time to connect before aborting.
 	Defaults to \${RURUN_TIMEOUT} if set."
@@ -204,6 +206,10 @@ while [ $# -gt 0 ]; do
 		shift 1
 		RURUN_TIMEOUT="$1"; shift 1
 		;;
+	--targetsfile)
+		shift 1
+		RURUN_PNET_TARGETSFILE="$1"; shift 1
+		;;
 	--wrap)
 		shift 1
 		colon=":"
@@ -214,6 +220,9 @@ while [ $# -gt 0 ]; do
 		;;
 	esac
 done
+
+# expand
+RURUN_PNET_TARGETSFILE=$(readlink -f "${RURUN_PNET_TARGETSFILE}")
 
 # dynamically start pnet server if necessary
 if [ -z "${RURUN_PNET_ADDR}" ]; then
