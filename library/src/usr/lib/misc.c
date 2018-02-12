@@ -27,6 +27,22 @@
 #include "russ/priv.h"
 
 /**
+* Return reference to services directory path.
+*
+* @return		reference (dot not free) to services
+*			directory path; NULL on failure
+*/
+char *
+russ_get_services_dir(void) {
+	char	*path;
+
+	if ((path = getenv("RUSS_SERVICES_DIR")) == NULL) {
+		path = RUSS_SERVICES_DIR;
+	}
+	return path;
+}
+
+/**
 * Write an (encoded) exit status to an fd.
 *
 * @param fd		file descriptor (presumably the exit fd)

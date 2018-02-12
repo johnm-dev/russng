@@ -323,6 +323,7 @@ void *russ_free(void *);
 void *russ_malloc(size_t);
 
 /* misc.c */
+char *russ_get_services_dir(void);
 int russ_write_exit(int, int);
 
 /* optable.c */
