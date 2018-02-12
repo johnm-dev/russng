@@ -70,9 +70,7 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 	if ((spath == NULL) || (strncpy(buf, spath, sizeof(buf)) < 0)) {
 		return NULL;
 	}
-	if ((services_dir = getenv("RUSS_SERVICES_DIR")) == NULL) {
-		services_dir = RUSS_SERVICES_DIR;
-	}
+	services_dir = russ_get_services_dir();
 	sdlen = strlen(services_dir);
 	bend = buf+sizeof(buf);
 
