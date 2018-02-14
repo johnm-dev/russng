@@ -282,6 +282,11 @@ libruss.russ_write_exit.argtypes = [
 ]
 libruss.russ_write_exit.restype = ctypes.c_int
 
+libruss.russ_get_services_dir.argtypes = [
+    ctypes.c_void_p
+]
+libruss.russ_get_services_dir.restype = ctypes.c_char_p
+
 #
 # from optable.c
 #

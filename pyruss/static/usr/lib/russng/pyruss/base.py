@@ -150,6 +150,11 @@ def execv_wait_inouterr(deadline, spath, attrs=None, args=None, stdin=None, stdo
 def execv_wait_inouterr_timeout(timeout, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
     return dialv_wait_inouterr_timeout(timeout, "execute", spath, attrs, args, stdin, stdout_size, stderr_size)
 
+def get_services_dir():
+    """Get services directory path.
+    """
+    return libruss.russ_get_services_dir()
+
 def gettime():
     """Get clock time (corresponds to a deadline).
     """
