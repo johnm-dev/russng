@@ -72,11 +72,13 @@ __spawn(int argc, char **argv) {
 	int			xargc;
 	char			*main_addr = NULL;
 	int			main_pgid;
+	char			buf[16];
 	char			tmppath[PATH_MAX];
 	char			tmparg[128];
 	int			pid, reappid, status;
 	int			timeout;
 	int			withpids = 0;
+	int			notifyfds[2];
 	int			i;
 
 	/* special handling of --withpids */
@@ -126,20 +128,27 @@ __spawn(int argc, char **argv) {
 		setpgid(getpid(), main_pgid);
 	}
 
+	/* to synchronize server creation and connect */
+	pipe(notifyfds);
+
 	if ((reappid = fork()) == 0) {
 		char	pidst[16];
 
 		/* close and reopen to occupy fds 0-2 */
-		russ_close_range(0, -1);
+		russ_close_range(0, 2);
 		open("/dev/null", O_RDONLY);
 		open("/dev/null", O_WRONLY);
 		open("/dev/null", O_WRONLY);
 
+		russ_close(notifyfds[0]);
+
 		if ((pid = fork()) == 0) {
 			signal(SIGPIPE, SIG_IGN);
-			russ_start(xargc, xargv);
+			russ_start(xargc, xargv, notifyfds[1]);
 			exit(1);
 		}
+
+		russ_close(notifyfds[1]);
 
 		sprintf(pidst, "%d", pid);
 		execlp("rureap", "rureap", pidst, main_addr, NULL);
@@ -158,18 +167,10 @@ __spawn(int argc, char **argv) {
 #endif
 		exit(0);
 	}
-	/* max wait time: 20000*0.000250us = 5s */
-	for (timeout = 20000; timeout > 0; timeout -= 250) {
-		if ((stat(main_addr, &st) == 0)
-			&& (S_ISSOCK(st.st_mode))
-			&& ((st.st_mode & 0777) != 0)) {
-			break;
-		}
-		usleep(250);
-	}
-	if (timeout < 0) {
-		goto fail;
-	}
+
+	/* wait for notification */
+	russ_close(notifyfds[1]);
+	read(notifyfds[0], buf, 1);
 
 	conf = russ_conf_free(conf);
 	xargv = russ_sarray0_free(xargv);

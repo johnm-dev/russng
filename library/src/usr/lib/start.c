@@ -134,7 +134,7 @@ russ_ruspawn(char *caddr) {
 * @return		-1 on failure (which should not happen)
 */
 int
-russ_start(int argc, char **argv) {
+russ_start(int argc, char **argv, int notifyfd) {
 	struct russ_conf	*conf = NULL;
 	int			lisd;
 	int			oargc;
@@ -181,8 +181,13 @@ russ_start(int argc, char **argv) {
 	main_mkdirs = russ_conf_get(conf, "main", "mkdirs", NULL);
 	main_mkdirs_mode = russ_conf_getsint(conf, "main", "mkdirs_mode", 0755);
 
-	/* close fds >= 3 */
-	russ_close_range(3, -1);
+	/* close fds >= 3, except for notifyfd */
+	if (notifyfd < 3) {
+		russ_close_range(3, -1);
+	} else {
+		russ_close_range(3, notifyfd-1);
+		russ_close_range(notifyfd+1, -1);
+	}
 
 	/* change uid/gid then exec; listen socket is at fd lisd */
 	if (russ_switch_userinitgroups(uid, gid) < 0) {
@@ -212,13 +217,12 @@ russ_start(int argc, char **argv) {
 		}
 	}
 
-	/* (RUSSNG-858) set up socket; non-0 file mode indicates listen() called */
-	umask(0777);
 	if ((lisd = russ_announce(main_addr, main_file_mode, file_uid, file_gid)) < 0) {
 		fprintf(stderr, "error: cannot set up socket\n");
 		exit(1);
 	}
-	umask(main_umask);
+
+	russ_close(notifyfd);
 
 	/* pass listening socket description as config arguments */
 	russ_snprintf(buf, sizeof(buf), "main:sd=%d", lisd);
@@ -260,7 +264,7 @@ russ_startl(char *dummy, ...) {
 		return -1;
 	}
 
-	russ_start(argc, argv);
+	russ_start(argc, argv, -1);
 
 	/* should not get here; clean up on failure */
 	free(argv);

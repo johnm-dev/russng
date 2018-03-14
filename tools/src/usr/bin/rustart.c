@@ -55,7 +55,7 @@ main(int argc, char **argv) {
 		exit(0);
 	}
 	signal(SIGPIPE, SIG_IGN);
-	russ_start(argc, argv);
+	russ_start(argc, argv, -1);
 	fprintf(stderr, "error: cannot start server\n");
 	exit(1);
 }
