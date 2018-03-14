@@ -148,9 +148,10 @@ russ_start(int argc, char **argv) {
 	int			main_mkdirs_mode;
 	char			*main_user = NULL, *main_group = NULL;
 	mode_t			main_umask;
+	char			buf[128];
 	uid_t			file_uid, uid;
 	gid_t			file_gid, gid;
-	int			i;
+	int			i, pos;
 
 	/* duplicate args and load conf */
 	oargc = argc;
@@ -218,6 +219,15 @@ russ_start(int argc, char **argv) {
 		exit(1);
 	}
 	umask(main_umask);
+
+	/* pass listening socket description as config arguments */
+	russ_snprintf(buf, sizeof(buf), "main:sd=%d", lisd);
+	pos = russ_sarray0_find(oargv, "--");
+	if (pos < 0) {
+		russ_sarray0_append(&oargv, "-c", buf, NULL);
+	} else {
+		russ_sarray0_insert(&oargv, pos, "-c", buf, NULL);
+	}
 
 	/* exec server itself */
 	argv[0] = main_path;
