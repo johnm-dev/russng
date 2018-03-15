@@ -73,12 +73,6 @@ class Conf(RawConfigParser):
             elif arg == "--":
                 break
 
-        # (RUSSNG-687) temporary support to copy "server" to "main"
-        if not self.has_section("main") and self.has_section("server"):
-            self.add_section("main")
-            for name, value in self.items("server"):
-                self.set("main", name, value)
-
         return args
 
     def get(self, section, option, default=None):
