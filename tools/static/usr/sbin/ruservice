@@ -121,7 +121,6 @@ function status {
 
 function restart {
 	stop
-	sleep 1
 	start
 }
 
@@ -149,17 +148,19 @@ addr=
 		echo "x" > "${pidpath}"
 	else
 		ruspawn -f "${confpath}" -c "main:pgid=0" -c "main:addr=/+/${confname}"< /dev/null > /dev/null 2>&1 & pgid=$!
-		sleep 0.25
 		echo "${pgid}" > "${pidpath}"
 	fi
 
-	if is_running "${confname}"; then
-		echo "STARTED"
-		return 0
-	else
-		echo "START FAILED"
-		return 1
-	fi
+	for i in $(seq 20); do
+		if is_running "${confname}"; then
+			echo "STARTED"
+			return 0
+		fi
+		sleep 0.1
+	done
+
+        echo "START FAILED"
+        return 1
 }
 
 function stop {
