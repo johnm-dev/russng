@@ -319,6 +319,72 @@ russ_sarray0_get_suffix(char **arr, char *prefix) {
 }
 
 /**
+* Insert strings into NULL-terminated string array at index
+* position, moving existing items as needed.
+*
+* @param arrp[inout]	pointer to string array (array may be NULL)
+* @param index		index into arrp at which to insert
+* @param ...		valist of strings terminated by NULL
+* @return		0 on success; -1 on failure
+*/
+int
+russ_sarray0_insert(char ***arrp, int index, ...) {
+	va_list			ap;
+	char			**arr = NULL, *s = NULL;
+	int			narr, narrp, narrp2;
+	int			i, j;
+
+	/* count existing items */
+	for (narrp = 0; (*arrp)[narrp] != NULL; narrp++);
+
+	/* validate index */
+	if ((index < 0) || (index > narrp)) {
+		return -1;
+	}
+
+	/* count new items */
+	va_start(ap, index);
+	for (narr = 0; va_arg(ap, char *) != NULL ; narr++);
+	va_end(ap);
+
+	/* resize, assing to arr (not *arrp) */
+	narr += narrp;
+	if ((arr = realloc(*arrp, sizeof(char *)*(narr+1))) == NULL) {
+		return -1;
+	}
+
+	/* move existing items (including NULL) starting at end */
+	for (i = narr, j = narrp; j >= index; i--, j--) {
+		arr[i] = arr[j];
+	}
+
+	/* insert new items */
+	va_start(ap, index);
+	for (i = index; ; i++) {
+		if ((s = va_arg(ap, char *)) == NULL) {
+			break;
+		}
+		if ((arr[i] = strdup(s)) == NULL) {
+			/* free appended items */
+			for (i--; i >= index; i--) {
+				arr[i] = russ_free(arr[i]);
+			}
+			/* move items back to original position
+			* (including NULL) starting at index
+			*/
+			for (i = index, j = narr-(narrp-index); i <= narrp; i++, j++) {
+				arr[i] = arr[j];
+			}
+			return -1;
+		}
+	}
+	va_end(ap);
+	*arrp = arr;
+
+	return 0;
+}
+
+/**
 * Remove element at index; or, move elements above index to
 * positions one less than they are at.
 *
