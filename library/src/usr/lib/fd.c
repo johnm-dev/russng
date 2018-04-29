@@ -296,7 +296,7 @@ russ_writen_deadline(russ_deadline deadline, int fd, void *b, size_t count) {
 			/* error or timeout */
 			break;
 		} else if (pollfds[0].revents & POLLOUT) {
-			if ((n = write(fd, b, bend-b)) < 0) {
+			if ((n = russ_write(fd, b, bend-b)) < 0) {
 				break;
 			}
 			b += n;
