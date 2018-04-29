@@ -9,7 +9,8 @@ include ../../../../Makefile.inc
 #LIBS=-lruss $(LIBS_PLAT)
 LIBS_PTHREAD=-lruss-pthread -lruss -lpthread $(LIBS_PLAT)
 BINS=rudial ruexec ruhelp ruinfo ruls rureap \
-	russ_resolve_spath ruspawn rustart rutuns
+	russ_resolve_spath ruspawn rustart rutuns \
+	rutunsr
 
 ifndef RUSS_INCLUDE_DIR
 	$(error "error: missing RUSS_INCLUDE_DIR")
@@ -62,3 +63,6 @@ rustart:	rustart.c
 
 rutuns:	rutuns.c
 	$(CC) $(CFLAGS) -o $@ -I$(RUSS_INCLUDE_DIR) $< -L$(RUSS_LIB_DIR) $(LDFLAGS) $(LIBS)
+
+rutunsr:	rutuns
+	cp rutuns rutunsr

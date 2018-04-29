@@ -48,6 +48,10 @@ print_usage(char *prog_name) {
 "stderr of the service. Once connected, rudial forwards the stdin,\n"
 "stdout, and sterr I/O data between the caller and the service.\n"
 "\n"
+"If there is a request attribute named __SSHR_DELIM__, the tunnel is\n"
+"set up as a protected relay and the attribute value is used as a\n"
+"delimiter to indicate the start of relay data.\n"
+"\n"
 "An exit value of < 0 indicates a failure to connect. Otherwise a 0\n"
 "exit value is returned.\n"
 );
@@ -60,6 +64,7 @@ main(int argc, char **argv) {
 	struct russ_req		*req = NULL;
 	russ_deadline		deadline;
 	char			*prog_name = NULL;
+	char			*delim = NULL;
 	int			bufsize, exitst;
 	int			cbfd;
 
@@ -72,7 +77,7 @@ main(int argc, char **argv) {
 	cbfd = -1;
 	deadline = RUSS_DEADLINE_NEVER;
 
-	/* receive sconn */
+	/* receive sconn (tunneled over stdin) */
 	if ((sconn = russ_sconn_new()) == NULL) {
 		exit(1);
 	}
@@ -82,6 +87,17 @@ main(int argc, char **argv) {
 	deadline = russ_to_deadline(30000);
 	if ((req =  russ_sconn_await_req(sconn, deadline)) == NULL) {
 		exit(1);
+	}
+
+	/* get delimiter (if available) and echo back */
+	if ((delim = russ_sarray0_get_suffix(req->attrv, "__SSHR_DELIM__=")) != NULL) {
+		if ((delim = strdup(delim)) == NULL) {
+			exit(RUSS_EXIT_CALLFAILURE);
+		}
+
+		/* write delimiter to stdout and stderr */
+		russ_dprintf(STDOUT_FILENO, "%s", delim);
+		russ_dprintf(STDERR_FILENO, "%s", delim);
 	}
 
 	/* dial client */
