@@ -38,4 +38,4 @@ install:
 	for name in $(SERVERS); do \
 		(cd src/usr/lib/russng/$${name}; $(MAKE) install INSTALL_DIR=${INSTALL_DIR}) \
 	done
-	(cd static; tar cf - etc usr/share) | (cd $(INSTALL_DIR); tar xvf -)
+	(cd static; tar cf - etc usr/bin usr/share) | (cd $(INSTALL_DIR); tar xvf -)
