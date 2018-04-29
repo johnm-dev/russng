@@ -40,6 +40,7 @@ extern char **environ;
 #define SSH_EXEC	"/usr/bin/ssh"
 #define RUDIAL_EXEC	"/usr/bin/rudial"
 #define RUTUNS_EXEC	"/usr/bin/rutuns"
+#define RUTUNSR_EXEC	"/usr/bin/rutunsr"
 
 /* global */
 struct russ_conf	*conf = NULL;
@@ -141,6 +142,73 @@ escape_special(char *s) {
 	return s2;
 }
 
+
+/**
+* Read bytes from fd until delimiter found. All read bytes,
+* including are consumed/dropped.
+*
+* @param fd		fd to read from
+* @param delim		char string to match
+* @param delimsz	# of bytes in delim
+* @return		0 on success; -1 on error
+*/
+int
+consume_delimiter(int fd, char *delim, int delimsz) {
+	char	buf[16384];
+	int	bri, bwi, n;
+
+	if (delimsz > sizeof(buf)) {
+		return -1;
+	}
+	buf[0] = '\0';
+
+	/* fill buffer to delimsz */
+	for (bwi = 0; bwi < delimsz; ) {
+		if ((n = russ_read(fd, &buf[bwi], delimsz-bwi)) < 0) {
+			return -1;
+		}
+		bwi += n;
+	}
+
+	/* compare buffer with delim, read byte at a time */
+	for (bri = 0; ; ) {
+		if (memcmp(&buf[bri], delim, delimsz) == 0) {
+			return 0;
+		}
+		bri++;
+
+		/* move delimsz-1 buf contents from end to start */
+		if (bwi == sizeof(buf)) {
+			memmove(&buf[bri], buf, delimsz-1);
+			bri = 0;
+			bwi = delimsz-1;
+		}
+		if (russ_read(fd, &buf[bwi], 1) < 0) {
+			return -1;
+		}
+		bwi++;
+	}
+	return -1;
+}
+
+/**
+* Generate delimiter string. Composed of some one-time information:
+* * timestamp
+* * random sequence
+*
+* Note: there is no need to leak any local information such as uid.
+*/
+char *
+generate_delimiter(void) {
+	char	buf[1024];
+
+	if (russ_snprintf(buf, sizeof(buf), "____SSHR_DELIM____%ld_%s",
+		russ_gettime(), "1234") < 0) {
+		return NULL;
+	}
+	return strdup(buf);
+}
+
 void
 execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	struct russ_sconn	*sconn = NULL;
@@ -229,11 +297,24 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	}
 	args[nargs++] = uhp_host;
 
-	if (strcmp(tool_type, "tunnel") == 0) {
+	if ((strcmp(tool_type, "tunnel") == 0)
+		|| (strcmp(tool_type, "tunnelr") == 0)) {
 		int	cconn_send_rv;
 		int	cfds[RUSS_CONN_NFDS], tmpfd;
+		char	*delim = NULL;
+		char	delimattr[1024];
+		int	delimsz;
 
-		args[nargs++] = tool_exec ? tool_exec : RUTUNS_EXEC;
+		/* select tool exec */
+		if (tool_exec) {
+			args[nargs++] = tool_exec;
+		} else {
+			if (strcmp(tool_type, "tunnel") == 0) {
+				args[nargs++] = RUTUNS_EXEC;
+			} else {
+				args[nargs++] = RUTUNSR_EXEC;
+			}
+		}
 		args[nargs++] = NULL;
 
 		/* set up fds to pass to ssh server */
@@ -270,11 +351,49 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			exit(0);
 		}
 
+		if (strcmp(tool_type, "tunnelr") == 0) {
+			/* augment request with delimiter attribute */
+			if ((req->attrv == NULL)
+				&& ((req->attrv = russ_sarray0_new(0)) == NULL)) {
+				russ_sconn_exit(sconn, RUSS_EXIT_CALLFAILURE);
+				exit(0);
+			}
+
+			if (((delim = generate_delimiter()) == NULL)
+				|| ((delimsz = strlen(delim)) < 0)
+				|| (russ_snprintf(delimattr, sizeof(delimattr), "__SSHR_DELIM__=%s", delim) < 0)
+				|| (russ_sarray0_append(&req->attrv, delimattr, NULL) < 0)) {
+				/* TODO: return something to client? */
+				exit(0);
+			}
+		} else {
+			int	i;
+
+			/* ensure __SSHR_DELIM__ is not in attrv */
+			if ((req->attrv)
+				&& ((i = russ_sarray0_find_prefix(req->attrv, "__SSHR_DELIM__=")) >= 0)
+				&& (russ_sarray0_remove(req->attrv, i) < 0)) {
+				russ_sconn_exit(sconn, RUSS_EXIT_CALLFAILURE);
+				exit(0);
+			}
+		}
+
+		/* send request over cfds[0] */
 		cconn->sd = cfds[0];
 		req->spath = new_spath; /* not saving old req->spath! */
 		cconn_send_rv = russ_cconn_send_req(cconn, RUSS_DEADLINE_NEVER, req);
 		cconn->sd = -1;
 
+		if (delim) {
+			/* wait for and consume delimiter on stdout and stderr in cfds */
+			if ((consume_delimiter(cfds[1], delim, delimsz) < 0)
+				|| (consume_delimiter(cfds[2], delim, delimsz) < 0)) {
+				russ_sconn_exit(sconn, RUSS_EXIT_CALLFAILURE);
+				exit(0);
+			}
+		}
+
+		/* answer client */
 		if (russ_sconn_answer(sconn, RUSS_CONN_STD_NFDS, cfds) < 0) {
 			/* can't return anything; not even exit status */
 			exit(0);
@@ -454,7 +573,12 @@ main(int argc, char **argv) {
 	tool_type = russ_conf_get(conf, "tool", "type", "dial");
 	tool_exec = russ_conf_get(conf, "tool", "exec", NULL);
 
-	autoanswer = (strcmp(tool_type, "tunnel") == 0) ? 0 : 1;
+	if ((strcmp(tool_type, "tunnel") == 0)
+		|| (strcmp(tool_type, "tunnelr") ==0)) {
+		autoanswer = 0;
+	} else {
+		autoanswer = 1;
+	}
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
