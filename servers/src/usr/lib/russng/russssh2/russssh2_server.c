@@ -44,9 +44,9 @@ extern char **environ;
 
 /* global */
 struct russ_conf	*conf = NULL;
-const char		*HELP = 
+const char		*HELP_FMT =
 "Provides access to remote host using ssh.\n"
-"\n"
+"%s\n"
 "/[<user>@]<host>[:<port>][<options>]/... <args>\n"
 "    Connect to service ... at <user>@<host>:<port> using ssh.\n"
 "\n"
@@ -560,6 +560,7 @@ int
 main(int argc, char **argv) {
 	struct russ_svcnode	*node = NULL;
 	struct russ_svr		*svr = NULL;
+	char			help[4096];
 	int			autoanswer;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -573,17 +574,22 @@ main(int argc, char **argv) {
 	tool_type = russ_conf_get(conf, "tool", "type", "dial");
 	tool_exec = russ_conf_get(conf, "tool", "exec", NULL);
 
-	if ((strcmp(tool_type, "tunnel") == 0)
-		|| (strcmp(tool_type, "tunnelr") ==0)) {
+	/* autoanswer and help settings */
+	if (strcmp(tool_type, "tunnelr") ==0) {
+		russ_snprintf(help, sizeof(help), HELP_FMT, "\nRunning as a clean relay.\n");
+		autoanswer = 0;
+	} else if (strcmp(tool_type, "tunnel") == 0) {
+		russ_snprintf(help, sizeof(help), HELP_FMT, "");
 		autoanswer = 0;
 	} else {
+		russ_snprintf(help, sizeof(help), HELP_FMT, "");
 		autoanswer = 1;
 	}
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
 		|| (russ_svr_set_autoswitchuser(svr, 0) < 0)
-		|| (russ_svr_set_help(svr, HELP) < 0)
+		|| (russ_svr_set_help(svr, help) < 0)
 
 		|| (russ_svcnode_set_handler(svr->root, svc_root_handler) < 0)
 
