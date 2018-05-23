@@ -137,8 +137,8 @@ int
 russ_start(int argc, char **argv, int notifyfd) {
 	struct russ_conf	*conf = NULL;
 	int			lisd;
-	int			oargc;
-	char			**oargv = NULL;
+	int			largc;
+	char			**largv = NULL;
 	char			*main_path = NULL, *main_addr = NULL;
 	char			*main_cwd = NULL;
 	mode_t			main_file_mode;
@@ -153,12 +153,14 @@ russ_start(int argc, char **argv, int notifyfd) {
 	gid_t			file_gid, gid;
 	int			i, pos;
 
-	/* duplicate args and load conf */
-	oargc = argc;
-	if ((oargv = russ_sarray0_dup(argv, oargc+1)) == NULL) {
+	/* get local copy of args */
+	largc = argc;
+	if ((largv = russ_sarray0_dup(argv, largc+1)) == NULL) {
 		fprintf(stderr, "error: cannot duplicate argument list\n");
 		exit(1);
-	} else if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
+	}
+	/* load conf */
+	if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
 		fprintf(stderr, "error: cannot load configuration.\n");
 		exit(1);
 	}
@@ -226,19 +228,20 @@ russ_start(int argc, char **argv, int notifyfd) {
 
 	/* pass listening socket description as config arguments */
 	russ_snprintf(buf, sizeof(buf), "main:sd=%d", lisd);
-	pos = russ_sarray0_find(oargv, "--");
+	pos = russ_sarray0_find(largv, "--");
 	if (pos < 0) {
-		russ_sarray0_append(&oargv, "-c", buf, NULL);
+		russ_sarray0_append(&largv, "-c", buf, NULL);
 	} else {
-		russ_sarray0_insert(&oargv, pos, "-c", buf, NULL);
+		russ_sarray0_insert(&largv, pos, "-c", buf, NULL);
 	}
 
 	/* exec server itself */
-	argv[0] = main_path;
-	if (execv(argv[0], main_hide_conf ? argv : oargv) < 0) {
+	if (execv(main_path, main_hide_conf ? argv : largv) < 0) {
 		fprintf(stderr, "error: cannot exec server\n");
 		exit(1);
 	}
+
+	largv = russ_sarray0_free(largv);
 
 	return -1;
 }
