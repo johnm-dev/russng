@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <russ/priv.h>
 
@@ -73,6 +74,50 @@ fail:
 	free(dirnames);
 	free(dname);
 	return -1;
+}
+
+/**
+* Augment path arguments passed to rustart by making them absolute
+* based on the CWD.
+*
+* @param argc		number of arguments
+* @param argv		argument list
+* @return		0 on success; -1 on failure
+*/
+static int
+_russ_start_augment_path(int argc, char **argv) {
+	char	buf[1024], cwd[1024];
+	char	*p = NULL;
+	int	i;
+
+	if (getcwd(cwd, sizeof(cwd)) == NULL) {
+		return -1;
+	}
+	for (i = 1; i < argc; i++) {
+		p = argv[i];
+		if (strcmp(p, "-c") == 0) {
+			i++;
+			if (i >= argc) {
+				return -1;
+			}
+		} else if (strcmp(p, "-f") == 0) {
+			i++;
+			if (i >= argc) {
+				return -1;
+			}
+			if ((strncmp(argv[i], "./", 2) == 0)
+				|| (strncmp(argv[i], "../", 3) != 0)
+				|| (argv[i][0] != '/')) {
+				/* relative */
+				if (russ_snprintf(buf, sizeof(buf), "%s/%s", cwd, argv[i]) < 0) {
+					return -1;
+				}
+				/* TODO: should argv[i] be freed? */
+				argv[i] = strdup(buf);
+			}
+		}
+	}
+	return 0;
 }
 
 /**
