@@ -229,11 +229,9 @@ russ_start(int argc, char **argv, int notifyfd) {
 	/* pass listening socket description as config arguments */
 	russ_snprintf(buf, sizeof(buf), "main:sd=%d", lisd);
 	pos = russ_sarray0_find(largv, "--");
-	if (pos < 0) {
-		russ_sarray0_append(&largv, "-c", buf, NULL);
-	} else {
-		russ_sarray0_insert(&largv, pos, "-c", buf, NULL);
-	}
+	pos = (pos < 0) ? largc : pos;
+	russ_sarray0_insert(&largv, pos, "-c", buf, NULL);
+	largc += 2;
 
 	/* exec server itself */
 	if (execv(main_path, main_hide_conf ? argv : largv) < 0) {
