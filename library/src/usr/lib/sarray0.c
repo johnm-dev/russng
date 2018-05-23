@@ -30,6 +30,70 @@
 #include <russ/priv.h>
 
 /**
+* Insert strings into NULL-terminated string array at index
+* position, moving existing items as needed.
+*
+* @param narrp		number of items in arrp
+* @param arrp[inout]	pointer to string array (array may be NULL)
+* @param index		index into arrp at which to insert
+* @param ap		va_list of strings terminated by NULL
+* @return		0 on success; -1 on failure
+*/
+static int
+_russ_sarray0_insert(int narrp, char ***arrp, int index, va_list ap) {
+	va_list	ap2;
+	char	**arr = NULL, *s = NULL;
+	int	narr, narrp2;
+	int	i, j;
+
+	/* validate index */
+	if ((index < 0) || (index > narrp)) {
+		return -1;
+	}
+
+	/* count new items */
+	va_copy(ap2, ap);
+	for (narr = 0; va_arg(ap2, char *) != NULL ; narr++);
+	va_end(ap2);
+
+	/* resize, assing to arr (not *arrp) */
+	narr += narrp;
+	if ((arr = realloc(*arrp, sizeof(char *)*(narr+1))) == NULL) {
+		return -1;
+	}
+
+	/* move existing items (including NULL) starting at end */
+	for (i = narr, j = narrp; j >= index; i--, j--) {
+		arr[i] = arr[j];
+	}
+
+	/* insert new items */
+	va_copy(ap2, ap);
+	for (i = index; ; i++) {
+		if ((s = va_arg(ap2, char *)) == NULL) {
+			break;
+		}
+		if ((arr[i] = strdup(s)) == NULL) {
+			/* free appended items */
+			for (i--; i >= index; i--) {
+				arr[i] = russ_free(arr[i]);
+			}
+			/* move items back to original position
+			* (including NULL) starting at index
+			*/
+			for (i = index, j = narr-(narrp-index); i <= narrp; i++, j++) {
+				arr[i] = arr[j];
+			}
+			return -1;
+		}
+	}
+	va_end(ap2);
+	*arrp = arr;
+
+	return 0;
+}
+
+/**
 * Create empty NULL-terminated string array.
 *
 * @param n		new array size (not including the terminating NULL)
@@ -155,45 +219,17 @@ russ_sarray0_free(char **arr) {
 */
 int
 russ_sarray0_append(char ***arrp, ...) {
-	va_list			ap;
-	char			**arr = NULL, *s = NULL;
-	int			narr, narrp;
-	int			i;
+	va_list	ap;
+	int	narrp, rv;
 
 	/* count existing items */
 	for (narrp = 0; (*arrp)[narrp] != NULL; narrp++);
 
-	/* count new items */
 	va_start(ap, arrp);
-	for (narr = 0; va_arg(ap, char *) != NULL ; narr++);
+	rv = _russ_sarray0_insert(narrp, arrp, narrp, ap);
 	va_end(ap);
 
-	/* resize */
-	narr += narrp;
-	if ((arr = realloc(*arrp, sizeof(char *)*(narr+1))) == NULL) {
-		return -1;
-	}
-
-	/* append new items */
-	va_start(ap, arrp);
-	for (i = narrp; i < narr; i++) {
-		if ((s = va_arg(ap, char *)) == NULL) {
-			break;
-		}
-		if ((arr[i] = strdup(s)) == NULL) {
-			/* free appended items */
-			for (i--; i > narrp; i--) {
-				arr[i] = russ_free(arr[i]);
-			}
-			arr[i] = NULL;
-			return -1;
-		}
-	}
-	arr[i] = NULL;
-	va_end(ap);
-	*arrp = arr;
-
-	return 0;
+	return rv;
 }
 
 /**
@@ -329,59 +365,17 @@ russ_sarray0_get_suffix(char **arr, char *prefix) {
 */
 int
 russ_sarray0_insert(char ***arrp, int index, ...) {
-	va_list			ap;
-	char			**arr = NULL, *s = NULL;
-	int			narr, narrp, narrp2;
-	int			i, j;
+	va_list	ap;
+	int	narrp, rv;
 
 	/* count existing items */
 	for (narrp = 0; (*arrp)[narrp] != NULL; narrp++);
 
-	/* validate index */
-	if ((index < 0) || (index > narrp)) {
-		return -1;
-	}
-
-	/* count new items */
 	va_start(ap, index);
-	for (narr = 0; va_arg(ap, char *) != NULL ; narr++);
+	rv = _russ_sarray0_insert(narrp, arrp, index, ap);
 	va_end(ap);
 
-	/* resize, assing to arr (not *arrp) */
-	narr += narrp;
-	if ((arr = realloc(*arrp, sizeof(char *)*(narr+1))) == NULL) {
-		return -1;
-	}
-
-	/* move existing items (including NULL) starting at end */
-	for (i = narr, j = narrp; j >= index; i--, j--) {
-		arr[i] = arr[j];
-	}
-
-	/* insert new items */
-	va_start(ap, index);
-	for (i = index; ; i++) {
-		if ((s = va_arg(ap, char *)) == NULL) {
-			break;
-		}
-		if ((arr[i] = strdup(s)) == NULL) {
-			/* free appended items */
-			for (i--; i >= index; i--) {
-				arr[i] = russ_free(arr[i]);
-			}
-			/* move items back to original position
-			* (including NULL) starting at index
-			*/
-			for (i = index, j = narr-(narrp-index); i <= narrp; i++, j++) {
-				arr[i] = arr[j];
-			}
-			return -1;
-		}
-	}
-	va_end(ap);
-	*arrp = arr;
-
-	return 0;
+	return rv;
 }
 
 /**
