@@ -364,6 +364,7 @@ int russ_sconn_answer(struct russ_sconn *, int, int *);
 int russ_sconn_answerhandler(struct russ_sconn *);
 struct russ_req *russ_sconn_await_req(struct russ_sconn *, russ_deadline);
 void russ_sconn_close(struct russ_sconn *);
+void russ_sconn_close_fd(struct russ_sconn *, int);
 int russ_sconn_exit(struct russ_sconn *, int);
 int russ_sconn_fatal(struct russ_sconn *, const char *, int);
 int russ_sconn_redialandsplice(struct russ_sconn *, russ_deadline, struct russ_req *);
