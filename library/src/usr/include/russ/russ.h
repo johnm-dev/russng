@@ -413,7 +413,7 @@ int russ_svr_set_autoswitchuser(struct russ_svr *, int);
 int russ_svr_set_closeonaccept(struct russ_svr *, int);
 int russ_svr_set_help(struct russ_svr *, const char *);
 int russ_svr_set_root(struct russ_svr *, struct russ_svcnode *);
-int russ_svr_set_sd(struct russ_svr *, int);
+int russ_svr_set_lisd(struct russ_svr *, int);
 int russ_svr_set_type(struct russ_svr *, int);
 
 /* time.c */
