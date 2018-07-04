@@ -143,6 +143,10 @@ russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int 
 	if (self == NULL) {
 		return NULL;
 	}
+	/* skip leading / */
+	if (path[0] == '/') {
+		path++;
+	}
 	if ((self->virtual) || (strcmp(path, "") == 0)) {
 		return self;
 	}
