@@ -108,6 +108,9 @@ russ_announce(char *saddr, mode_t mode, uid_t uid, gid_t gid) {
 
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sun_family = AF_UNIX;
+	if (strlen(saddr) >= sizeof(servaddr.sun_path)) {
+		return -1;
+	}
 	strcpy(servaddr.sun_path, saddr);
 	if ((lisd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
 		goto free_saddr;
