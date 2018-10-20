@@ -8,6 +8,25 @@ CONF_DIR=${ETC_DIR}/conf
 PIDS_DIR=${RUN_DIR}/pids
 SERVICES_DIR="${RUN_DIR}/services"
 
+function clean_dirs {
+	local confname confrdir
+
+	confname=$1; shift 1
+	confrdir=$(dirname "${confname}")
+
+	while [ "${confrdir}" != "." ]; do
+		for path in "${PIDS_DIR}/${confrdir}" "${SERVICES_DIR}/${confrdir}"; do
+			if is_dir_empty "${path}"; then
+				rmdir "${path}"
+				if [ $? -ne 0 ]; then
+					echo "error: cannot remove directory (${path})" 1>&2
+				fi
+			fi
+		done
+		confrdir=$(dirname "${confrdir}")
+	done
+}
+
 function clean_servicefile {
 	local confname
 
@@ -17,7 +36,12 @@ function clean_servicefile {
 }
 
 function create_dirs {
-	for path in "${PIDS_DIR}" "${SERVICES_DIR}"; do
+	local confname confrdir
+
+	confname=$1; shift 1
+	confrdir=$(dirname "${confname}")
+
+	for path in "${PIDS_DIR}/${confrdir}" "${SERVICES_DIR}/${confrdir}"; do
 		if [ ! -d "${path}" ]; then
 			mkdir -m 0755 -p "${path}"
 			if [ $? -ne 0 ]; then
@@ -35,15 +59,17 @@ function get_confnames {
 
 	confnames=()
 	if [ "${confname}" = "." ]; then
-		filenames=$(cd "${CONF_DIR}"; \ls *.conf)
+		filenames=$(cd "${CONF_DIR}"; find * | grep "\.conf")
 	else
-		filenames=$(cd "${CONF_DIR}"; \ls "${confname}.conf" "${confname}".*.conf 2>/dev/null)
+		# file
+		filenames=$(cd "${CONF_DIR}"; find "${confname}.conf" 2>/dev/null | grep "\.conf" 2>/dev/null)
+		if [ -z "${filenames}" ]; then
+			# dir
+			filenames=$(cd "${CONF_DIR}"; find "${confname}" 2>/dev/null | grep "\.conf" 2>/dev/null)
+		fi
 	fi
 	for filename in ${filenames}; do
-		confname="${filename%.conf}"
-		if [ "${confname}" != "${filename}" ]; then
-			confnames+=("${confname}")
-		fi
+		confnames+=("${filename%.conf}")
 	done
 	echo "${confnames[*]}"
 }
@@ -76,6 +102,19 @@ function is_onconffile {
 	else
 		return 1
 	fi
+}
+
+function is_dir_empty {
+	local names path
+
+	path=$1; shift 1
+	if [ -d "${path}" ]; then
+		names=$(ls "${path}" 2> /dev/null| head -1)
+		if [ -z "${names}" ]; then
+			return 0
+		fi
+	fi
+	return 1
 }
 
 function is_running {
@@ -128,7 +167,7 @@ function start {
 	local pgid
 
 	# ensure required working dirs
-	create_dirs
+	create_dirs "${confname}"
 
 	#echo -n "starting server (${confname}) ... "
 	echo -n "[${confname}] "
@@ -170,6 +209,7 @@ function stop {
 	echo -n "[${confname}] "
 	if ! is_running "${confname}"; then
 		echo "NOT RUNNING"
+		clean_dirs "${confname}"
 		return 1
 	fi
 
@@ -179,6 +219,7 @@ function stop {
 	if ! is_running; then
 		echo "STOPPED"
 		clean_servicefile "${confname}"
+		clean_dirs "${confname}"
 		return 0
 	else
 		echo "STOP FAILED"
@@ -188,18 +229,15 @@ function stop {
 
 function print_usage {
 	echo "\
-usage: $PROGNAME <confname> {start|stop|restart|status|list}
+usage: $PROGNAME <name> {start|stop|restart|status|list}
        $PROGNAME list|status
        $PROGNAME -h|--help|help
 
-Manage system configured RUSS servers. Configurations must be in
+Manage system configured RUSS servers as configured in:
 	${CONF_DIR}
-The server address will be set to the configuration name (and
-override any main:addr setting in the original configuration).
 
-Where:
-<confname>	Configuration name (not including .conf). confname of
-		\".\" means all configuration names."
+The given <name> may be the name of the configuration (without
+.conf), a directory, or \".\" for all."
 }
 
 PROGNAME=$(basename $0)
