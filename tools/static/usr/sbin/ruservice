@@ -21,14 +21,14 @@ function create_dirs {
 		if [ ! -d "${path}" ]; then
 			mkdir -m 0755 -p "${path}"
 			if [ $? -ne 0 ]; then
-				echo "error: cannot create working directory (${path})" 1>&2
+				echo "error: cannot create directory (${path})" 1>&2
 				exit 1
 			fi
 		fi
 	done
 }
 
-function getconfnames {
+function get_confnames {
 	local confname confnames filename filenames
 
 	confname=$1; shift 1
@@ -48,17 +48,17 @@ function getconfnames {
 	echo "${confnames[*]}"
 }
 
-function getpid {
+function get_pid {
 	local confname pid pidpath
 
 	confname=$1; shift 1
 
-	pidpath=$(getpidpath "${confname}")
+	pidpath=$(get_pidpath "${confname}")
 	pid=$(cat "${pidpath}" 2> /dev/null)
 	echo "${pid}"
 }
 
-function getpidpath {
+function get_pidpath {
 	local confname
 
 	confname=$1; shift 1
@@ -84,7 +84,7 @@ function is_running {
 	confname=$1; shift 1
 
 	if [ -e "${SERVICES_DIR}/${confname}" ]; then
-		pgid=$(getpid "${confname}")
+		pgid=$(get_pid "${confname}")
 		if [ "${pgid}" = "x" ]; then
 			return 0
 		fi
@@ -100,7 +100,7 @@ function list {
 
 	confname=$1; shift 1
 
-	confnames=$(getconfnames "${confname}")
+	confnames=$(get_confnames "${confname}")
 	if [ -n "${confnames}" ]; then
 		echo "${confnames}"
 	fi
@@ -159,8 +159,8 @@ addr=
 		sleep 0.1
 	done
 
-        echo "START FAILED"
-        return 1
+	echo "START FAILED"
+	return 1
 }
 
 function stop {
@@ -173,7 +173,7 @@ function stop {
 		return 1
 	fi
 
-	pgid=$(getpid "${confname}")
+	pgid=$(get_pid "${confname}")
 	kill -TERM "-${pgid}" 2> /dev/null
 	rm -f "${pidpath}" 2> /dev/null
 	if ! is_running; then
@@ -233,10 +233,10 @@ elif [ $# -eq 2 ]; then
 		exit 0
 	fi
 
-	confnames=$(getconfnames "${confname}")
+	confnames=$(get_confnames "${confname}")
 	for confname in ${confnames}; do
 		confpath="${CONF_DIR}/${confname}.conf"
-		pidpath=$(getpidpath "${confname}")
+		pidpath=$(get_pidpath "${confname}")
 
 		if [ ! -r "${confpath}" ]; then
 			echo "error: cannot find configuration" 1>&2
