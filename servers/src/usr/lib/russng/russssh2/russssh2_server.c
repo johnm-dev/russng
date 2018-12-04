@@ -29,7 +29,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -450,7 +449,10 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	russ_close(sconn->fds[2]);
 
 	/* wait for exit value, pass back, and close up */
-	waitpid(pid, &status, 0);
+	if (__russ_waitpidfd(pid, &status, sconn->sysfds[0], 200) == __RUSS_WAITPIDFD_FD) {
+		status = RUSS_EXIT_EXITFDCLOSED;
+		kill(pid, SIGHUP);
+	}
 	russ_sconn_exit(sconn, WEXITSTATUS(status));
 	russ_sconn_close(sconn);
 
