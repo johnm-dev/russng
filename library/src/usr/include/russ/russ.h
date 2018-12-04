@@ -67,6 +67,7 @@ extern "C" {
 /* common exit status values */
 #define RUSS_EXIT_SUCCESS	0
 #define RUSS_EXIT_FAILURE	1
+#define RUSS_EXIT_EXITFDCLOSED	125
 #define RUSS_EXIT_CALLFAILURE	126
 #define RUSS_EXIT_SYSFAILURE	127
 
