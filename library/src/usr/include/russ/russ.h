@@ -113,6 +113,9 @@ extern "C" {
 #define RUSS_WAIT_TIMEOUT	-3
 #define RUSS_WAIT_HUP		-4
 
+#define __RUSS_WAITPIDFD_FD	1
+#define __RUSS_WAITPIDFD_PID	2
+
 typedef uint32_t	russ_opnum;
 
 /**
@@ -323,6 +326,7 @@ void *russ_free(void *);
 void *russ_malloc(size_t);
 
 /* misc.c */
+int __russ_waitpidfd(pid_t, int *, int, int);
 char *russ_get_services_dir(void);
 int russ_write_exit(int, int);
 
