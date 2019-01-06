@@ -386,7 +386,6 @@ char *russ_spath_resolve(const char *);
 char *russ_spath_resolvewithuid(const char *, uid_t *, int);
 
 /* start.c */
-char *russ_ruspawn(char *);
 int russ_start(int, char **, int);
 int russ_startl(char *, ...);
 

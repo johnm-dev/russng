@@ -93,6 +93,9 @@ int russ_get_creds(int, struct russ_creds *);
 int russ_recv_fd(int, int *);
 int russ_send_fd(int, int);
 
+/* start.c */
+char *russ_ruspawn(char *);
+
 /* svr-fork.c */
 void russ_svr_loop_fork(struct russ_svr *);
 
