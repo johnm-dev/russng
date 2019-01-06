@@ -303,6 +303,7 @@ russ_ruspawn(char *caddr) {
 
 		execlp("ruspawn", "ruspawn",
 			"-f", caddr,
+			"-c", "main:addr=",
 			"-c", "main:closeonaccept=1",
 			"-c", "main:accepttimeout=2500",
 			NULL);
