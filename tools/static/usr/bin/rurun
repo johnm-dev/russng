@@ -232,7 +232,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ "${usewaitn}" = "0" ]; then
-	echo "warning: old bash, clamping maxtasks to 1" 1>&2
+	# old bash, clamping maxtasks to 1
 	nrunningmax=1
 fi
 
