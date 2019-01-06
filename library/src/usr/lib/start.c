@@ -27,6 +27,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -116,6 +117,160 @@ _russ_start_augment_path(int argc, char **argv) {
 				argv[i] = strdup(buf);
 			}
 		}
+	}
+	return 0;
+}
+
+/**
+* Set single resource (soft, hard).
+*
+* @param conf		configuration object
+* @param name		option name in "main.limits" section
+* @return		0 on success; -1 on failure
+*/
+int
+_russ_start_setlimit(struct russ_conf *conf, char *name) {
+	struct rlimit	rlim;
+	char		*sh, *soft, *hard, *endptr;
+	int		resource;
+
+	/* match name and resource (if existent) */
+	if (strcmp(name, "as") == 0) {
+#ifndef RLIMIT_AS
+		return 0;
+#else
+		resource = RLIMIT_AS;
+#endif
+	} else if (strcmp(name, "core") == 0) {
+#ifndef RLIMIT_CORE
+		return 0;
+#else
+		resource = RLIMIT_CORE;
+#endif
+	} else if (strcmp(name, "cpu") == 0) {
+#ifndef RLIMIT_CPU
+		return 0;
+#else
+		resource = RLIMIT_CPU;
+#endif
+	} else if (strcmp(name, "data") == 0) {
+#ifndef RLIMIT_DATA
+		return 0;
+#else
+		resource = RLIMIT_DATA;
+#endif
+	} else if (strcmp(name, "fsize") == 0) {
+#ifndef RLIMIT_FSIZE
+		return 0;
+#else
+		resource = RLIMIT_FSIZE;
+#endif
+	} else if (strcmp(name, "memlock") == 0) {
+#ifndef RLIMIT_MEMLOCK
+		return 0;
+#else
+		resource = RLIMIT_MEMLOCK;
+#endif
+	} else if (strcmp(name, "nofile") == 0) {
+#ifndef RLIMIT_NOFILE
+		return 0;
+#else
+		resource = RLIMIT_NOFILE;
+#endif
+	} else if (strcmp(name, "nproc") == 0) {
+#ifndef RLIMIT_NPROC
+		return 0;
+#else
+		resource = RLIMIT_NPROC;
+#endif
+	} else if (strcmp(name, "rss") == 0) {
+#ifndef RLIMIT_RSS
+		return 0;
+#else
+		resource = RLIMIT_RSS;
+#endif
+	} else if (strcmp(name, "stack") == 0) {
+#ifndef RLIMIT_STACK
+		return 0;
+#else
+		resource = RLIMIT_STACK;
+#endif
+	} else {
+		// unknown
+		return 0;
+	}
+
+	/* get setting if present */
+	if ((sh = russ_conf_get(conf, "main.limits", name, NULL)) == NULL) {
+		return 0;
+	}
+	soft = sh;
+	if ((hard = strchr(sh, ':')) != NULL) {
+		*hard = '\0';
+		hard++;
+	}
+	if (getenv("RUSS_DEBUG__russ_start_setlimit")) {
+		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) soft (%s) hard (%s)\n", name, soft, hard);
+	}
+
+	/* get and update rlimit */
+	getrlimit(resource, &rlim);
+	if (strcmp(soft, "") == 0) {
+		// keep current
+	} else if (strcmp(soft, "unlimited") == 0) {
+		rlim.rlim_cur = RLIM_INFINITY;
+	} else {
+		rlim.rlim_cur = strtol(soft, &endptr, 10);
+		if (*endptr != '\0') {
+			goto fail;
+		}
+	}
+	if (hard) {
+		if (strcmp(hard, "") == 0) {
+			// keep current
+		} else if (strcmp(hard, "unlimited") == 0) {
+			rlim.rlim_max = RLIM_INFINITY;
+		} else {
+			rlim.rlim_max = strtol(hard, &endptr, 10);
+			if (*endptr != '\0') {
+				goto fail;
+			}
+		}
+	}
+	if (getenv("RUSS_DEBUG__russ_start_setlimit")) {
+		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) rlim (%ld:%ld)\n", name, rlim.rlim_cur, rlim.rlim_max);
+	}
+
+	sh = russ_free(sh);
+	return setrlimit(resource, &rlim);
+fail:
+	sh = russ_free(sh);
+	return -1;
+}
+
+/**
+* Set process limits.
+*
+* Some limits may not be settable on the platform.
+*
+* @param conf		configuration object
+* @return		0 on success; -1 on failure
+*/
+int
+_russ_start_setlimits(struct russ_conf *conf) {
+	if ((_russ_start_setlimit(conf, "as") < 0)
+		|| (_russ_start_setlimit(conf, "rss") < 0)
+		|| (_russ_start_setlimit(conf, "data") < 0)
+		|| (_russ_start_setlimit(conf, "stack") < 0)
+		|| (_russ_start_setlimit(conf, "memlock") < 0)
+
+		|| (_russ_start_setlimit(conf, "core") < 0)
+		|| (_russ_start_setlimit(conf, "cpu") < 0)
+		|| (_russ_start_setlimit(conf, "fsize") < 0)
+		//|| (_russ_start_setlimit(conf, "locks") < 0)
+		|| (_russ_start_setlimit(conf, "nofile") < 0)
+		|| (_russ_start_setlimit(conf, "nproc") < 0)) {
+		return -1;
 	}
 	return 0;
 }
@@ -264,6 +419,13 @@ russ_start(int argc, char **argv, int notifyfd) {
 		}
 	}
 
+	/* set limits */
+	if (_russ_start_setlimits(conf) < 0) {
+		fprintf(stderr, "error: cannot set limits\n");
+		exit(1);
+	}
+
+	/* announce */
 	if ((lisd = russ_announce(main_addr, main_file_mode, file_uid, file_gid)) < 0) {
 		fprintf(stderr, "error: cannot set up socket\n");
 		exit(1);
