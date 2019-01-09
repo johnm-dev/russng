@@ -358,12 +358,12 @@ russ_start(int argc, char **argv, int notifyfd) {
 	largc = argc;
 	if ((largv = russ_sarray0_dup(argv, largc+1)) == NULL) {
 		fprintf(stderr, "error: cannot duplicate argument list\n");
-		exit(1);
+		return -1;
 	}
 	/* load conf */
 	if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
 		fprintf(stderr, "error: cannot load configuration.\n");
-		exit(1);
+		return -1;
 	}
 
 	/* get settings */
@@ -395,41 +395,41 @@ russ_start(int argc, char **argv, int notifyfd) {
 	/* change uid/gid then exec; listen socket is at fd lisd */
 	if (russ_switch_userinitgroups(uid, gid) < 0) {
 		fprintf(stderr, "error: cannot switch user\n");
-		exit(1);
+		return -1;
 	}
 
 	umask(main_umask);
 
 	if (chdir(main_cwd) < 0) {
 		fprintf(stderr, "error: cannot change directory\n");
-		exit(1);
+		return -1;
 	}
 
 	/* check for server program */
 	if ((main_path == NULL)
 		|| (access(main_path, R_OK|X_OK))) {
 		fprintf(stderr, "error: cannot access server program\n");
-		exit(1);
+		return -1;
 	}
 
 	/* create directories */
 	if (main_mkdirs) {
 		if (_mkdirs(main_mkdirs, main_mkdirs_mode) < 0) {
 			fprintf(stderr, "error: cannot make directories\n");
-			exit(1);
+			return -1;
 		}
 	}
 
 	/* set limits */
 	if (_russ_start_setlimits(conf) < 0) {
 		fprintf(stderr, "error: cannot set limits\n");
-		exit(1);
+		return -1;
 	}
 
 	/* announce */
 	if ((lisd = russ_announce(main_addr, main_file_mode, file_uid, file_gid)) < 0) {
 		fprintf(stderr, "error: cannot set up socket\n");
-		exit(1);
+		return -1;
 	}
 
 	russ_close(notifyfd);
@@ -444,7 +444,7 @@ russ_start(int argc, char **argv, int notifyfd) {
 	/* exec server itself */
 	if (execv(main_path, main_hide_conf ? argv : largv) < 0) {
 		fprintf(stderr, "error: cannot exec server\n");
-		exit(1);
+		return -1;
 	}
 
 	largv = russ_sarray0_free(largv);
