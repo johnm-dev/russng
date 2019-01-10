@@ -128,7 +128,7 @@ _russ_start_augment_path(int argc, char **argv) {
 * @param name		option name in "main.limits" section
 * @return		0 on success; -1 on failure
 */
-int
+static int
 _russ_start_setlimit(struct russ_conf *conf, char *name) {
 	struct rlimit	rlim;
 	char		*sh, *soft, *hard, *endptr;
@@ -256,7 +256,7 @@ fail:
 * @param conf		configuration object
 * @return		0 on success; -1 on failure
 */
-int
+static int
 _russ_start_setlimits(struct russ_conf *conf) {
 	if ((_russ_start_setlimit(conf, "as") < 0)
 		|| (_russ_start_setlimit(conf, "rss") < 0)
