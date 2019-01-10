@@ -122,7 +122,7 @@ _russ_start_augment_path(int argc, char **argv) {
 }
 
 /**
-* Set single resource (soft, hard).
+* Set single resource (soft, hard) found in the main.limits section.
 *
 * @param conf		configuration object
 * @param name		option name in "main.limits" section
@@ -249,7 +249,7 @@ fail:
 }
 
 /**
-* Set process limits.
+* Set process limits found in the main.limits section.
 *
 * Some limits may not be settable on the platform.
 *
