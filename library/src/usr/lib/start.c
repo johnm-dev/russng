@@ -122,6 +122,42 @@ _russ_start_augment_path(int argc, char **argv) {
 }
 
 /**
+* Set environment variables found in the main.env section.
+*
+* The items are iterated through in order.
+*
+* @param conf		configuration object
+* @return		0 on success; -1 on failure
+*/
+static int
+_russ_start_setenv(struct russ_conf *conf) {
+	char	**names = NULL, *name = NULL, *value = NULL;
+	int	rv;
+
+	if (!russ_conf_has_section(conf, "main.env")) {
+		return 0;
+	}
+
+	if ((names = russ_conf_options(conf, "main.env")) == NULL) {
+		return -1;
+	}
+
+	for (name = *names; name != NULL; names++) {
+		value = russ_conf_get(conf, "main.env", name, "");
+		rv = setenv(name, value, 1);
+		value = russ_free(value);
+		if (rv < 0) {
+			break;
+		}
+	}
+	russ_conf_sarray0_free(names);
+	if (rv < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+/**
 * Set single resource (soft, hard) found in the main.limits section.
 *
 * @param conf		configuration object
@@ -423,6 +459,12 @@ russ_start(int argc, char **argv, int notifyfd) {
 	/* set limits */
 	if (_russ_start_setlimits(conf) < 0) {
 		fprintf(stderr, "error: cannot set limits\n");
+		return -1;
+	}
+
+	/* set env */
+	if (_russ_start_setenv(conf) < 0) {
+		fprintf(stderr, "error: cannot set env\n");
 		return -1;
 	}
 
