@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#include <russ/priv.h>
+
 extern char	**environ;
 
 /**
@@ -91,6 +93,89 @@ russ_env_reset(void) {
 		return -1;
 	}
 	return 0;
+}
+
+/**
+* Resolve string using environment variables and return a new
+* string.
+*
+* Resolving is done for environment variables references in a
+* string with the format ${name}. If the named environment variable
+* exists, its value replaced the ${name} string; otherwise an empty
+* string is added.
+*
+* A failure occurs *only* if the size of the working space is
+* exceeded.
+*
+* The return value must be freed by the caller.
+*
+* @param		s
+* @return		resolved string; NULL on failure
+*/
+char *
+russ_env_resolve(const char *s) {
+	const char	*start = NULL, *end = NULL;
+	const char	*sp = NULL, *spend = NULL;
+	char		*fp = NULL, *fpend = NULL;
+	char		*value = NULL;
+	int		valuelen;
+	char		final[16000], name[256];
+
+	sp = s;
+	spend = s+strlen(s)+1;
+	fp = final;
+	fpend = final+sizeof(final);
+	final[0] = '\0';
+
+	while (sp < spend) {
+		if ((start = strstr(sp, "${")) == NULL) {
+			// nothing left to resolve
+			break;
+		}
+
+		// leading part
+		if (start > sp) {
+			if (start-sp > fpend-fp) {
+				return NULL;
+			}
+			strncpy(fp, sp, start-sp);
+			fp += start-sp;
+		}
+
+		// to resolve part
+		start += 2;
+		if ((end = strchr(start+1, '}')) == NULL) {
+			// cannot find terminator
+			return NULL;
+		}
+		if (end-start+1 > sizeof(name)) {
+			// name too long
+			return NULL;
+		}
+		strncpy(name, start, end-start);
+		name[end-start] = '\0';
+
+		if ((value = getenv(name)) != NULL) {
+			valuelen = strlen(value);
+			if (fp+valuelen+1 > fpend) {
+				value = russ_free(value);
+				return NULL;
+			}
+			strcpy(fp, value);
+			fp += valuelen;
+			//value = russ_free(value);
+		}
+		sp = end+1;
+	}
+
+	// trailing part
+	if (spend-sp > fpend-fp) {
+		return NULL;
+	}
+	strncpy(fp, sp, spend-sp);
+	fp += spend-sp;
+
+	return strdup(final);
 }
 
 /**
