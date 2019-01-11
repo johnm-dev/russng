@@ -131,8 +131,9 @@ _russ_start_augment_path(int argc, char **argv) {
 */
 static int
 _russ_start_setenv(struct russ_conf *conf) {
-	char	**names = NULL, *name = NULL, *value = NULL;
-	int	rv;
+	char	**names = NULL, *name = NULL;
+	char	*value = NULL, *rvalue = NULL;
+	int	i, rv;
 
 	if (!russ_conf_has_section(conf, "main.env")) {
 		return 0;
@@ -142,10 +143,18 @@ _russ_start_setenv(struct russ_conf *conf) {
 		return -1;
 	}
 
-	for (name = *names; name != NULL; names++) {
+	for (i = 0; names[i] != NULL; i++) {
+		name = names[i];
+
+		fprintf(stderr, "name (%s) i (%d) names (%p)\n", name, i, names);
 		value = russ_conf_get(conf, "main.env", name, "");
-		rv = setenv(name, value, 1);
+		rvalue = russ_env_resolve(value);
+		fprintf(stderr, "value (%s) rvalue (%s)\n", value, rvalue);
+		rv = setenv(name, rvalue, 1);
+		fprintf(stderr, "rv (%d)\n", rv);
 		value = russ_free(value);
+		rvalue = russ_free(rvalue);
+
 		if (rv < 0) {
 			break;
 		}
