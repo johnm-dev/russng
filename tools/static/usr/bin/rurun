@@ -142,7 +142,10 @@ Options:
 	Use targets file. Defaults \${RURUN_PNET_TARGETSFILE}.
 -t|--timeout <seconds>
 	Allow a given amount of time to connect before aborting.
-	Defaults to \${RURUN_TIMEOUT} if set."
+	Defaults to \${RURUN_TIMEOUT} if set.
+--wrap	Indexes in the <targetspec> which are outside of the count are
+	wrapped back to zero (effectively, modulo <count>). Negative
+	indexes are wrapped, too."
 }
 
 # defaults (null or unset)
