@@ -58,11 +58,12 @@ PROG_NAME=$(basename $0)
 export RUMPIRUN_MPIRUN=${RUMPIRUN_MPIRUN:-mpirun}
 export RUMPIRUN_LAUNCHER=${RUMPIRUN_LAUNCHER:-rurun}
 export RUMPIRUN_SHELL=""
+export RUMPIRUN_TARGETSFILE="${RUMPIRUN_TARGETSFILE:-${RUMPIRUN_PNET_TARGETSFILE}}"
 
 # dynamically start pnet server if necessary
 if [ -z "${RUMPIRUN_PNET_ADDR}" ]; then
-	if [ -n "${RUMPIRUN_PNET_TARGETSFILE}" ]; then
-		export RUMPIRUN_PNET_ADDR=$(ruspawn -c main:path=/usr/lib/russng/russpnet/russpnet_server -c "targets:filename=${RUMPIRUN_PNET_TARGETSFILE}" -c "main:pgid=$$")
+	if [ -n "${RUMPIRUN_TARGETSFILE}" ]; then
+		export RUMPIRUN_PNET_ADDR=$(ruspawn -c main:path=/usr/lib/russng/russpnet/russpnet_server -c "targets:filename=${RUMPIRUN_TARGETSFILE}" -c "main:pgid=$$")
 	fi
 	if [ -n "${RUMPIRUN_PNET_ADDR}" ]; then
 		# ensure cleanup of pnet server
