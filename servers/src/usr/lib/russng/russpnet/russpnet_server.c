@@ -306,22 +306,40 @@ svc_id_handler(struct russ_sess *sess) {
 }
 
 int
-get_valid_id_index(char *spath, int *idx, int *wrap) {
+get_valid_id_index(char *spath, int *idx, int *oidx, int *wrap, int ntargets) {
 	char	buf[64];
 
+	*idx = -1;
+	*oidx = -1;
+	*wrap = -1;
+
+	if (ntargets < 1) {
+		return -1;
+	}
 	if (russ_str_get_comp(spath, '/', 2, buf, sizeof(buf)) < 0) {
 		return -1;
 	}
-	if (sscanf(buf, ":%d", idx) == 1) {
+
+	if (sscanf(buf, ":%d", oidx) == 1) {
 		*wrap = 1;
-	} else if (sscanf(buf, "%d", idx) == 1) {
+	} else if (sscanf(buf, "%d", oidx) == 1) {
 		*wrap = 0;
 	} else {
 		return -1;
 	}
-	if ((*idx < 0) || (*idx >= targetslist.n)) {
+	*idx = *oidx;
+
+	/* negative index, wrapping, out of range */
+	if (*idx < 0) {
+		*idx += ntargets;
+	}
+	if (*wrap) {
+		*idx = *idx % ntargets;
+	}
+	if ((*idx < 0) || (*idx >= ntargets)) {
 		return -1;
 	}
+
 	return 0;
 }
 
@@ -329,12 +347,12 @@ void
 svc_id_index_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
-	int			i, idx, wrap;
+	int			i, idx, oidx, wrap;
 
 	sconn = sess->sconn;
 	req = sess->req;
 
-	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
+	if (get_valid_id_index(req->spath, &idx, &oidx, &wrap, targetslist.n) < 0) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}
@@ -359,22 +377,14 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	struct russ_req		*req = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	char			*relay_addr = NULL, *tail = NULL, *userhost = NULL;
-	int			i, idx, n, wrap = 0;
+	int			i, idx, n, oidx, wrap = 0;
 
 	sconn = sess->sconn;
 	req = sess->req;
 
-	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
+	if (get_valid_id_index(req->spath, &idx, &oidx, &wrap, targetslist.n) < 0) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
-	}
-
-	/* wrap if requested; handle negative indexes */
-	if (wrap) {
-		idx = idx % targetslist.n;
-	}
-	if ((idx < 0) && (-idx <= targetslist.n)) {
-		idx = targetslist.n+idx;
 	}
 
 	/* set up new spath */
@@ -551,22 +561,14 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	char			*relay_addr = NULL, *tail = NULL;
 	char			*userhost = NULL, *cgname = NULL, *exec_spath = NULL;
-	int			i, idx, n, wrap = 0;
+	int			i, idx, n, oidx, wrap = 0;
 
 	sconn = sess->sconn;
 	req = sess->req;
 
-	if (get_valid_id_index(req->spath, &idx, &wrap) < 0) {
+	if (get_valid_id_index(req->spath, &idx, &oidx, &wrap, targetslist.n) < 0) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
-	}
-
-	/* wrap if requested; handle negative indexes */
-	if (wrap) {
-		idx = idx % targetslist.n;
-	}
-	if ((idx < 0) && (-idx <= targetslist.n)) {
-		idx = targetslist.n+idx;
 	}
 
 	/* set up new spath */
