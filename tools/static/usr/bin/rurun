@@ -139,7 +139,7 @@ Options:
 	Alternative shell to run on target. The arguments are passed
 	to it for execution. Forces \"--exec simple\".
 --targetsfile <path>
-	Use targets file. Defaults \${RURUN_PNET_TARGETSFILE}.
+	Use targets file. Defaults \${RURUN_TARGETSFILE}.
 -t|--timeout <seconds>
 	Allow a given amount of time to connect before aborting.
 	Defaults to \${RURUN_TIMEOUT} if set.
@@ -221,7 +221,7 @@ while [ $# -gt 0 ]; do
 		;;
 	--targetsfile)
 		shift 1
-		RURUN_PNET_TARGETSFILE="$1"; shift 1
+		RURUN_TARGETSFILE="$1"; shift 1
 		;;
 	--wrap)
 		shift 1
@@ -240,19 +240,20 @@ if [ "${usewaitn}" = "0" ]; then
 fi
 
 # expand
-RURUN_PNET_TARGETSFILE=$(readlink -f "${RURUN_PNET_TARGETSFILE}")
+RURUN_TARGETSFILE="${RURUN_TARGETSFILE:-${RURUN_PNET_TARGETSFILE}}"
+RURUN_TARGETSFILE=$(readlink -f "${RURUN_TARGETSFILE}")
 
 # dynamically start pnet server if necessary
 if [ -z "${RURUN_PNET_ADDR}" ]; then
-	if [ -n "${RURUN_PNET_TARGETSFILE}" ]; then
-		x=$(ruspawn --withpids -c main:path=/usr/lib/russng/russpnet/russpnet_server -c "targets:filename=${RURUN_PNET_TARGETSFILE}" -c "main:pgid=0")
+	if [ -n "${RURUN_TARGETSFILE}" ]; then
+		x=$(ruspawn --withpids -c main:path=/usr/lib/russng/russpnet/russpnet_server -c "targets:filename=${RURUN_TARGETSFILE}" -c "main:pgid=0")
 		export RURUN_PNET_ADDR="${x##*:}"
 		x="${x%:*}"
 		pnetpid="${x%:*}"
 		pnetpgid="${x#*:}"
 	fi
 	if [ -z "${RURUN_PNET_ADDR}" ]; then
-		echo "error: neither RURUN_PNET_ADDR nor RURUN_PNET_TARGETSFILE are set" 1>&2
+		echo "error: neither RURUN_PNET_ADDR nor RURUN_TARGETSFILE are set" 1>&2
 		exit 1
 	fi
 	# ensure cleanup of pnet server
@@ -273,6 +274,7 @@ if [ -n "${RURUN_DEBUG}" ]; then
 	echo "RURUN_PNET_ADDR (${RURUN_PNET_ADDR})"
 	echo "RURUN_RELAY (${RURUN_RELAY})"
 	echo "RURUN_SHELL (${RURUN_SHELL})"
+	echo "RURUN_TARGETSFILE (${RURUN_TARGETSFILE})"
 	echo "-----"
 fi
 
