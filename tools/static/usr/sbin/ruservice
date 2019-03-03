@@ -19,7 +19,7 @@ function clean_dirs {
 			if is_dir_empty "${path}"; then
 				rmdir "${path}"
 				if [ $? -ne 0 ]; then
-					echo "error: cannot remove directory (${path})" 1>&2
+					echoe "error: cannot remove directory (${path})"
 				fi
 			fi
 		done
@@ -45,11 +45,15 @@ function create_dirs {
 		if [ ! -d "${path}" ]; then
 			mkdir -m 0755 -p "${path}"
 			if [ $? -ne 0 ]; then
-				echo "error: cannot create directory (${path})" 1>&2
+				echoe "error: cannot create directory (${path})"
 				exit 1
 			fi
 		fi
 	done
+}
+
+function echoe {
+	echo "$*" 1>&2
 }
 
 function get_confnames {
@@ -280,7 +284,7 @@ if [ $# -eq 1 ]; then
 		$0 . status
 		;;
 	*)
-		echo "error: bad/missing arguments"
+		echoe "error: bad/missing arguments"
 		exit 1
 		;;
 	esac
@@ -307,7 +311,7 @@ elif [ $# -eq 2 ] || [ $# -eq 3 ]; then
 		pidpath=$(get_pidpath "${confname}")
 
 		if [ ! -r "${confpath}" ]; then
-			echo "error: cannot find configuration" 1>&2
+			echoe "error: cannot find configuration"
 		else
 			case "${cmd}" in
 			status)
@@ -323,13 +327,13 @@ elif [ $# -eq 2 ] || [ $# -eq 3 ]; then
 				restart
 				;;
 			*)
-				echo "error: bad/missing arguments"
+				echoe "error: bad/missing arguments"
 				exit 1
 				;;
 			esac
 		fi
 	done
 else
-	echo "error: bad/missing arguments" 1>&2
+	echoe "error: bad/missing arguments"
 	exit 1
 fi
