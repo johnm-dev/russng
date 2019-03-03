@@ -1,13 +1,12 @@
 #! /bin/bash
 #
-# ruservice
+# ruservice-legacy
 
 ETC_DIR=/etc/russ
 RUN_DIR=/var/run/russ
 CONF_DIR=${ETC_DIR}/conf
 PIDS_DIR=${RUN_DIR}/pids
 SERVICES_DIR="${RUN_DIR}/services"
-SOURCES_FILE="${ETC_DIR}/ruservice.sources"
 
 function clean_dirs {
 	local confname confrdir
@@ -266,12 +265,6 @@ The <name> is one of:
 * server name (when -n is specified) matching all configurations
   with 'name=<name>' in the #russ header line."
 }
-
-if [ ! -e "${SOURCES_FILE}" ]; then
-	# hand off to legacy (< v7) version
-	echoe "info: calling ruservice-legacy"
-	exec ruservice-legacy "$@"
-fi
 
 PROGNAME=$(basename $0)
 
