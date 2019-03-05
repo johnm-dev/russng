@@ -146,12 +146,9 @@ _russ_start_setenv(struct russ_conf *conf) {
 	for (i = 0; names[i] != NULL; i++) {
 		name = names[i];
 
-		fprintf(stderr, "name (%s) i (%d) names (%p)\n", name, i, names);
 		value = russ_conf_get(conf, "main.env", name, "");
 		rvalue = russ_env_resolve(value);
-		fprintf(stderr, "value (%s) rvalue (%s)\n", value, rvalue);
 		rv = setenv(name, rvalue, 1);
-		fprintf(stderr, "rv (%d)\n", rv);
 		value = russ_free(value);
 		rvalue = russ_free(rvalue);
 
