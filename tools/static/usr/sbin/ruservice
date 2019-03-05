@@ -272,6 +272,9 @@ function sync {
 		exit 1
 	fi
 
+	fqhost=$(hostname -f 2>/dev/null)
+	domain=$(hostname --domain 2>/dev/null)
+
 	while read line; do
 		if [ "${line:0:1}" = "#" -o "${line}" = "" ]; then
 			continue
@@ -281,6 +284,7 @@ function sync {
 		rest=${line#*:}
 		typ=${rest%%:*}
 		path=${rest#*:}
+		path=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "${path}")
 
 		echo "syncing ${typ} (${name}) ..."
 		case "${typ}" in
