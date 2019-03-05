@@ -26,6 +26,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* prototypes */
+char *russ_sarray0_get_suffix(char **, char *);
+void *russ_free(void *);
+
 /**
 * Count the number of substrings in the string.
 *
@@ -129,4 +133,90 @@ russ_str_replace_char(char *s, char oldch, char newch) {
 		}
 	}
 	return s;
+}
+
+/**
+* Resolve a format string using a NULL-terminated list of strings of
+* the form name=value, and return a new string.
+*
+* Resolving is done for references in a string with the format
+* ${name}. If the name exists in the list, its value replaces the
+* ${name} string; otherwise an empty string is used.
+*
+* A failure occurs *only* if the size of the working space is
+* exceeded.
+*
+* The return value must be freed by the caller.
+*
+* @param		s
+* @return		resolved string; NULL on failure
+*/
+char *
+russ_str_resolve(const char *s, char **vars) {
+	const char	*start = NULL, *end = NULL;
+	const char	*sp = NULL, *spend = NULL;
+	char		*fp = NULL, *fpend = NULL;
+	char		*value = NULL;
+	int		valuelen;
+	char		final[16000], name[256], prefix[256];
+
+	sp = s;
+	spend = s+strlen(s)+1;
+	fp = final;
+	fpend = final+sizeof(final);
+	final[0] = '\0';
+
+	while (sp < spend) {
+		if ((start = strstr(sp, "${")) == NULL) {
+			// nothing left to resolve
+			break;
+		}
+
+		// leading part
+		if (start > sp) {
+			if (start-sp > fpend-fp) {
+				return NULL;
+			}
+			strncpy(fp, sp, start-sp);
+			fp += start-sp;
+		}
+
+		// to resolve part
+		start += 2;
+		if ((end = strchr(start+1, '}')) == NULL) {
+			// cannot find terminator
+			return NULL;
+		}
+		if (end-start+1 > sizeof(name)) {
+			// name too long
+			return NULL;
+		}
+		strncpy(name, start, end-start);
+		name[end-start] = '\0';
+
+		strcpy(prefix, name);
+		prefix[end-start] = '=';
+		prefix[end-start+1] = '\0';
+
+		if ((value = russ_sarray0_get_suffix(vars, prefix)) != NULL) {
+			valuelen = strlen(value);
+			if (fp+valuelen+1 > fpend) {
+				value = russ_free(value);
+				return NULL;
+			}
+			strcpy(fp, value);
+			fp += valuelen;
+			//value = russ_free(value);
+		}
+		sp = end+1;
+	}
+
+	// trailing part
+	if (spend-sp > fpend-fp) {
+		return NULL;
+	}
+	strncpy(fp, sp, spend-sp);
+	fp += spend-sp;
+
+	return strdup(final);
 }
