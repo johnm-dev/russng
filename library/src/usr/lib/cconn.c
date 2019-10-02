@@ -240,6 +240,11 @@ russ_dialv(russ_deadline deadline, const char *op, const char *spath, char **att
 			fprintf(stderr, "RUSS_DEBUG_russ_dialv:russ_spath_split() < 0\n");
 		}
 		return NULL;
+	} else {
+		if (getenv("RUSS_DEBUG_russ_dialv")) {
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:saddr == %s\n", saddr);
+			fprintf(stderr, "RUSS_DEBUG_russ_dialv:spath2 == %s\n", spath2);
+		}
 	}
 	if (russ_is_conffile(saddr)) {
 		/* saddr points to configuration */

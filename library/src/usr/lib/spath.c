@@ -37,19 +37,7 @@
 #define RUSS_SPATH_RESOLVE_SYMLINKS_MAX	32
 
 /**
-* Resolve spath by replacing prefixes and symlinks.
-*
-* Prefixes of /+ and + are resolved as equivalent to
-* RUSS_SERVICES_DIR (from env or C #define). Prefixes /++ and ++ are
-* resolved as equivalent to the "$HOME/.russ" of the user identified
-* by uid. Symlinks are resolved by reading the link rather than
-* following them via the OS. This allows one to use symlinks that
-* use the above prefixes and also which actually do not exist in the
-* filesystem (i.e., for referencing non-local, valid russ service
-* paths).
-*
-* Note: if uid == NULL, then /++ and ++ prefixes are not resolved
-* and the return value is NULL (failure).
+* Resolve spath by replacing symlinks.
 *
 * @param spath		service path
 * @param uid		pointer to uid (may be NULL)
@@ -74,11 +62,6 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 	sdlen = strlen(services_dir);
 	bend = buf+sizeof(buf);
 
-	/* special case */
-	if ((strcmp(buf, "+") == 0) || (strcmp(buf, "++") == 0)) {
-		strcat(buf, "/");
-	}
-
 	/*
 	* TODO: the following code could be simplified and
 	* clarified so that flow is obvious.
@@ -87,36 +70,7 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 	changed = 1;
 	while (changed) {
 		changed = 0;
-		if ((strstr(buf, "+/") == buf) || (strstr(buf, "/+/") == buf)) {
-			/* resolve prefixes */
-			if (buf[0] == '+') {
-				bp = &buf[2];
-			} else {
-				bp = &buf[3];
-			}
-			if ((russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", services_dir, bp) < 0)
-				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
-				return NULL;
-			}
-			changed = 1;
-		} else if ((strstr(buf, "++/") == buf) || (strstr(buf, "/++/") == buf)) {
-			struct passwd	pwd, *result;
-			char		pwd_buf[16384];
-
-			if (buf[0] == '+') {
-				bp = &buf[3];
-			} else {
-				bp = &buf[4];
-			}
-			if ((uid_p == NULL)
-				|| (getpwuid_r(*uid_p, &pwd, pwd_buf, sizeof(pwd_buf), &result) != 0)
-				|| (result == NULL)
-				|| (russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s/.russ/%s", pwd.pw_dir, bp) < 0)
-				|| (strncpy(buf, tmpbuf, sizeof(buf)) < 0)) {
-				return NULL;
-			}
-			changed = 1;
-		} else if (buf[0] != '\0') {
+		if (buf[0] != '\0') {
 			/* for each subpath, test for symlink and resolve */
 			bp = buf;
 			while (bp != NULL) {
@@ -139,7 +93,7 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 						}
 						lnkbuf[st.st_size] = '\0';
 
-						if ((lnkbuf[0] == '/') || (strncmp(lnkbuf, "+/", 2) == 0)) {
+						if (lnkbuf[0] == '/') {
 							/* replace subpath with lnkbuf */
 							if (russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s", lnkbuf) < 0) {
 								return NULL;
@@ -219,6 +173,11 @@ russ_find_socket_addr(const char *spath) {
 	return NULL;
 }
 
+char *
+russ_get_plusserver_path(void) {
+	return strdup(RUSS_SERVICES_DIR"/plus");
+}
+
 /**
 * Split spath into saddr and remaing spath.
 *
@@ -227,6 +186,8 @@ russ_find_socket_addr(const char *spath) {
 * passed to the service server. Depending on the service server, the
 * spath may also be a service target and need to be resolved and
 * followed.
+*
+* Special handling: "/+", "+". Stops searching for saddr.
 *
 * @param spath		service path
 * @param[out] saddr	socket address
@@ -248,6 +209,22 @@ russ_spath_split(const char *spath, char **saddr, char **spath2) {
 	if (((spath = russ_spath_resolve(spath)) == NULL)
 		|| (spath[0] == '\0')) {
 		goto free_spath;
+	}
+
+	/* special case */
+	if (spath[0] == '+') {
+		p = (char *)spath+1;
+	} else if (strncmp(spath, "/+", 2) == 0) {
+		p = (char *)spath+2;
+	}
+	if ((p) && ((p[0] == '/') || (p[0] == '\0'))) {
+		*saddr = russ_get_plusserver_path();
+		if (p[0] == '\0') {
+			/* ensure minimal spath of "/" */
+			p = "/";
+		}
+		*spath2 = strdup(p);
+		return 0;
 	}
 
 	/*
