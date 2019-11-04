@@ -283,17 +283,37 @@ function sync {
 		name=${line%%:*}
 		rest=${line#*:}
 		typ=${rest%%:*}
-		path=${rest#*:}
-		path=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "${path}")
 
 		echo "syncing ${typ} (${name}) ..."
 		case "${typ}" in
 		dir)
+			path=${rest#*:}
+			path=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "${path}")
+
 			if [ ! -d "${path}" ]; then
 				echoe "warning: cannot find dir (${path})"
 			else
 				cp -r "${path}"/* "${CONF_DIR}"
 			fi
+			;;
+		http|https)
+			# EXPERIMENTAL
+			names=${rest%%:*}
+			url=${rest#*:}
+
+			for name in ${names}; do
+				url=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "NAME=${name}" "${url}")
+
+				data=$(curl "${url}" 2>/dev/null)
+				if [ $? -ne 0 ]; then
+					echoe "warning: cannot pull from url (${url})"
+				else
+					dname=$(dirname "${name}")
+					bname=$(basename "${name}")
+					mkdir -p "${CONF_DIR}/${dname}"
+					echo "${data}" > "${CONF_DIR}/${name}"
+				fi
+			done
 			;;
 		*)
 			echoe "error: unknown sources type (${typ})"
