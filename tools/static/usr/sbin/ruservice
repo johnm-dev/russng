@@ -225,7 +225,7 @@ addr=
 " >> "${SERVICES_DIR}/${confname}"
 		echo "x" > "${pidpath}"
 	else
-		ruspawn -f "${confpath}" -c "main:pgid=0" -c "main:addr=/+/${confname}"< /dev/null > /dev/null 2>&1 & pgid=$!
+		ruspawn -f "${confpath}" -c "main:pgid=0" -c "main:addr=${SERVICES_DIR}/${confname}"< /dev/null > /dev/null 2>&1 & pgid=$!
 		echo "${pgid}" > "${pidpath}"
 	fi
 
