@@ -289,7 +289,7 @@ cleanup:
 * Supports:
 * AIX - pid, euid, egid
 * LINUX - pid, uid, gid
-* FREEBSD - uid, gid; pid is unavailable and set to -1
+* FREEBSD, OSX - uid, gid; pid is unavailable and set to -1
 *
 * @param sd		socket descriptor
 * @param creds		credentials object in which to put infomation
@@ -321,7 +321,7 @@ russ_get_creds(int sd, struct russ_creds *creds) {
 	creds->pid = (long)_cred.pid;
 	creds->uid = (long)_cred.uid;
 	creds->gid = (long)_cred.gid;
-#elif __RUSS_FREEBSD__
+#elif __RUSS_FREEBSD__ || __RUSS_OSX__
 	if (getpeereid(sd, (uid_t *)&(creds->uid), (gid_t *)&(creds->gid)) < 0) {
 		return -1;
 	}

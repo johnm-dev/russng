@@ -25,7 +25,7 @@ endif
 
 ifeq ($(UNAME_SYSTEM),Darwin)
 	CC=gcc
-	CFLAGS=-D__RUSS_FREEBSD__ -g $(CFLAGS_RELAY)
+	CFLAGS=-D__RUSS_OSX__ -g $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	CXX=g++
 	CXXFLAGS=$(CFLAGS)
