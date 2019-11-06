@@ -9,7 +9,7 @@ CFLAGS_RELAY=-DUSE_RUSS_RELAY
 ifeq ($(UNAME_SYSTEM),AIX)
 	# OBJECT_MODE should be set externally
 	CC=xlc_r
-	CFLAGS=-DAIX -g $(CFLAGS_RELAY)
+	CFLAGS=-D__RUSS_AIX__ -g $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -bstatic
 	CXX=xlc++_r
 	CXXFLAGS=$(CFLAGS)
@@ -25,7 +25,7 @@ endif
 
 ifeq ($(UNAME_SYSTEM),Darwin)
 	CC=gcc
-	CFLAGS=-DFREEBSD -g $(CFLAGS_RELAY)
+	CFLAGS=-D__RUSS_FREEBSD__ -g $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	CXX=g++
 	CXXFLAGS=$(CFLAGS)
@@ -40,7 +40,7 @@ endif
 
 ifeq ($(UNAME_SYSTEM),FreeBSD)
 	CC=gcc
-	CFLAGS=-DFREEBSD -g $(CFLAGS_RELAY)
+	CFLAGS=-D__RUSS_FREEBSD__ -g $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	CXX=g++
 	CXXFLAGS=$(CFLAGS)
@@ -56,7 +56,7 @@ endif
 ifeq ($(UNAME_SYSTEM),Linux)
 	#CC=arm-linux-gnueabi-gcc
 	CC=gcc
-	CFLAGS=-DLINUX -g -DUSE_PAM $(CFLAGS_RELAY)
+	CFLAGS=-D__RUSS_LINUX__ -g -DUSE_PAM $(CFLAGS_RELAY)
 	CFLAGS_STATIC=$(CFLAGS) -static
 	CXX=g++
 	CXXFLAGS=$(CFLAGS)

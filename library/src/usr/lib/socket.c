@@ -299,7 +299,7 @@ int
 russ_get_creds(int sd, struct russ_creds *creds) {
 	socklen_t		_cred_len;
 
-#ifdef AIX
+#ifdef __RUSS_AIX__
 	struct peercred_struct	_cred;
 
 	_cred_len = sizeof(struct peercred_struct);
@@ -311,7 +311,7 @@ russ_get_creds(int sd, struct russ_creds *creds) {
 	creds->uid = (long)_cred.euid;
 	creds->gid = (long)_cred.egid;
 
-#elif LINUX
+#elif __RUSS_LINUX__
 	struct ucred	_cred;
 
 	_cred_len = sizeof(struct ucred);
@@ -321,12 +321,12 @@ russ_get_creds(int sd, struct russ_creds *creds) {
 	creds->pid = (long)_cred.pid;
 	creds->uid = (long)_cred.uid;
 	creds->gid = (long)_cred.gid;
-#elif FREEBSD
+#elif __RUSS_FREEBSD__
 	if (getpeereid(sd, (uid_t *)&(creds->uid), (gid_t *)&(creds->gid)) < 0) {
 		return -1;
 	}
 	creds->pid = -1;
-#elif FREEBSD_ALT
+#elif __RUSS_FREEBSD_ALT__
 	struct xucred	_cred;
 
 	_cred_len = sizeof(struct xucred);
