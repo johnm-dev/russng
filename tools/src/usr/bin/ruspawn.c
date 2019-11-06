@@ -151,12 +151,15 @@ __spawn(int argc, char **argv) {
 		russ_close(notifyfds[1]);
 
 		sprintf(pidst, "%d", pid);
-		execlp("rureap", "rureap", pidst, main_addr, NULL);
 #if 0
+		execlp("rureap", "rureap", pidst, main_addr, NULL);
+#endif
+#if 1
 		/*
 		* stay alive until child exits/is killed
 		* kill process group to clean up
 		*/
+		signal(SIGPIPE, SIG_IGN);
 		signal(SIGHUP, __reap_sigh);
 		signal(SIGINT, __reap_sigh);
 		signal(SIGTERM, __reap_sigh);
@@ -164,8 +167,8 @@ __spawn(int argc, char **argv) {
 
 		waitpid(pid, &status, 0);
 		remove(main_addr);
-#endif
 		exit(0);
+#endif
 	}
 
 	/* wait for notification */
