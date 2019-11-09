@@ -109,10 +109,42 @@ __spawn(int argc, char **argv) {
 		tmp = russ_free(tmp);
 	}
 	if (main_addr == NULL) {
-		if ((russ_snprintf(tmppath, sizeof(tmppath), "/tmp/.russ-%d-XXXXXX", getpid()) < 0)
-			|| (mkstemp(tmppath) < 0)) {
+		/*
+		* create/reserve tmp file for socket file in one of a
+		* few possible locations
+		*/
+		do {
+			char	hostname[HOST_NAME_MAX];
+			char	*homedir, hometmpdir[PATH_MAX];
+
+			if ((russ_snprintf(tmppath, sizeof(tmppath), "/tmp/.russng-%d-XXXXXX", getpid()) > 0)
+				&& (mkstemp(tmppath) >= 0)) {
+				break;
+			}
+			if ((russ_snprintf(tmppath, sizeof(tmppath), "/var/tmp/.russng-%d-XXXXXX", getpid()) > 0)
+				&& (mkstemp(tmppath) >= 0)) {
+				break;
+			}
+			if (((homedir = getenv("HOME")) != NULL)
+				&& (gethostname(hostname, sizeof(hostname)) == 0)
+				&& (russ_snprintf(tmppath, sizeof(tmppath), "%s/.russng/tmp/%s-%d-XXXXXX", homedir, hostname, getpid()) > 0)) {
+
+				if (mkstemp(tmppath) >= 0) {
+					break;
+				}
+				/* reset tmppath for mkstemp */
+				if ((russ_snprintf(tmppath, sizeof(tmppath), "%s/.russng/tmp/%s-%d-XXXXXX", homedir, hostname, getpid()) > 0)
+					&& (russ_snprintf(hometmpdir, sizeof(hometmpdir), "%s/.russng", homedir) > 0)
+					&& (((stat(hometmpdir, &st) == 0) && S_ISDIR(st.st_mode)) || (mkdir(hometmpdir, 0700) == 0))
+					&& (russ_snprintf(hometmpdir, sizeof(hometmpdir), "%s/.russng/tmp", homedir) > 0)
+					&& (((stat(hometmpdir, &st) == 0) && S_ISDIR(st.st_mode)) || (mkdir(hometmpdir, 0700) == 0))
+					&& (mkstemp(tmppath) >= 0)) {
+					break;
+				}
+			}
 			goto fail;
-		}
+		} while (0);
+
 		if ((russ_snprintf(tmparg, sizeof(tmparg), "main:addr=%s", tmppath) < 0)
 			|| (russ_sarray0_append(&xargv, "-c", tmparg, NULL) < 0)) {
 			remove(tmppath);

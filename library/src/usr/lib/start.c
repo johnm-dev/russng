@@ -347,7 +347,7 @@ russ_ruspawn(char *caddr) {
 			"-f", caddr,
 			"-c", "main:addr=",
 			"-c", "main:closeonaccept=1",
-			"-c", "main:accepttimeout=2500",
+			"-c", "main:accepttimeout=5000",
 			NULL);
 		exit(1);
 	}
