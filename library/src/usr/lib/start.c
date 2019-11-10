@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
@@ -143,7 +144,7 @@ _russ_start_setenv(struct russ_conf *conf) {
 		return -1;
 	}
 
-	for (i = 0; names[i] != NULL; i++) {
+	for (rv = 0, i = 0; (names[i] != NULL) && (rv == 0); i++) {
 		name = names[i];
 
 		value = russ_conf_get(conf, "main.env", name, "");
@@ -151,11 +152,8 @@ _russ_start_setenv(struct russ_conf *conf) {
 		rv = setenv(name, rvalue, 1);
 		value = russ_free(value);
 		rvalue = russ_free(rvalue);
-
-		if (rv < 0) {
-			break;
-		}
 	}
+
 	russ_conf_sarray0_free(names);
 	if (rv < 0) {
 		return -1;
