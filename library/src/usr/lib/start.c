@@ -382,6 +382,7 @@ russ_start(int argc, char **argv, int notifyfd) {
 	int			lisd;
 	int			largc;
 	char			**largv = NULL;
+	char			*main_launcher = NULL, **main_launcher_items;
 	char			*main_path = NULL, *main_addr = NULL;
 	char			*main_cwd = NULL;
 	mode_t			main_file_mode;
@@ -409,6 +410,28 @@ russ_start(int argc, char **argv, int notifyfd) {
 	}
 
 	/* get settings */
+	if ((main_launcher = russ_conf_get(conf, "main", "launcher", NULL)) != NULL) {
+		main_launcher_items = russ_sarray0_new_split(main_launcher, ":", 0);
+		main_launcher = russ_free(main_launcher);
+
+		for (i = 0; main_launcher_items[i] != NULL; i++) {
+			main_launcher = main_launcher_items[i];
+			if (access(main_launcher, R_OK|X_OK) == 0) {
+				if ((main_launcher = strdup(main_launcher_items[i])) == NULL) {
+					fprintf(stderr, "error: out of memory\n");
+					return -1;
+				}
+				break;
+			}
+			main_launcher = NULL;
+		}
+		if (main_launcher == NULL) {
+			fprintf(stderr, "error: cannot find launcher\n");
+			return -1;
+		}
+	}
+	main_launcher_items = russ_sarray0_free(main_launcher_items);
+
 	main_path = russ_conf_get(conf, "main", "path", NULL);
 	main_addr = russ_conf_get(conf, "main", "addr", NULL);
 	main_cwd = russ_conf_get(conf, "main", "cwd", "/");
@@ -490,11 +513,20 @@ russ_start(int argc, char **argv, int notifyfd) {
 	largc += 2;
 
 	/* exec server itself */
-	if (execv(main_path, main_hide_conf ? argv : largv) < 0) {
-		fprintf(stderr, "error: cannot exec server\n");
-		return -1;
-	}
+	largv[0] = russ_free(largv[0]);
+	largv[0] = strdup(main_path);
 
+	if (main_launcher) {
+		if (russ_sarray0_insert(&largv, 0, main_launcher, NULL) < 0) {
+			fprintf(stderr, "error: out of memory\n");
+			return -1;
+		}
+		largc++;
+	}
+	execv(largv[0], main_hide_conf ? argv : largv);
+
+	/* should not get here */
+	fprintf(stderr, "error: cannot exec server\n");
 	largv = russ_sarray0_free(largv);
 
 	return -1;
