@@ -363,6 +363,11 @@ russ_init(struct russ_conf *conf) {
 	if (conf == NULL) {
 		return NULL;
 	}
+
+	/* load debug variables */
+	russ_debug_init();
+
+	/* setup base server */
 	sd = (int)russ_conf_getint(conf, "main", "sd", RUSS_SVR_LIS_SD_DEFAULT);
 	accepttimeout = (int)russ_conf_getint(conf, "main", "accepttimeout", RUSS_SVR_TIMEOUT_ACCEPT);
 	closeonaccept = (int)russ_conf_getint(conf, "main", "closeonaccept", 0);

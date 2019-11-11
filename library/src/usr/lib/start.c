@@ -249,7 +249,7 @@ _russ_start_setlimit(struct russ_conf *conf, char *name) {
 		*hard = '\0';
 		hard++;
 	}
-	if (getenv("RUSS_DEBUG__russ_start_setlimit")) {
+	if (RUSS_DEBUG__russ_start_setlimit) {
 		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) soft (%s) hard (%s)\n", name, soft, hard);
 	}
 
@@ -277,7 +277,7 @@ _russ_start_setlimit(struct russ_conf *conf, char *name) {
 			}
 		}
 	}
-	if (getenv("RUSS_DEBUG__russ_start_setlimit")) {
+	if (RUSS_DEBUG__russ_start_setlimit) {
 		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) rlim (%ld:%ld)\n", name, rlim.rlim_cur, rlim.rlim_max);
 	}
 

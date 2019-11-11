@@ -255,6 +255,9 @@ main(int argc, char **argv) {
 		}
 	}
 
+	/* load debug variables */
+	russ_debug_init();
+
 	/* [op], spath and args */
 	if (argi == argc) {
 		fprintf(stderr, "%s\n", RUSS_MSG_BADARGS);

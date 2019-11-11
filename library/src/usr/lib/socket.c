@@ -166,7 +166,7 @@ russ_connect_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, soc
 
 	/* catch fd<0 before calling into poll() */
 	if (sd < 0) {
-		if (getenv("RUSS_DEBUG_russ_connect_deadline")) {
+		if (RUSS_DEBUG_russ_connect_deadline) {
 			fprintf(stderr, "RUSS_DEBUG_russ_dialv:sd < 0\n");
 		}
 		return -1;
@@ -175,13 +175,13 @@ russ_connect_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, soc
 	/* save and set non-blocking */
 	if (((flags = fcntl(sd, F_GETFL)) < 0)
 		|| (fcntl(sd, F_SETFL, flags|O_NONBLOCK) < 0)) {
-		if (getenv("RUSS_DEBUG_russ_connect_deadline")) {
+		if (RUSS_DEBUG_russ_connect_deadline) {
 			fprintf(stderr, "RUSS_DEBUG_russ_connect_deadline:flags < 0 || cannot set O_NONBLOCK\n");
 		}
 		return -1;
 	}
 	if (connect(sd, addr, addrlen) < 0) {
-		if (getenv("RUSS_DEBUG_russ_connect_deadline")) {
+		if (RUSS_DEBUG_russ_connect_deadline) {
 			fprintf(stderr, "RUSS_DEBUG_russ_connect_deadline:connect() < 0\n");
 		}
 		if ((errno == EINTR) || (errno == EINPROGRESS)) {
@@ -194,7 +194,7 @@ russ_connect_deadline(russ_deadline deadline, int sd, struct sockaddr *addr, soc
 	}
 	/* restore */
 	if (fcntl(sd, F_SETFL, flags) < 0) {
-			if (getenv("RUSS_DEBUG_russ_connect_deadline")) {
+			if (RUSS_DEBUG_russ_connect_deadline) {
 				fprintf(stderr, "RUSS_DEBUG_russ_connect_deadline:fcntl(%d, F_SETFL, %x)\n", sd, flags);
 			}
 		return -1;
@@ -220,7 +220,7 @@ russ_connectunix_deadline(russ_deadline deadline, char *path) {
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sun_family = AF_UNIX;
 	if (strlen(path) >= sizeof(servaddr.sun_path)) {
-		if (getenv("RUSS_DEBUG_russ_connectunix_deadline")) {
+		if (RUSS_DEBUG_russ_connectunix_deadline) {
 			fprintf(stderr, "RUSS_DEBUG_russ_connectunix_deadline:bad path length\n");
 		}
 		return -1;
@@ -229,7 +229,7 @@ russ_connectunix_deadline(russ_deadline deadline, char *path) {
 
 retry:
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-		if (getenv("RUSS_DEBUG_russ_connectunix_deadline")) {
+		if (RUSS_DEBUG_russ_connectunix_deadline) {
 			fprintf(stderr, "RUSS_DEBUG_russ_connectunix_deadline:sd < 0\n");
 		}
 		return -1;
@@ -238,14 +238,14 @@ retry:
 	/* set to non-blocking */
 	if (((flags = fcntl(sd, F_GETFL)) < 0)
 		|| (fcntl(sd, F_SETFL, flags|O_NONBLOCK) < 0)) {
-		if (getenv("RUSS_DEBUG_russ_connectunix_deadline")) {
+		if (RUSS_DEBUG_russ_connectunix_deadline) {
 			fprintf(stderr, "RUSS_DEBUG_russ_connectunix_deadline:flags < 0 || cannot set O_NONBLOCK\n");
 		}
 		goto cleanup;
 	}
 
 	if (connect(sd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-		if (getenv("RUSS_DEBUG_russ_connectunix_deadline")) {
+		if (RUSS_DEBUG_russ_connectunix_deadline) {
 			fprintf(stderr, "RUSS_DEBUG_russ_connectunix_deadline:connect() < 0\n");
 		}
 		if ((errno == EINTR) || (errno == EINPROGRESS) || (errno == EAGAIN)) {
@@ -260,7 +260,7 @@ retry:
 				goto retry;
 			}
 		} else {
-			if (getenv("RUSS_DEBUG_russ_connectunix_deadline")) {
+			if (RUSS_DEBUG_russ_connectunix_deadline) {
 				fprintf(stderr, "RUSS_DEBUG_russ_connectunix_deadline:errno = %d\n", errno);
 			}
 			goto cleanup;
@@ -269,7 +269,7 @@ retry:
 
 	/* restore blocking */
 	if (fcntl(sd, F_SETFL, flags) < 0) {
-		if (getenv("RUSS_DEBUG_russ_connectunix_deadline")) {
+		if (RUSS_DEBUG_russ_connectunix_deadline) {
 			fprintf(stderr, "RUSS_DEBUG_russ_connectunix_deadline:cannot restore blocking\n");
 		}
 		goto cleanup;
