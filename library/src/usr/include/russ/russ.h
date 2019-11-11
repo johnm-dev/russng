@@ -305,6 +305,7 @@ struct russ_svr *russ_init(struct russ_conf *);
 int russ_env_clear(void);
 int russ_env_reset(void);
 char *russ_env_resolve(const char *);
+int russ_env_setdefaults();
 int russ_env_update(char **);
 
 /* fd.c */

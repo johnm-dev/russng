@@ -77,19 +77,14 @@ russ_env_clear(void) {
 /**
 * Reset environ.
 *
-* Clear and set basic settings: HOME, LOGNAME, USER.
+* Clear and set default settings.
 *
 * @return		0 on success; -1 on failure
 */
 int
 russ_env_reset(void) {
-	struct passwd	*pw = NULL;
-
-	if (((pw = getpwuid(getuid())) == NULL)
-		|| (russ_env_clear() < 0)
-		|| (setenv("HOME", pw->pw_dir, 1) < 0)
-		|| (setenv("LOGNAME", pw->pw_name, 1) < 0)
-		|| (setenv("USER", pw->pw_name, 1) < 0)) {
+	if ((russ_env_clear() < 0)
+		|| (russ_env_setdefaults() < 0)) {
 		return -1;
 	}
 	return 0;
@@ -176,6 +171,26 @@ russ_env_resolve(const char *s) {
 	fp += spend-sp;
 
 	return strdup(final);
+}
+
+/**
+* Set environ defaults.
+*
+* Set environment variables specific to users: HOME, LOGNAME, USER.
+*
+* @return		0 on success; -1 on failure
+*/
+int
+russ_env_setdefaults(void) {
+	struct passwd	*pw = NULL;
+
+	if (((pw = getpwuid(getuid())) == NULL)
+		|| (setenv("HOME", pw->pw_dir, 1) < 0)
+		|| (setenv("LOGNAME", pw->pw_name, 1) < 0)
+		|| (setenv("USER", pw->pw_name, 1) < 0)) {
+		return -1;
+	}
+	return 0;
 }
 
 /**

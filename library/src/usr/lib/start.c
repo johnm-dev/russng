@@ -136,6 +136,10 @@ _russ_start_setenv(struct russ_conf *conf) {
 	char	*value = NULL, *rvalue = NULL;
 	int	i, rv;
 
+	if (russ_env_reset() < 0) {
+		return -1;
+	}
+
 	if (!russ_conf_has_section(conf, "main.env")) {
 		return 0;
 	}
