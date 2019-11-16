@@ -256,6 +256,10 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	args[nargs++] = "BatchMode=yes";
 	args[nargs++] = "-o";
 	args[nargs++] = "LogLevel=QUIET";
+	args[nargs++] = "-o";
+	args[nargs++] = "ForwardX11=no";
+	args[nargs++] = "-o";
+	args[nargs++] = "ForwardX11Trusted=no";
 
 	if (uhp_opt) {
 		char	*controlpersist = NULL, *controltag = NULL;
