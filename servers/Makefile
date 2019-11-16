@@ -15,7 +15,7 @@ ifndef RUSS_LIB_DIR
 endif
 
 SERVERS=russdebug russexec russmredir russplus russpnet russproc \
-	russredir russset russssh russssh2 russsuper russtee \
+	russredir russset russssh2 russsuper russtee \
 	russuredir
 
 all:
