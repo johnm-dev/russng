@@ -55,6 +55,9 @@ const char		*HELP =
 "        Used to generate a ControlPath. Required to set up control\n"
 "        master functionality (if available).\n";
 
+int			nsshargs = 0;
+char			*sshargs[1024];
+
 int
 switch_user(struct russ_sconn *sconn) {
 	uid_t	uid;
@@ -141,12 +144,10 @@ void
 execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
-	char			*args[1024];
 	char			*uhp_user = NULL, *uhp_host = NULL, *uhp_port = NULL, *uhp_opt = NULL;
 	char			**opts = NULL;
 	char			controlpathopt[1024], controlpersistopt[32];
 	char			russssh_dirpath[1024];
-	int			nargs;
 	int			i, status, pid;
 
 	sconn = sess->sconn;
@@ -174,20 +175,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		opts = russ_sarray0_new_split(uhp_opt, "?", 0);
 	}
 
-	/* build args array */
-	nargs = 0;
-	args[nargs++] = SSH_EXEC;
-	args[nargs++] = "-o";
-	args[nargs++] = "StrictHostKeyChecking=no";
-	args[nargs++] = "-o";
-	args[nargs++] = "BatchMode=yes";
-	args[nargs++] = "-o";
-	args[nargs++] = "LogLevel=QUIET";
-	args[nargs++] = "-o";
-	args[nargs++] = "ForwardX11=no";
-	args[nargs++] = "-o";
-	args[nargs++] = "ForwardX11Trusted=no";
-
+	/* augment sshargs array */
 	if (uhp_opt) {
 		char	*controlpersist = NULL, *controltag = NULL;
 		char	*user_home = NULL;
@@ -203,55 +191,55 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			&& (ensure_mkdir(russssh_dirpath, 0700) == 0)
 			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), "ControlPath=%s/%%l-%%r@%%h:%%p-%s", russssh_dirpath, controltag) > 0)) {
 
-			args[nargs++] = "-o";
-			args[nargs++] = "ControlMaster=auto";
-			args[nargs++] = "-o";
-			args[nargs++] = controlpathopt;
-			args[nargs++] = "-o";
-			args[nargs++] = "ControlPersist=1";
+			sshargs[nsshargs++] = "-o";
+			sshargs[nsshargs++] = "ControlMaster=auto";
+			sshargs[nsshargs++] = "-o";
+			sshargs[nsshargs++] = controlpathopt;
+			sshargs[nsshargs++] = "-o";
+			sshargs[nsshargs++] = "ControlPersist=1";
 
 			if (controlpersist && (russ_snprintf(controlpersistopt, sizeof(controlpersistopt), "ControlPersist=%s", controlpersist) > 0)) {
-				args[nargs-1] = controlpersistopt;
+				sshargs[nsshargs-1] = controlpersistopt;
 			}
 		}
 		user_home = russ_free(user_home);
 	}
 	if (uhp_user) {
-		args[nargs++] = "-l";
-		args[nargs++] = uhp_user;
+		sshargs[nsshargs++] = "-l";
+		sshargs[nsshargs++] = uhp_user;
 	}
 	if (uhp_port) {
-		args[nargs++] = "-p";
-		args[nargs++] = uhp_port;
+		sshargs[nsshargs++] = "-p";
+		sshargs[nsshargs++] = uhp_port;
 	}
-	args[nargs++] = uhp_host;
-	args[nargs++] = RUDIAL_EXEC;
+	sshargs[nsshargs++] = uhp_host;
+	sshargs[nsshargs++] = RUDIAL_EXEC;
 	if ((req->attrv != NULL) && (req->attrv[0] != NULL)) {
 		for (i = 0; req->attrv[i] != NULL; i++) {
-			args[nargs++] = "-a";
-			if ((args[nargs++] = escape_special(req->attrv[i])) == NULL) {
+			sshargs[nsshargs++] = "-a";
+			if ((sshargs[nsshargs++] = escape_special(req->attrv[i])) == NULL) {
 				russ_sconn_fatal(sconn, "error: out of memory", RUSS_EXIT_FAILURE);
 				exit(0);
 			}
 		}
 	}
-	args[nargs++] = req->op;
-	args[nargs++] = new_spath;
+	sshargs[nsshargs++] = req->op;
+	sshargs[nsshargs++] = new_spath;
 	if ((req->argv != NULL) && (req->argv[0] != NULL)) {
 		for (i = 0; req->argv[i] != NULL; i++) {
-			if ((args[nargs++] = escape_special(req->argv[i])) == NULL) {
+			if ((sshargs[nsshargs++] = escape_special(req->argv[i])) == NULL) {
 				russ_sconn_fatal(sconn, "error: out of memory", RUSS_EXIT_FAILURE);
 				exit(0);
 			}
 		}
 	}
-	args[nargs++] = NULL;
+	sshargs[nsshargs++] = NULL;
 
 #if 0
 	{
-		char **xargs;
-		for (xargs = args; *xargs != NULL; xargs++) {
-			fprintf(stderr, "(%s)\n", *xargs);
+		char **xsshargs;
+		for (xsshargs = sshargs; *xsshargs != NULL; xsshargs++) {
+			fprintf(stderr, "(%s)\n", *xsshargs);
 		}
 	}
 #endif
@@ -265,7 +253,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			(dup2(sconn->fds[2], 2) >= 0)) {
 
 			russ_sconn_close(sconn);
-			execv(args[0], args);
+			execv(sshargs[0], sshargs);
 		}
 
 		/* should not get here! */
@@ -400,6 +388,21 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
+	/* set up sshargs with fixed and configuration */
+	nsshargs = 0;
+	sshargs[nsshargs++] = SSH_EXEC;
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "StrictHostKeyChecking=no";
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "BatchMode=yes";
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "LogLevel=QUIET";
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "ForwardX11=no";
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "ForwardX11Trusted=no";
+
+	/* set up server and service tree */
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
 		|| (russ_svr_set_autoswitchuser(svr, 0) < 0)
