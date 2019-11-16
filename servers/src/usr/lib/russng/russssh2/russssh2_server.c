@@ -540,6 +540,48 @@ svc_userhostport_other_handler(struct russ_sess *sess) {
 	execute(sess, userhostport, new_spath);
 }
 
+/**
+* Set up sshargs with default/fixed settings and those from the
+* configuration file.
+*
+* @return		0 on success; -1 on failure
+*/
+int
+setup_sshargs(void) {
+	char	**options = NULL, *option = NULL, *value = NULL;
+	char	sshoption[1024];
+	int	i;
+
+	nsshargs = 0;
+	sshargs[nsshargs++] = SSH_EXEC;
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "StrictHostKeyChecking=no";
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "BatchMode=yes";
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "LogLevel=QUIET";
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "ForwardX11=no";
+	sshargs[nsshargs++] = "-o";
+	sshargs[nsshargs++] = "ForwardX11Trusted=no";
+
+	if ((options = russ_conf_options(conf, "options")) != NULL) {
+		for (i = 0, option = options[i]; option != NULL; i++, option = options[i]) {
+			value = russ_conf_get(conf, "options", option, NULL);
+			if (russ_snprintf(sshoption, sizeof(sshoption), "%s=%s", option, value) < 0) {
+				value = russ_free(value);
+				options = russ_sarray0_free(options);
+				return -1;
+			}
+			sshargs[nsshargs++] = "-o";
+			sshargs[nsshargs++] = strdup(sshoption);
+			value = russ_free(value);
+		}
+		options = russ_sarray0_free(options);
+	}
+	return 0;
+}
+
 void
 print_usage(char **argv) {
 	fprintf(stderr,
@@ -581,19 +623,10 @@ main(int argc, char **argv) {
 		autoanswer = 1;
 	}
 
-	/* set up sshargs with fixed and configuration */
-	nsshargs = 0;
-	sshargs[nsshargs++] = SSH_EXEC;
-	sshargs[nsshargs++] = "-o";
-	sshargs[nsshargs++] = "StrictHostKeyChecking=no";
-	sshargs[nsshargs++] = "-o";
-	sshargs[nsshargs++] = "BatchMode=yes";
-	sshargs[nsshargs++] = "-o";
-	sshargs[nsshargs++] = "LogLevel=QUIET";
-	sshargs[nsshargs++] = "-o";
-	sshargs[nsshargs++] = "ForwardX11=no";
-	sshargs[nsshargs++] = "-o";
-	sshargs[nsshargs++] = "ForwardX11Trusted=no";
+	if (setup_sshargs() < 0) {
+		fprintf(stderr, "error: cannot setup sshargs\n");
+		exit(1);
+	}
 
 	/* set up server and service tree */
 	if (((svr = russ_init(conf)) == NULL)
