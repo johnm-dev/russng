@@ -392,14 +392,23 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exitfd) {
 	int			nactive, nstreams;
 	int			i, cnt;
 
+	/* alias and setup */
 	pollfds = self->pollfds;
 	streams = self->streams;
-	nactive = self->nstreams+1;
 	nstreams = self->nstreams;
 
 	pollfds[nstreams].fd = exitfd;
 	pollfds[nstreams].events = POLLIN;
 
+	/* only count for streams with read fd >= 0; includes exitfd */
+	nactive = 0;
+	for (i = 0; i < nstreams+1; i++) {
+		if (pollfds[i].fd >= 0) {
+			nactive++;
+		}
+	}
+
+	/* stream */
 	while (nactive) {
 //usleep(500000);
 //usleep(100000);
