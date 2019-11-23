@@ -150,6 +150,9 @@ escape_special(char *s) {
 * Read bytes from fd until delimiter found. All read bytes,
 * including are consumed/dropped.
 *
+* Blocking read on fd only returns when something is available or EOF
+* is reached (fd closed on other end).
+*
 * @param fd		fd to read from
 * @param delim		char string to match
 * @param delimsz	# of bytes in delim
@@ -167,7 +170,7 @@ consume_delimiter(int fd, char *delim, int delimsz) {
 
 	/* fill buffer to delimsz */
 	for (bwi = 0; bwi < delimsz; ) {
-		if ((n = russ_read(fd, &buf[bwi], delimsz-bwi)) < 0) {
+		if ((n = russ_read(fd, &buf[bwi], delimsz-bwi)) <= 0) {
 			return -1;
 		}
 		bwi += n;
@@ -186,7 +189,7 @@ consume_delimiter(int fd, char *delim, int delimsz) {
 			bri = 0;
 			bwi = delimsz-1;
 		}
-		if (russ_read(fd, &buf[bwi], 1) < 0) {
+		if (russ_read(fd, &buf[bwi], 1) <= 0) {
 			return -1;
 		}
 		bwi++;
@@ -328,7 +331,10 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 				(dup2(sconn->fds[1], 1) >= 0) &&
 				(dup2(sconn->fds[2], 2) >= 0)) {
 
+				/* close fds */
+				russ_fds_close(cfds, RUSS_CONN_NFDS);
 				russ_sconn_close(sconn);
+
 				execv(sshargs[0], sshargs);
 			}
 
@@ -337,26 +343,26 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			exit(1);
 		}
 
+		/* close non-sysfds (comm with ssh is now over stdin/out/err) */
+		russ_fds_close(sconn->fds, RUSS_CONN_NFDS);
+
 		/* tunnel request */
 		if ((cconn = russ_cconn_new()) == NULL) {
-			russ_sconn_exit(sconn, RUSS_EXIT_CALLFAILURE);
-			exit(0);
+			goto answer_exit_callfailure;
 		}
 
 		if (strcmp(tool_type, "tunnelr") == 0) {
 			/* augment request with delimiter attribute */
 			if ((req->attrv == NULL)
 				&& ((req->attrv = russ_sarray0_new(0)) == NULL)) {
-				russ_sconn_exit(sconn, RUSS_EXIT_CALLFAILURE);
-				exit(0);
+				goto answer_exit_callfailure;
 			}
 
 			if (((delim = generate_delimiter()) == NULL)
 				|| ((delimsz = strlen(delim)) < 0)
 				|| (russ_snprintf(delimattr, sizeof(delimattr), "__SSHR_DELIM__=%s", delim) < 0)
 				|| (russ_sarray0_append(&req->attrv, delimattr, NULL) < 0)) {
-				/* TODO: return something to client? */
-				exit(0);
+				goto answer_exit_callfailure;
 			}
 		} else {
 			int	i;
@@ -365,8 +371,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			if ((req->attrv)
 				&& ((i = russ_sarray0_find_prefix(req->attrv, "__SSHR_DELIM__=")) >= 0)
 				&& (russ_sarray0_remove(req->attrv, i) < 0)) {
-				russ_sconn_exit(sconn, RUSS_EXIT_CALLFAILURE);
-				exit(0);
+				goto answer_exit_callfailure;
 			}
 		}
 
@@ -380,8 +385,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			/* wait for and consume delimiter on stdout and stderr in cfds */
 			if ((consume_delimiter(cfds[1], delim, delimsz) < 0)
 				|| (consume_delimiter(cfds[2], delim, delimsz) < 0)) {
-				russ_sconn_exit(sconn, RUSS_EXIT_CALLFAILURE);
-				exit(0);
+				goto answer_exit_callfailure;
 			}
 		}
 
@@ -427,19 +431,21 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 				(dup2(sconn->fds[1], 1) >= 0) &&
 				(dup2(sconn->fds[2], 2) >= 0)) {
 
+				/* close fds */
 				russ_sconn_close(sconn);
+
 				execv(sshargs[0], sshargs);
 			}
 			/* should not get here! */
 			russ_dprintf(2, "error: could not execute\n");
 			exit(1);
 		}
-	}
 
-	/* close sconn stdin/out/err; leave exitfd */
-	russ_close(sconn->fds[0]);
-	russ_close(sconn->fds[1]);
-	russ_close(sconn->fds[2]);
+		/* close non-sysfds (comm with ssh is now over stdin/out/err) */
+		russ_fds_close(sconn->fds, RUSS_CONN_NFDS);
+
+		/* autoanswer is set up for server in main() */
+	}
 
 	/* wait for exit value, pass back, and close up */
 	if (__russ_waitpidfd(pid, &status, sconn->sysfds[0], 200) == __RUSS_WAITPIDFD_FD) {
@@ -449,6 +455,12 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	russ_sconn_exit(sconn, WEXITSTATUS(status));
 	russ_sconn_close(sconn);
 
+	exit(0);
+
+answer_exit_callfailure:
+	/* setup sysfds[0] and return exit value */
+	russ_sconn_answer(sconn, 0, NULL);
+	russ_sconn_exit(sconn, RUSS_EXIT_CALLFAILURE);
 	exit(0);
 }
 
