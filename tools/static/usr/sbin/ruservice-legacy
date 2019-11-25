@@ -170,7 +170,7 @@ function list {
 function status {
 	local pgid
 
-	echo -n "[${confname}] "
+	echo -n "[server:${confname}] "
 	if is_running "${confname}"; then
 		echo "RUNNING"
 		return 0
@@ -192,7 +192,7 @@ function start {
 	create_dirs "${confname}"
 
 	#echo -n "starting server (${confname}) ... "
-	echo -n "[${confname}] "
+	echo -n "[server:${confname}] "
 	if is_running "${confname}"; then
 		echo "RUNNING"
 		return 0
@@ -228,7 +228,7 @@ function stop {
 	local pgid
 
 	#echo -n "stopping server (${confname}) ... "
-	echo -n "[${confname}] "
+	echo -n "[server:${confname}] "
 	if ! is_running "${confname}"; then
 		echo "NOT RUNNING"
 		clean_dirs "${confname}"
