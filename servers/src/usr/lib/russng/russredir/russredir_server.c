@@ -22,6 +22,8 @@
 # license--end
 */
 
+#include <grp.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +46,26 @@ const char		*HELP =
 "    Dial service at <spath>.\n";
 
 char			*logfilename = NULL;
-char			*spath_prefix = NULL;
+
+char *
+gid2groupname(gid_t gid) {
+	struct group	*gr = NULL;
+
+	if ((gr = getgrgid(gid)) == NULL) {
+		return NULL;
+	}
+	return strdup(gr->gr_name);
+}
+
+char *
+uid2username(uid_t uid) {
+	struct passwd	*pw = NULL;
+
+	if ((pw = getpwuid(uid)) == NULL) {
+		return NULL;
+	}
+	return strdup(pw->pw_name);
+}
 
 /**
 * Answer and service request only if it is for "/". Otherwise, pass
@@ -56,26 +77,56 @@ svc_root_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
 	char			spath[RUSS_REQ_SPATH_MAX];
+	gid_t			gid;
+	uid_t			uid;
+	char			*groupname, *username;
+	char			groupsecname[64], usersecname[64];
+	char			*prefix = NULL;
 	int			n;
 
 	svr = sess->svr;
 	sconn = sess->sconn;
 	req = sess->req;
 
-	if (russ_snprintf(spath, sizeof(spath), "%s%s", spath_prefix, req->spath) < 0) {
-		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
-			/* fatal */
-			russ_lprintf(logfilename, "[%F %T] ", "req->spath (%s)\n", req->spath);
-			return;
-		}
-		russ_sconn_fatal(sconn, "error: spath too big", RUSS_EXIT_FAILURE);
-		exit(0);
-	} else {
-		russ_lprintf(logfilename, "[%F %T] ", "res->path (%s) spath (%s)\n", req->spath, spath);
-		req->spath = spath;
-		russ_sconn_redialandsplice(sconn, RUSS_DEADLINE_NEVER, req);
+	gid = sconn->creds.gid;
+	uid = sconn->creds.uid;
+	groupname = gid2groupname(gid);
+	username = uid2username(uid);
+
+	if ((groupname == NULL) || (username == NULL)) {
+		russ_sconn_fatal(sconn, "error: cannot find username or groupname", RUSS_EXIT_FAILURE);
 		exit(0);
 	}
+
+	if ((russ_snprintf(groupsecname, sizeof(groupsecname), "group.%s", groupname) < 0)
+		|| (russ_snprintf(usersecname, sizeof(usersecname), "user.%s", username) < 0)) {
+		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
+			russ_sconn_fatal(sconn, "error: out of memory", RUSS_EXIT_FAILURE);
+		}
+		exit(0);	
+	}
+
+	if (((prefix = russ_conf_get(conf, usersecname, "spath", NULL)) == NULL)
+		&& ((prefix = russ_conf_get(conf, groupsecname, "spath", NULL)) == NULL)
+		&& ((prefix = russ_conf_get(conf, "user", "spath", NULL)) == NULL)
+		&& ((prefix = russ_conf_get(conf, "next", "spath", NULL)) == NULL)) {
+		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
+			russ_sconn_fatal(sconn, "error: cannot find next spath", RUSS_EXIT_FAILURE);
+		}
+		exit(0);
+	}
+
+	if (russ_snprintf(spath, sizeof(spath), "%s%s", prefix, req->spath) < 0) {
+		if ((svr->answerhandler == NULL) || (svr->answerhandler(sconn) < 0)) {
+			russ_sconn_fatal(sconn, "error: out of memory", RUSS_EXIT_FAILURE);
+		}
+		exit(0);
+	}
+
+	//russ_lprintf(logfilename, "[%F %T] ", "res->path (%s) spath (%s)\n", req->spath, spath);
+	req->spath = spath;
+	russ_sconn_redialandsplice(sconn, RUSS_DEADLINE_NEVER, req);
+	exit(0);
 }
 
 void
@@ -83,7 +134,9 @@ print_usage(char **argv) {
 	fprintf(stderr,
 "usage: russredir_server [<conf options>]\n"
 "\n"
-"Redirect connection by prefixing an spath.\n"
+"Redirect connection by prefixing an spath. The prefix is selected by\n"
+"username, groupname, or default as specified in the sections of the\n"
+"configuration file.\n"
 );
 }
 
@@ -99,12 +152,7 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	logfilename = russ_conf_get(conf, "main", "logfile", NULL);
-
-	if ((spath_prefix = russ_conf_get(conf, "next", "spath", NULL)) == NULL) {
-		fprintf(stderr, "error: bad configuration\n");
-		exit(1);
-	}
+	//logfilename = russ_conf_get(conf, "main", "logfile", NULL);
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)

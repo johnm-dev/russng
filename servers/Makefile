@@ -15,8 +15,7 @@ ifndef RUSS_LIB_DIR
 endif
 
 SERVERS=russdebug russexec russmredir russplus russpnet russproc \
-	russredir russset russssh2 russsuper russtee \
-	russuredir
+	russredir russset russssh2 russsuper russtee
 
 all:
 	for name in $(SERVERS); do \
