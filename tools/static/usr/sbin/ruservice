@@ -102,6 +102,19 @@ function get_confnamesbyname {
 	echo "${confnames[*]}"
 }
 
+function get_srcnames {
+	local srcname srcnames
+
+	srcname=$1; shift 1
+
+	if [ "${srcname}" = "." ]; then
+		srcnames=$(grep -v '#' "${SOURCES_FILE}" | cut -d: -f1)
+	else
+		srcnames="${srcname}"
+	fi
+	echo "${srcnames}"
+}
+
 function get_pid {
 	local confname pid pidpath
 
@@ -171,6 +184,15 @@ function list {
 	if [ -n "${confnames}" ]; then
 		echo "${confnames}"
 	fi
+}
+
+function listsync {
+	local name srcnames
+
+	srcnames=$(get_srcnames ".")
+	for name in $srcnames; do
+		echo "${name}"
+	done
 }
 
 function make_required_dirs {
@@ -267,6 +289,10 @@ function stop {
 }
 
 function sync {
+	local srcname
+
+	srcname=$1; shift 1
+
 	if [ ! -e "${SOURCES_FILE}" ]; then
 		echoe "error: cannot find sources file (${SOURCES_FILE})"
 		exit 1
@@ -284,48 +310,51 @@ function sync {
 		rest=${line#*:}
 		typ=${rest%%:*}
 
-		echo "[${typ}:${name}] SYNCING"
-		case "${typ}" in
-		dir)
-			path=${rest#*:}
-			path=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "${path}")
+		if [  "${srcname}" = "." -o "${name}" = "${srcname}" ]; then
+			echo "[${typ}:${name}] SYNCING"
+			case "${typ}" in
+			dir)
+				path=${rest#*:}
+				path=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "${path}")
 
-			if [ ! -d "${path}" ]; then
-				echoe "warning: cannot find dir (${path})"
-			else
-				cp -r "${path}"/* "${CONF_DIR}"
-			fi
-			;;
-		http|https)
-			# EXPERIMENTAL
-			names=${rest%%:*}
-			url=${rest#*:}
-
-			for name in ${names}; do
-				url=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "NAME=${name}" "${url}")
-
-				data=$(curl "${url}" 2>/dev/null)
-				if [ $? -ne 0 ]; then
-					echoe "warning: cannot pull from url (${url})"
+				if [ ! -d "${path}" ]; then
+					echoe "warning: cannot find dir (${path})"
 				else
-					dname=$(dirname "${name}")
-					bname=$(basename "${name}")
-					mkdir -p "${CONF_DIR}/${dname}"
-					echo "${data}" > "${CONF_DIR}/${name}"
+					cp -r "${path}"/* "${CONF_DIR}"
 				fi
-			done
-			;;
-		*)
-			echoe "error: unknown sources type (${typ})"
-			;;
-		esac
+				;;
+			http|https)
+				# EXPERIMENTAL
+				names=${rest%%:*}
+				url=${rest#*:}
+
+				for name in ${names}; do
+					url=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "NAME=${name}" "${url}")
+
+					data=$(curl "${url}" 2>/dev/null)
+					if [ $? -ne 0 ]; then
+						echoe "warning: cannot pull from url (${url})"
+					else
+						dname=$(dirname "${name}")
+						bname=$(basename "${name}")
+						mkdir -p "${CONF_DIR}/${dname}"
+						echo "${data}" > "${CONF_DIR}/${name}"
+					fi
+				done
+				;;
+			*)
+				echoe "error: unknown sources type (${typ})"
+				;;
+			esac
+		fi
 
 	done < "${SOURCES_FILE}"
 }
 
 function print_usage {
 	echo "\
-usage: $PROGNAME clean|resync|sync
+usage: $PROGNAME clean|list-sync|resync
+       $PROGNAME <srcname> sync
        $PROGNAME [-n] <confname> {start|stop|restart|status|list}
        $PROGNAME list|status
        $PROGNAME -h|--help|help
@@ -378,15 +407,15 @@ if [ $# -eq 1 ]; then
 	list)
 		$0 . list
 		;;
+	list-sync)
+		listsync
+		;;
 	resync)
 		clean_confdir
-		sync
+		sync "."
 		;;
 	status)
 		$0 . status
-		;;
-	sync)
-		sync
 		;;
 	*)
 		echoe "error: bad/missing arguments"
@@ -398,7 +427,7 @@ elif [ $# -eq 2 ] || [ $# -eq 3 ]; then
 		matchnames=1
 		shift 1
 	fi
-	confname=$1; shift 1
+	name=$1; shift 1
 	cmd=$1; shift 1
 
 	if [ "${cmd}" = "list" ]; then
@@ -406,38 +435,50 @@ elif [ $# -eq 2 ] || [ $# -eq 3 ]; then
 		exit 0
 	fi
 
-	if [ "${matchnames}" = "1" ]; then
-		confnames=$(get_confnamesbyname "${confname}")
-	else
-		confnames=$(get_confnames "${confname}")
-	fi
-	for confname in ${confnames}; do
-		confpath="${CONF_DIR}/${confname}.conf"
-		pidpath=$(get_pidpath "${confname}")
+	if [ "${cmd}" = "sync" ]; then
+		srcnames=$(get_srcnames "${name}")
 
-		if [ ! -r "${confpath}" ]; then
-			echoe "error: cannot find configuration"
-		else
+		for srcname in ${srcnames}; do
 			case "${cmd}" in
-			status)
-				status
-				;;
-			start)
-				start
-				;;
-			stop)
-				stop
-				;;
-			restart)
-				restart
-				;;
-			*)
-				echoe "error: bad/missing arguments"
-				exit 1
+			sync)
+				sync "${srcname}"
 				;;
 			esac
+		done
+	else
+		if [ "${matchnames}" = "1" ]; then
+			confnames=$(get_confnamesbyname "${name}")
+		else
+			confnames=$(get_confnames "${name}")
 		fi
-	done
+		for confname in ${confnames}; do
+			confpath="${CONF_DIR}/${confname}.conf"
+			pidpath=$(get_pidpath "${confname}")
+
+			if [ ! -r "${confpath}" ]; then
+				echoe "error: cannot find configuration"
+			else
+				case "${cmd}" in
+				status)
+					status
+					;;
+				start)
+					start
+					;;
+				stop)
+					stop
+					;;
+				restart)
+					restart
+					;;
+				*)
+					echoe "error: bad/missing arguments"
+					exit 1
+					;;
+				esac
+			fi
+		done
+	fi
 else
 	echoe "error: bad/missing arguments"
 	exit 1
