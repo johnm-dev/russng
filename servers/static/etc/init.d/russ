@@ -22,7 +22,7 @@ start() {
 	mkdir -m 0755 -p "${RUN_DIR}/services"
 
 	# load configuration
-	ruservice resync
+	[ -e "/etc/russ/ruservice.sources" ] && ruservice resync
 
 	# start services
 	ruservice . start
