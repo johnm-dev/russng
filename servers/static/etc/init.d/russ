@@ -13,6 +13,7 @@
 ### END INIT INFO
 
 RUN_DIR="/var/run/russ"
+SOURCES_FILE="/etc/russ/ruservice.sources"
 
 start() {
 	# ensure working directories
@@ -22,7 +23,11 @@ start() {
 	mkdir -m 0755 -p "${RUN_DIR}/services"
 
 	# load configuration
-	[ -e "/etc/russ/ruservice.sources" ] && ruservice resync
+	if [ ! -e "${SOURCES_FILE}" ]; then
+		echo "creating ruservice.sources ..." 1>&2
+		echo "# created for v7\nlocal:dir:/etc/russ/conf" > "${SOURCES_FILE}"
+	fi
+	[ -e "${SOURCES_FILE}" ] && ruservice resync
 
 	# start services
 	ruservice . start
