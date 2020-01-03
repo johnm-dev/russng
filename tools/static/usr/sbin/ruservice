@@ -431,7 +431,7 @@ elif [ $# -eq 2 ] || [ $# -eq 3 ]; then
 	cmd=$1; shift 1
 
 	if [ "${cmd}" = "list" ]; then
-		list "${confname}"
+		list "${name}"
 		exit 0
 	fi
 
