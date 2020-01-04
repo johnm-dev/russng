@@ -196,7 +196,7 @@ main(int argc, char **argv) {
 			break;
 		}
 
-		if (((strcmp(arg, "--attr") == 0) || (strcmp(arg, "-a") == 0))
+		if (((strcmp(arg, "-a") == 0) || (strcmp(arg, "--attr") == 0))
 			&& (argi < argc)) {
 			
 			arg = argv[argi++];
@@ -238,7 +238,7 @@ main(int argc, char **argv) {
 			if (sscanf(arg, "%d", (int *)&cbfd) < 0) {
 				cbfd = -1;
 			}
-		} else if (((strcmp(arg, "--timeout") == 0) || (strcmp(arg, "-t") == 0))
+		} else if (((strcmp(arg, "-t") == 0) || (strcmp(arg, "--timeout") == 0))
 			&& (argi < argc)) {
 			arg = argv[argi++];
 			if (sscanf(arg, "%d", &timeout) < 0) {
