@@ -14,7 +14,8 @@ ifndef RUSS_LIB_DIR
         $(error "error: missing RUSS_LIB_DIR")
 endif
 
-SERVERS=russdebug russexec russmredir russplus russpnet russproc \
+SERVERS=russalive russdebug russexec russmredir \
+	russplus russpnet russproc \
 	russredir russset russssh2 russsuper russtee
 
 all:
