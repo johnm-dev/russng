@@ -138,8 +138,8 @@ print_usage(char *prog_name) {
 	printf(
 "\n"
 "Options:\n"
-"-a|--attr <name=vaue>\n" \
-"    Pass a 'name=value' string to the service.\n"
+"-a|--attr <name>=<value>\n" \
+"    Pass an attribute to the service.\n"
 "-b <bufsize>\n" \
 "    Set buffer size for reading/writing.\n"
 "-i <path>\n" \
