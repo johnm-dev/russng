@@ -6,6 +6,13 @@
 HERE_FILE:="$(CURDIR)/$(strip $(MAKEFILE_LIST))"
 HERE_DIR:=$(shell dirname $(HERE_FILE))
 
+STATIC_FILES = usr/bin/rudial-bm usr/bin/rurun user/bin/rurun-mpi \
+	usr/bin/rumpirun.mpich usr/bin/rumpirun.openmpi \
+	usr/bin/russ_converthosts.py \
+	etc \
+	usr/sbin \
+	usr/share
+
 .PHONY:	all clean doc install
 
 all:
@@ -23,4 +30,4 @@ install:
 	:
 	(mkdir -p "${INSTALL_DIR}")
 	(cd src/usr/bin; $(MAKE) install INSTALL_DIR=${INSTALL_DIR})
-	(cd static; tar cf - usr/bin/rurun usr/bin/rurun-mpi usr/bin/rumrun usr/bin/rumpirun* usr/bin/russ_converthosts.py etc usr/sbin usr/share) | (cd $(INSTALL_DIR); tar xvf -)
+	(cd static; tar cf - ${STATIC_FILES}) | (cd $(INSTALL_DIR); tar xvf -)
