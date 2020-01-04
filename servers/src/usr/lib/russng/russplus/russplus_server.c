@@ -150,7 +150,8 @@ svc_root_handler(struct russ_sess *sess) {
 				}
 			}
 		} else {
-			russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
+			/* fallback */
+			return;
 		}
 		russ_sconn_close(sconn);
 		exit(0);
