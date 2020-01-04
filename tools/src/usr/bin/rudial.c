@@ -149,8 +149,8 @@ print_usage(char *prog_name) {
 "    Output statistics for each read and write operation. The\n"
 "    default is to output to stderr (fd=2). For 'execute' operation\n"
 "    only.\n"
-"-t|--timeout <seconds>\n" \
-"    Allow a given amount of time to connect before aborting.\n"
+"-t|--timeout <ms>\n" \
+"    Time (in ms) allowed to connect before aborting.\n"
 );
 }
 
@@ -240,14 +240,11 @@ main(int argc, char **argv) {
 			}
 		} else if (((strcmp(arg, "--timeout") == 0) || (strcmp(arg, "-t") == 0))
 			&& (argi < argc)) {
-			float	f;
-
 			arg = argv[argi++];
-			if (sscanf(arg, "%f", (float *)&f) < 0) {
+			if (sscanf(arg, "%d", &timeout) < 0) {
 				fprintf(stderr, "error: bad timeout value\n");
 				exit(1);
 			}
-			timeout = f*1000;
 			deadline = russ_to_deadline(timeout);
 		} else {
 			fprintf(stderr, "%s\n", RUSS_MSG_BADARGS);
