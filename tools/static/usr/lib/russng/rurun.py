@@ -354,9 +354,9 @@ Options:
 -c  Run all tasks concurrently. Overrides -n.
 --debug
     Enable debugging. Or set RURUN_DEBUG=1.
---exec simple|shell|login
+--exec noshell|shell|login
     Environment to launch with:
-    simple - without shell
+    noshell - do not use a shell (was "simple")
     shell - shell with basic environment
     login - shell with login environment
     Defaults to $RURUN_EXEC_METHOD or "%(RURUN_EXEC_METHOD_DEFAULT)s".
@@ -374,7 +374,7 @@ Options:
     "%(RURUN_RELAY_DEFAULT)s".
 --shell <path>
     Alternative shell to run on target. The arguments are passed
-    to it for execution. Forces "--exec simple".
+    to it for execution. Forces "--exec noshell".
 --targetsfile <path>
     Use targets file. Defaults $RURUN_TARGETSFILE.
 -t|--timeout <seconds>
@@ -521,7 +521,7 @@ def main():
         # select exec method and "shell"
         if rurun_shell:
             # override
-            rurun_exec_method = "simple"
+            rurun_exec_method = "noshell"
 
         # mpirun-specific
         # TODO: eliminate?
@@ -552,6 +552,7 @@ def main():
         taskid = 0
         for taskid, (targetgid, targetid) in enumerate(targetpairs):
             #print("targetid (%s) targetids (%s)" % (targetid, targetids))
+            exec_method = rurun_exec_method == "noshell" and "simple" or rurun_exec_method
             spath = os.path.join(rurun_pnet_addr, "run", colon+str(targetid), rurun_exec_method)
             sargs = args[:]
 

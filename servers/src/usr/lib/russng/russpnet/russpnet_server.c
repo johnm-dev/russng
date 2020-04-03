@@ -92,8 +92,8 @@ const char		*HELP =
 "    list.\n"
 "\n"
 "/run/<index>/<method> <args>\n"
-"    Run exec-based service, where method corresponds to what is\n"
-"    provided by the exec server (e.g., simple, shell, login), at\n"
+"    Run exec-based service, where <method> corresponds to what is\n"
+"    provided by the exec server (e.g., noshell, shell, login), at\n"
 "    target identified by a lookup into the targetsfile list at\n"
 "    <index>. A negative index starts at the last entry (1 is the\n"
 "    last entry). An index starting with : loops around to continue\n"
@@ -548,6 +548,8 @@ svc_random_handler(struct russ_sess *sess) {
 
 /**
 * Handler for the /run/<index>/... service.
+*
+* ... is expected to be supported by the +/exec server, e.g., an exec method.
 *
 * Convert:
 *	run/<index>/... -> <relay_addr>/<userhost>/+/exec/cgroup/<cgname>/...
