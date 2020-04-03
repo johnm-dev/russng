@@ -60,21 +60,28 @@ const char		*HELP =
 "Execute a command/program.\n"
 "\n"
 "/cgroup/<cgname>/login\n"
+"/cgroup/<cgname>/noshell\n"
 "/cgroup/<cgname>/shell\n"
+"    Execute using login, shell, or noshell methods within a cgroup\n"
+"    container. <cgname> is used to identify the cgroup to use if\n"
+"    a cg_path attribute is not specified (in which case the\n"
+"    <cgname> value is ignored). Note: cgname cannot contain /\n"
+"    characters.\n"
+"\n"
 "/cgroup/<cgname>/simple\n"
-"    Execute using login, shell, or simple methods within a cgroup\n"
-"    container. cgname is used to identify the cgroup to use if\n"
-"    a cg_path attribute is not specified (in which case the cgname\n"
-"    value is ignored). Note: cgname cannot contain / characters."
+"    (Deprecated) An alias for /cgroup/<cgname>/noshell.\n"
 "\n"
 "/login <cmd>\n"
 "    Execute a shell command string with a configured login shell.\n"
+"\n"
+"/noshell <path> [<arg> ...]\n"
+"    Execute a program with arguments directly (no shell).\n"
 "\n"
 "/shell <cmd>\n"
 "    Execute a shell command in an unconfigured (not a login) shell.\n"
 "\n"
 "/simple <path> [<arg> ...]\n"
-"    Execute a program with arguments directly (no shell).\n"
+"    (Deprecated) An alias for noshell.\n"
 "\n"
 "All services use the given attribute settings to configure the\n"
 "environment and are applied before shell settings. For security\n"
@@ -395,7 +402,7 @@ svc_loginshell_handler(struct russ_sess *sess) {
 }
 
 void
-svc_simple_handler(struct russ_sess *sess) {
+svc_noshell_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
 	char			*username = NULL, *home = NULL;
@@ -426,7 +433,7 @@ svc_cgroup_path_handler(struct russ_sess *sess) {
 }
 
 void
-svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
+svc_cgroup_path_loginshellnoshell_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
 	char			*cg_path = NULL;
@@ -465,8 +472,8 @@ svc_cgroup_path_loginshellsimple_handler(struct russ_sess *sess) {
 		/* forward to "next" handler */
 		if ((strcmp(req->spath, "/shell") == 0) || (strcmp(req->spath, "/login") == 0)) {
 			svc_loginshell_handler(sess);
-		} else if (strcmp(req->spath, "/simple") == 0) {
-			svc_simple_handler(sess);
+		} else if ((strcmp(req->spath, "/noshell") == 0) || (strcmp(req->spath, "/simple") == 0)) {
+			svc_noshell_handler(sess);
 		} else {
 			russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 			exit(0);
@@ -530,12 +537,14 @@ main(int argc, char **argv) {
 		|| ((node = russ_svcnode_add(svr->root, "cgroup", svc_cgroup_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_cgroup_path_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| (russ_svcnode_add(node, "login", svc_cgroup_path_loginshellsimple_handler) == NULL)
-		|| (russ_svcnode_add(node, "shell", svc_cgroup_path_loginshellsimple_handler) == NULL)
-		|| (russ_svcnode_add(node, "simple", svc_cgroup_path_loginshellsimple_handler) == NULL)
+		|| (russ_svcnode_add(node, "login", svc_cgroup_path_loginshellnoshell_handler) == NULL)
+		|| (russ_svcnode_add(node, "noshell", svc_cgroup_path_loginshellnoshell_handler) == NULL)
+		|| (russ_svcnode_add(node, "shell", svc_cgroup_path_loginshellnoshell_handler) == NULL)
+		|| (russ_svcnode_add(node, "simple", svc_cgroup_path_loginshellnoshell_handler) == NULL)
 		|| ((node = russ_svcnode_add(svr->root, "login", svc_loginshell_handler)) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "noshell", svc_noshell_handler)) == NULL)
 		|| ((node = russ_svcnode_add(svr->root, "shell", svc_loginshell_handler)) == NULL)
-		|| ((node = russ_svcnode_add(svr->root, "simple", svc_simple_handler)) == NULL)) {
+		|| ((node = russ_svcnode_add(svr->root, "simple", svc_noshell_handler)) == NULL)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
 	}
