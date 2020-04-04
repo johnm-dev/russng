@@ -1,4 +1,4 @@
-#! /usr/bin/python2
+#! /usr/bin/python3
 #
 # rurun
 
@@ -296,7 +296,7 @@ def spawn_pnet_server(targetsfile):
 
         sout, serr = p.communicate()
         if p.returncode == 0:
-            t = sout.split(":", 3)
+            t = sout.decode().split(":", 3)
             pnet_pid = int(t[0])
             return t
     except:
@@ -577,9 +577,9 @@ def main():
             else:
                 finalev = 1
             if sout:
-                sys.stdout.write(sout)
+                sys.stdout.write(sout.decode())
             if serr:
-                sys.stderr.write(serr)
+                sys.stderr.write(serr.decode())
 
         sys.exit(finalev)
     except SystemExit:
