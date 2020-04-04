@@ -389,9 +389,10 @@ def main():
     # cleanup handler
     atexit.register(cleanup)
 
-    colon = ""
     rurun_allconcurrent = False
     rurun_ntasks = None
+    rurun_wrap = False
+
     rurun_debug = os.environ.get("RURUN_DEBUG") == "1"
     try:
         rurun_nrunning_max = int(os.environ.get("RURUN_NRUNNING_MAX", RURUN_NRUNNING_MAX_DEFAULT))
@@ -443,7 +444,7 @@ def main():
             elif arg == "-N" and args:
                 rurun_ntasks = int(args.pop(0))
                 rurun_allconcurrent = True
-                colon = ":"
+                rurun_wrap = True
             elif arg == "--pnet" and args:
                 rurun_pnet_addr = args.pop(0)
             elif arg == "--relay" and args:
@@ -455,7 +456,7 @@ def main():
             elif arg == "--targetsfile" and args:
                 rurun_targetsfile = args.pop(0)
             elif arg == "--wrap":
-                colon = ":"
+                rurun_wrap = True
             else:
                 targetspec = arg
                 break
@@ -553,7 +554,7 @@ def main():
         for taskid, (targetgid, targetid) in enumerate(targetpairs):
             #print("targetid (%s) targetids (%s)" % (targetid, targetids))
             exec_method = rurun_exec_method == "noshell" and "simple" or rurun_exec_method
-            spath = os.path.join(rurun_pnet_addr, "run", colon+str(targetid), rurun_exec_method)
+            spath = os.path.join(rurun_pnet_addr, "run", (rurun_wrap and ":" or "")+str(targetid), rurun_exec_method)
             sargs = args[:]
 
             if rurun_debug:
