@@ -50,7 +50,7 @@ def list_of_strings_to_c_string_array(l):
         if s == None:
             c_strings[i] = None
         else:
-            c_strings[i] = ctypes.create_string_buffer(s).value
+            c_strings[i] = ctypes.create_string_buffer(s.encode()).value
     return c_strings
 
 def convert_dial_attrs_args(attrs, args):
@@ -78,7 +78,7 @@ def dialv(deadline, op, spath, attrs=None, args=None):
     """Dial a service.
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
-    cconn_ptr = libruss.russ_dialv(deadline, op, spath, c_attrs, c_argv)
+    cconn_ptr = libruss.russ_dialv(deadline, op.encode(), spath.encode(), c_attrs, c_argv)
     return bool(cconn_ptr) and ClientConn(cconn_ptr, True) or None
 
 dial = dialv
@@ -88,7 +88,7 @@ def dialv_wait(deadline, op, spath, attrs=None, args=None):
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
     exitst = ctypes.c_int()
-    rv = libruss.russ_dialv_wait(deadline, op, spath, c_attrs, c_argv, ctypes.byref(exitst))
+    rv = libruss.russ_dialv_wait(deadline, op.encode(), spath.encode(), c_attrs, c_argv, ctypes.byref(exitst))
     return rv, int(exitst.value)
 
 def dialv_wait_timeout(timeout, op, spath, attrs=None, args=None):
@@ -96,6 +96,9 @@ def dialv_wait_timeout(timeout, op, spath, attrs=None, args=None):
 
 def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
     """Convenience function.
+
+    stdin is expected to be of type bytes. stdout and stderr are
+    returned as type bytes.
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
     exitst = ctypes.c_int()
@@ -108,7 +111,7 @@ def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, 
     ]
     rbufs = [bool(rbuf) and rbuf or None for rbuf in rbufs]
     if None in rbufs:
-        for i in xrange(3):
+        for i in range(3):
             libruss.russ_buf_free(rbufs[i])
         return RUSS_WAIT_FAILURE, RUSS_EXIT_FAILURE, None, None
 
@@ -117,7 +120,7 @@ def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, 
         ctypes.memmove(rbufs[0].contents.data, ctypes.create_string_buffer(stdin), len(stdin))
         rbufs[0].contents.len = len(stdin)
 
-    rv = libruss.russ_dialv_wait_inouterr3(deadline, op, spath, c_attrs, c_argv,
+    rv = libruss.russ_dialv_wait_inouterr3(deadline, op.encode(), spath.encode(), c_attrs, c_argv,
         ctypes.byref(exitst), rbufs[0], rbufs[1], rbufs[2])
 
     # copy stdout and stderr out
@@ -125,12 +128,14 @@ def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, 
     stderr = ctypes.string_at(rbufs[2].contents.data, rbufs[2].contents.len)
 
     # free rbufs
-    for i in xrange(3):
+    for i in range(3):
         libruss.russ_buf_free(rbufs[i])
 
     return rv, int(exitst.value), stdout, stderr
 
 def dialv_wait_inouterr_timeout(timeout, op, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
+    """See dialv_wait_inouterr() for more.
+    """
     return dialv_wait_inouterr(to_deadline(timeout), op, spath, attrs, args, stdin, stdout_size, stderr_size)
 
 def execv(deadline, spath, attrs=None, args=None):
@@ -142,9 +147,13 @@ def execv_wait(deadline, spath, attrs=None, args=None):
     return dialv_wait(deadline, "execute", spath, attrs, args)
 
 def execv_wait_timeout(timeout, spath, attrs=None, args=None):
+    """See dialv_wait_timeout() for more.
+    """
     return dialv_wait_timeout(timeout, "execute", spath, attrs, args)
 
 def execv_wait_inouterr(deadline, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
+    """See dialv_wait_inouterr() for more.
+    """
     return dialv_wait_inouterr(deadline, "execute", spath, attrs, args, stdin, stdout_size, stderr_size)
 
 def execv_wait_inouterr_timeout(timeout, spath, attrs=None, args=None, stdin=None, stdout_size=STDOUT_SIZE_DEFAULT, stderr_size=STDERR_SIZE_DEFAULT):
