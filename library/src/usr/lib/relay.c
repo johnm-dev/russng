@@ -382,7 +382,7 @@ russ_relay_poll(struct russ_relay *self, int timeout) {
 *
 * @param self		relay object
 * @param timeout	time (ms) to serve
-* @retrun		0 on success; -1 on error
+* @retrun		0 on success; < 0 on error
 */
 int
 russ_relay_serve(struct russ_relay *self, int timeout, int exitfd) {
@@ -415,6 +415,7 @@ russ_relay_serve(struct russ_relay *self, int timeout, int exitfd) {
 //usleep(500000);
 //usleep(100000);
 		if ((nevents = russ_relay_poll(self, timeout)) < 1) {
+			return RUSS_WAIT_TIMEOUT;
 			break;
 		}
 		if (nevents == 0) {
@@ -473,4 +474,5 @@ disable_stream:
 			}
 		}
 	}
+	return RUSS_WAIT_OK;
 }
