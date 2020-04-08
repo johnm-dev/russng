@@ -355,8 +355,10 @@ russ_relay_remove(struct russ_relay *self, int rfd, int wfd) {
 	if ((i = russ_relay_find(self, rfd, wfd)) < 0) {
 		return -1;
 	}
-	close(rfd);
-	close(wfd);
+	if (self->streams[i]->closeonexit) {
+		close(rfd);
+		close(wfd);
+	}
 	self->streams[i] = russ_relaystream_free(self->streams[i]);
 	self->pollfds[i].fd = -1;
 	self->pollfds[i].events = 0;
