@@ -476,3 +476,30 @@ disable_stream:
 	}
 	return RUSS_WAIT_OK;
 }
+
+/*
+* High level loop to relay between multiple pairs of fds.
+*
+* @param timeout	time (ms) to serve
+* @param nfds		count of fd pairs to relay
+* @param infds		input fds
+* @param outfds		output fds
+* @param bufsizes	buffer sizes for unrelayed data
+* @param closeonexits	flag to mark close fd on exit
+* @param exitfd		exit fd
+* @return		0 on success; -1 on error
+*/
+int
+russ_relay_loop(int timeout, int nfds, int *infds, int *outfds, int *bufsizes, int *closeonexits, int exitfd) {
+	struct russ_relay		*relay;
+	russ_relaystream_callback	cb = NULL;
+	int				i, rv;
+
+	relay = russ_relay_new(nfds);
+	for (i = 0; i < nfds; i++) {
+		russ_relay_add(relay, infds[i], outfds[i], bufsizes[i], closeonexits[i]);
+	}
+	rv = russ_relay_serve(relay, timeout, exitfd);
+	relay = russ_relay_free(relay);
+	return rv;
+}

@@ -345,6 +345,7 @@ int russ_relay_add(struct russ_relay *, int, int, int, int);
 int russ_relay_addwithcallback(struct russ_relay *, int, int, int, int, russ_relaystream_callback, void *);
 int russ_relay_add2(struct russ_relay *, int, int, int, int);
 int russ_relay_find(struct russ_relay *, int, int);
+int russ_relay_loop(int, int, int *, int *, int *, int *, int);
 int russ_relay_remove(struct russ_relay *, int, int);
 int russ_relay_poll(struct russ_relay *, int);
 int russ_relay_serve(struct russ_relay *, int, int);
