@@ -314,8 +314,20 @@ def run_dial(taskid, ntasks, targetgid, targetid, realtargetid, targetcount, tim
     attrs["RURUN_REALTARGETID"] = str(realtargetid)
     attrs["RURUN_TARGETCOUNT"] = str(targetcount)
 
-    # ideally/optionally, out and err should be output as received not buffered
-    t = pyruss.dialv_wait_inouterr_timeout(timeout, op, spath, args=args, attrs=attrs)
+    # relay i/o as it becomes available
+    deadline = pyruss.to_deadline(timeout)
+    infd = os.dup(0)
+    if infd < 0:
+        t = (-1, 0)
+    else:
+        cconn = pyruss.dialv(deadline, op, spath, args=args, attrs=attrs)
+        relay = pyruss.Relay()
+        relay.add(infd, cconn.get_fd(0), closeonexit=True)
+        relay.add(cconn.get_fd(1), 1)
+        relay.add(cconn.get_fd(2), 2)
+        rv = relay.loop(deadline, cconn.get_sysfd(0))
+        t = cconn.wait(deadline)
+        cconn.close()
     return t
 
 def print_usage():
@@ -530,7 +542,6 @@ def main():
             # drop "-x"
             args.pop(0)
 
-
         # TODO: ensure self and all children are killed/cleaned up
         #trap '' HUP
         #trap 'exit 1' INT TERM
@@ -555,13 +566,22 @@ def main():
             #print("targetid (%s) targetids (%s)" % (targetid, targetids))
             exec_method = rurun_exec_method == "noshell" and "simple" or rurun_exec_method
             spath = os.path.join(rurun_pnet_addr, "run", (rurun_wrap and ":" or "")+str(targetid), rurun_exec_method)
-            sargs = args[:]
-
-            if rurun_debug:
-                pass
+            if rurun_exec_method == "noshell":
+                sargs = args[:]
+            else:
+                # must combine args to pass as command string to shell
+                sargs = []
+                for arg in args:
+                    if arg == "":
+                        arg = '""'
+                    sargs.append(arg)
+                sargs = [" ".join(sargs)]
 
             if rurun_shell:
                 sargs.insert(0, rurun_shell)
+
+            if rurun_debug:
+                pass
 
             targs = [taskid, rurun_ntasks, targetgid, targetid, targetid % targetcount, targetcount, timeout, "execute", spath]
             tattrs = {"args": sargs, "attrs": attrs}
@@ -570,17 +590,12 @@ def main():
         finalev = 0
         for _ in range(rurun_ntasks):
             targetid, t = tp.reap()
-            rv, ev, sout, serr = t
-
+            rv, ev = t
             if rv == 0:
                 if ev != 0:
                     finalev = ev
             else:
                 finalev = 1
-            if sout:
-                sys.stdout.write(sout.decode())
-            if serr:
-                sys.stderr.write(serr.decode())
 
         sys.exit(finalev)
     except SystemExit:
