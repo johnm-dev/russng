@@ -298,6 +298,20 @@ libruss.russ_optable_find_opnum.argtypes = [
 libruss.russ_optable_find_opnum.restype = russ_opnum
 
 #
+# from relay.c
+#
+libruss.russ_relay_loop.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+]
+libruss.russ_relay_loop.restype = ctypes.c_int
+
+#
 # from sconn.c
 #
 libruss.russ_sconn_accept.argtypes = [

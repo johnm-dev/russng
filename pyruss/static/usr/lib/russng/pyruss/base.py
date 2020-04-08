@@ -200,6 +200,29 @@ def unlink(path):
     """
     return libruss.russ_unlink(path)
 
+class Relay:
+    """To relay data between one or more file descriptors pairs with special
+    support to monitor an exitfd.
+    """
+
+    def __init__(self):
+        self.relayinfo = []
+
+    def add(self, infd, outfd, bufsize=32768, closeonexit=False):
+        """Add relay info.
+        """
+        self.relayinfo.append([infd, outfd, bufsize, closeonexit])
+
+    def loop(self, deadline, exitfd):
+        """Relay data until deadline or completed.
+        """
+        nfds = len(self.relayinfo)
+        c_infds = (ctypes.c_int * nfds)(*[x[0] for x in self.relayinfo])
+        c_outfds = (ctypes.c_int * nfds)(*[x[1] for x in self.relayinfo])
+        c_bufsizes = (ctypes.c_int * nfds)(*[x[2] for x in self.relayinfo])
+        c_closeonexits = (ctypes.c_int * nfds)(*[x[3] and 1 or 0 for x in self.relayinfo])
+        return libruss.russ_relay_loop(to_timeout(deadline), nfds, c_infds, c_outfds, c_bufsizes, c_closeonexits, exitfd)
+
 class Request:
     """Wrapper for russ_req object.
     """
