@@ -98,6 +98,7 @@ openmpi)
 	export OMPI_MCA_orte_default_hostfile="${RUMPIRUN_HOSTFILE}"
 	export OMPI_MCA_plm_rsh_agent="${RUMPIRUN_LAUNCHER}"
 	export OMPI_MCA_plm_rsh_disable_qrsh=1
+	export OMPI_MCA_plm_rsh_no_tree_spawn=1
 
 	MPIRUN_ARGS=""
 	;;
