@@ -72,6 +72,7 @@ double russ_conf_getfloat(struct russ_conf *, const char *, const char *, double
 long russ_conf_getsint(struct russ_conf *, const char *, const char *, long);
 char **russ_conf_options(struct russ_conf *, const char *);
 int russ_conf_read(struct russ_conf *, const char *);
+int russ_conf_readfd(struct russ_conf *, int);
 int russ_conf_remove_option(struct russ_conf *, const char *, const char *);
 int russ_conf_remove_section(struct russ_conf *, const char *);
 int russ_conf_set(struct russ_conf *, const char *, const char *, const char *);

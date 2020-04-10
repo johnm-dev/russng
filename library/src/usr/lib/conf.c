@@ -29,6 +29,7 @@
 */
 
 #include <ctype.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -733,13 +734,31 @@ free_all:
 */
 int
 russ_conf_read(struct russ_conf *self, const char *filename) {
+	int	fd, rv;
+
+	if ((fd = open(filename, O_RDONLY)) < 0) {
+		return -1;
+	}
+	rv = russ_conf_readfd(self, fd);
+	close(fd);
+	return rv;
+}
+
+/**
+* Read settings from file descriptor.
+*
+* @param fd			file descriptor
+* @return			0 on success; -1 on failure
+*/
+int
+russ_conf_readfd(struct russ_conf *self, int fd) {
 	struct russ_confsection	*section = NULL;
 	FILE			*fp = NULL;
 	char			*section_name = NULL;
 	char			buf[4096];
 	char			*p0 = NULL, *p1 = NULL;
 
-	if ((fp = fopen(filename, "r")) == NULL) {
+	if ((fp = fdopen(fd, "r")) == NULL) {
 		return -1;
 	}
 	if ((russ_conf_add_section(self, "DEFAULT")) < 0) {
