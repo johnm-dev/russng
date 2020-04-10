@@ -356,6 +356,14 @@ russ_conf_load(int *argc, char **argv) {
 			if (russ_conf_read(self, argv[i]) < 0) {
 				goto bad_args;
 			}
+		} else if ((strcmp(argv[i], "--fd") == 0) && (i+1 < *argc)) {
+			int fd;
+
+			i++;
+			if ((sscanf(argv[i], "%u", &fd) != 1)
+				|| (russ_conf_readfd(self, fd) < 0)) {
+				goto bad_args;
+			}
 		} else if (strcmp(argv[i], "--") == 0) {
 			i++;
 			break;
