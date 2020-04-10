@@ -70,6 +70,11 @@ class Conf(RawConfigParser):
                     self.read(args.pop(0))
                 except:
                     raise Exception()
+            elif arg == "--fd" and args:
+                try:
+                    self.readfp(os.fdopen(int(args.pop(0))))
+                except:
+                    raise Exception()
             elif arg == "--":
                 break
 
