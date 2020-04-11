@@ -921,8 +921,7 @@ russ_conf_set2(struct russ_conf *self, const char *section_name, const char *opt
 }
 
 /**
-* Write russ_conf contents to file. Can be read in using
-* russ_conf_read().
+* Write russ_conf contents to file. Can be read using russ_conf_read().
 *
 * @param self		russ_conf object
 * @param filename	file name
@@ -930,12 +929,31 @@ russ_conf_set2(struct russ_conf *self, const char *section_name, const char *opt
 */
 int
 russ_conf_write(struct russ_conf *self, char *filename) {
+	int	fd, rv;
+
+	if ((fd = open(filename, O_WRONLY|O_CREAT, 0644)) < 0) {
+		return -1;
+	}
+	rv = russ_conf_writefd(self, fd);
+	close(fd);
+	return rv;
+}
+
+/**
+* Write russ_conf contents to file. Can be read using russ_conf_read().
+*
+* @param self		russ_conf object
+* @param fd		file descriptor
+* @return		0 on success; -1 on failure
+*/
+int
+russ_conf_writefd(struct russ_conf *self, int fd) {
 	struct russ_confsection	**sections = NULL, *section = NULL;
 	struct russ_confitem	**items = NULL, *item = NULL;
 	FILE			*fp;
 	int			i, j;
 
-	if ((fp = fopen(filename, "w")) == NULL) {
+	if ((fp = fdopen(fd, "w")) == NULL) {
 		return -1;
 	}
 
@@ -962,3 +980,4 @@ bad_write:
 	fclose(fp);
 	return -1;
 }
+
