@@ -80,7 +80,7 @@ int russ_conf_set2(struct russ_conf *, const char *, const char *, const char *)
 
 void russ_conf_sarray0_free(char **);
 char **russ_conf_sections(struct russ_conf *);
-int russ_conf_write(struct russ_conf *, FILE *);
+int russ_conf_write(struct russ_conf *, char *);
 
 #ifdef __cplusplus
 }

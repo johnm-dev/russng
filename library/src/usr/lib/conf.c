@@ -925,23 +925,40 @@ russ_conf_set2(struct russ_conf *self, const char *section_name, const char *opt
 * russ_conf_read().
 *
 * @param self		russ_conf object
-* @param fp		FILE * object
+* @param filename	file name
 * @return		0 on success; -1 on failure
 */
 int
-russ_conf_write(struct russ_conf *self, FILE *fp) {
+russ_conf_write(struct russ_conf *self, char *filename) {
 	struct russ_confsection	**sections = NULL, *section = NULL;
 	struct russ_confitem	**items = NULL, *item = NULL;
+	FILE			*fp;
 	int			i, j;
+
+	if ((fp = fopen(filename, "w")) == NULL) {
+		return -1;
+	}
 
 	for (i = 0; i < self->len; i++) {
 		section = self->sections[i];
-		fprintf(fp, "[%s]\n", section->name);
+		if (fprintf(fp, "[%s]\n", section->name) < 0) {
+			goto bad_write;
+		}
 		for (j = 0; j < section->len; j++) {
 			item = section->items[j];
-			fprintf(fp, "%s=%s\n", item->option, item->value);
+			if (fprintf(fp, "%s=%s\n", item->option, item->value) < 0) {
+				goto bad_write;
+			}
 		}
-		printf("\n");
+		if (fprintf(fp, "\n") < 0) {
+			goto bad_write;
+		}
 	}
+
+	fclose(fp);
 	return 0;
+
+bad_write:
+	fclose(fp);
+	return -1;
 }
