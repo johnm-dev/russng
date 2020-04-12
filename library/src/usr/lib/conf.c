@@ -389,7 +389,6 @@ russ_conf_load(int *argc, char **argv) {
 
 	return self;
 bad_args:
-	fprintf(stderr, "error: bad/missing arguments\n");
 free_conf:
 	russ_conf_free(self);
 	return NULL;
