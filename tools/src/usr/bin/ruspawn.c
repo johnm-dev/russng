@@ -23,6 +23,7 @@
 */
 
 #include <fcntl.h>
+#include <libgen.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -193,7 +194,7 @@ fail:
 }
 
 void
-print_usage(char *prog_name) {
+ruspawn_print_usage(char *prog_name) {
 	printf(
 "usage: ruspawn (-f <path>|-c <name>=<value>) [...] [-- ...]\n"
 "\n"
@@ -219,18 +220,51 @@ print_usage(char *prog_name) {
 );
 }
 
+void
+rustart_print_usage(char *prog_name) {
+	printf(
+"usage: rustart (-f <path>|-c <name>=<value>) [...] [-- ...]\n"
+"\n"
+"Start a russ server. Using the configuration, a socket file is\n"
+"created and the listener socket is passed to the server.\n"
+"\n"
+"Where:\n"
+"-c <name>=<value>\n"
+"	Set configuration attribute.\n"
+"-f <path>\n"
+"	Load configuration file.\n"
+"-- ...	Arguments to pass to the server program.\n"
+);
+}
+
 int
 main(int argc, char **argv) {
+	char	*progname;
 	char	*saddr;
 
-	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
-		print_usage(argv[0]);
+	progname = basename(strdup(argv[0]));
+	if (strcmp(progname, "ruspawn") == 0) {
+		if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
+			ruspawn_print_usage(argv[0]);
+			exit(0);
+		}
+		if ((saddr = __spawn(argc, argv)) == NULL) {
+			fprintf(stderr, "error: cannot spawn server\n");
+			exit(1);
+		}
+		printf("%s", saddr);
 		exit(0);
-	}
-	if ((saddr = __spawn(argc, argv)) == NULL) {
-		fprintf(stderr, "error: cannot spawn server\n");
+	} else if (strcmp(progname, "rustart") == 0) {
+		if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
+			rustart_print_usage(argv[0]);
+			exit(0);
+		}
+		signal(SIGPIPE, SIG_IGN);
+		russ_start(argc, argv, -1);
+		fprintf(stderr, "error: cannot start server\n");
+		exit(1);
+	} else {
+		fprintf(stderr, "error: program name not ruspawn or rustart\n");
 		exit(1);
 	}
-	printf("%s", saddr);
-	exit(0);
 }
