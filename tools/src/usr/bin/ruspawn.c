@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -67,13 +66,11 @@ __reap_sigh(int signum) {
 static char *
 __spawn(int argc, char **argv) {
 	struct russ_conf	*conf = NULL;
-	struct stat		st;
 	char			**xargv = NULL;
 	int			xargc;
 	char			*main_addr = NULL;
 	int			main_pgid;
 	char			buf[16];
-	char			tmppath[PATH_MAX];
 	char			tmparg[128];
 	int			pid, reappid, status;
 	int			timeout;
@@ -113,44 +110,15 @@ __spawn(int argc, char **argv) {
 		* create/reserve tmp file for socket file in one of a
 		* few possible locations
 		*/
-		do {
-			char	hostname[HOST_NAME_MAX];
-			char	*homedir, hometmpdir[PATH_MAX];
-
-			if ((russ_snprintf(tmppath, sizeof(tmppath), "/tmp/.russng-%d-XXXXXX", getpid()) > 0)
-				&& (mkstemp(tmppath) >= 0)) {
-				break;
-			}
-			if ((russ_snprintf(tmppath, sizeof(tmppath), "/var/tmp/.russng-%d-XXXXXX", getpid()) > 0)
-				&& (mkstemp(tmppath) >= 0)) {
-				break;
-			}
-			if (((homedir = getenv("HOME")) != NULL)
-				&& (gethostname(hostname, sizeof(hostname)) == 0)
-				&& (russ_snprintf(tmppath, sizeof(tmppath), "%s/.russng/tmp/%s-%d-XXXXXX", homedir, hostname, getpid()) > 0)) {
-
-				if (mkstemp(tmppath) >= 0) {
-					break;
-				}
-				/* reset tmppath for mkstemp */
-				if ((russ_snprintf(tmppath, sizeof(tmppath), "%s/.russng/tmp/%s-%d-XXXXXX", homedir, hostname, getpid()) > 0)
-					&& (russ_snprintf(hometmpdir, sizeof(hometmpdir), "%s/.russng", homedir) > 0)
-					&& (((stat(hometmpdir, &st) == 0) && S_ISDIR(st.st_mode)) || (mkdir(hometmpdir, 0700) == 0))
-					&& (russ_snprintf(hometmpdir, sizeof(hometmpdir), "%s/.russng/tmp", homedir) > 0)
-					&& (((stat(hometmpdir, &st) == 0) && S_ISDIR(st.st_mode)) || (mkdir(hometmpdir, 0700) == 0))
-					&& (mkstemp(tmppath) >= 0)) {
-					break;
-				}
-			}
-			goto fail;
-		} while (0);
-
-		if ((russ_snprintf(tmparg, sizeof(tmparg), "main:addr=%s", tmppath) < 0)
-			|| (russ_sarray0_append(&xargv, "-c", tmparg, NULL) < 0)) {
-			remove(tmppath);
+		if ((main_addr = russ_mkstemp(NULL)) == NULL) {
 			goto fail;
 		}
-		main_addr = strdup(tmppath);
+
+		if ((russ_snprintf(tmparg, sizeof(tmparg), "main:addr=%s", main_addr) < 0)
+			|| (russ_sarray0_append(&xargv, "-c", tmparg, NULL) < 0)) {
+			remove(main_addr);
+			goto fail;
+		}
 		xargc = russ_sarray0_count(xargv, 128);
 	}
 

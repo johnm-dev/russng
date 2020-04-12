@@ -23,6 +23,9 @@
 */
 
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 
 #include "russ/priv.h"
@@ -99,6 +102,69 @@ russ_get_services_dir(void) {
 		path = RUSS_SERVICES_DIR;
 	}
 	return path;
+}
+
+/**
+* Create temp file. If template is NULL, the a temp file is created
+* using the first success of (where XXX is something):
+* 1) /tmp/.russng-XXX
+* 2) /var/tmp/.russng-XXX
+* 3) ~/.russng/tmp/XXX
+*
+* @param template	template string as with mkstemp()
+* @return		filename string on success (free by caller);
+*			NULL on error
+*/
+char *
+russ_mkstemp(char *template) {
+	struct stat	st;
+	char		tmppath[PATH_MAX];
+	char		hostname[HOST_NAME_MAX];
+	char		*homedir = NULL, hometmpdir[PATH_MAX];
+
+	do {
+		if (template) {
+			if ((russ_snprintf(tmppath, sizeof(tmppath), template) > 0)
+				&& (mkstemp(tmppath) >= 0)) {
+				break;
+			}
+			return NULL;
+		}
+
+		if ((russ_snprintf(tmppath, sizeof(tmppath), "/tmp/.russng-%d-XXXXXX", getpid()) > 0)
+			&& (mkstemp(tmppath) >= 0)) {
+			break;
+		}
+
+		if ((russ_snprintf(tmppath, sizeof(tmppath), "/var/tmp/.russng-%d-XXXXXX", getpid()) > 0)
+			&& (mkstemp(tmppath) >= 0)) {
+			break;
+		}
+
+		if (((homedir = getenv("HOME")) != NULL)
+			&& (gethostname(hostname, sizeof(hostname)) == 0)
+			&& (russ_snprintf(tmppath, sizeof(tmppath), "%s/.russng/tmp/%s-%d-XXXXXX", homedir, hostname, getpid()) > 0)) {
+
+			if (mkstemp(tmppath) >= 0) {
+				break;
+			}
+
+			/* create dirs, reset tmppath, mkstemp */
+			if ((russ_snprintf(tmppath, sizeof(tmppath), "%s/.russng/tmp/%s-%d-XXXXXX", homedir, hostname, getpid()) > 0)
+				&& (russ_snprintf(hometmpdir, sizeof(hometmpdir), "%s/.russng", homedir) > 0)
+				&& (((stat(hometmpdir, &st) == 0) && S_ISDIR(st.st_mode)) || (mkdir(hometmpdir, 0700) == 0))
+				&& (russ_snprintf(hometmpdir, sizeof(hometmpdir), "%s/.russng/tmp", homedir) > 0)
+				&& (((stat(hometmpdir, &st) == 0) && S_ISDIR(st.st_mode)) || (mkdir(hometmpdir, 0700) == 0))
+				&& (mkstemp(tmppath) >= 0)) {
+				break;
+			}
+		}
+		/* fail */
+		return NULL;
+	} while (0);
+
+	/* success */
+	return strdup(tmppath);
 }
 
 /**
