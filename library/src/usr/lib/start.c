@@ -384,7 +384,7 @@ russ_start(int argc, char **argv, int notifyfd) {
 	int			lisd;
 	int			largc;
 	char			**largv = NULL;
-	char			*main_launcher = NULL, **main_launcher_items;
+	char			*main_launcher = NULL, **main_launcher_items = NULL;
 	char			*main_path = NULL, *main_addr = NULL;
 	char			*main_cwd = NULL;
 	mode_t			main_file_mode;
