@@ -158,7 +158,7 @@ start_server(char *svrname) {
 		signal(SIGHUP, SIG_IGN);
 		if (fork() == 0) {
 			put_pid(pidpath, getpid());
-			russ_startl("", serverpath,
+			russ_startl(RUSS_STARTTYPE_START, "", serverpath,
 				"-f", conffile,
 				"-c", serveraddr,
 				(char *)NULL);

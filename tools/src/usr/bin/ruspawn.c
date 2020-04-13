@@ -29,55 +29,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
 #include <russ/russ.h>
 
-struct russ_conf	*conf = NULL;
-
 /**
-* Signal handler to reap spawned child servers.
+* Do ruspawn.
 *
-* The child process is killed using the pgid which the reaper
-* handles by this very handler. The kill can only be trigged
-* once.
+* Does not return.
+*
+* @param argc		command line argc
+* @param argv		command line argv
 */
 static void
-__reap_sigh(int signum) {
-	static int	called = 0;
-
-	if (called == 0) {
-		kill(-getpgid(0), SIGTERM);
-		called = 1;
-	}
-}
-
-/**
-* Spawn server using arguments as provided from the command line and
-* return a dynamically created socket file. Configuration and
-* non-configuration (i.e., after the --) may be provided.
-*
-* @param argc		number of arguments
-* @param argv		argument list
-* @return		path to socket file (free by caller); NULL
-*			on failure
-*/
-static char *
-__spawn(int argc, char **argv) {
-	struct russ_conf	*conf = NULL;
-	char			**xargv = NULL;
-	int			xargc;
-	char			*main_addr = NULL;
-	int			main_pgid;
-	char			buf[16];
-	char			tmparg[128];
-	int			pid, reappid, status;
-	int			timeout;
-	int			withpids = 0;
-	int			notifyfds[2];
-	int			i;
+ruspawn(int argc, char **argv) {
+	char	*p, *startstr;
+	int	withpids = 0;
 
 	/* special handling of --withpids */
 	if (strcmp(argv[1], "--withpids") == 0) {
@@ -86,117 +52,41 @@ __spawn(int argc, char **argv) {
 		argc--;
 	}
 
-	/* duplicate args and load conf */
-	xargc = argc;
-	if ((xargv = russ_sarray0_dup(argv, argc+1)) == NULL) {
-		fprintf(stderr, "error: cannot duplicate argument list\n");
-		goto fail;
-	} else if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
-		fprintf(stderr, "error: cannot load configuration.\n");
-		goto fail;
+	if ((startstr = russ_start(RUSS_STARTTYPE_SPAWN, argc, argv)) == NULL) {
+		fprintf(stderr, "error: cannot spawn server\n");
+		exit(1);
 	}
+	if (!withpids) {
+		char	*p;
 
-	main_addr = russ_conf_get(conf, "main", "addr", "");
-	if (strcmp(main_addr, "") == 0) {
-		main_addr = russ_free(main_addr);
-	} else {
-		char	*tmp = NULL;
-
-		tmp = main_addr;
-		main_addr = russ_spath_resolve(tmp);
-		tmp = russ_free(tmp);
+		p = index(startstr, ':');
+		p = index(p+1, ':');
+		strcpy(startstr, p+1);
 	}
-	if (main_addr == NULL) {
-		/*
-		* create/reserve tmp file for socket file in one of a
-		* few possible locations
-		*/
-		if ((main_addr = russ_mkstemp(NULL)) == NULL) {
-			goto fail;
-		}
+	printf("%s", startstr);
+	exit(0);
+}
 
-		if ((russ_snprintf(tmparg, sizeof(tmparg), "main:addr=%s", main_addr) < 0)
-			|| (russ_sarray0_append(&xargv, "-c", tmparg, NULL) < 0)) {
-			remove(main_addr);
-			goto fail;
-		}
-		xargc = russ_sarray0_count(xargv, 128);
-	}
-
-	main_pgid = russ_conf_getint(conf, "main", "pgid", -1);
-	if (main_pgid >= 0) {
-		//setsid();
-		setpgid(getpid(), main_pgid);
-	}
-
-	/* to synchronize server creation and connect */
-	pipe(notifyfds);
-
-	if ((reappid = fork()) == 0) {
-		char	pidst[16];
-
-		/* close and reopen to occupy fds 0-2 */
-		russ_close_range(0, 2);
-		open("/dev/null", O_RDONLY);
-		open("/dev/null", O_WRONLY);
-		open("/dev/null", O_WRONLY);
-
-		russ_close(notifyfds[0]);
-
-		if ((pid = fork()) == 0) {
-			signal(SIGPIPE, SIG_IGN);
-			russ_start(xargc, xargv, notifyfds[1]);
-			exit(1);
-		}
-
-		russ_close(notifyfds[1]);
-
-		sprintf(pidst, "%d", pid);
-#if 0
-		execlp("rureap", "rureap", pidst, main_addr, NULL);
-#endif
-#if 1
-		/*
-		* stay alive until child exits/is killed
-		* kill process group to clean up
-		*/
-		signal(SIGPIPE, SIG_IGN);
-		signal(SIGHUP, __reap_sigh);
-		signal(SIGINT, __reap_sigh);
-		signal(SIGTERM, __reap_sigh);
-		signal(SIGQUIT, __reap_sigh);
-
-		waitpid(pid, &status, 0);
-		remove(main_addr);
-		exit(0);
-#endif
-	}
-
-	/* wait for notification */
-	russ_close(notifyfds[1]);
-	read(notifyfds[0], buf, 1);
-
-	conf = russ_conf_free(conf);
-	xargv = russ_sarray0_free(xargv);
-
-	if (withpids) {
-		printf("%d:%d:", reappid, main_pgid);
-	}
-
-	return main_addr;
-
-fail:
-	conf = russ_conf_free(conf);
-	xargv = russ_sarray0_free(xargv);
-	main_addr = russ_free(main_addr);
-
-	return NULL;
+/**
+* Do rustart.
+*
+* Does not return.
+*
+* @param argc		command line argc
+* @param argv		command line argv
+*/
+static void
+rustart(int argc, char **argv) {
+	signal(SIGPIPE, SIG_IGN);
+	russ_start(RUSS_STARTTYPE_START, argc, argv);
+	fprintf(stderr, "error: cannot start server\n");
+	exit(1);
 }
 
 void
 ruspawn_print_usage(char *prog_name) {
 	printf(
-"usage: ruspawn (-f <path>|-c <name>=<value>) [...] [-- ...]\n"
+"usage: ruspawn (-c <name>=<value>|-f <path>|--fd <fd>) [...] [-- ...]\n"
 "\n"
 "Spawn a russ server. Using the configuration, a socket file is\n"
 "created and the listener socket is passed to the server. The path\n"
@@ -213,9 +103,11 @@ ruspawn_print_usage(char *prog_name) {
 "\n"
 "Where:\n"
 "-c <name>=<value>\n"
-"	Set configuration attribute.\n"
+"        Set configuration attribute.\n"
 "-f <path>\n"
-"	Load configuration file.\n"
+"        Load configuration file.\n"
+"--fd <fd>\n"
+"        Load configuration from file descriptor.\n"
 "-- ...	Arguments to pass to the server program.\n"
 );
 }
@@ -223,16 +115,18 @@ ruspawn_print_usage(char *prog_name) {
 void
 rustart_print_usage(char *prog_name) {
 	printf(
-"usage: rustart (-f <path>|-c <name>=<value>) [...] [-- ...]\n"
+"usage: rustart (-c <name>=<value>|-f <path>|--fd <fd>) [...] [-- ...]\n"
 "\n"
 "Start a russ server. Using the configuration, a socket file is\n"
 "created and the listener socket is passed to the server.\n"
 "\n"
 "Where:\n"
 "-c <name>=<value>\n"
-"	Set configuration attribute.\n"
+"        Set configuration attribute.\n"
 "-f <path>\n"
-"	Load configuration file.\n"
+"        Load configuration file.\n"
+"--fd <fd>\n"
+"        Load configuration from file descriptor.\n"
 "-- ...	Arguments to pass to the server program.\n"
 );
 }
@@ -240,29 +134,20 @@ rustart_print_usage(char *prog_name) {
 int
 main(int argc, char **argv) {
 	char	*progname;
-	char	*saddr;
 
 	progname = basename(strdup(argv[0]));
 	if (strcmp(progname, "ruspawn") == 0) {
-		if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
-			ruspawn_print_usage(argv[0]);
+		if ((argc == 2) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
+			ruspawn_print_usage(progname);
 			exit(0);
 		}
-		if ((saddr = __spawn(argc, argv)) == NULL) {
-			fprintf(stderr, "error: cannot spawn server\n");
-			exit(1);
-		}
-		printf("%s", saddr);
-		exit(0);
+		ruspawn(argc, argv);
 	} else if (strcmp(progname, "rustart") == 0) {
-		if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
-			rustart_print_usage(argv[0]);
+		if ((argc == 2) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
+			rustart_print_usage(progname);
 			exit(0);
 		}
-		signal(SIGPIPE, SIG_IGN);
-		russ_start(argc, argv, -1);
-		fprintf(stderr, "error: cannot start server\n");
-		exit(1);
+		rustart(argc, argv);
 	} else {
 		fprintf(stderr, "error: program name not ruspawn or rustart\n");
 		exit(1);

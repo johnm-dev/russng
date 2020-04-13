@@ -37,6 +37,23 @@
 #include <russ/priv.h>
 
 /**
+* Signal handler to reap spawned child servers.
+*
+* The child process is killed using the pgid which the reaper
+* handles by this very handler. The kill can only be trigged
+* once.
+*/
+static void
+__reap_sigh(int signum) {
+	static int	called = 0;
+
+	if (called == 0) {
+		kill(-getpgid(0), SIGTERM);
+		called = 1;
+	}
+}
+
+/**
 * Make directories. For rustart() only.
 *
 * @param dirnames	:-separated list of paths
@@ -374,12 +391,13 @@ russ_ruspawn(char *caddr) {
 * Configuration and non-configuration (i.e., after the --) may be
 * provided.
 *
+* @param starttype	start server by start or spawn mechanism
 * @param argc		number of arguments
 * @param argv		argument list
-* @return		-1 on failure (which should not happen)
+* @return		start string ([<reappid>:<pgid>:]<main_addr>) or NULL on failure
 */
-int
-russ_start(int argc, char **argv, int notifyfd) {
+char *
+russ_start(int starttype, int argc, char **argv) {
 	struct russ_conf	*conf = NULL;
 	int			lisd;
 	int			largc;
@@ -392,9 +410,10 @@ russ_start(int argc, char **argv, int notifyfd) {
 	int			main_hide_conf;
 	char			*main_mkdirs = NULL;
 	int			main_mkdirs_mode;
+	int			main_pgid;
 	char			*main_user = NULL, *main_group = NULL;
 	mode_t			main_umask;
-	char			buf[128];
+	char			buf[128], tmparg[128];
 	uid_t			file_uid, uid;
 	gid_t			file_gid, gid;
 	int			i, pos;
@@ -403,12 +422,12 @@ russ_start(int argc, char **argv, int notifyfd) {
 	largc = argc;
 	if ((largv = russ_sarray0_dup(argv, largc+1)) == NULL) {
 		fprintf(stderr, "error: cannot duplicate argument list\n");
-		return -1;
+		return NULL;
 	}
 	/* load conf */
 	if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
 		fprintf(stderr, "error: cannot load configuration.\n");
-		return -1;
+		return NULL;
 	}
 
 	/* get settings */
@@ -421,7 +440,7 @@ russ_start(int argc, char **argv, int notifyfd) {
 			if (access(main_launcher, R_OK|X_OK) == 0) {
 				if ((main_launcher = strdup(main_launcher_items[i])) == NULL) {
 					fprintf(stderr, "error: out of memory\n");
-					return -1;
+					return NULL;
 				}
 				break;
 			}
@@ -429,13 +448,50 @@ russ_start(int argc, char **argv, int notifyfd) {
 		}
 		if (main_launcher == NULL) {
 			fprintf(stderr, "error: cannot find launcher\n");
-			return -1;
+			return NULL;
 		}
 	}
 	main_launcher_items = russ_sarray0_free(main_launcher_items);
 
+	if (starttype == RUSS_STARTTYPE_START) {
+		if ((main_addr = russ_conf_get(conf, "main", "addr", NULL)) == NULL) {
+			/* fatal: no cleanup done */
+			return NULL;
+		}
+	} else if (starttype == RUSS_STARTTYPE_SPAWN) {
+		main_addr = russ_conf_get(conf, "main", "addr", "");
+
+		if (strcmp(main_addr, "") == 0) {
+			main_addr = russ_free(main_addr);
+		} else {
+			char	*tmp = NULL;
+
+			tmp = main_addr;
+			main_addr = russ_spath_resolve(tmp);
+			tmp = russ_free(tmp);
+		}
+
+		if (main_addr == NULL) {
+			/*
+			* create/reserve tmp file for socket file in one of a
+			* few possible locations
+			*/
+			if ((main_addr = russ_mkstemp(NULL)) == NULL) {
+				goto fail;
+			}
+
+			if ((russ_snprintf(tmparg, sizeof(tmparg), "main:addr=%s", main_addr) < 0)
+				|| (russ_sarray0_append(&largv, "-c", tmparg, NULL) < 0)) {
+				remove(main_addr);
+				goto fail;
+			}
+			largc = russ_sarray0_count(largv, 128);
+		}
+	}
+
 	main_path = russ_conf_get(conf, "main", "path", NULL);
-	main_addr = russ_conf_get(conf, "main", "addr", NULL);
+	main_pgid = russ_conf_getint(conf, "main", "pgid", -1);
+
 	main_cwd = russ_conf_get(conf, "main", "cwd", "/");
 	main_umask = (mode_t)russ_conf_getsint(conf, "main", "umask", 022);
 	main_file_mode = russ_conf_getsint(conf, "main", "file_mode", 0666);
@@ -451,61 +507,112 @@ russ_start(int argc, char **argv, int notifyfd) {
 	main_mkdirs = russ_conf_get(conf, "main", "mkdirs", NULL);
 	main_mkdirs_mode = russ_conf_getsint(conf, "main", "mkdirs_mode", 0755);
 
-	/* close fds >= 3, except for notifyfd */
-	if (notifyfd < 3) {
-		russ_close_range(3, -1);
-	} else {
-		russ_close_range(3, notifyfd-1);
-		russ_close_range(notifyfd+1, -1);
+	/* close fds > 2 */
+	russ_close_range(3, -1);
+
+	/* change pgid */
+	if (main_pgid >= 0) {
+		//setsid();
+		setpgid(getpid(), main_pgid);
 	}
 
 	/* change uid/gid then exec; listen socket is at fd lisd */
 	if (russ_switch_userinitgroups(uid, gid) < 0) {
 		fprintf(stderr, "error: cannot switch user\n");
-		return -1;
+		return NULL;
 	}
 
 	umask(main_umask);
 
 	if (chdir(main_cwd) < 0) {
 		fprintf(stderr, "error: cannot change directory\n");
-		return -1;
+		return NULL;
 	}
 
 	/* check for server program */
 	if ((main_path == NULL)
 		|| (access(main_path, R_OK|X_OK))) {
 		fprintf(stderr, "error: cannot access server program\n");
-		return -1;
+		return NULL;
 	}
 
 	/* create directories */
 	if (main_mkdirs) {
 		if (_mkdirs(main_mkdirs, main_mkdirs_mode) < 0) {
 			fprintf(stderr, "error: cannot make directories\n");
-			return -1;
+			return NULL;
 		}
 	}
 
 	/* set limits */
 	if (_russ_start_setlimits(conf) < 0) {
 		fprintf(stderr, "error: cannot set limits\n");
-		return -1;
+		return NULL;
 	}
 
 	/* set env */
 	if (_russ_start_setenv(conf) < 0) {
 		fprintf(stderr, "error: cannot set env\n");
-		return -1;
+		return NULL;
 	}
 
 	/* announce */
 	if ((lisd = russ_announce(main_addr, main_file_mode, file_uid, file_gid)) < 0) {
 		fprintf(stderr, "error: cannot set up socket\n");
-		return -1;
+		return NULL;
 	}
 
-	russ_close(notifyfd);
+	if (starttype == RUSS_STARTTYPE_SPAWN) {
+		int	pid, status;
+
+		/*
+		* process tree:
+		*   ruspawn -> returns addr path
+		*     ruspawn/reaper
+		*       server
+		*/
+		if ((pid = fork()) != 0) {
+			char	startstr[2048];
+
+			/* parent */
+			close(lisd);
+
+			if (russ_snprintf(startstr, sizeof(startstr), "%d:%d:%s", pid, getpgid(getpid()), main_addr) < 0) {
+				return NULL;
+			}
+			return strdup(startstr);
+		} else {
+			/* child */
+			/* close and reopen to occupy fds 0-2 */
+			russ_close_range(0, 2);
+			open("/dev/null", O_RDONLY);
+			open("/dev/null", O_WRONLY);
+			open("/dev/null", O_WRONLY);
+
+			if ((pid = fork()) != 0) {
+				/* child-parent */
+				close(lisd);
+
+				/*
+				* stay alive until child exits/is killed
+				* kill process group to clean up
+				*/
+				signal(SIGPIPE, SIG_IGN);
+				signal(SIGHUP, __reap_sigh);
+				signal(SIGINT, __reap_sigh);
+				signal(SIGTERM, __reap_sigh);
+				signal(SIGQUIT, __reap_sigh);
+
+				waitpid(pid, &status, 0);
+				remove(main_addr);
+				exit(0);
+			} else {
+				/* child-child */
+			}
+		}
+	}
+
+	/* RUSS_STARTTYPE_SPAWN child or RUSS_STARTTYPE_START */
 
 	/* pass listening socket description as config arguments */
 	russ_snprintf(buf, sizeof(buf), "main:sd=%d", lisd);
@@ -521,17 +628,19 @@ russ_start(int argc, char **argv, int notifyfd) {
 	if (main_launcher) {
 		if (russ_sarray0_insert(&largv, 0, main_launcher, NULL) < 0) {
 			fprintf(stderr, "error: out of memory\n");
-			return -1;
+			return NULL;
 		}
 		largc++;
 	}
 	execv(largv[0], main_hide_conf ? argv : largv);
 
+fail:
 	/* should not get here */
 	fprintf(stderr, "error: cannot exec server\n");
+	conf = russ_conf_free(conf);
 	largv = russ_sarray0_free(largv);
 
-	return -1;
+	return NULL;
 }
 
 /**
@@ -539,25 +648,26 @@ russ_start(int argc, char **argv, int notifyfd) {
 *
 * @see russ_start()
 *
+* @param starttype	start server by start or spawn mechanism
 * @param dummy		ignored placeholder
-* @return		-1 on failure or russ_start()
+* @return		see russ_start()
 */
-int
-russ_startl(char *dummy, ...) {
+char *
+russ_startl(int starttype, char *dummy, ...) {
 	va_list			ap;
 	char			**argv = NULL;
+	char			*rv;
 	int			argc;
 
 	va_start(ap, dummy);
 	argv = __russ_variadic_to_argv(RUSS_REQ_ARGS_MAX, 0, &argc, ap);
 	va_end(ap);
 	if (argv == NULL) {
-		return -1;
+		return NULL;
 	}
 
-	russ_start(argc, argv, -1);
+	rv = russ_start(starttype, argc, argv);
 
-	/* should not get here; clean up on failure */
 	free(argv);
-	return -1;
+	return rv;
 }

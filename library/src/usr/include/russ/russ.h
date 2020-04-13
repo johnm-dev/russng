@@ -99,6 +99,10 @@ extern "C" {
 #define RUSS_REQ_SPATH_MAX	8192
 #define RUSS_REQ_PROTOCOLSTRING	"0010"
 
+/* start */
+#define RUSS_STARTTYPE_START	1
+#define RUSS_STARTTYPE_SPAWN	2
+
 /* svr */
 #define RUSS_SVR_LIS_SD_DEFAULT	3
 #define RUSS_SVR_TIMEOUT_ACCEPT	INT_MAX
@@ -391,8 +395,8 @@ char *russ_spath_resolve(const char *);
 char *russ_spath_resolvewithuid(const char *, uid_t *, int);
 
 /* start.c */
-int russ_start(int, char **, int);
-int russ_startl(char *, ...);
+char *russ_start(int, int, char **);
+char *russ_startl(int, char *, ...);
 
 /* str.c */
 int russ_str_count_sub(const char *, const char *);
