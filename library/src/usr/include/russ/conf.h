@@ -58,6 +58,7 @@ int russ_is_conffile(char *);
 
 struct russ_conf *russ_conf_new(void);
 struct russ_conf *russ_conf_free(struct russ_conf *);
+struct russ_conf *russ_conf_dup(struct russ_conf *);
 struct russ_conf *russ_conf_load(int *, char **);
 struct russ_conf *russ_conf_init(int *, char **);
 

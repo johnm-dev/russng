@@ -486,6 +486,44 @@ russ_conf_add_section(struct russ_conf *self, const char *section_name) {
 }
 
 /**
+* Duplicate configuration object.
+*
+* @param self		russ_conf object
+* @return		duplicate russ_conf object on success; NULL on failure
+*/
+struct russ_conf *
+russ_conf_dup(struct russ_conf *self) {
+	struct russ_conf	*copy = NULL;
+	struct russ_confsection	**sections = NULL, *section = NULL, *csection = NULL;
+	struct russ_confitem	**items = NULL, *item = NULL;
+	int			i, ci, j;
+
+	if ((copy = russ_conf_new()) == NULL) {
+		return NULL;
+	}
+
+	for (i = 0; i < self->len; i++) {
+		section = self->sections[i];
+		if ((ci = russ_conf_add_section(copy, section->name)) < 0) {
+			goto fail;
+		}
+		csection = copy->sections[ci];
+
+		for (j = 0; j < section->len; j++) {
+			item = section->items[j];
+			if (__russ_confsection_set(csection, item->option, item->value) == NULL) {
+				goto fail;
+			}
+		}
+	}
+	return copy;
+
+fail:
+	copy = russ_conf_free(copy);
+	return NULL;
+}
+
+/**
 * Duplicate all options and values from one section to another.
 * Existing items in the destination section will be overwritten.
 *
@@ -979,4 +1017,3 @@ bad_write:
 	fclose(fp);
 	return -1;
 }
-
