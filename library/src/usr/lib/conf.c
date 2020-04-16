@@ -963,6 +963,35 @@ russ_conf_set2(struct russ_conf *self, const char *section_name, const char *opt
 }
 
 /**
+* Update russ_conf contents from an existing russ_conf object.
+*
+* @param self		russ_conf object
+* @param other		russ_conf object from which to get items
+* @return		0 on success; -1 on failure
+*/
+int
+russ_conf_update(struct russ_conf *self, struct russ_conf *other) {
+	struct russ_confsection	*section = NULL;
+	struct russ_confitem	*item = NULL;
+	int			i, j;
+
+	if (self == other) {
+		return 0;
+	}
+
+	for (i = 0; i < other->len; i++) {
+		section = other->sections[i];
+		for (j = 0; j < section->len; j++) {
+			item = section->items[j];
+			if (russ_conf_set2(self, section->name, item->option, item->value) < 0) {
+				return -1;
+			}
+		}
+	}
+	return 0;
+}
+
+/**
 * Write russ_conf contents to file. Can be read using russ_conf_read().
 *
 * @param self		russ_conf object
