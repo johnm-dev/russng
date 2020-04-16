@@ -464,6 +464,12 @@ libruss.russ_svr_handler.argtypes = [
 ]
 libruss.russ_svr_handler.restype = None
 
+libruss.russ_svr_set_accepttimeout.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctypes.c_int,
+]
+libruss.russ_svr_set_accepttimeout.restype = ctypes.c_int
+
 libruss.russ_svr_set_allowrootuser.argtypes = [
     ctypes.POINTER(russ_svr_Structure),
     ctypes.c_int,
