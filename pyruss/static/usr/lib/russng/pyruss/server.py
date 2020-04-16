@@ -217,6 +217,11 @@ class Server:
         """
         return libruss.russ_svr_set_lisd(self._ptr, lisd)
 
+    def set_matchclientuser(self, value):
+        """Set matchclientuser flag.
+        """
+        return libruss.russ_svr_set_matchclientuser(self._ptr, value)
+
     def set_root(self, root):
         """Set root ServiceNode.
         """

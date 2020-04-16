@@ -73,6 +73,7 @@ RUSS_MSG_NOLIST = "info: list not available"
 RUSS_MSG_NOSERVICE = "error: no service"
 RUSS_MSG_NOSWITCHUSER = "error: cannot switch user"
 RUSS_MSG_UNDEFSERVICE = "warning: undefined service"
+RUSS_MSG_BADUSER = "error: bad user"
 
 RUSS_OPNUM_NOTSET = 0
 RUSS_OPNUM_EXTENSION = 1
@@ -486,6 +487,12 @@ libruss.russ_svr_set_lisd.argtypes = [
     ctypes.c_int,
 ]
 libruss.russ_svr_set_lisd.restype = ctypes.c_int
+
+libruss.russ_svr_set_matchclientuser.argtypes = [
+    ctypes.POINTER(russ_svr_Structure),
+    ctypes.c_int,
+]
+libruss.russ_svr_set_matchclientuser.restype = ctypes.c_int
 
 libruss.russ_svr_set_root.argtypes = [
     ctypes.POINTER(russ_svr_Structure),

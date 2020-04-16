@@ -84,6 +84,7 @@ extern "C" {
 #define RUSS_MSG_NOSERVICE	"error: no service"
 #define RUSS_MSG_NOSWITCHUSER	"error: service cannot switch user"
 #define RUSS_MSG_UNDEFSERVICE	"warning: undefined service"
+#define RUSS_MSG_BADUSER	"error: bad user"
 
 #define RUSS_OPNUM_NOTSET	0
 #define RUSS_OPNUM_EXTENSION	1
@@ -220,6 +221,7 @@ struct russ_svr {
 	russ_answerhandler	answerhandler;
 	int			awaittimeout;
 	int			autoswitchuser;
+	int			matchclientuser;
 	char			*help;
 };
 
@@ -427,6 +429,7 @@ int russ_svr_set_answerhandler(struct russ_svr *, russ_answerhandler);
 int russ_svr_set_autoswitchuser(struct russ_svr *, int);
 int russ_svr_set_closeonaccept(struct russ_svr *, int);
 int russ_svr_set_help(struct russ_svr *, const char *);
+int russ_svr_set_matchclientuser(struct russ_svr *, int);
 int russ_svr_set_root(struct russ_svr *, struct russ_svcnode *);
 int russ_svr_set_lisd(struct russ_svr *, int);
 int russ_svr_set_type(struct russ_svr *, int);

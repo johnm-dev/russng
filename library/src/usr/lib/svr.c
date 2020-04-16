@@ -68,6 +68,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	self->answerhandler = russ_sconn_answerhandler;
 	self->awaittimeout = RUSS_SVR_TIMEOUT_AWAIT;
 	self->autoswitchuser = 1;
+	self->matchclientuser = 0;
 	self->help = NULL;
 
 	return self;
@@ -205,6 +206,25 @@ russ_svr_set_help(struct russ_svr *self, const char *help) {
 }
 
 /**
+* Set flag for check that getuid() matches client.
+*
+* If enabled, the server handler will verify that the getuid()
+* matches the client use.
+*
+* @param self		russ server object
+* @param value		0 to disable; 1 to enable
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_matchclientuser(struct russ_svr *self, int value) {
+	if (self == NULL) {
+		return -1;
+	}
+	self->matchclientuser = value;
+	return 0;
+}
+
+/**
 * Set the service tree root node.
 *
 * @param self		server object
@@ -302,6 +322,14 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 			|| (russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0)
 			|| (russ_env_setdefaults() < 0)) {
 			russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
+			goto cleanup;
+		}
+	}
+
+	/* verify/enforce proper user */
+	if (self->matchclientuser) {
+		if (getuid() != sconn->creds.uid) {
+			russ_sconn_fatal(sconn, RUSS_MSG_BADUSER, RUSS_EXIT_FAILURE);
 			goto cleanup;
 		}
 	}
