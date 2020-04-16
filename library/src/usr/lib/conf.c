@@ -482,7 +482,7 @@ russ_conf_add_section(struct russ_conf *self, const char *section_name) {
 	}
 	self->sections[self->len] = section;
 	self->len++;
-	return 0;
+	return self->len-1;
 }
 
 /**
