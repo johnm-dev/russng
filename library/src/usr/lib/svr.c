@@ -298,9 +298,9 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 
 	/* auto switch user if requested */
 	if (self->autoswitchuser) {
-		if ((russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0)
-			|| (russ_env_setdefaults() < 0)
-			|| (chdir("/") < 0)) {
+		if ((chdir("/") < 0)
+			|| (russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0)
+			|| (russ_env_setdefaults() < 0)) {
 			russ_sconn_fatal(sconn, RUSS_MSG_NOSWITCHUSER, RUSS_EXIT_FAILURE);
 			goto cleanup;
 		}
