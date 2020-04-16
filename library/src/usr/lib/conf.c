@@ -803,9 +803,14 @@ russ_conf_readfd(struct russ_conf *self, int fd) {
 	char			buf[4096];
 	char			*p0 = NULL, *p1 = NULL;
 
-	if ((fp = fdopen(fd, "r")) == NULL) {
+	if ((fd = dup(fd)) < 0) {
 		return -1;
 	}
+	if ((fp = fdopen(fd, "r")) == NULL) {
+		close(fd);
+		return -1;
+	}
+
 	if ((russ_conf_add_section(self, "DEFAULT")) < 0) {
 		goto free_all;
 	}
@@ -990,7 +995,11 @@ russ_conf_writefd(struct russ_conf *self, int fd) {
 	FILE			*fp;
 	int			i, j;
 
+	if ((fd = dup(fd)) < 0) {
+		return -1;
+	}
 	if ((fp = fdopen(fd, "w")) == NULL) {
+		close(fd);
 		return -1;
 	}
 
