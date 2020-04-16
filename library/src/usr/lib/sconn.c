@@ -336,7 +336,7 @@ russ_sconn_close(struct russ_sconn *self) {
 * to the client. The exit fd is then closed. This operation is valid
 * for the server side only.
 *
-* Note: the other (non-exit fd) fds are not affected.
+* Note: all fds are closed.
 *
 * @param self		server connection object
 * @param exitst		exit status
