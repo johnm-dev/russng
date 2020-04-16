@@ -65,6 +65,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 	self->closeonaccept = 0;
 	self->accepthandler = russ_sconn_accepthandler;
 	self->accepttimeout = RUSS_SVR_TIMEOUT_ACCEPT;
+	self->allowrootuser = 1;
 	self->answerhandler = russ_sconn_answerhandler;
 	self->awaittimeout = RUSS_SVR_TIMEOUT_AWAIT;
 	self->autoswitchuser = 1;
@@ -134,6 +135,25 @@ russ_svr_set_accepttimeout(struct russ_svr *self, int value) {
 		return -1;
 	}
 	self->accepttimeout = value;
+	return 0;
+}
+
+/**
+* Set flag for check that allows root user.
+*
+* If enabled, the server handler will verify and allow that the
+* getuid() is root/0. If not enabled, root is disallowed!
+*
+* @param self		russ server object
+* @param value		0 to disable; 1 to enable
+* @return		0 on success; -1 on failure
+*/
+int
+russ_svr_set_allowrootuser(struct russ_svr *self, int value) {
+	if (self == NULL) {
+		return -1;
+	}
+	self->allowrootuser = value;
 	return 0;
 }
 
@@ -329,6 +349,14 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	/* verify/enforce proper user */
 	if (self->matchclientuser) {
 		if (getuid() != sconn->creds.uid) {
+			russ_sconn_fatal(sconn, RUSS_MSG_BADUSER, RUSS_EXIT_FAILURE);
+			goto cleanup;
+		}
+	}
+
+	/* verify/enforce root user */
+	if (!self->allowrootuser) {
+		if (getuid() == 0) {
 			russ_sconn_fatal(sconn, RUSS_MSG_BADUSER, RUSS_EXIT_FAILURE);
 			goto cleanup;
 		}

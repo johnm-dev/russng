@@ -218,6 +218,7 @@ struct russ_svr {
 	int			closeonaccept;
 	russ_accepthandler	accepthandler;
 	int			accepttimeout;
+	int			allowrootuser;
 	russ_answerhandler	answerhandler;
 	int			awaittimeout;
 	int			autoswitchuser;
@@ -425,6 +426,7 @@ void russ_svr_handler(struct russ_svr *, struct russ_sconn *);
 void russ_svr_loop(struct russ_svr *);
 int russ_svr_set_accepthandler(struct russ_svr *, russ_accepthandler);
 int russ_svr_set_accepttimeout(struct russ_svr *, int);
+int russ_svr_set_allowrootuser(struct russ_svr *, int);
 int russ_svr_set_answerhandler(struct russ_svr *, russ_answerhandler);
 int russ_svr_set_autoswitchuser(struct russ_svr *, int);
 int russ_svr_set_closeonaccept(struct russ_svr *, int);

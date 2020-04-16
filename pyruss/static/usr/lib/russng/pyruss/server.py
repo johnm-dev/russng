@@ -197,6 +197,11 @@ class Server:
         """
         return libruss.russ_svr_set_accepttimeout(self._ptr, value)
 
+    def set_allowrootuser(self, value):
+        """Set allowrootuser flag.
+        """
+        return libruss.russ_svr_set_allowrootuser(self._ptr, value)
+
     def set_autoswitchuser(self, value):
         """Set autoswitchuser state.
         """
