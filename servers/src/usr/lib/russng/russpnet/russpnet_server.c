@@ -50,7 +50,6 @@ struct target {
 struct targetslist {
 	struct target	targets[MAX_TARGETS];
 	int		n;
-	int		next;
 };
 
 /* global */
@@ -82,10 +81,6 @@ const char		*HELP =
 "/net/<user@host>/... <args>\n"
 "    Connect to service ... at unregistered target (i.e.,\n"
 "    user@host).\n"
-"\n"
-"/next/... <args>\n"
-"    Connect to the 'next' target selected from the targetsfile\n"
-"    list. Each call bumps to 'next' and wraps to 0 as needed.\n"
 "\n"
 "/random/... <args>\n"
 "    Connect to a randomly selected target from the targetsfile\n"
@@ -484,38 +479,6 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 }
 
 /**
-* Handler for the /next service.
-*
-* Depends on the a "next" counter which determines the next target
-* id to use.
-*
-* Convert:
-*	next/... -> <relay_addr>/<userhost>/...
-* where userhost is selected using a 'next' counter.
-*
-* @param sess		session object
-*/
-void
-svc_next_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = NULL;
-	struct russ_req		*req = NULL;
-	char			new_spath[RUSS_REQ_SPATH_MAX];
-	int			idx, n;
-
-	sconn = sess->sconn;
-	req = sess->req;
-
-	idx = targetslist.next;
-	if (russ_snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[6])) < 0) {
-		russ_sconn_fatal(sconn, "error: spath is too large", RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	req->spath = russ_free(req->spath);
-	req->spath = strdup(new_spath);
-	svc_id_handler(sess);
-}
-
-/**
 * Handler for the /random service.
 *
 * Select a target id at random.
@@ -599,11 +562,7 @@ struct russ_sconn *
 accepthandler(russ_deadline deadline, int lisd) {
 	struct russ_sconn	*sconn = NULL;
 
-	if ((sconn = russ_sconn_accept(deadline, lisd)) != NULL) {
-		targetslist.next = (targetslist.next+1 >= targetslist.n) ? 0 : targetslist.next+1;
-		random(); /* tickle */
-	}
-	return sconn;
+	return russ_sconn_accept(deadline, lisd);
 }
 
 /**
@@ -649,7 +608,6 @@ load_targetsfile(char *filename) {
 		targetslist.targets[i].cgroup = russ_str_replace_char(p, '/', ':');
 		targetslist.n++;
 	}
-	targetslist.next = -1;
 	return 0;
 }
 
@@ -728,9 +686,6 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 
-		|| ((node = russ_svcnode_add(svr->root, "next", svc_next_handler)) == NULL)
-		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 		|| ((node = russ_svcnode_add(svr->root, "random", svc_random_handler)) == NULL)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
