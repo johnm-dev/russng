@@ -299,13 +299,10 @@ execute(struct russ_sess *sess, char *cwd, char *username, char *home, char *cmd
 	sconn = sess->sconn;
 	req = sess->req;
 
-	/* change uid/gid ASAP */
-	/* TODO: this may have to move to support job service */
-	if ((russ_switch_userinitgroups(sconn->creds.uid, sconn->creds.gid) < 0)
-		|| (russ_env_reset() < 0)
+	/* paranoid: expect autoswitchuser, but verify */
+	if ((getuid() != sconn->creds.uid)
 		|| (setup_by_pam(pam_confname, username) < 0)
-		|| (russ_env_update(envp) < 0)
-		|| (chdir("/") < 0)) {
+		|| (russ_env_update(envp) < 0)) {
 		russ_sconn_fatal(sconn, "error: cannot set up", RUSS_EXIT_FAILURE);
 		return;
 	}
@@ -531,7 +528,8 @@ main(int argc, char **argv) {
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
-		|| (russ_svr_set_autoswitchuser(svr, 0) < 0)
+		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
+		|| (russ_svr_set_matchclientuser(svr, 1) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)
 
 		|| ((node = russ_svcnode_add(svr->root, "cgroup", svc_cgroup_handler)) == NULL)
