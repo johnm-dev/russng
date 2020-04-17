@@ -407,7 +407,6 @@ russ_start(int starttype, int argc, char **argv) {
 	char			*main_cwd = NULL;
 	mode_t			main_file_mode;
 	char			*main_file_user = NULL, *main_file_group = NULL;
-	int			main_hide_conf;
 	char			*main_mkdirs = NULL;
 	int			main_mkdirs_mode;
 	int			main_pgid;
@@ -503,7 +502,6 @@ russ_start(int starttype, int argc, char **argv) {
 		? russ_user2uid(main_user) : getuid();
 	gid = (main_group = russ_conf_get(conf, "main", "group", NULL)) \
 		? russ_group2gid(main_group) : getgid();
-	main_hide_conf = russ_conf_getint(conf, "main", "hide_conf", 0);
 	main_mkdirs = russ_conf_get(conf, "main", "mkdirs", NULL);
 	main_mkdirs_mode = russ_conf_getsint(conf, "main", "mkdirs_mode", 0755);
 
@@ -632,7 +630,7 @@ russ_start(int starttype, int argc, char **argv) {
 		}
 		largc++;
 	}
-	execv(largv[0], main_hide_conf ? argv : largv);
+	execv(largv[0], largv);
 
 fail:
 	/* should not get here */
