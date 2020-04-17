@@ -82,10 +82,6 @@ const char		*HELP =
 "    Connect to service ... at unregistered target (i.e.,\n"
 "    user@host).\n"
 "\n"
-"/random/... <args>\n"
-"    Connect to a randomly selected target from the targetsfile\n"
-"    list.\n"
-"\n"
 "/run/<index>/<method> <args>\n"
 "    Run exec-based service, where <method> corresponds to what is\n"
 "    provided by the exec server (e.g., noshell, shell, login), at\n"
@@ -479,37 +475,6 @@ svc_net_userhost_other_handler(struct russ_sess *sess) {
 }
 
 /**
-* Handler for the /random service.
-*
-* Select a target id at random.
-*
-* Convert:
-*	random/... -> <relay_addr>/<userhost>/...
-* where userhost is selected at random from the list of targets.
-*
-* @param sess		session object
-*/
-void
-svc_random_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = NULL;
-	struct russ_req		*req = NULL;
-	char			new_spath[RUSS_REQ_SPATH_MAX];
-	int			idx, n;
-
-	sconn = sess->sconn;
-	req = sess->req;
-
-	idx = (random()/(double)RAND_MAX)*targetslist.n;
-	if (russ_snprintf(new_spath, sizeof(new_spath), "/id/%d/%s", idx, &(req->spath[8])) < 0) {
-		russ_sconn_fatal(sconn, "error: spath is too large", RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	req->spath = russ_free(req->spath);
-	req->spath = strdup(new_spath);
-	svc_id_handler(sess);
-}
-
-/**
 * Handler for the /run/<index>/... service.
 *
 * ... is expected to be supported by the +/exec server, e.g., an exec method.
@@ -624,7 +589,6 @@ main(int argc, char **argv) {
 
 	signal(SIGPIPE, SIG_IGN);
 
-	srandom(time(NULL));
 	targetslist.n = 0;
 
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
@@ -676,10 +640,6 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| ((node = russ_svcnode_add(node, "*", svc_net_userhost_other_handler)) == NULL)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| (russ_svcnode_set_virtual(node, 1) < 0)
-		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
-
-		|| ((node = russ_svcnode_add(svr->root, "random", svc_random_handler)) == NULL)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)
 		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 
