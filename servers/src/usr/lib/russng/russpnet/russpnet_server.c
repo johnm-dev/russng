@@ -65,8 +65,6 @@ const char		*HELP =
 "/count\n"
 "    Output the number of targets registered.\n"
 "\n"
-"/first/... <args>\n"
-"\n"
 "/host/<user@host>/... <args>\n"
 "    Connect to service ... at target (i.e., user@host) verified\n"
 "    by a lookup into the targetsfile list. Only available if a\n"
@@ -145,27 +143,6 @@ svc_count_handler(struct russ_sess *sess) {
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		exit(0);
 	}
-}
-
-/**
-* Handler for the /first service.
-*
-* Convert:
-*	first/... -> <relay_addr>/<userhost>/...
-* where <userhost> is select because it answers.
-*
-* @param sess		session object
-*/
-void
-svc_first_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = NULL;
-	struct russ_req		*req = NULL;
-
-	sconn = sess->sconn;
-	req = sess->req;
-
-	/* NIY */
-	exit(1);
 }
 
 void
@@ -615,9 +592,6 @@ main(int argc, char **argv) {
 		|| (russ_svr_set_help(svr, HELP) < 0)
 
 		|| ((node = russ_svcnode_add(svr->root, "count", svc_count_handler)) == NULL)
-//		|| ((node = russ_svcnode_add(svr->root, "first", svc_first_handler)) == NULL)
-//		|| (russ_svcnode_set_virtual(node, 1) < 0)
-//		|| (russ_svcnode_set_autoanswer(node, 0) < 0)
 
 		|| ((node = russ_svcnode_add(svr->root, "host", svc_host_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_host_userhost_handler)) == NULL)
