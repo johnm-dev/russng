@@ -558,13 +558,6 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 	russ_sconn_redialandsplice(sconn, russ_to_deadline(DEFAULT_DIAL_TIMEOUT), req);
 }
 
-struct russ_sconn *
-accepthandler(russ_deadline deadline, int lisd) {
-	struct russ_sconn	*sconn = NULL;
-
-	return russ_sconn_accept(deadline, lisd);
-}
-
 /**
 * Load targets list from file.
 *
@@ -653,8 +646,8 @@ main(int argc, char **argv) {
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
-		|| (russ_svr_set_autoswitchuser(svr, 0) < 0)
-		|| (russ_svr_set_accepthandler(svr, accepthandler) < 0)
+		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
+		|| (russ_svr_set_matchclientuser(svr, 1) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)
 
 		|| ((node = russ_svcnode_add(svr->root, "count", svc_count_handler)) == NULL)
