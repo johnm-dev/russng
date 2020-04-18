@@ -63,6 +63,7 @@ struct russ_conf *russ_conf_free(struct russ_conf *);
 char *russ_conf_get(struct russ_conf *, const char *, const char *, const char *);
 long russ_conf_getint(struct russ_conf *, const char *, const char *, long);
 double russ_conf_getfloat(struct russ_conf *, const char *, const char *, double);
+char *russ_conf_getref(struct russ_conf *, const char *, const char *);
 long russ_conf_getsint(struct russ_conf *, const char *, const char *, long);
 int russ_conf_has_option(struct russ_conf *, const char *, const char *);
 int russ_conf_has_section(struct russ_conf *, const char *);

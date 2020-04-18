@@ -709,6 +709,25 @@ russ_conf_getfloat(struct russ_conf *self, const char *section_name, const char 
 }
 
 /**
+* Get reference to item value for section name and option. The
+* returned value should *not* be freed.
+*
+* @param self		russ_conf object
+* @param secname	section name
+* @param option		option name
+* @return		refernce to item value; or NULL if not found.
+*/
+char *
+russ_conf_getref(struct russ_conf *self, const char *secname, const char *option) {
+	struct russ_confitem	*item = NULL;
+
+	if ((item = __russ_conf_get_item(self, secname, option)) == NULL) {
+		return NULL;
+	}
+	return item->value;
+}
+
+/**
 * Get item value as long-size integer for section name and option or
 * default value if not found. Option value determines integer type:
 * 0-prefix is octal, 0x-prefix is hex, otherwise integer.
