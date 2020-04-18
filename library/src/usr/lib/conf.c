@@ -992,6 +992,46 @@ russ_conf_update(struct russ_conf *self, struct russ_conf *other) {
 }
 
 /**
+* Update russ_conf section contents from an existing russ_conf section.
+*
+* @param self		russ_conf object
+* @param ssecname	self section name
+* @param other		russ_conf object from which to get items
+* @param osecname	other section name
+* @return		0 on success; -1 on failure
+*/
+int
+russ_conf_update_section(struct russ_conf *self, char *ssecname, struct russ_conf *other, char *osecname) {
+	struct russ_confsection	*osection = NULL, *ssection = NULL;
+	struct russ_confitem	*item = NULL;
+	int			i, pos;
+
+	if ((self == other) && (strcmp(ssecname, osecname) == 0)) {
+		/* source and destination */
+		return 0;
+	}
+
+	if ((osection = __russ_conf_find_section(other, osecname)) == NULL) {
+		/* no section at source */
+		return 0;
+	}
+
+	if (((pos = __russ_conf_find_section_pos(self, ssecname)) < 0)
+		&& ((pos = russ_conf_add_section(self, ssecname)) < 0)) {
+		return -1;
+	}
+	ssection = self->sections[pos];
+
+	for (i = 0; i < osection->len; i++) {
+		item = osection->items[i];
+		if (__russ_confsection_set(ssection, item->option, item->value) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+/**
 * Write russ_conf contents to file. Can be read using russ_conf_read().
 *
 * @param self		russ_conf object

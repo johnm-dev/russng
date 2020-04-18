@@ -79,6 +79,7 @@ char **russ_conf_sections(struct russ_conf *);
 int russ_conf_set(struct russ_conf *, const char *, const char *, const char *);
 int russ_conf_set2(struct russ_conf *, const char *, const char *, const char *);
 int russ_conf_update(struct russ_conf *, struct russ_conf *);
+int russ_conf_update_section(struct russ_conf *, char *, struct russ_conf *, char *);
 int russ_conf_write(struct russ_conf *, char *);
 int russ_conf_writefd(struct russ_conf *, int);
 
