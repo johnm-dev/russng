@@ -971,19 +971,25 @@ russ_conf_set2(struct russ_conf *self, const char *section_name, const char *opt
 */
 int
 russ_conf_update(struct russ_conf *self, struct russ_conf *other) {
-	struct russ_confsection	*section = NULL;
+	struct russ_confsection	*osection = NULL, *ssection = NULL;
 	struct russ_confitem	*item = NULL;
-	int			i, j;
+	int			i, j, pos;
 
 	if (self == other) {
 		return 0;
 	}
 
 	for (i = 0; i < other->len; i++) {
-		section = other->sections[i];
-		for (j = 0; j < section->len; j++) {
-			item = section->items[j];
-			if (russ_conf_set2(self, section->name, item->option, item->value) < 0) {
+		osection = other->sections[i];
+		if (((pos = __russ_conf_find_section_pos(self, osection->name)) < 0)
+			&& ((pos = russ_conf_add_section(self, osection->name)) < 0)) {
+			return -1;
+		}
+		ssection = self->sections[pos];
+
+		for (j = 0; j < osection->len; j++) {
+			item = osection->items[j];
+			if (__russ_confsection_set(ssection, item->option, item->value) < 0) {
 				return -1;
 			}
 		}
