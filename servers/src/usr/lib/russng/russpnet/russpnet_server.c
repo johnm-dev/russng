@@ -54,6 +54,7 @@ struct targetslist {
 
 /* global */
 struct russ_conf	*conf = NULL;
+struct russ_conf	*targetsconf = NULL;
 char			*targetsfilename = NULL;
 struct targetslist	targetslist;
 char			fqlocalhostname[1024] = "";
@@ -521,10 +522,16 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 /**
 * Load targets list from file.
 *
-* * target information is copied to a target-specific russ_conf
+* Both targetsconf and targetslist are set up.
+*
+* targetlist:
 * * targetslist.targetconfs holds all target conf info
-* * each targetconf has a section named "target"
+* * each targetconf has a single section named "target"
 * * each target holds: id, userhost, cgroup
+* 
+* targetsconf:
+* * all targets have info like targetlist
+* * there is a "target.<idx>" section for each target
 *
 * @param filename	targets filename
 * @return		0 on success; -1 on failure
@@ -536,6 +543,7 @@ load_targetsfile(char *filename) {
 	size_t			line_size;
 	ssize_t			nbytes;
 	char			targetid[128];
+	char			secname[128];
 	char			*line = NULL, *p = NULL;
 	int			i;
 
@@ -573,14 +581,27 @@ load_targetsfile(char *filename) {
 			}
 		}
 
-		/* add target conf */
-		if ((russ_snprintf(targetid, sizeof(targetid), "%d", i) < 0)
+		/* add target conf
+		*
+		* note: updating a targetsconf section from a targetconf
+		* is more efficient than updating targetsconf for each item.
+		*/
+		if ((russ_snprintf(secname, sizeof(secname), "target.%d", i) < 0)
+			|| (russ_snprintf(targetid, sizeof(targetid), "%d", i) < 0)
 			|| ((targetconf = russ_conf_new()) == NULL)) {
 			return -1;
 		}
-		russ_conf_set2(targetconf, "target", "id", targetid);
-		russ_conf_set2(targetconf, "target", "userhost", line);
-		russ_conf_set2(targetconf, "target", "cgroup", p);
+		if ((russ_conf_set2(targetconf, "target", "id", targetid) < 0)
+			|| (russ_conf_set2(targetconf, "target", "userhost", line) < 0)
+			|| (russ_conf_set2(targetconf, "target", "cgroup", p) < 0)
+			|| (russ_conf_update_section(targetsconf, secname, targetconf, "target") < 0)) {
+			return -1;
+		}
+		targetslist.targetconfs[i] = targetconf;
+		targetslist.n++;
+	}
+	return 0;
+}
 		targetslist.targetconfs[i] = targetconf;
 		targetslist.n++;
 	}
@@ -607,8 +628,6 @@ main(int argc, char **argv) {
 
 	signal(SIGPIPE, SIG_IGN);
 
-	targetslist.n = 0;
-
 	if ((argc == 2) && (strcmp(argv[1], "-h") == 0)) {
 		print_usage(argv);
 		exit(0);
@@ -616,6 +635,9 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot configure\n");
 		exit(1);
 	}
+
+	targetslist.n = 0;
+	targetsconf = russ_conf_new();
 
 	if (((targetsfilename = russ_conf_get(conf, "targets", "filename", NULL)) == NULL)
 		|| (load_targetsfile(targetsfilename) < 0)) {
