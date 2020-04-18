@@ -548,9 +548,38 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 }
 
 /**
-* Load targets list from file.
+* Copy targetsconf info to targetslist.targetconfs.
 *
-* Both targetsconf and targetslist are set up.
+* @return       0 on success; -1 on failure
+*/
+int
+load_targetslist(void) {
+    struct russ_conf    *targetconf = NULL;
+    char            secname[128];
+    int         i;
+
+    targetslist.n = 0;
+
+    for (i = 0; i < MAX_TARGETS; i++) {
+        if ((russ_snprintf(secname, sizeof(secname), "target.%d", i) < 0)
+            || ((targetconf = russ_conf_new()) == NULL)
+            || (russ_conf_update_section(targetconf, "target", targetsconf, secname) < 0)) {
+            targetconf = russ_free(targetconf);
+            return -1;
+        }
+        if (!russ_conf_has_option(targetconf, "target", "id")) {
+            targetconf = russ_free(targetconf);
+            break;
+        }
+        targetslist.targetconfs[i] = targetconf;
+        targetslist.n++;
+
+    }
+    return 0;
+}
+
+/**
+* Load conf-style targetsfile.
 *
 * targetlist:
 * * targetslist.targetconfs holds all target conf info
@@ -566,6 +595,25 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 */
 int
 load_targetsfile(char *filename) {
+	if ((russ_conf_read(targetsconf, filename) < 0)
+		|| (load_targetslist() < 0)) {
+		return -1;
+	}
+	return 0;
+}
+
+/**
+* Load legacy format targets list from file.
+*
+* Both targetsconf and targetslist are set up.
+*
+* See load_targetsfile().
+*
+* @param filename	targets filename
+* @return		0 on success; -1 on failure
+*/
+int
+load_targetsfile_legacy(char *filename) {
 	struct russ_conf	*targetconf = NULL;
 	FILE			*f = NULL;
 	size_t			line_size;
@@ -639,7 +687,8 @@ print_usage(char **argv) {
 "Routes connections over the network to a fixed set of targets\n"
 "identified by index or hostname.\n"
 "\n"
-"Targets file is set in targets:filename configuration.\n"
+"The targets file is set in the newtargets:filename configuration\n"
+"setting or the targets:filename setting for legacy target files.\n"
 );
 }
 
@@ -662,11 +711,23 @@ main(int argc, char **argv) {
 	targetslist.n = 0;
 	targetsconf = russ_conf_new();
 
-	if (((targetsfilename = russ_conf_get(conf, "targets", "filename", NULL)) == NULL)
-		|| (load_targetsfile(targetsfilename) < 0)) {
-		fprintf(stderr, "error: missing or bad targets file\n");
+	if (russ_conf_has_option(conf, "newtargets", "filename")) {
+		if (((targetsfilename = russ_conf_get(conf, "newtargets", "filename", NULL)) == NULL)
+			|| (load_targetsfile(targetsfilename) < 0)) {
+			fprintf(stderr, "error: missing or bad targets file\n");
+			exit(1);
+		}
+	} else if (russ_conf_has_option(conf, "targets", "filename")) {
+		if (((targetsfilename = russ_conf_get(conf, "targets", "filename", NULL)) == NULL)
+			|| (load_targetsfile_legacy(targetsfilename) < 0)) {
+			fprintf(stderr, "error: missing or bad targets file\n");
+			exit(1);
+		}
+	} else {
+		fprintf(stderr, "error: targets filename not found\n");
 		exit(1);
 	}
+
 	if (russ_conf_getint(conf, "targets", "fastlocalhost", 0) == 1) {
 		set_fqlocalhostname();
 	}
