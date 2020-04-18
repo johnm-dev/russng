@@ -66,6 +66,9 @@ const char		*HELP =
 "/count\n"
 "    Output the number of targets registered.\n"
 "\n"
+"/gettargets\n"
+"    Get the targets file information (configuration file format).\n"
+"\n"
 "/host/<user@host>/... <args>\n"
 "    Connect to service ... at target (i.e., user@host) verified\n"
 "    by a lookup into the targetsfile list. Only available if a\n"
@@ -142,6 +145,31 @@ svc_count_handler(struct russ_sess *sess) {
 	if (req->opnum == RUSS_OPNUM_EXECUTE) {
 		russ_dprintf(sconn->fds[1], "%d", targetslist.n);
 		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
+}
+
+/**
+* Handler for the /gettargets service.
+*
+* Output the targets configuration.
+*
+* @param sess		session object
+*/
+void
+svc_gettargets_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+
+	sconn = sess->sconn;
+	req = sess->req;
+
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		if (russ_conf_writefd(targetsconf, sconn->fds[1]) < 0) {
+			russ_sconn_fatal(sconn, "error: failed do output targets info", RUSS_EXIT_FAILURE);
+		} else {
+			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		}
 		exit(0);
 	}
 }
@@ -602,11 +630,6 @@ load_targetsfile(char *filename) {
 	}
 	return 0;
 }
-		targetslist.targetconfs[i] = targetconf;
-		targetslist.n++;
-	}
-	return 0;
-}
 
 void
 print_usage(char **argv) {
@@ -655,6 +678,7 @@ main(int argc, char **argv) {
 		|| (russ_svr_set_help(svr, HELP) < 0)
 
 		|| ((node = russ_svcnode_add(svr->root, "count", svc_count_handler)) == NULL)
+		|| ((node = russ_svcnode_add(svr->root, "gettargets", svc_gettargets_handler)) == NULL)
 
 		|| ((node = russ_svcnode_add(svr->root, "host", svc_host_handler)) == NULL)
 		|| ((node = russ_svcnode_add(node, "*", svc_host_userhost_handler)) == NULL)
