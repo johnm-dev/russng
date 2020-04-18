@@ -48,8 +48,8 @@ struct target {
 };
 
 struct targetslist {
-	struct target	targets[MAX_TARGETS];
-	int		n;
+	struct russ_conf	*targetconfs[MAX_TARGETS];
+	int			n;
 };
 
 /* global */
@@ -149,6 +149,8 @@ void
 svc_host_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
+	struct russ_conf	*targetconf = NULL;
+	char			*ref;
 	int			i;
 
 	sconn = sess->sconn;
@@ -159,7 +161,11 @@ svc_host_handler(struct russ_sess *sess) {
 			russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		} else {
 			for (i = 0; i < targetslist.n; i++) {
-				russ_dprintf(sconn->fds[1], "%s\n", targetslist.targets[i].userhost);
+				if (((targetconf = targetslist.targetconfs[i]) == NULL)
+					|| ((ref = russ_conf_getref(targetconf, "target", "userhost")) == NULL)) {
+					continue;
+				}
+				russ_dprintf(sconn->fds[1], "%s\n", ref);
 			}
 			russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
 		}
@@ -177,12 +183,18 @@ get_userhost(char *spath) {
 
 char *
 get_valid_userhost(char *spath) {
-	char	*userhost = NULL;
-	int	i;
+	struct russ_conf	*targetconf = NULL;
+	char			*ref = NULL;
+	char			*userhost = NULL;
+	int			i;
 
 	if ((userhost = get_userhost(spath)) != NULL) {
 		for (i = 0; i < targetslist.n; i++) {
-			if (strcmp(userhost, targetslist.targets[i].userhost) == 0) {
+			if (((targetconf = targetslist.targetconfs[i]) == NULL)
+				|| ((ref = russ_conf_getref(targetconf, "target", "userhost")) == NULL)) {
+				continue;
+			}
+			if (strcmp(userhost, ref) == 0) {
 				return userhost;
 			}
 		}
@@ -343,6 +355,7 @@ void
 svc_id_index_other_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
+	struct russ_conf	*targetconf = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	char			*relay_addr = NULL, *tail = NULL, *userhost = NULL;
 	int			i, idx, n, oidx, wrap = 0;
@@ -358,7 +371,8 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	/* set up new spath */
 	tail = strchr(req->spath+1, '/');
 	tail = strchr(tail+1, '/')+1;
-	userhost = targetslist.targets[idx].userhost;
+	targetconf = targetslist.targetconfs[idx];
+	userhost = russ_conf_get(targetconf, "target", "userhost", NULL);
 	if ((index(userhost, '@') == NULL) && (is_localhost(userhost))) {
 		if (russ_snprintf(new_spath, sizeof(new_spath), "%s", tail) < 0) {
 			russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
@@ -465,6 +479,7 @@ void
 svc_run_index_other_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
+	struct russ_conf	*targetconf = NULL;
 	char			new_spath[RUSS_REQ_SPATH_MAX];
 	char			*relay_addr = NULL, *tail = NULL;
 	char			*userhost = NULL, *cgname = NULL, *exec_spath = NULL;
@@ -483,8 +498,11 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 	tail = strchr(tail+1, '/')+1;
 	relay_addr = russ_conf_get(conf, "net", "relay_addr", DEFAULT_RELAY_ADDR);
 	exec_spath = "+/exec";
-	userhost = targetslist.targets[idx].userhost;
-	cgname = targetslist.targets[idx].cgroup;
+	targetconf = targetslist.targetconfs[idx];
+	userhost = russ_conf_get(targetconf, "target", "userhost", NULL);
+	cgname = russ_conf_get(targetconf, "target", "cgroup", NULL);
+	russ_str_replace_char(cgname, '/', ':');
+
 	if ((cgname == NULL) || (strcmp(cgname, "") == 0)) {
 		n = russ_snprintf(new_spath, sizeof(new_spath), "%s/%s/%s/%s", relay_addr, userhost, exec_spath, tail);
 	} else {
@@ -503,21 +521,36 @@ svc_run_index_other_handler(struct russ_sess *sess) {
 /**
 * Load targets list from file.
 *
+* * target information is copied to a target-specific russ_conf
+* * targetslist.targetconfs holds all target conf info
+* * each targetconf has a section named "target"
+* * each target holds: id, userhost, cgroup
+*
 * @param filename	targets filename
 * @return		0 on success; -1 on failure
 */
 int
 load_targetsfile(char *filename) {
-	FILE	*f = NULL;
-	size_t	line_size;
-	ssize_t	nbytes;
-	char	*line = NULL, *p = NULL;
-	int	i;
+	struct russ_conf	*targetconf = NULL;
+	FILE			*f = NULL;
+	size_t			line_size;
+	ssize_t			nbytes;
+	char			targetid[128];
+	char			*line = NULL, *p = NULL;
+	int			i;
 
 	if ((f = fopen(filename, "r")) == NULL) {
 		return -1;
 	}
-	for (i = 0, targetslist.n = 0; i < MAX_TARGETS; i++) {
+
+	/* initialize */
+	targetslist.n = 0;
+	for (i = 0; i < MAX_TARGETS; i++) {
+		targetslist.targetconfs[i] = NULL;
+	}
+
+	/* set */
+	for (i = 0; i < MAX_TARGETS; i++) {
 		line = NULL;
 		if ((nbytes = getline(&line, &line_size, f)) < 0) {
 			break;
@@ -539,8 +572,16 @@ load_targetsfile(char *filename) {
 				return -1;
 			}
 		}
-		targetslist.targets[i].userhost = line;
-		targetslist.targets[i].cgroup = russ_str_replace_char(p, '/', ':');
+
+		/* add target conf */
+		if ((russ_snprintf(targetid, sizeof(targetid), "%d", i) < 0)
+			|| ((targetconf = russ_conf_new()) == NULL)) {
+			return -1;
+		}
+		russ_conf_set2(targetconf, "target", "id", targetid);
+		russ_conf_set2(targetconf, "target", "userhost", line);
+		russ_conf_set2(targetconf, "target", "cgroup", p);
+		targetslist.targetconfs[i] = targetconf;
 		targetslist.n++;
 	}
 	return 0;
