@@ -402,6 +402,7 @@ russ_start(int starttype, int argc, char **argv) {
 	int			lisd;
 	int			largc;
 	char			**largv = NULL;
+	char			*filename;
 	char			*main_launcher = NULL, **main_launcher_items = NULL;
 	char			*main_path = NULL, *main_addr = NULL;
 	char			*main_cwd = NULL;
@@ -415,14 +416,9 @@ russ_start(int starttype, int argc, char **argv) {
 	char			buf[128], tmparg[128];
 	uid_t			file_uid, uid;
 	gid_t			file_gid, gid;
+	int			conffd;
 	int			i, pos;
 
-	/* get local copy of args */
-	largc = argc;
-	if ((largv = russ_sarray0_dup(argv, largc+1)) == NULL) {
-		fprintf(stderr, "error: cannot duplicate argument list\n");
-		return NULL;
-	}
 	/* load conf */
 	if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
 		fprintf(stderr, "error: cannot load configuration.\n");
@@ -479,12 +475,10 @@ russ_start(int starttype, int argc, char **argv) {
 				goto fail;
 			}
 
-			if ((russ_snprintf(tmparg, sizeof(tmparg), "main:addr=%s", main_addr) < 0)
-				|| (russ_sarray0_append(&largv, "-c", tmparg, NULL) < 0)) {
+			if (russ_conf_set2(conf, "main", "addr", main_addr) < 0) {
 				remove(main_addr);
 				goto fail;
 			}
-			largc = russ_sarray0_count(largv, 128);
 		}
 	}
 
@@ -612,24 +606,40 @@ russ_start(int starttype, int argc, char **argv) {
 
 	/* RUSS_STARTTYPE_SPAWN child or RUSS_STARTTYPE_START */
 
-	/* pass listening socket description as config arguments */
-	russ_snprintf(buf, sizeof(buf), "main:sd=%d", lisd);
-	pos = russ_sarray0_find(largv, "--");
-	pos = (pos < 0) ? largc : pos;
-	russ_sarray0_insert(&largv, pos, "-c", buf, NULL);
-	largc += 2;
+	russ_snprintf(buf, sizeof(buf), "%d", lisd);
+	russ_conf_set2(conf, "main", "sd", buf);
 
-	/* exec server itself */
-	largv[0] = russ_free(largv[0]);
-	largv[0] = strdup(main_path);
-
-	if (main_launcher) {
-		if (russ_sarray0_insert(&largv, 0, main_launcher, NULL) < 0) {
-			fprintf(stderr, "error: out of memory\n");
-			return NULL;
-		}
-		largc++;
+	if ((filename = russ_mkstemp(NULL)) == NULL) {
+		goto fail;
 	}
+	if ((russ_conf_write(conf, filename) < 0)
+		|| ((conffd = open(filename, O_RDONLY)) < 0)) {
+		remove(filename);
+		goto fail;
+	}
+	remove(filename);
+
+	largc = 0;
+	largv = russ_sarray0_new(0, NULL);
+	if (main_launcher) {
+		if (russ_sarray0_append(&largv, main_launcher, NULL) < 0) {
+			goto fail;
+		}
+	}
+	if ((russ_sarray0_append(&largv, main_path, NULL) < 0)
+		|| (russ_snprintf(buf, sizeof(buf), "%d", conffd) < 0)
+		|| (russ_sarray0_append(&largv, "--fd", buf, NULL) < 0)) {
+		goto fail;
+	}
+
+	/* append from argv */
+	for (i = 1; i < argc; i++) {
+		if (russ_sarray0_append(&largv, argv[i], NULL) < 0) {
+			goto fail;
+		}
+	}
+	largc = russ_sarray0_count(largv, 128);
+
 	execv(largv[0], largv);
 
 fail:
