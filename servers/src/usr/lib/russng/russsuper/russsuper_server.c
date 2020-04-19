@@ -129,25 +129,29 @@ put_pid(char *path, int pid) {
 */
 int
 start_server(char *svrname) {
-	char	lockpath[PATH_MAX], pidpath[PATH_MAX], sockpath[PATH_MAX];
-	char	*conffile = NULL, *execfile = NULL;
-	char	serveraddr[PATH_MAX], serverpath[PATH_MAX];
-	int	pid, wpid;
-	int	wst;
+	struct russ_conf	*sconf = NULL;
+	char			*conffileref = NULL, *execfileref = NULL;
+	char			lockpath[PATH_MAX], pidpath[PATH_MAX], sockpath[PATH_MAX];
+	int			pid, wpid;
+	int			wst;
 
 	// TODO: add checks to sprintf calls to prevent short printfs
 	if ((sprintf(lockpath, "%s/.lock.%s", trackdir, svrname+1) < 0)
 		|| (sprintf(pidpath, "%s/.pid.%s", trackdir, svrname+1) < 0)
-		|| (sprintf(sockpath, "%s/%s", trackdir, svrname+1) < 0)
-		|| (sprintf(serveraddr, "main:addr=%s", sockpath) < 0)) {
-		return -1;
-	}
-	if (((execfile = russ_conf_get(conf, svrname, "execfile", NULL)) != NULL)
-		&& (sprintf(serverpath, "main:path=%s", execfile) < 0)) {
+		|| (sprintf(sockpath, "%s/%s", trackdir, svrname+1) < 0)) {
 		goto error;
 	}
-	if (((conffile = russ_conf_get(conf, svrname, "conffile", NULL)) == NULL)
-		|| ((lock_file(lockpath, 100, 10000) < 0))) {		
+
+	if (((sconf = russ_conf_new()) == NULL)
+		|| ((conffileref = russ_conf_getref(conf, svrname, "conffile")) == NULL)
+		|| (russ_conf_read(sconf, conffileref) < 0)
+		|| ((execfileref = russ_conf_getref(conf, svrname, "execfile")) == NULL)
+		|| (russ_conf_set2(sconf, "main", "path", execfileref) < 0)
+		|| (russ_conf_set2(sconf, "main", "addr", sockpath) < 0)) {
+		goto error;
+	}
+
+	if (lock_file(lockpath, 100, 10000) < 0) {
 		/* TODO: should svrname section be removed/disabled since it is invalid? */
 		goto error;
 	}
@@ -158,10 +162,7 @@ start_server(char *svrname) {
 		signal(SIGHUP, SIG_IGN);
 		if (fork() == 0) {
 			put_pid(pidpath, getpid());
-			russ_startl(RUSS_STARTTYPE_START, "", serverpath,
-				"-f", conffile,
-				"-c", serveraddr,
-				(char *)NULL);
+			russ_start(RUSS_STARTTYPE_START, sconf);
 			exit(1);
 		}
 		exit(0);
@@ -173,15 +174,14 @@ start_server(char *svrname) {
 	if (unlock_file(lockpath) < 0) {
 		/* unexpected */
 	}
-	execfile = russ_free(execfile);
-	conffile = russ_free(conffile);
 	return 0;
 
 unlock_and_error:
 	unlock_file(lockpath);
 error:
-	execfile = russ_free(execfile);
-	conffile = russ_free(conffile);
+	if (sconf) {
+		sconf = russ_conf_free(sconf);
+	}
 	return -1;
 }
 
