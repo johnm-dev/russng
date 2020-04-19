@@ -249,7 +249,7 @@ def cleanup():
 
 def get_target_count(pnet_addr):
     try:
-        t = pyruss.execv_wait_inouterr_timeout(10000, "%s/count" % pnet_addr)
+        t = pyruss.dialv_wait_inouterr_timeout(10000, "execute", "%s/count" % pnet_addr)
         if t[0:2] != (0, 0):
             raise Exception()
         count = int(t[2])
@@ -285,7 +285,7 @@ def get_target_ids(targetcount, targetspec):
 
 def gettargets(pnet_addr):
     try:
-        t = pyruss.execv_wait_inouterr_timeout(10000, "%s/gettargets" % pnet_addr)
+        t = pyruss.dialv_wait_inouterr_timeout(10000, "execute", "%s/gettargets" % pnet_addr)
         if t[0:2] != (0, 0):
             raise Exception()
         return t[2]
