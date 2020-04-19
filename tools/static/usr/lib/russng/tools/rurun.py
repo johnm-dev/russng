@@ -282,6 +282,16 @@ def get_target_ids(targetcount, targetspec):
         targetranges.append(range(a, b, c))
     return targetranges
 
+def gettargets(pnet_addr):
+    try:
+        t = pyruss.execv_wait_inouterr_timeout(10000, "%s/gettargets" % pnet_addr)
+        if t[0:2] != (0, 0):
+            raise Exception()
+        return t[2]
+    except:
+        #traceback.print_exc()
+        raise Exception("cannot get targets")
+
 def spawn_pnet_server(targetsfile):
     global pnet_pid
 
@@ -372,6 +382,8 @@ Options:
     shell - shell with basic environment
     login - shell with login environment
     Defaults to $RURUN_EXEC_METHOD or "%(RURUN_EXEC_METHOD_DEFAULT)s".
+--gettargets
+    Show targets file information.
 -n <maxtasks>
     Set number of concurrently running tasks. Defaults to
     $RURUN_NRUNNING_MAX or "%(RURUN_NRUNNING_MAX_DEFAULT)s".
@@ -427,7 +439,8 @@ def main():
     if len(args) == 1 and args[0] in ["-h", "--help"]:
         print_usage()
         sys.exit(0)
-    elif len(args) < 2 and (args and args[0] not in ["--count"]):
+    elif len(args) < 2 and (args and args[0] not in ["--count", "--gettargets"]):
+        #traceback.print_exc()
         sys.stderr.write("error: bad/missing arguments\n")
         sys.exit(1)
 
@@ -436,6 +449,7 @@ def main():
         attrs = {}
         mpi = 0
         nrunningmax = rurun_nrunning_max
+        rurun_gettargets = False
         showcount = False
         targetspec = None
 
@@ -451,6 +465,8 @@ def main():
                 rurun_debug = "1"
             elif arg == "--exec" and args:
                 rurun_exec_method = args.pop(0)
+            elif arg == "--gettargets":
+                rurun_gettargets = True
             elif arg == "-n" and args:
                 nrunningmax = int(args.pop(0))
             elif arg == "-N" and args:
@@ -473,9 +489,10 @@ def main():
                 targetspec = arg
                 break
 
-        if None in [targetspec] and not showcount:
+        if None in [targetspec] and not (showcount or rurun_gettargets):
             raise Exception()
     except:
+        #traceback.print_exc()
         sys.stderr.write("error: bad/missing argument\n")
         sys.exit(1)
 
@@ -499,6 +516,10 @@ def main():
         sys.exit(1)
 
     try:
+        if rurun_gettargets:
+            print(gettargets(rurun_pnet_addr).decode(), end='')
+            sys.exit(0)
+
         targetcount = get_target_count(rurun_pnet_addr)
         if showcount:
             print(targetcount)
