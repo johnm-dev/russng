@@ -239,7 +239,7 @@ RURUN_EXEC_METHOD_DEFAULT = "shell"
 RURUN_NRUNNING_MAX_DEFAULT = 1
 RURUN_RELAY_DEFAULT = "sshr"
 RURUN_TARGETSFILETYPE_DEFAULT = "legacy"
-RURUN_TIMEOUT_DEFAULT = 30000
+RURUN_TIMEOUT_DEFAULT = None
 
 pnet_pid = None
 
@@ -327,12 +327,13 @@ def run_dial(taskid, ntasks, targetgid, targetid, realtargetid, targetcount, tim
     attrs["RURUN_TARGETCOUNT"] = str(targetcount)
 
     # relay i/o as it becomes available
+    connect_deadline = pyruss.to_deadline(60000)
     deadline = pyruss.to_deadline(timeout)
     infd = os.dup(0)
     if infd < 0:
         t = (-1, 0)
     else:
-        cconn = pyruss.dialv(deadline, op, spath, args=args, attrs=attrs)
+        cconn = pyruss.dialv(connect_deadline, op, spath, args=args, attrs=attrs)
         relay = pyruss.Relay()
         relay.add(infd, cconn.get_fd(0), closeonexit=True)
         relay.add(cconn.get_fd(1), 1)
@@ -422,6 +423,7 @@ def main():
 
     rurun_allconcurrent = False
     rurun_ntasks = None
+    rurun_timeout = None
     rurun_wrap = False
 
     rurun_debug = os.environ.get("RURUN_DEBUG") == "1"
@@ -439,10 +441,12 @@ def main():
     rurun_targetsfiletype = os.environ.get("RURUN_TARGETSFILETYPE", RURUN_TARGETSFILETYPE_DEFAULT)
 
     try:
-        timeout = int(os.environ.get("RURUN_TIMEOUT", RURUN_TIMEOUT_DEFAULT))
+        rurun_timeout = os.environ.get("RURUN_TIMEOUT", RURUN_TIMEOUT_DEFAULT)
+        if rurun_timeout != None:
+            rurun_timeout = int(rurun_timeout)
     except:
-        timeout = RURUN_TIMEOUT_DEFAULT
-        stderr.write('warning: falling back to RURUN_TIMEOUT of "%s"' % (timeout,))
+        rurun_timeout = RURUN_TIMEOUT_DEFAULT
+        stderr.write('warning: falling back to RURUN_TIMEOUT of "%s"' % (rurun_timeout,))
 
     args = sys.argv[1:]
     if len(args) == 1 and args[0] in ["-h", "--help"]:
@@ -489,7 +493,7 @@ def main():
             elif arg == "--shell" and args:
                 rurun_shell = args.pop(0)
             elif arg in ["-t", "--timeout"] and args:
-                rurun_timeout = args.pop(0)
+                rurun_timeout = int(args.pop(0))
             elif arg == "--targetsfile" and args:
                 rurun_targetsfile = args.pop(0)
             elif arg == "--targetsfiletype" and args:
@@ -551,6 +555,7 @@ def main():
                 "exec method (%s)" % rurun_exec_method,
                 "relay (%s)" % rurun_relay,
                 "shell (%s)" % rurun_shell,
+                "timeout (%s)" % rurun_timeout,
                 "RURUN_ENV (%s)" % environ.get("RURUN_ENV"),
                 "RUMPIRUN_ENV (%s)" % environ.get("RUMPIRUN_ENV"),
                 "-----",
@@ -595,6 +600,7 @@ def main():
 
         procs = []
         taskid = 0
+        timeout = rurun_timeout == None and pyruss.to_timeout(pyruss.RUSS_DEADLINE_NEVER) or rurun_timeout
         for taskid, (targetgid, targetid) in enumerate(targetpairs):
             #print("targetid (%s) targetids (%s)" % (targetid, targetids))
             exec_method = rurun_exec_method == "noshell" and "simple" or rurun_exec_method
