@@ -42,8 +42,9 @@
 */
 static void
 ruspawn(int argc, char **argv) {
-	char	*p, *startstr;
-	int	withpids = 0;
+	struct russ_conf	*conf;
+	char			*p, *startstr;
+	int			withpids = 0;
 
 	/* special handling of --withpids */
 	if (strcmp(argv[1], "--withpids") == 0) {
@@ -52,7 +53,13 @@ ruspawn(int argc, char **argv) {
 		argc--;
 	}
 
-	if ((startstr = russ_start(RUSS_STARTTYPE_SPAWN, argc, argv)) == NULL) {
+	/* load conf */
+	if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
+		fprintf(stderr, "error: cannot load configuration.\n");
+		exit(1);
+	}
+
+	if ((startstr = russ_start(RUSS_STARTTYPE_SPAWN, conf)) == NULL) {
 		fprintf(stderr, "error: cannot spawn server\n");
 		exit(1);
 	}
@@ -77,8 +84,16 @@ ruspawn(int argc, char **argv) {
 */
 static void
 rustart(int argc, char **argv) {
+	struct russ_conf	*conf;
+
+	/* load conf */
+	if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
+		fprintf(stderr, "error: cannot load configuration.\n");
+		exit(1);
+	}
+
 	signal(SIGPIPE, SIG_IGN);
-	russ_start(RUSS_STARTTYPE_START, argc, argv);
+	russ_start(RUSS_STARTTYPE_START, conf);
 	fprintf(stderr, "error: cannot start server\n");
 	exit(1);
 }

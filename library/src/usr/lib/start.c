@@ -392,13 +392,11 @@ russ_ruspawn(char *caddr) {
 * provided.
 *
 * @param starttype	start server by start or spawn mechanism
-* @param argc		number of arguments
-* @param argv		argument list
+* @param conf		russ_conf object
 * @return		start string ([<reappid>:<pgid>:]<main_addr>) or NULL on failure
 */
 char *
-russ_start(int starttype, int argc, char **argv) {
-	struct russ_conf	*conf = NULL;
+russ_start(int starttype, struct russ_conf *conf) {
 	int			lisd;
 	int			largc;
 	char			**largv = NULL;
@@ -418,12 +416,6 @@ russ_start(int starttype, int argc, char **argv) {
 	gid_t			file_gid, gid;
 	int			conffd;
 	int			i, pos;
-
-	/* load conf */
-	if ((argc < 2) || ((conf = russ_conf_load(&argc, argv)) == NULL)) {
-		fprintf(stderr, "error: cannot load configuration.\n");
-		return NULL;
-	}
 
 	/* get settings */
 	if ((main_launcher = russ_conf_get(conf, "main", "launcher", NULL)) != NULL) {
@@ -631,13 +623,6 @@ russ_start(int starttype, int argc, char **argv) {
 		|| (russ_sarray0_append(&largv, "--fd", buf, NULL) < 0)) {
 		goto fail;
 	}
-
-	/* append from argv */
-	for (i = 1; i < argc; i++) {
-		if (russ_sarray0_append(&largv, argv[i], NULL) < 0) {
-			goto fail;
-		}
-	}
 	largc = russ_sarray0_count(largv, 128);
 
 	execv(largv[0], largv);
@@ -649,33 +634,4 @@ fail:
 	largv = russ_sarray0_free(largv);
 
 	return NULL;
-}
-
-/**
-* Wrapper for russ_start supporting variadic args.
-*
-* @see russ_start()
-*
-* @param starttype	start server by start or spawn mechanism
-* @param dummy		ignored placeholder
-* @return		see russ_start()
-*/
-char *
-russ_startl(int starttype, char *dummy, ...) {
-	va_list			ap;
-	char			**argv = NULL;
-	char			*rv;
-	int			argc;
-
-	va_start(ap, dummy);
-	argv = __russ_variadic_to_argv(RUSS_REQ_ARGS_MAX, 0, &argc, ap);
-	va_end(ap);
-	if (argv == NULL) {
-		return NULL;
-	}
-
-	rv = russ_start(starttype, argc, argv);
-
-	free(argv);
-	return rv;
 }

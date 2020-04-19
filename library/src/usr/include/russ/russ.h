@@ -398,8 +398,7 @@ char *russ_spath_resolve(const char *);
 char *russ_spath_resolvewithuid(const char *, uid_t *, int);
 
 /* start.c */
-char *russ_start(int, int, char **);
-char *russ_startl(int, char *, ...);
+char *russ_start(int, struct russ_conf *);
 
 /* str.c */
 int russ_str_count_sub(const char *, const char *);
