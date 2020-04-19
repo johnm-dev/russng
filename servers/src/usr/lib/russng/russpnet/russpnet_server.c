@@ -696,7 +696,7 @@ int
 main(int argc, char **argv) {
 	struct russ_svcnode	*node = NULL;
 	struct russ_svr		*svr = NULL;
-	char			*targetsfilename = NULL;
+	char			*targetsfilename = NULL, *targetsfiletype = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -711,20 +711,23 @@ main(int argc, char **argv) {
 	targetslist.n = 0;
 	targetsconf = russ_conf_new();
 
-	if (russ_conf_has_option(conf, "newtargets", "filename")) {
-		if (((targetsfilename = russ_conf_get(conf, "newtargets", "filename", NULL)) == NULL)
+	targetsfilename = russ_conf_get(conf, "targets", "filename", NULL);
+	targetsfiletype = russ_conf_get(conf, "targets", "filetype", NULL);
+
+	if (strcmp(targetsfiletype, "conf") == 0) {
+		if ((targetsfilename == NULL)
 			|| (load_targetsfile(targetsfilename) < 0)) {
-			fprintf(stderr, "error: missing or bad targets file\n");
+			fprintf(stderr, "error: bad/missing targets file\n");
 			exit(1);
 		}
-	} else if (russ_conf_has_option(conf, "targets", "filename")) {
-		if (((targetsfilename = russ_conf_get(conf, "targets", "filename", NULL)) == NULL)
+	} else if (strcmp(targetsfiletype, "legacy") == 0) {
+		if ((targetsfilename == NULL)
 			|| (load_targetsfile_legacy(targetsfilename) < 0)) {
-			fprintf(stderr, "error: missing or bad targets file\n");
+			fprintf(stderr, "error: bad/missing targets file\n");
 			exit(1);
 		}
 	} else {
-		fprintf(stderr, "error: targets filename not found\n");
+		fprintf(stderr, "error: targets file type not supported\n");
 		exit(1);
 	}
 

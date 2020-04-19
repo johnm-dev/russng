@@ -238,6 +238,7 @@ DEVNULL = open("/dev/null", "w")
 RURUN_EXEC_METHOD_DEFAULT = "shell"
 RURUN_NRUNNING_MAX_DEFAULT = 1
 RURUN_RELAY_DEFAULT = "sshr"
+RURUN_TARGETSFILETYPE_DEFAULT = "legacy"
 RURUN_TIMEOUT_DEFAULT = 30000
 
 pnet_pid = None
@@ -292,13 +293,14 @@ def gettargets(pnet_addr):
         #traceback.print_exc()
         raise Exception("cannot get targets")
 
-def spawn_pnet_server(targetsfile):
+def spawn_pnet_server(targetsfile, targetsfiletype):
     global pnet_pid
 
     try:
         pargs = ["ruspawn", "--withpids",
             "-c", "main:path=/usr/lib/russng/russpnet/russpnet_server",
             "-c", "targets:filename=%s" % targetsfile,
+            "-c", "targets:filetype=%s" % targetsfiletype,
             "-c", "main:pgid=0"]
         pargs.extend(["-c", "net:relay_addr=+/sshr"])
         p = subprocess.Popen(pargs, close_fds=True,
@@ -346,6 +348,7 @@ def print_usage():
         "RURUN_EXEC_METHOD_DEFAULT": RURUN_EXEC_METHOD_DEFAULT,
         "RURUN_NRUNNING_MAX_DEFAULT": RURUN_NRUNNING_MAX_DEFAULT,
         "RURUN_RELAY_DEFAULT": RURUN_RELAY_DEFAULT,
+        "RURUN_TARGETSFILETYPE_DEFAULT": RURUN_TARGETSFILETYPE_DEFAULT,
         "RURUN_TIMEOUT_DEFAULT": RURUN_TIMEOUT_DEFAULT,
     }
 
@@ -401,6 +404,10 @@ Options:
     to it for execution. Forces "--exec noshell".
 --targetsfile <path>
     Use targets file. Defaults $RURUN_TARGETSFILE.
+--targetsfiletype legacy|conf
+    Targets file format type: legacy (row-oriented), conf
+    (configuration file). Defaults to $RURUN_TARGETSFILETYPE or
+    "%(RURUN_TARGETSFILETYPE_DEFAULT)s".
 -t|--timeout <seconds>
     Allow a given amount of time to connect before aborting.
     Defaults to $RURUN_TIMEOUT or "%(RURUN_TIMEOUT_DEFAULT)s".
@@ -429,6 +436,8 @@ def main():
     rurun_relay = os.environ.get("RURUN_RELAY", RURUN_RELAY_DEFAULT)
     rurun_pnet_addr = os.environ.get("RURUN_PNET_ADDR")
     rurun_targetsfile = os.environ.get("RURUN_TARGETSFILE")
+    rurun_targetsfiletype = os.environ.get("RURUN_TARGETSFILETYPE", RURUN_TARGETSFILETYPE_DEFAULT)
+
     try:
         timeout = int(os.environ.get("RURUN_TIMEOUT", RURUN_TIMEOUT_DEFAULT))
     except:
@@ -483,6 +492,8 @@ def main():
                 rurun_timeout = args.pop(0)
             elif arg == "--targetsfile" and args:
                 rurun_targetsfile = args.pop(0)
+            elif arg == "--targetsfiletype" and args:
+                rurun_targetsfiletype = args.pop(0)
             elif arg == "--wrap":
                 rurun_wrap = True
             else:
@@ -503,7 +514,7 @@ def main():
         # dynamically start pnet server if necessary
         if not rurun_pnet_addr:
             if rurun_targetsfile:
-                t = spawn_pnet_server(rurun_targetsfile)
+                t = spawn_pnet_server(rurun_targetsfile, rurun_targetsfiletype)
                 pnetpid, pnetpgid, rurun_pnet_addr = t
                 #print(rurun_pnet_addr, pnetpid, pnetpgid)
                 pnetpid = int(pnetpid)
@@ -535,6 +546,7 @@ def main():
                 "targetspec (%s)" % targetspec,
                 "targets (%s)" % str(targetranges),
                 "targets file (%s)" % rurun_targetsfile,
+                "targets file type (%s)" % rurun_targetsfiletype,
                 "pnet addr (%s)" % rurun_pnet_addr,
                 "exec method (%s)" % rurun_exec_method,
                 "relay (%s)" % rurun_relay,
