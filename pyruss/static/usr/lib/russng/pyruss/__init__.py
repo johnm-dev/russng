@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 #! /usr/bin/env python2
 #
 #  pyruss/__init__.py
