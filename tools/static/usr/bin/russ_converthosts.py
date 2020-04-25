@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 #
 # russ_converthosts.py
 
@@ -27,7 +27,7 @@ def fmti(s, fmt):
     for i in range(1, len(fmt)+1):
         if l[-i] == "0":
             l[-i] = s[-j]
-            j = j+1         
+            j = j+1
             if j > len(s):
                 break
     return "".join(l)
@@ -56,11 +56,11 @@ def hosts_to_dir(hosts, basedir, svcfmt, namefmt):
 
 def hosts_to_spaths(hosts, svcfmt, namefmt):
     for name, src in _hosts_to_spaths(hosts, svcfmt, namefmt):
-        print "%s" % src
+        print("%s" % src)
 
 def hosts_to_named_spaths(hosts, svcfmt, namefmt):
     for name, src in _hosts_to_spaths(hosts, svcfmt, namefmt):
-        print "%s:%s" % (name, src)
+        print("%s:%s" % (name, src))
 
 def print_usage():
     print("""\
