@@ -140,15 +140,17 @@ _russ_start_augment_path(int argc, char **argv) {
 }
 
 /**
-* Set environment variables found in the main.env section.
+* Set environment variables found in the a named section. The section
+* name is typically main.env.
 *
 * The items are iterated through in order.
 *
 * @param conf		configuration object
+* @param secname	section name
 * @return		0 on success; -1 on failure
 */
 static int
-_russ_start_setenv(struct russ_conf *conf) {
+_russ_start_setenv(struct russ_conf *conf, char *secname) {
 	char	**names = NULL, *name = NULL;
 	char	*value = NULL, *rvalue = NULL;
 	int	i, rv;
@@ -157,18 +159,18 @@ _russ_start_setenv(struct russ_conf *conf) {
 		return -1;
 	}
 
-	if (!russ_conf_has_section(conf, "main.env")) {
+	if (!russ_conf_has_section(conf, secname)) {
 		return 0;
 	}
 
-	if ((names = russ_conf_options(conf, "main.env")) == NULL) {
+	if ((names = russ_conf_options(conf, secname)) == NULL) {
 		return -1;
 	}
 
 	for (rv = 0, i = 0; (names[i] != NULL) && (rv == 0); i++) {
 		name = names[i];
 
-		value = russ_conf_get(conf, "main.env", name, "");
+		value = russ_conf_get(conf, secname, name, "");
 		rvalue = russ_env_resolve(value);
 		rv = setenv(name, rvalue, 1);
 		value = russ_free(value);
@@ -535,7 +537,7 @@ russ_start(int starttype, struct russ_conf *conf) {
 	}
 
 	/* set env */
-	if (_russ_start_setenv(conf) < 0) {
+	if (_russ_start_setenv(conf, "main.env") < 0) {
 		fprintf(stderr, "error: cannot set env\n");
 		return NULL;
 	}
