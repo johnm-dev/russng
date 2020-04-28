@@ -150,7 +150,7 @@ _russ_start_augment_path(int argc, char **argv) {
 * @return		0 on success; -1 on failure
 */
 static int
-_russ_start_setenv(struct russ_conf *conf, char *secname) {
+_russ_start_setenvs(struct russ_conf *conf, char *secname) {
 	char	**names = NULL, *name = NULL;
 	char	*value = NULL, *rvalue = NULL;
 	int	i, rv;
@@ -537,8 +537,8 @@ russ_start(int starttype, struct russ_conf *conf) {
 	}
 
 	/* set env */
-	if (_russ_start_setenv(conf, "main.env") < 0) {
-		fprintf(stderr, "error: cannot set env\n");
+	if (_russ_start_setenvs(conf, "main.env") < 0) {
+		fprintf(stderr, "error: cannot set environment\n");
 		return NULL;
 	}
 
