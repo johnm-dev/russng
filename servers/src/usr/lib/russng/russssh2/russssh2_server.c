@@ -265,19 +265,21 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			&& user_home
 			&& (russ_snprintf(russssh_dirpath, sizeof(russssh_dirpath), "%s/.ssh/russssh", user_home) > 0)
 			&& (ensure_mkdir(russssh_dirpath, 0700) == 0)
-			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), "ControlPath=%s/%%l-%%r@%%h:%%p-%s", russssh_dirpath, controltag) > 0)) {
+			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), "ControlPath=%s/%s-%%C", russssh_dirpath, controltag) > 0)) {
 
 			//fprintf(stderr, "controlpathopt (%s)\n", controlpathopt);
 
 			sshargs[nsshargs++] = "-o";
 			sshargs[nsshargs++] = "ControlMaster=auto";
+
 			sshargs[nsshargs++] = "-o";
 			sshargs[nsshargs++] = controlpathopt;
-			sshargs[nsshargs++] = "-o";
-			sshargs[nsshargs++] = "ControlPersist=1";
 
+			sshargs[nsshargs++] = "-o";
 			if (controlpersist && (russ_snprintf(controlpersistopt, sizeof(controlpersistopt), "ControlPersist=%s", controlpersist) > 0)) {
-				sshargs[nsshargs-1] = controlpersistopt;
+				sshargs[nsshargs++] = controlpersistopt;
+			} else {
+				sshargs[nsshargs++] = "ControlPersist=1";
 			}
 		}
 		user_home = russ_free(user_home);
