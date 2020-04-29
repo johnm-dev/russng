@@ -188,71 +188,72 @@ _russ_start_setenvs(struct russ_conf *conf, char *secname) {
 * Set single resource (soft, hard) found in the main.limits section.
 *
 * @param conf		configuration object
-* @param name		option name in "main.limits" section
+* @param name		limit name in "main.limits" section
 * @return		0 on success; -1 on failure
 */
 static int
-_russ_start_setlimit(struct russ_conf *conf, char *name) {
+_russ_start_setlimit(struct russ_conf *conf, char *limitname) {
 	struct rlimit	rlim;
-	char		*sh, *soft, *hard, *endptr;
+	char		*endptr = NULL, *hard = NULL, *soft = NULL;
+	char		hardname[32], softname[32];
 	int		resource;
 
-	/* match name and resource (if existent) */
-	if (strcmp(name, "as") == 0) {
+	/* match limitname and resource (if existent) */
+	if (strcmp(limitname, "as") == 0) {
 #ifndef RLIMIT_AS
 		return 0;
 #else
 		resource = RLIMIT_AS;
 #endif
-	} else if (strcmp(name, "core") == 0) {
+	} else if (strcmp(limitname, "core") == 0) {
 #ifndef RLIMIT_CORE
 		return 0;
 #else
 		resource = RLIMIT_CORE;
 #endif
-	} else if (strcmp(name, "cpu") == 0) {
+	} else if (strcmp(limitname, "cpu") == 0) {
 #ifndef RLIMIT_CPU
 		return 0;
 #else
 		resource = RLIMIT_CPU;
 #endif
-	} else if (strcmp(name, "data") == 0) {
+	} else if (strcmp(limitname, "data") == 0) {
 #ifndef RLIMIT_DATA
 		return 0;
 #else
 		resource = RLIMIT_DATA;
 #endif
-	} else if (strcmp(name, "fsize") == 0) {
+	} else if (strcmp(limitname, "fsize") == 0) {
 #ifndef RLIMIT_FSIZE
 		return 0;
 #else
 		resource = RLIMIT_FSIZE;
 #endif
-	} else if (strcmp(name, "memlock") == 0) {
+	} else if (strcmp(limitname, "memlock") == 0) {
 #ifndef RLIMIT_MEMLOCK
 		return 0;
 #else
 		resource = RLIMIT_MEMLOCK;
 #endif
-	} else if (strcmp(name, "nofile") == 0) {
+	} else if (strcmp(limitname, "nofile") == 0) {
 #ifndef RLIMIT_NOFILE
 		return 0;
 #else
 		resource = RLIMIT_NOFILE;
 #endif
-	} else if (strcmp(name, "nproc") == 0) {
+	} else if (strcmp(limitname, "nproc") == 0) {
 #ifndef RLIMIT_NPROC
 		return 0;
 #else
 		resource = RLIMIT_NPROC;
 #endif
-	} else if (strcmp(name, "rss") == 0) {
+	} else if (strcmp(limitname, "rss") == 0) {
 #ifndef RLIMIT_RSS
 		return 0;
 #else
 		resource = RLIMIT_RSS;
 #endif
-	} else if (strcmp(name, "stack") == 0) {
+	} else if (strcmp(limitname, "stack") == 0) {
 #ifndef RLIMIT_STACK
 		return 0;
 #else
@@ -263,51 +264,50 @@ _russ_start_setlimit(struct russ_conf *conf, char *name) {
 		return 0;
 	}
 
-	/* get setting if present */
-	if ((sh = russ_conf_get(conf, "main.limits", name, NULL)) == NULL) {
-		return 0;
+	if ((russ_snprintf(softname, sizeof(softname), "%s.soft", limitname) < 0)
+		|| (russ_snprintf(hardname, sizeof(hardname), "%s.hard", limitname) < 0)) {
+		goto fail;
 	}
-	soft = sh;
-	if ((hard = strchr(sh, ':')) != NULL) {
-		*hard = '\0';
-		hard++;
-	}
+	soft = russ_conf_get(conf, "main.limits", softname, NULL);
+	hard = russ_conf_get(conf, "main.limits", hardname, NULL);
+
 	if (RUSS_DEBUG__russ_start_setlimit) {
-		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) soft (%s) hard (%s)\n", name, soft, hard);
+		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) soft (%s) hard (%s)\n", limitname, soft, hard);
 	}
 
 	/* get and update rlimit */
 	getrlimit(resource, &rlim);
-	if (strcmp(soft, "") == 0) {
+	if ((soft == NULL) || (strcmp(soft, "") == 0)) {
 		// keep current
 	} else if (strcmp(soft, "unlimited") == 0) {
 		rlim.rlim_cur = RLIM_INFINITY;
 	} else {
-		rlim.rlim_cur = strtol(soft, &endptr, 10);
+		rlim.rlim_cur = strtol(soft, NULL, 10);
 		if (*endptr != '\0') {
 			goto fail;
 		}
 	}
-	if (hard) {
-		if (strcmp(hard, "") == 0) {
-			// keep current
-		} else if (strcmp(hard, "unlimited") == 0) {
-			rlim.rlim_max = RLIM_INFINITY;
-		} else {
-			rlim.rlim_max = strtol(hard, &endptr, 10);
-			if (*endptr != '\0') {
-				goto fail;
-			}
+	if ((hard == NULL) || (strcmp(hard, "") == 0)) {
+		// keep current
+	} else if (strcmp(hard, "unlimited") == 0) {
+		rlim.rlim_max = RLIM_INFINITY;
+	} else {
+		rlim.rlim_max = strtol(hard, NULL, 10);
+		if (*endptr != '\0') {
+			goto fail;
 		}
 	}
+
 	if (RUSS_DEBUG__russ_start_setlimit) {
-		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) rlim (%ld:%ld)\n", name, rlim.rlim_cur, rlim.rlim_max);
+		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) rlim (%ld:%ld)\n", limitname, rlim.rlim_cur, rlim.rlim_max);
 	}
 
-	sh = russ_free(sh);
+	soft = russ_free(soft);
+	hard = russ_free(hard);
 	return setrlimit(resource, &rlim);
 fail:
-	sh = russ_free(sh);
+	soft = russ_free(soft);
+	hard = russ_free(hard);
 	return -1;
 }
 
