@@ -61,6 +61,7 @@ int			nsshargs = 0;
 char			*sshargs[1024];
 
 char			*ssh_controlpathfmt = NULL;
+char			*ssh_controlpersist = NULL;
 char			*tool_type = NULL;
 char			*tool_exec = NULL;
 
@@ -277,8 +278,12 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			sshargs[nsshargs++] = "-o";
 			sshargs[nsshargs++] = controlpathopt;
 
+			controlpersist = russ_sarray0_get_suffix(opts, "controlpersist=");
+			if (!controlpersist) {
+				controlpersist = ssh_controlpersist;
+			}
 			sshargs[nsshargs++] = "-o";
-			if (controlpersist && (russ_snprintf(controlpersistopt, sizeof(controlpersistopt), "ControlPersist=%s", controlpersist) > 0)) {
+			if (russ_snprintf(controlpersistopt, sizeof(controlpersistopt), "ControlPersist=%s", controlpersist) > 0) {
 				sshargs[nsshargs++] = controlpersistopt;
 			} else {
 				sshargs[nsshargs++] = "ControlPersist=1";
@@ -625,6 +630,7 @@ main(int argc, char **argv) {
 	}
 
 	ssh_controlpathfmt = russ_conf_get(conf, "ssh", "controlpathfmt", "%s-%%C");
+	ssh_controlpersist = russ_conf_get(conf, "ssh", "controlpersist", "1");
 	tool_type = russ_conf_get(conf, "tool", "type", "dial");
 	tool_exec = russ_conf_get(conf, "tool", "exec", NULL);
 
