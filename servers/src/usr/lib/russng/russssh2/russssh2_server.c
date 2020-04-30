@@ -60,10 +60,11 @@ const char		*HELP_FMT =
 int			nsshargs = 0;
 char			*sshargs[1024];
 
-char			*ssh_controlpathfmt = NULL;
-char			*ssh_controlpersist = NULL;
-char			*tool_type = NULL;
-char			*tool_exec = NULL;
+// preloaded configuration settings
+char			*conf_ssh_controlpathfmt = NULL;
+char			*conf_ssh_controlpersist = NULL;
+char			*conf_tool_type = NULL;
+char			*conf_tool_exec = NULL;
 
 int
 switch_user(struct russ_sconn *sconn) {
@@ -259,7 +260,6 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		char	*user_home = NULL;
 
 		controltag = russ_sarray0_get_suffix(opts, "controltag=");
-		// ssh_controlpathfmt set globally
 
 		user_home = dup_user_home();
 
@@ -267,7 +267,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			&& user_home
 			&& (russ_snprintf(russssh_dirpath, sizeof(russssh_dirpath), "%s/.ssh/russssh", user_home) > 0)
 			&& (ensure_mkdir(russssh_dirpath, 0700) == 0)
-			&& (russ_snprintf(tmp, sizeof(tmp), "ControlPath=%s/%s", russssh_dirpath, ssh_controlpathfmt) > 0)
+			&& (russ_snprintf(tmp, sizeof(tmp), "ControlPath=%s/%s", russssh_dirpath, conf_ssh_controlpathfmt) > 0)
 			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), tmp, controltag) > 0)) {
 
 			//fprintf(stderr, "controlpathopt (%s)\n", controlpathopt);
@@ -280,7 +280,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 
 			controlpersist = russ_sarray0_get_suffix(opts, "controlpersist=");
 			if (!controlpersist) {
-				controlpersist = ssh_controlpersist;
+				controlpersist = conf_ssh_controlpersist;
 			}
 			sshargs[nsshargs++] = "-o";
 			if (russ_snprintf(controlpersistopt, sizeof(controlpersistopt), "ControlPersist=%s", controlpersist) > 0) {
@@ -301,8 +301,8 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	}
 	sshargs[nsshargs++] = uhp_host;
 
-	if ((strcmp(tool_type, "tunnel") == 0)
-		|| (strcmp(tool_type, "tunnelr") == 0)) {
+	if ((strcmp(conf_tool_type, "tunnel") == 0)
+		|| (strcmp(conf_tool_type, "tunnelr") == 0)) {
 		int	cconn_send_rv;
 		int	cfds[RUSS_CONN_NFDS], tmpfd;
 		char	*delim = NULL;
@@ -310,10 +310,10 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		int	delimsz;
 
 		/* select tool exec */
-		if (tool_exec) {
-			sshargs[nsshargs++] = tool_exec;
+		if (conf_tool_exec) {
+			sshargs[nsshargs++] = conf_tool_exec;
 		} else {
-			if (strcmp(tool_type, "tunnel") == 0) {
+			if (strcmp(conf_tool_type, "tunnel") == 0) {
 				sshargs[nsshargs++] = RUTUNS_EXEC;
 			} else {
 				sshargs[nsshargs++] = RUTUNSR_EXEC;
@@ -360,7 +360,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			goto answer_exit_callfailure;
 		}
 
-		if (strcmp(tool_type, "tunnelr") == 0) {
+		if (strcmp(conf_tool_type, "tunnelr") == 0) {
 			/* augment request with delimiter attribute */
 			if ((req->attrv == NULL)
 				&& ((req->attrv = russ_sarray0_new(0)) == NULL)) {
@@ -410,7 +410,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		}
 		//cconn = russ_cconn_free(cconn);
 	} else {
-		sshargs[nsshargs++] = tool_exec ? tool_exec : RUDIAL_EXEC;
+		sshargs[nsshargs++] = conf_tool_exec ? conf_tool_exec : RUDIAL_EXEC;
 		if ((req->attrv != NULL) && (req->attrv[0] != NULL)) {
 			for (i = 0; req->attrv[i] != NULL; i++) {
 				sshargs[nsshargs++] = "-a";
@@ -629,16 +629,16 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	ssh_controlpathfmt = russ_conf_get(conf, "ssh", "controlpathfmt", "%s-%%C");
-	ssh_controlpersist = russ_conf_get(conf, "ssh", "controlpersist", "1");
-	tool_type = russ_conf_get(conf, "tool", "type", "dial");
-	tool_exec = russ_conf_get(conf, "tool", "exec", NULL);
+	conf_ssh_controlpathfmt = russ_conf_get(conf, "ssh", "controlpathfmt", "%s-%%C");
+	conf_ssh_controlpersist = russ_conf_get(conf, "ssh", "controlpersist", "1");
+	conf_tool_type = russ_conf_get(conf, "tool", "type", "dial");
+	conf_tool_exec = russ_conf_get(conf, "tool", "exec", NULL);
 
 	/* autoanswer and help settings */
-	if (strcmp(tool_type, "tunnelr") ==0) {
+	if (strcmp(conf_tool_type, "tunnelr") ==0) {
 		russ_snprintf(help, sizeof(help), HELP_FMT, "\nRunning as a clean relay.\n");
 		autoanswer = 0;
-	} else if (strcmp(tool_type, "tunnel") == 0) {
+	} else if (strcmp(conf_tool_type, "tunnel") == 0) {
 		russ_snprintf(help, sizeof(help), HELP_FMT, "");
 		autoanswer = 0;
 	} else {
