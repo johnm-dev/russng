@@ -720,7 +720,7 @@ main(int argc, char **argv) {
 			fprintf(stderr, "error: bad/missing targets file\n");
 			exit(1);
 		}
-	} else if (strcmp(targetsfiletype, "legacy") == 0) {
+	} else if ((strcmp(targetsfiletype, "legacy") == 0) || (targetsfiletype == NULL)) {
 		if ((targetsfilename == NULL)
 			|| (load_targetsfile_legacy(targetsfilename) < 0)) {
 			fprintf(stderr, "error: bad/missing targets file\n");
