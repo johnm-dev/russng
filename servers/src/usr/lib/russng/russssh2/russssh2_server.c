@@ -60,6 +60,7 @@ const char		*HELP_FMT =
 int			nsshargs = 0;
 char			*sshargs[1024];
 
+char			*ssh_controlpathfmt = NULL;
 char			*tool_type = NULL;
 char			*tool_exec = NULL;
 
@@ -222,7 +223,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	struct russ_cconn	*cconn = NULL;
 	char			*uhp_user = NULL, *uhp_host = NULL, *uhp_port = NULL, *uhp_opt = NULL;
 	char			**opts = NULL;
-	char			controlpathopt[1024], controlpersistopt[32];
+	char			controlpathopt[1024], controlpersistopt[32], tmp[1024];
 	char			russssh_dirpath[1024];
 	int			i, status, pid;
 
@@ -257,7 +258,7 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		char	*user_home = NULL;
 
 		controltag = russ_sarray0_get_suffix(opts, "controltag=");
-		controlpersist = russ_sarray0_get_suffix(opts, "controlpersist=");
+		// ssh_controlpathfmt set globally
 
 		user_home = dup_user_home();
 
@@ -265,7 +266,8 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 			&& user_home
 			&& (russ_snprintf(russssh_dirpath, sizeof(russssh_dirpath), "%s/.ssh/russssh", user_home) > 0)
 			&& (ensure_mkdir(russssh_dirpath, 0700) == 0)
-			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), "ControlPath=%s/%s-%%C", russssh_dirpath, controltag) > 0)) {
+			&& (russ_snprintf(tmp, sizeof(tmp), "ControlPath=%s/%s", russssh_dirpath, ssh_controlpathfmt) > 0)
+			&& (russ_snprintf(controlpathopt, sizeof(controlpathopt), tmp, controltag) > 0)) {
 
 			//fprintf(stderr, "controlpathopt (%s)\n", controlpathopt);
 
@@ -622,6 +624,7 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
+	ssh_controlpathfmt = russ_conf_get(conf, "ssh", "controlpathfmt", "%s-%%C");
 	tool_type = russ_conf_get(conf, "tool", "type", "dial");
 	tool_exec = russ_conf_get(conf, "tool", "exec", NULL);
 
