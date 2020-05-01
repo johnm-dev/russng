@@ -39,7 +39,7 @@ extern char **environ;
 #include <russ/russ.h>
 
 #define DEFAULT_DIAL_TIMEOUT	(30000)
-#define DEFAULT_RELAY_ADDR	"+/ssh"
+#define DEFAULT_RELAY_ADDR	"+/sshr"
 #define MAX_TARGETS		(32768)
 
 struct target {
@@ -61,7 +61,7 @@ char			fqlocalhostname[1024] = "";
 
 const char		*HELP = 
 "Provides access to local/remote targets (e.g., user@host) using a\n"
-"relay (e.g., ssh service).\n"
+"relay (e.g., sshr service).\n"
 "\n"
 "/count\n"
 "    Output the number of targets registered.\n"
