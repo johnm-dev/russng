@@ -25,7 +25,7 @@ start() {
 	# load configuration
 	if [ ! -e "${SOURCES_FILE}" ]; then
 		echo "creating ruservice.sources ..." 1>&2
-		echo "# created for v7\nlocal:dir:/etc/russ/conf" > "${SOURCES_FILE}"
+		cp /etc/russ/samples/default-ruservice.sources > "${SOURCES_FILE}"
 	fi
 	[ -e "${SOURCES_FILE}" ] && ruservice resync
 
