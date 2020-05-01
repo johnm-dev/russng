@@ -12,8 +12,9 @@
 # Description:       Sets up for russ-based services
 ### END INIT INFO
 
+PLUS_CONF_FILE="/etc/russ/conf/plus.conf"
 RUN_DIR="/var/run/russ"
-SOURCES_FILE="/etc/russ/ruservice.sources"
+RUSERVICE_SOURCES_FILE="/etc/russ/ruservice.sources"
 
 start() {
 	# ensure working directories
@@ -23,11 +24,18 @@ start() {
 	mkdir -m 0755 -p "${RUN_DIR}/services"
 
 	# load configuration
-	if [ ! -e "${SOURCES_FILE}" ]; then
-		echo "creating ruservice.sources ..." 1>&2
-		cp /etc/russ/samples/default-ruservice.sources > "${SOURCES_FILE}"
+	if [ ! -e "${RUSERVICE_SOURCES_FILE}" ]; then
+		# likely a new install of v7
+		echo "setting up for v7 ..." 1>&2
+
+		echo "installing default ruservice.sources ..." 1>&2
+		cp /etc/russ/samples/default-ruservice.sources "${RUSERVICE_SOURCES_FILE}"
+		if [ ! -e "${PLUS_CONF_FILE}" ]; then
+			echo "installing plus.conf ..." 1>&2
+			cp /etc/russ/samples/conf/plus.conf "${PLUS_CONF_FILE}"
+		fi
 	fi
-	[ -e "${SOURCES_FILE}" ] && ruservice resync
+	[ -e "${RUSERVICE_SOURCES_FILE}" ] && ruservice resync
 
 	# start services
 	ruservice . start
