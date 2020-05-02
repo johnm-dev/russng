@@ -126,7 +126,7 @@ russ_svcnode_add(struct russ_svcnode *self, const char *name, russ_svchandler ha
 /**
 * Find node matching path starting at a node.
 *
-* A wildcard svcnode always matches.
+* spath options are ignored. A wildcard svcnode always matches.
 *
 * @param self		service node object starting point
 * @param path		path to match (relative to self)
@@ -137,9 +137,10 @@ russ_svcnode_add(struct russ_svcnode *self, const char *name, russ_svchandler ha
 struct russ_svcnode *
 russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int mpath_cap) {
 	struct russ_svcnode	*node = NULL;
-	char			*sep = NULL;
-	int			len, cmp;
+	const char		*nsep = NULL, *qsep = NULL, *ssep = NULL;
+	int			cmp, nlen, qlen, slen;
 
+	//russ_lprintf("/tmp/svcfind.log", NULL, "*** mpath (%s) mpath_cap (%d)\n", mpath, mpath_cap);
 	if (self == NULL) {
 		return NULL;
 	}
@@ -150,19 +151,31 @@ russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int 
 	if ((self->virtual) || (strcmp(path, "") == 0)) {
 		return self;
 	}
-	if ((sep = strchr(path, '/')) == NULL) {
-		sep = strchr(path, '\0');
+	if ((ssep = strchr(path, '/')) == NULL) {
+		ssep = strchr(path, '\0');
 	}
-	len = sep-path;
+
+	for (qsep = path; (qsep < ssep) && (*qsep != '?'); qsep++);
+	qlen = qsep-path;
+	slen = ssep-path;
+	nsep = (qsep < ssep) ? qsep : ssep;
+	nlen = nsep-path;
+
+	//russ_lprintf("/tmp/svcfind.log", NULL, "name (%s) path (%s) qlen (%d) slen (%d) nlen (%d)\n", self->name, path, qlen, slen, nlen);
 	for (node = self->children; node != NULL; node = node->next) {
-		if ((!node->wildcard) && ((cmp = strncmp(node->name, path, len)) > 0)) {
+		cmp = strncmp(node->name, path, nlen);
+		//russ_lprintf("/tmp/svcfind.log", NULL, "node->name (%s) cmp (%d) wildcard (%d) name[nlen] (%c)\n", node->name, cmp, node->wildcard, node->name[nlen]);
+
+		/* matching component name? */
+		if ((!node->wildcard) && (cmp > 0)) {
 			if (mpath != NULL) {
 				mpath[0] = '\0';
 			}
 			node = NULL;
 			break;
-		} else if (node->wildcard || ((cmp == 0) && (node->name[len] == '\0'))) {
-			if (*sep != '\0') {
+		} else if (node->wildcard || ((cmp == 0) && (node->name[nlen] == '\0'))) {
+			/* wildcard or full match and matching component and *name* length */
+			if (*ssep != '\0') {
 				if (mpath != NULL) {
 					if ((strncat(mpath, "/", mpath_cap) < 0)
 						|| (strncat(mpath, node->name, mpath_cap) < 0)) {
@@ -172,11 +185,15 @@ russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int 
 						break;
 					}
 				}
-				node = russ_svcnode_find(node, &path[len+1], mpath, mpath_cap);
+				node = russ_svcnode_find(node, &path[slen+1], mpath, mpath_cap);
 			}
 			break;
 		}
 	}
+	//russ_lprintf("/tmp/svcfind.log", NULL, "node (%p) mpath (%s)\n", node, mpath);
+	//if (node) {
+		//russ_lprintf("/tmp/svcfind.log", NULL, "node->name (%s)\n", node->name);
+	//}
 	return node;
 }
 
