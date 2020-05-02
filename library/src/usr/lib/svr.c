@@ -302,6 +302,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	struct russ_sess	sess;
 	struct russ_req		*req = NULL;
 	struct russ_svcnode	*node = NULL;
+	char			mpath[RUSS_REQ_SPATH_MAX] = "";
 
 	if (self == NULL) {
 		return;
@@ -324,7 +325,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 		goto cleanup;
 	}
 
-	if ((node = russ_svcnode_find(self->root, req->spath, sess.spath, sizeof(sess.spath))) == NULL) {
+	if ((node = russ_svcnode_find(self->root, req->spath, mpath, sizeof(mpath))) == NULL) {
 		/* we need standard fds */
 		russ_sconn_answerhandler(sconn);
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -366,7 +367,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	/* prepare session object */
 	sess.sconn = sconn;
 	sess.svr = self;
-	sess.spath[0] = '\0';
+	strncpy(sess.spath, mpath, RUSS_REQ_SPATH_MAX);
 	sess.req = req;
 
 	/* call handler, if available */

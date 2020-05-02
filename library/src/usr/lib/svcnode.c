@@ -175,16 +175,18 @@ russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int 
 			break;
 		} else if (node->wildcard || ((cmp == 0) && (node->name[nlen] == '\0'))) {
 			/* wildcard or full match and matching component and *name* length */
-			if (*ssep != '\0') {
-				if (mpath != NULL) {
-					if ((strncat(mpath, "/", mpath_cap) < 0)
-						|| (strncat(mpath, node->name, mpath_cap) < 0)) {
-						/* do not exceed mpath buffer */
-						mpath[0] = '\0';
-						node = NULL;
-						break;
-					}
+			if (mpath != NULL) {
+				//russ_lprintf("/tmp/svcfind.log", NULL, "updating mpath from (%s)\n", mpath);
+				if ((strncat(mpath, "/", mpath_cap-1) < 0)
+					|| (strncat(mpath, node->name, mpath_cap-1) < 0)) {
+					/* do not exceed mpath buffer */
+					mpath[0] = '\0';
+					node = NULL;
+					break;
 				}
+				//russ_lprintf("/tmp/svcfind.log", NULL, "updated mpath to (%s)\n", mpath);
+			}
+			if (*ssep != '\0') {
 				node = russ_svcnode_find(node, &path[slen+1], mpath, mpath_cap);
 			}
 			break;
