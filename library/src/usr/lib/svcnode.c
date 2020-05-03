@@ -138,6 +138,7 @@ struct russ_svcnode *
 russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int mpath_cap) {
 	struct russ_svcnode	*node = NULL;
 	const char		*nsep = NULL, *qsep = NULL, *ssep = NULL;
+	char			*mpathend = NULL;
 	int			cmp, nlen, qlen, slen;
 
 	//russ_lprintf("/tmp/svcfind.log", NULL, "*** mpath (%s) mpath_cap (%d)\n", mpath, mpath_cap);
@@ -177,12 +178,16 @@ russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int 
 			/* wildcard or full match and matching component and *name* length */
 			if (mpath != NULL) {
 				//russ_lprintf("/tmp/svcfind.log", NULL, "updating mpath from (%s)\n", mpath);
-				if ((strncat(mpath, "/", mpath_cap-1) < 0)
-					|| (strncat(mpath, node->name, mpath_cap-1) < 0)) {
-					/* do not exceed mpath buffer */
-					mpath[0] = '\0';
-					node = NULL;
-					break;
+				mpathend = strchr(mpath, '\0');
+				if ((mpathend-mpath+1+slen+1) < mpath_cap) {
+					mpathend[0] = '/';
+					mpathend++;
+					if (strncat(mpathend, path, slen) < 0) {
+						/* do not exceed mpath buffer */
+						mpath[0] = '\0';
+						node = NULL;
+						break;
+					}
 				}
 				//russ_lprintf("/tmp/svcfind.log", NULL, "updated mpath to (%s)\n", mpath);
 			}
