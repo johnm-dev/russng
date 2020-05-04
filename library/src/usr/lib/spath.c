@@ -37,6 +37,96 @@
 #define RUSS_SPATH_RESOLVE_SYMLINKS_MAX	32
 
 /**
+* Test for option (look for "?").
+*
+* @param spath		service path
+* @return		0 on none, 1 on at least one
+*/
+int
+russ_spath_hasoption(const char *spath) {
+	const char	*last;
+
+	if (spath == NULL) {
+		return 0;
+	}
+	if ((last = rindex(spath, '/')) == NULL) {
+		last = spath;
+	}
+	if (index(last, '?') == NULL) {
+		return 0;
+	}
+	return 1;
+}
+
+/**
+* Get last component from spath.
+*
+* Caller must free value.
+*
+* @param spath		service path
+* @return		last component string; NULL otherwise
+*/
+char *
+russ_spath_getlast(const char *spath) {
+	char	*last;
+
+	if (spath == NULL) {
+		return NULL;
+	}
+	if ((last = rindex(spath, '/')) == NULL) {
+		return strdup(spath);
+	}
+	return strdup(last+1);
+}
+
+/**
+* Return spath service name of last component.
+*
+* Caller must free value.
+*
+* @param spath		service path
+* @return		name from last component, NULL otheriwse
+*/
+char *
+russ_spath_getname(const char *spath) {
+	const char	*name;
+	char		*qsep;
+
+	if (spath == NULL) {
+		return NULL;
+	}
+	if ((name = rindex(spath, '/')) == NULL) {
+		name = spath;
+	} else {
+		name++;
+	}
+	qsep = index(name, '?');
+	if (qsep == NULL) {
+		return strdup(name);
+	}
+	return strndup(name, qsep-name);
+}
+
+/**
+* Return options.
+*
+* @param spath		service path
+* @return		arrary of options; NULL otherwise
+*/
+char **
+russ_spath_getoptions(const char *spath) {
+	const char 	*last;
+
+	if (spath == NULL) {
+		return NULL;
+	}
+	if ((last = rindex(spath, '/')) == NULL) {
+		last = spath;
+	}
+	return russ_sarray0_new_split((char *)last, "?", 1);
+}
+
+/**
 * Resolve spath by replacing symlinks.
 *
 * @param spath		service path
@@ -277,4 +367,33 @@ free_saddr:
 free_spath:
 	spath = russ_free((char *)spath);
 	return -1;
+}
+
+/**
+* Return copy of service path without options.
+*
+* @param spath		service path
+* @return		string (free by caller); NULL otherwise
+*/
+char *
+russ_spath_stripoptions(const char *spath) {
+	char		tmp[RUSS_REQ_SPATH_MAX];
+	char		*dst;
+	const char	*src;
+
+	if (strlen(spath) > sizeof(tmp)) {
+		return NULL;
+	}
+	dst = tmp;
+	for (src = spath; *src != '\0'; src++, dst++) {
+		if (*src == '?') {
+			for (src++; (*src != '\0') && (*src != '/'); src++);
+			if (*src == '\0') {
+				break;
+			}
+		}
+		*dst = *src;
+	}
+	*dst = '\0';
+	return strdup(tmp);
 }

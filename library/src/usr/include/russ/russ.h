@@ -383,9 +383,14 @@ int russ_announce(char *, mode_t, uid_t, gid_t);
 int russ_unlink(const char *);
 
 /* spath.c */
-int russ_spath_split(const char *, char **, char **);
+int russ_spath_hasoption(const char *);
+char *russ_spath_getlast(const char *);
+char *russ_spath_getname(const char *);
+char **russ_spath_getoptions(const char *);
 char *russ_spath_resolve(const char *);
 char *russ_spath_resolvewithuid(const char *, uid_t *, int);
+int russ_spath_split(const char *, char **, char **);
+char *russ_spath_stripoptions(const char *);
 
 /* start.c */
 char *russ_start(int, struct russ_conf *);
