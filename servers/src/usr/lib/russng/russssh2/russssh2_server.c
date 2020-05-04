@@ -219,12 +219,11 @@ generate_delimiter(void) {
 }
 
 void
-execute(struct russ_sess *sess, char *userhost, char *new_spath) {
+execute(struct russ_sess *sess, char *userhostport, char **opts, char *new_spath) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
 	struct russ_cconn	*cconn = NULL;
 	char			*uhp_user = NULL, *uhp_host = NULL, *uhp_port = NULL, *uhp_opt = NULL;
-	char			**opts = NULL;
 	char			controlpathopt[1024], controlpersistopt[32], tmp[1024];
 	char			russssh_dirpath[1024];
 	int			i, status, pid;
@@ -235,7 +234,9 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 	switch_user(sconn);
 
 	/* parse out user, host, and port */
-	uhp_user = strdup(userhost);
+	if ((uhp_user = strdup(userhostport)) == NULL) {
+		goto answer_exit_callfailure;
+	}
 	if ((uhp_host = strstr(uhp_user, "@")) != NULL) {
 		*uhp_host = '\0';
 		uhp_host++;
@@ -247,15 +248,9 @@ execute(struct russ_sess *sess, char *userhost, char *new_spath) {
 		*uhp_port = '\0';
 		uhp_port++;
 	}
-	if ((uhp_opt = strstr(uhp_host, "?")) != NULL) {
-		*uhp_opt = '\0';
-		uhp_opt++;
-		/* validate tag */
-		opts = russ_sarray0_new_split(uhp_opt, "?", 0);
-	}
 
 	/* augment sshargs array */
-	if (uhp_opt) {
+	if ((opts) && (opts[0] != NULL)) {
 		char	*controlpersist = NULL, *controltag = NULL;
 		char	*user_home = NULL;
 
@@ -511,54 +506,32 @@ svc_root_handler(struct russ_sess *sess) {
 	}
 }
 
-char *
-get_userhostport(char *spath) {
-	char	*userhostport = NULL;
-
-	userhostport = russ_str_dup_comp(spath, '/', 1);
-	return userhostport;
-}
-
-void
-svc_userhostport_handler(struct russ_sess *sess) {
-	struct russ_sconn	*sconn = NULL;
-	struct russ_req		*req = NULL;
-	char			*userhostport = NULL;
-
-	sconn = sess->sconn;
-	req = sess->req;
-
-	if ((userhostport = get_userhostport(req->spath)) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
-	}
-	if (req->opnum == RUSS_OPNUM_LIST) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
-		exit(0);
-	}
-	userhostport = russ_free(userhostport);
-}
-
 /**
 * Handler for /<user@host:port>/...
 *
 * @param sess		session object
 */
 void
-svc_userhostport_other_handler(struct russ_sess *sess) {
+svc_userhostport_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
-	char			*userhostport = NULL, *new_spath = NULL;
+	char			*newspath = NULL;
 
 	sconn = sess->sconn;
 	req = sess->req;
 
-	if ((userhostport = get_userhostport(req->spath)) == NULL) {
-		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
-		exit(0);
+	if (strcmp(req->spath, sess->spath) == 0) {
+		/* no newspath */
+		if (req->opnum == RUSS_OPNUM_LIST) {
+			russ_sconn_fatal(sconn, RUSS_MSG_NOLIST, RUSS_EXIT_SUCCESS);
+			exit(0);
+		}
+	} else {
+		if ((newspath = strchr(req->spath+1, '/')) == NULL) {
+			return;
+		}
+		execute(sess, sess->name, sess->options, newspath);
 	}
-	new_spath = strchr(req->spath+1, '/');
-	execute(sess, userhostport, new_spath);
 }
 
 /**
@@ -662,8 +635,6 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_set_handler(svr->root, svc_root_handler) < 0)
 
 		|| ((node = russ_svcnode_add(svr->root, "*", svc_userhostport_handler)) == NULL)
-		|| (russ_svcnode_set_wildcard(node, 1) < 0)
-		|| ((node = russ_svcnode_add(node, "*", svc_userhostport_other_handler)) == NULL)
 		|| (russ_svcnode_set_autoanswer(node, autoanswer) < 0)
 		|| (russ_svcnode_set_wildcard(node, 1) < 0)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)) {
