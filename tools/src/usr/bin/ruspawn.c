@@ -66,8 +66,8 @@ ruspawn(int argc, char **argv) {
 	if (!withpids) {
 		char	*p;
 
-		p = index(startstr, ':');
-		p = index(p+1, ':');
+		p = strchr(startstr, ':');
+		p = strchr(p+1, ':');
 		strcpy(startstr, p+1);
 	}
 	printf("%s", startstr);

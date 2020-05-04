@@ -49,10 +49,10 @@ russ_spath_hasoption(const char *spath) {
 	if (spath == NULL) {
 		return 0;
 	}
-	if ((last = rindex(spath, '/')) == NULL) {
+	if ((last = strrchr(spath, '/')) == NULL) {
 		last = spath;
 	}
-	if (index(last, '?') == NULL) {
+	if (strchr(last, '?') == NULL) {
 		return 0;
 	}
 	return 1;
@@ -73,7 +73,7 @@ russ_spath_getlast(const char *spath) {
 	if (spath == NULL) {
 		return NULL;
 	}
-	if ((last = rindex(spath, '/')) == NULL) {
+	if ((last = strrchr(spath, '/')) == NULL) {
 		return strdup(spath);
 	}
 	return strdup(last+1);
@@ -95,12 +95,12 @@ russ_spath_getname(const char *spath) {
 	if (spath == NULL) {
 		return NULL;
 	}
-	if ((name = rindex(spath, '/')) == NULL) {
+	if ((name = strrchr(spath, '/')) == NULL) {
 		name = spath;
 	} else {
 		name++;
 	}
-	qsep = index(name, '?');
+	qsep = strchr(name, '?');
 	if (qsep == NULL) {
 		return strdup(name);
 	}
@@ -120,7 +120,7 @@ russ_spath_getoptions(const char *spath) {
 	if (spath == NULL) {
 		return NULL;
 	}
-	if ((last = rindex(spath, '/')) == NULL) {
+	if ((last = strrchr(spath, '/')) == NULL) {
 		last = spath;
 	}
 	return russ_sarray0_new_split((char *)last, "?", 1);
@@ -164,7 +164,7 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 			/* for each subpath, test for symlink and resolve */
 			bp = buf;
 			while (bp != NULL) {
-				if ((bp = index(bp+1, '/')) != NULL) {
+				if ((bp = strchr(bp+1, '/')) != NULL) {
 					*bp = '\0'; /* delimit path to check */
 				}
 				if (lstat(buf, &st) == 0) {
@@ -189,7 +189,7 @@ russ_spath_resolvewithuid(const char *spath, uid_t *uid_p, int follow) {
 								return NULL;
 							}
 						} else {
-							if ((bp2 = rindex(buf, '/')) != NULL) {
+							if ((bp2 = strrchr(buf, '/')) != NULL) {
 								/* append lnkbuf to subpath */
 								*bp2 = '\0';
 								if (russ_snprintf(tmpbuf, sizeof(tmpbuf), "%s/%s", buf, lnkbuf) < 0) {
@@ -324,7 +324,7 @@ russ_spath_split(const char *spath, char **saddr, char **spath2) {
 	*/
 	p = (char *)spath;
 	while (p != NULL) {
-		if ((p = index(p+1, '/')) != NULL) {
+		if ((p = strchr(p+1, '/')) != NULL) {
 			*p = '\0';
 		}
 		if (lstat(spath, &st) == 0) {

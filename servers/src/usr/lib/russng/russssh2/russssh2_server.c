@@ -486,7 +486,7 @@ svc_net_handler(struct russ_sess *sess) {
 
 	/* extract and validate user@host and new_spath */
 	userhost = &(req->spath[5]);
-	if ((p = index(userhost, '/')) == NULL) {
+	if ((p = strchr(userhost, '/')) == NULL) {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
 		exit(0);
 	}

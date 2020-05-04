@@ -402,7 +402,7 @@ svc_id_index_other_handler(struct russ_sess *sess) {
 	tail = strchr(tail+1, '/')+1;
 	targetconf = targetslist.targetconfs[idx];
 	userhost = russ_conf_get(targetconf, "target", "userhost", NULL);
-	if ((index(userhost, '@') == NULL) && (is_localhost(userhost))) {
+	if ((strchr(userhost, '@') == NULL) && (is_localhost(userhost))) {
 		if (russ_snprintf(new_spath, sizeof(new_spath), "%s", tail) < 0) {
 			russ_sconn_fatal(sconn, "error: cannot patch spath", RUSS_EXIT_FAILURE);
 			exit(0);
