@@ -234,6 +234,8 @@ struct russ_sess {
 	struct russ_sconn	*sconn;
 	struct russ_req		*req;
 	char			*spath;
+	char			*name;
+	char			**options;
 };
 
 /**

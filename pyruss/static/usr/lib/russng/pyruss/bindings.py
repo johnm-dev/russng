@@ -185,6 +185,8 @@ russ_sess_Structure._fields_ = [
         ("sconn", ctypes.POINTER(russ_sconn_Structure)),
         ("req", ctypes.POINTER(russ_req_Structure)),
         ("spath", ctypes.c_char_p),
+        ("name", ctypes.c_char_p),
+        ("options", ctypes.POINTER(ctypes.c_char_p)),
     ]
 
 #

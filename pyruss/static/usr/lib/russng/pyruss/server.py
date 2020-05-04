@@ -248,6 +248,34 @@ class Sess:
     def __del__(self):
         self._ptr = None
 
+    def get_name(self):
+        """Return name of last spath component.
+        """
+        return self._ptr.contents.name
+
+    def get_options(self):
+        """Return options of last spath component as dictionary.
+        """
+        sess_options = self._ptr.contents.options
+        opts = {}
+        if bool(sess_options):
+            i = 0
+            while 1:
+                s = sess_options[i]
+                i += 1
+                if s == None:
+                    break
+                try:
+                    t = s.split("=", 1)
+                    if len(t) == 1:
+                        k, v = t[0], ""
+                    else:
+                        k, v = t
+                    opts[k] = v
+                except:
+                    pass
+        return opts
+
     def get_request(self):
         """Return Request object.
         """

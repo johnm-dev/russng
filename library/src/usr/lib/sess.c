@@ -41,6 +41,7 @@
 struct russ_sess *
 russ_sess_new(struct russ_svr *svr, struct russ_sconn *sconn, struct russ_req *req, char *spath) {
 	struct russ_sess	*self = NULL;
+	char			*last = NULL;
 
 	if ((self = russ_malloc(sizeof(struct russ_sess))) == NULL) {
 		return NULL;
@@ -48,13 +49,24 @@ russ_sess_new(struct russ_svr *svr, struct russ_sconn *sconn, struct russ_req *r
 	self->svr = svr;
 	self->sconn = sconn;
 	self->req = req;
+	self->spath = NULL;
+	self->name = NULL;
+	self->options = NULL;
+
 	if ((self->spath = strdup(spath)) == NULL) {
 		return NULL;
 	}
+	if (((last = russ_spath_getlast(self->spath)) == NULL)
+		|| ((self->name = russ_spath_getname(last)) == NULL)
+		|| ((self->options = russ_spath_getoptions(last)) == NULL)) {
+		goto free_session;
+	}
 
+	last = russ_free(last);
 	return self;
 
-free_request:
+free_session:
+	last = russ_free(last);
 	russ_sess_free(self);
 	return NULL;
 }
@@ -74,6 +86,8 @@ russ_sess_free(struct russ_sess *self) {
 
 	/* own copy */
 	self->spath = russ_free(self->spath);
+	self->name = russ_free(self->name);
+	self->options = russ_sarray0_free(self->options);
 
 	self = russ_free(self);
 	return NULL;
