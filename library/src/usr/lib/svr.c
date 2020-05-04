@@ -299,7 +299,7 @@ russ_svr_set_type(struct russ_svr *self, int type) {
 */
 void
 russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
-	struct russ_sess	sess;
+	struct russ_sess	*sess = NULL;
 	struct russ_req		*req = NULL;
 	struct russ_svcnode	*node = NULL;
 	char			mpath[RUSS_REQ_SPATH_MAX] = "";
@@ -365,15 +365,12 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 	}
 
 	/* prepare session object */
-	sess.sconn = sconn;
-	sess.svr = self;
-	strncpy(sess.spath, mpath, RUSS_REQ_SPATH_MAX);
-	sess.req = req;
+	sess = russ_sess_new(self, sconn, req, mpath);
 
 	/* call handler, if available */
 	if (node) {
 		if (node->handler) {
-			node->handler(&sess);
+			node->handler(sess);
 		}
 	} else {
 		russ_sconn_fatal(sconn, RUSS_MSG_NOSERVICE, RUSS_EXIT_FAILURE);
@@ -430,6 +427,7 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 
 cleanup:
 	/* clean up: on error and fallthrough on success */
+	sess = russ_sess_free(sess);
 	if (req != NULL) {
 		req = russ_req_free(req);
 	}

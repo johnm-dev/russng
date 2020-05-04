@@ -184,7 +184,7 @@ russ_sess_Structure._fields_ = [
         ("svr", ctypes.POINTER(russ_svr_Structure)),
         ("sconn", ctypes.POINTER(russ_sconn_Structure)),
         ("req", ctypes.POINTER(russ_req_Structure)),
-        ("spath", ctypes.c_char*RUSS_REQ_SPATH_MAX),
+        ("spath", ctypes.c_char_p),
     ]
 
 #

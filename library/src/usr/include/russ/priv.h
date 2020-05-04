@@ -85,6 +85,10 @@ int russ_poll_deadline(russ_deadline, struct pollfd *, int);
 struct russ_req *russ_req_new(const char *, const char *, const char *, char **, char **);
 struct russ_req *russ_req_free(struct russ_req *);
 
+/* sess.c */
+struct russ_sess *russ_sess_free(struct russ_sess *);
+struct russ_sess *russ_sess_new(struct russ_svr *, struct russ_sconn *, struct russ_req *, char *);
+
 /* socket.c */
 int russ_accept_deadline(russ_deadline, int, struct sockaddr *, socklen_t *);
 int russ_connect_deadline(russ_deadline, int, struct sockaddr *, socklen_t);

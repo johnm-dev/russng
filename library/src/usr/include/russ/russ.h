@@ -233,7 +233,7 @@ struct russ_sess {
 	struct russ_svr		*svr;
 	struct russ_sconn	*sconn;
 	struct russ_req		*req;
-	char			spath[RUSS_REQ_SPATH_MAX];
+	char			*spath;
 };
 
 /**
