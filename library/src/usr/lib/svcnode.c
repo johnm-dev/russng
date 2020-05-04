@@ -84,6 +84,9 @@ russ_svcnode_free(struct russ_svcnode *self) {
 /**
 * Add child service node.
 *
+* Nodes are added in strcmp() order. This allows linear searching and
+* short circuit.
+*
 * @param self		service node object
 * @param name		service name
 * @param handler	service handler
@@ -128,6 +131,8 @@ russ_svcnode_add(struct russ_svcnode *self, const char *name, russ_svchandler ha
 *
 * spath options are ignored. A wildcard svcnode always matches.
 *
+* See russ_svcnode_add() for ordering of child nodes.
+*
 * @param self		service node object starting point
 * @param path		path to match (relative to self)
 * @param mpath		path matched
@@ -164,6 +169,7 @@ russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int 
 
 	//russ_lprintf("/tmp/svcfind.log", NULL, "name (%s) path (%s) qlen (%d) slen (%d) nlen (%d)\n", self->name, path, qlen, slen, nlen);
 	for (node = self->children; node != NULL; node = node->next) {
+		/* strcmp() ordering */
 		cmp = strncmp(node->name, path, nlen);
 		//russ_lprintf("/tmp/svcfind.log", NULL, "node->name (%s) cmp (%d) wildcard (%d) name[nlen] (%c)\n", node->name, cmp, node->wildcard, node->name[nlen]);
 
