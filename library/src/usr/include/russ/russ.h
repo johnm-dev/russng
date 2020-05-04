@@ -97,7 +97,7 @@ extern "C" {
 /* request */
 #define RUSS_REQ_ARGS_MAX	1024
 #define RUSS_REQ_ATTRS_MAX	1024
-#define RUSS_REQ_SPATH_MAX	8192
+#define RUSS_REQ_SPATH_MAX	65536
 #define RUSS_REQ_PROTOCOLSTRING	"0010"
 
 /* start */
