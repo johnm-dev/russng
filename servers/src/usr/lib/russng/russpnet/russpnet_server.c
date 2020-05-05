@@ -711,18 +711,22 @@ main(int argc, char **argv) {
 	targetslist.n = 0;
 	targetsconf = russ_conf_new();
 
-	targetsfilename = russ_conf_get(conf, "targets", "filename", NULL);
-	targetsfiletype = russ_conf_get(conf, "targets", "filetype", NULL);
+	if ((targetsfilename = russ_conf_get(conf, "targets", "filename", NULL)) == NULL) {
+		fprintf(stderr, "error: targets file not specified\n");
+		exit(1);
+	}
+	if ((targetsfiletype = russ_conf_get(conf, "targets", "filetype", "legacy")) == NULL) {
+		fprintf(stderr, "error: targets type not specified\n");
+		exit(1);
+	}
 
 	if (strcmp(targetsfiletype, "conf") == 0) {
-		if ((targetsfilename == NULL)
-			|| (load_targetsfile(targetsfilename) < 0)) {
+		if (load_targetsfile(targetsfilename) < 0) {
 			fprintf(stderr, "error: bad/missing targets file\n");
 			exit(1);
 		}
-	} else if ((strcmp(targetsfiletype, "legacy") == 0) || (targetsfiletype == NULL)) {
-		if ((targetsfilename == NULL)
-			|| (load_targetsfile_legacy(targetsfilename) < 0)) {
+	} else if (strcmp(targetsfiletype, "legacy") == 0) {
+		if (load_targetsfile_legacy(targetsfilename) < 0) {
 			fprintf(stderr, "error: bad/missing targets file\n");
 			exit(1);
 		}
