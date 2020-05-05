@@ -170,6 +170,12 @@ def gettime():
     """
     return libruss.russ_gettime()
 
+def spath_stripoptions(spath):
+    """Strip options from the spath. See russ_spath_stripoptions().
+    """
+    l = [comp.split("?", 1)[0] for comp in spath.split("/")]
+    return "/".join(l)
+
 def switch_user(uid, gid, gids):
     """Change process uid/gid/supplemental gids.
 
