@@ -160,7 +160,9 @@ russ_svcnode_Structure._fields_ = [
         ("name", ctypes.c_char_p),
         ("next", ctypes.POINTER(russ_svcnode_Structure)),
         ("children", ctypes.POINTER(russ_svcnode_Structure)),
+        ("autoanswer", ctypes.c_int),
         ("virtual", ctypes.c_int),
+        ("wildcard", ctypes.c_int),
     ]
 
 class russ_svr_Structure(ctypes.Structure):
@@ -174,9 +176,11 @@ class russ_svr_Structure(ctypes.Structure):
         ("closeonaccept", ctypes.c_int),
         ("accepthandler", ctypes.c_void_p), # cheating to get pointer
         ("accepttimeout", ctypes.c_int),
+        ("allowrootuser", ctypes.c_int),
         ("answerhandler", ctypes.c_void_p), # cheating to get pointer
         ("awaittimeout", ctypes.c_int),
         ("autoswitchuser", ctypes.c_int),
+        ("matchclientuser", ctypes.c_int),
         ("help", ctypes.c_char_p),
     ]
 
