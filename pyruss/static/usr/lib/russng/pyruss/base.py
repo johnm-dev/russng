@@ -51,7 +51,8 @@ def list_of_strings_to_c_string_array(l):
         if s == None:
             c_strings[i] = None
         else:
-            c_strings[i] = ctypes.create_string_buffer(s.encode()).value
+            # create_string_buffer() handles conversion
+            c_strings[i] = ctypes.create_string_buffer(s).value
     return c_strings
 
 def convert_dial_attrs_args(attrs, args):
@@ -72,14 +73,14 @@ def convert_dial_attrs_args(attrs, args):
 def announce(path, mode, uid, gid):
     """Announce a service.
     """
-    lisd = libruss.russ_announce(path, mode, uid, gid)
+    lisd = libruss.russ_announce(strtobytes(path), mode, uid, gid)
     return lisd
 
 def dialv(deadline, op, spath, attrs=None, args=None):
     """Dial a service.
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
-    cconn_ptr = libruss.russ_dialv(deadline, op.encode(), spath.encode(), c_attrs, c_argv)
+    cconn_ptr = libruss.russ_dialv(deadline, strtobytes(op), strtobytes(spath), c_attrs, c_argv)
     return bool(cconn_ptr) and ClientConn(cconn_ptr, True) or None
 
 dial = dialv
@@ -89,7 +90,7 @@ def dialv_wait(deadline, op, spath, attrs=None, args=None):
     """
     c_attrs, c_argv = convert_dial_attrs_args(attrs, args)
     exitst = ctypes.c_int()
-    rv = libruss.russ_dialv_wait(deadline, op.encode(), spath.encode(), c_attrs, c_argv, ctypes.byref(exitst))
+    rv = libruss.russ_dialv_wait(deadline, strtobytes(op), strtobytes(spath), c_attrs, c_argv, ctypes.byref(exitst))
     return rv, int(exitst.value)
 
 def dialv_wait_timeout(timeout, op, spath, attrs=None, args=None):
@@ -121,7 +122,7 @@ def dialv_wait_inouterr(deadline, op, spath, attrs=None, args=None, stdin=None, 
         ctypes.memmove(rbufs[0].contents.data, ctypes.create_string_buffer(stdin), len(stdin))
         rbufs[0].contents.len = len(stdin)
 
-    rv = libruss.russ_dialv_wait_inouterr3(deadline, op.encode(), spath.encode(), c_attrs, c_argv,
+    rv = libruss.russ_dialv_wait_inouterr3(deadline, strtobytes(op), strtobytes(spath), c_attrs, c_argv,
         ctypes.byref(exitst), rbufs[0], rbufs[1], rbufs[2])
 
     # copy stdout and stderr out
@@ -163,7 +164,7 @@ def execv_wait_inouterr_timeout(timeout, spath, attrs=None, args=None, stdin=Non
 def get_services_dir():
     """Get services directory path.
     """
-    return libruss.russ_get_services_dir()
+    return bytestostr(libruss.russ_get_services_dir())
 
 def gettime():
     """Get clock time (corresponds to a deadline).
@@ -205,7 +206,7 @@ def to_timeout(deadline):
 def unlink(path):
     """Unlink service path.
     """
-    return libruss.russ_unlink(path)
+    return libruss.russ_unlink(strtobytes(path))
 
 class Relay:
     """To relay data between one or more file descriptors pairs with special
@@ -248,7 +249,7 @@ class Request:
         if bool(req_argv):
             i = 0
             while 1:
-                s = req_argv[i]
+                s = bytestostr(req_argv[i])
                 i += 1
                 if s == None:
                     break
@@ -263,7 +264,7 @@ class Request:
         if bool(req_attrv):
             i = 0
             while 1:
-                s = req_attrv[i]
+                s = bytestostr(req_attrv[i])
                 i += 1
                 if s == None:
                     break
@@ -277,7 +278,7 @@ class Request:
     def get_op(self):
         """Return op string.
         """
-        return self._ptr.contents.op
+        return bytestostr(self._ptr.contents.op)
     op = property(get_op, None)
 
     def get_opnum(self):
@@ -289,13 +290,13 @@ class Request:
     def get_protocolstring(self):
         """Return protocol string.
         """
-        return self._ptr.contents.protocolstring
+        return bytestostr(self._ptr.contents.protocolstring)
     protocolstring = property(get_protocolstring, None)
 
     def get_spath(self):
         """Return service path.
         """
-        return self._ptr.contents.spath
+        return bytestostr(self._ptr.contents.spath)
     spath = property(get_spath, None)
 
 class Conn:
@@ -453,7 +454,7 @@ class ServerConn(Conn):
     def fatal(self, msg, exitst):
         """Send (usually non-0) exit value and message on stderr stream.
         """
-        return libruss.russ_sconn_fatal(self._ptr, msg, exitst)
+        return libruss.russ_sconn_fatal(self._ptr, strtobytes(msg), exitst)
 
     def redialandsplice(self, deadline, req):
         """Dial another service and pass the received fds to the

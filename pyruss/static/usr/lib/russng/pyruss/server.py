@@ -38,6 +38,7 @@ import threading
 
 #
 import pyruss
+from pyruss.bindings import strtobytes, bytestostr
 from pyruss import libruss, SVCHANDLER_FUNC
 from pyruss import Request, ServerConn
 
@@ -84,7 +85,7 @@ class ServiceNode:
 
     @classmethod
     def new(cls, name, handler):
-        _ptr = libruss.russ_svcnode_new(name, get_service_handler(handler))
+        _ptr = libruss.russ_svcnode_new(strtobytes(name), get_service_handler(handler))
         if _ptr == None:
             raise Exception("could not create ServiceNode")
         return cls(_ptr)
@@ -98,12 +99,12 @@ class ServiceNode:
     def add(self, name, handler):
         """Add handler.
         """
-        return ServiceNode(libruss.russ_svcnode_add(self._ptr, name, get_service_handler(handler)))
+        return ServiceNode(libruss.russ_svcnode_add(self._ptr, strtobytes(name), get_service_handler(handler)))
 
     def find(self, path):
         """Find service node corresponding to service path.
         """
-        return ServiceNode(libruss.russ_svcnode_find(self._ptr, path))
+        return ServiceNode(libruss.russ_svcnode_find(self._ptr, strtobytes(path)))
 
     def set_autoanswer(self, value):
         """Set autoanswer state.
@@ -216,7 +217,7 @@ class Server:
     def set_help(self, value):
         """Set help text.
         """
-        return libruss.russ_svr_set_help(self._ptr, value)
+        return libruss.russ_svr_set_help(self._ptr, strtobytes(value))
 
     def set_lisd(self, lisd):
         """Set socket descriptor.
@@ -251,7 +252,7 @@ class Sess:
     def get_name(self):
         """Return name of last spath component.
         """
-        return self._ptr.contents.name
+        return bytestostr(self._ptr.contents.name)
 
     def get_options(self):
         """Return options of last spath component as dictionary.
@@ -261,7 +262,7 @@ class Sess:
         if bool(sess_options):
             i = 0
             while 1:
-                s = sess_options[i]
+                s = bytestostr(sess_options[i])
                 i += 1
                 if s == None:
                     break
@@ -289,7 +290,7 @@ class Sess:
     def get_spath(self):
         """Return service path.
         """
-        return self._ptr.contents.spath
+        return bytestostr(self._ptr.contents.spath)
 
     def get_svr(self):
         """Return Server object.

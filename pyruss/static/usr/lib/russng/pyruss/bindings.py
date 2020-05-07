@@ -106,6 +106,31 @@ RUSS_WAIT_HUP = -4
 russ_deadline = ctypes.c_int64
 russ_opnum = ctypes.c_uint32
 
+# helper converters for converting between string and bytes; to be
+# for all interactions with C calls (vis libruss functions)
+# rules:
+# * use strtobytes() when setting at call site
+# * use bytestostr() when getting at call site
+# * do not convert too early
+# * do not convert when calling python code
+if sys.version_info[0] == 3:
+    def strtobytes(s):
+        if s == None:
+            return s
+        return s.encode()
+
+    def bytestostr(b):
+        if b == None:
+            return b
+        return b.decode()
+else:
+    # effectively, noops
+    def strtobytes(s):
+        return s
+
+    def bytestostr(b):
+        return b
+
 # data type descriptions
 class russ_buf_Structure(ctypes.Structure):
     _fields_ = [
