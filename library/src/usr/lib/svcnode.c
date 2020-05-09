@@ -167,6 +167,9 @@ russ_svcnode_find(struct russ_svcnode *self, const char *path, char *mpath, int 
 	nsep = (qsep < ssep) ? qsep : ssep;
 	nlen = nsep-path;
 
+	/* force initialize */
+	mpath[0] = '\0';
+
 	//russ_lprintf("/tmp/svcfind.log", NULL, "name (%s) path (%s) qlen (%d) slen (%d) nlen (%d)\n", self->name, path, qlen, slen, nlen);
 	for (node = self->children; node != NULL; node = node->next) {
 		/* strcmp() ordering */
