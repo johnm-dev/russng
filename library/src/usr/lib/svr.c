@@ -427,7 +427,9 @@ russ_svr_handler(struct russ_svr *self, struct russ_sconn *sconn) {
 
 cleanup:
 	/* clean up: on error and fallthrough on success */
-	sess = russ_sess_free(sess);
+	if (sess) {
+		sess = russ_sess_free(sess);
+	}
 	if (req != NULL) {
 		req = russ_req_free(req);
 	}
