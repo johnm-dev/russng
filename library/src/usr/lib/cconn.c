@@ -47,7 +47,9 @@
 */
 struct russ_cconn *
 russ_cconn_free(struct russ_cconn *self) {
-	self = russ_free(self);
+	if (self) {
+		self = russ_free(self);
+	}
 	return NULL;
 }
 

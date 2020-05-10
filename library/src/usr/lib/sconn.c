@@ -44,7 +44,9 @@
 */
 struct russ_sconn *
 russ_sconn_free(struct russ_sconn *self) {
-	self = russ_free(self);
+	if (self) {
+		self = russ_free(self);
+	}
 	return NULL;
 }
 

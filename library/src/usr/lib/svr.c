@@ -84,6 +84,7 @@ russ_svr_new(struct russ_svcnode *root, int type, int lisd) {
 struct russ_svr *
 russ_svr_free(struct russ_svr *self) {
 	if (self) {
+		/* own copy */
 		/* TODO: only the root node is freed */
 		self->root = russ_svcnode_free(self->root);
 		self->saddr = russ_free(self->saddr);

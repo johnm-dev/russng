@@ -91,6 +91,7 @@ free_buf:
 struct russ_buf *
 russ_buf_free(struct russ_buf *self) {
 	if (self) {
+		/* own copy */
 		self->data = russ_free(self->data);
 		self = russ_free(self);
 	}

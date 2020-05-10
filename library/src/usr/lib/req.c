@@ -88,20 +88,23 @@ struct russ_req *
 russ_req_free(struct russ_req *self) {
 	int			i;
 
-	self->protocolstring = russ_free(self->protocolstring);
-	self->op = russ_free(self->op);
-	self->spath = russ_free(self->spath);
-	if (self->attrv) {
-	    for (i = 0; self->attrv[i] != NULL; i++) {
-		    self->attrv[i] = russ_free(self->attrv[i]);
-	    }
-	    self->attrv = russ_free(self->attrv);
-	}
-	if (self->argv) {
-	    for (i = 0; self->argv[i] != NULL; i++) {
-		    self->argv[i] = russ_free(self->argv[i]);
-	    }
-	    self->argv = russ_free(self->argv);
+	if (self) {
+		/* own copy */
+		self->protocolstring = russ_free(self->protocolstring);
+		self->op = russ_free(self->op);
+		self->spath = russ_free(self->spath);
+		if (self->attrv) {
+		    for (i = 0; self->attrv[i] != NULL; i++) {
+			    self->attrv[i] = russ_free(self->attrv[i]);
+		    }
+		    self->attrv = russ_free(self->attrv);
+		}
+		if (self->argv) {
+		    for (i = 0; self->argv[i] != NULL; i++) {
+			    self->argv[i] = russ_free(self->argv[i]);
+		    }
+		    self->argv = russ_free(self->argv);
+		}
 	}
 	return NULL;
 }

@@ -79,16 +79,18 @@ free_session:
 */
 struct russ_sess *
 russ_sess_free(struct russ_sess *self) {
-	/* references only */
-	self->svr = NULL;
-	self->sconn = NULL;
-	self->req = NULL;
+	if (self) {
+		/* references only */
+		self->svr = NULL;
+		self->sconn = NULL;
+		self->req = NULL;
 
-	/* own copy */
-	self->spath = russ_free(self->spath);
-	self->name = russ_free(self->name);
-	self->options = russ_sarray0_free(self->options);
+		/* own copy */
+		self->spath = russ_free(self->spath);
+		self->name = russ_free(self->name);
+		self->options = russ_sarray0_free(self->options);
 
-	self = russ_free(self);
+		self = russ_free(self);
+	}
 	return NULL;
 }

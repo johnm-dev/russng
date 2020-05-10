@@ -78,6 +78,7 @@ russ_relaystream_init(struct russ_relaystream *self, int rfd, int wfd, int bufsi
 struct russ_relaystream *
 russ_relaystream_free(struct russ_relaystream *self) {
 	if (self) {
+		/* own copy */
 		self->rbuf = russ_buf_free(self->rbuf);
 		self = russ_free(self);
 	}
@@ -197,6 +198,7 @@ russ_relay_free(struct russ_relay *self) {
 	int	i;
 
 	if (self) {
+		/* own copy */
 		self->pollfds = russ_free(self->pollfds);
 		for (i = 0; i < self->nstreams; i++) {
 			self->streams[i] = russ_relaystream_free(self->streams[i]);

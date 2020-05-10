@@ -74,7 +74,8 @@ free_node:
 */
 struct russ_svcnode *
 russ_svcnode_free(struct russ_svcnode *self) {
-	if (self != NULL) {
+	if (self) {
+		/* own copy */
 		self->name = russ_free(self->name);
 		self = russ_free(self);
 	}
