@@ -116,8 +116,12 @@ russ_svr_loop_thread(struct russ_svr *self) {
 
 		data->svr = self;
 		data->sconn = sconn;
-		if (pthread_create(&th, NULL, (void *)russ_svr_handler_helper, (void *)data) < 0) {
-			fprintf(stderr, "error: cannot spawn thread\n");
+		if (self->closeonaccept == 1) {
+			russ_svr_handler_helper((void *)data);
+		} else {
+			if (pthread_create(&th, NULL, (void *)russ_svr_handler_helper, (void *)data) < 0) {
+				fprintf(stderr, "error: cannot spawn thread\n");
+			}
 		}
 	}
 }
