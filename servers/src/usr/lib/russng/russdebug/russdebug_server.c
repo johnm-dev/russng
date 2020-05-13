@@ -452,8 +452,9 @@ main(int argc, char **argv) {
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
-		|| ((getuid() == 0)
-			&& ((russ_svr_set_autoswitchuser(svr, 1) < 0) || (russ_svr_set_matchclientuser(svr, 1) < 0)))
+		|| (russ_svr_set_autoswitchuser(svr, 1) < 0)
+		|| (russ_svr_set_allowrootuser(svr, 1) < 0)
+		|| (russ_svr_set_matchclientuser(svr, 1) < 0)
 		|| (russ_svr_set_help(svr, HELP) < 0)
 
 		|| ((node = russ_svcnode_add(svr->root, "chargen", svc_chargen_handler)) == NULL)
