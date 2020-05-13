@@ -35,21 +35,28 @@
 * Convert group as gid or groupname string into a gid.
 *
 * @param group		gid/groupname string
-* @return		gid; -1 on failure
+* @param gid (inout)	reference to gid_t object; max uint32 on
+*			failure
+* @return		0 on success; -1 on failure
 */
-gid_t
-russ_group2gid(char *group) {
+int
+russ_group2gid(char *group, gid_t *gid) {
 	struct group	*gr = NULL;
-	gid_t	gid;
 
 	if ((group) && ((group[0] >= '0') && (group[0] <= '9'))) {
-		if (sscanf(group, "%d", &gid) < 1) {
-			gid = -1;
+		if (sscanf(group, "%u", gid) < 1) {
+			goto fail;
 		}
 	} else {
-		gid = ((gr = getgrnam(group)) == NULL) ? -1 : gr->gr_gid;
+		if ((gr = getgrnam(group)) == NULL) {
+			goto fail;
+		}
+		*gid = gr->gr_gid;
 	}
-	return (gid >= 0) ? gid : -1;
+	return 0;
+fail:
+	*gid = -1;
+	return -1;
 }
 
 /**
@@ -163,19 +170,26 @@ russ_switch_userinitgroups(uid_t uid, gid_t gid) {
 * Convert user as uid or username string into a uid.
 *
 * @param group		uid/username string
-* @return		uid; -1 on failure
+* @param uid (inout)	reference to uid_t object; max uint32 on
+*			failure
+* @return		0 on success; -1 on failure
 */
-uid_t
-russ_user2uid(char *user) {
+int
+russ_user2uid(char *user, uid_t *uid) {
 	struct passwd	*pw = NULL;
-	uid_t		uid;
 
 	if ((user) && ((user[0] >= '0') && (user[0] <= '9'))) {
-		if (sscanf(user, "%d", &uid) < 1) {
-			uid = -1;
+		if (sscanf(user, "%u", uid) < 1) {
+			goto fail;
 		}
 	} else {
-		uid = ((pw = getpwnam(user)) == NULL) ? -1 : pw->pw_uid;
+		if ((pw = getpwnam(user)) == NULL) {
+			goto fail;
+		}
+		*uid = pw->pw_uid;
 	}
-	return (uid >= 0) ? uid : -1;
+	return 0;
+fail:
+	*uid = -1;
+	return -1;
 }

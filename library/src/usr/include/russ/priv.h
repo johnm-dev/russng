@@ -107,8 +107,8 @@ void russ_svr_loop_fork(struct russ_svr *);
 void russ_svr_loop_thread(struct russ_svr *);
 
 /* user.c */
-gid_t russ_group2gid(char *);
-uid_t russ_user2uid(char *);
+int russ_group2gid(char *, gid_t *);
+int russ_user2uid(char *, uid_t *);
 
 #ifdef __cplusplus
 }
