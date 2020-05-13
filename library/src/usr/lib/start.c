@@ -22,6 +22,7 @@
 # license--end
 */
 
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -51,48 +52,6 @@ __reap_sigh(int signum) {
 		kill(-getpgid(0), SIGTERM);
 		called = 1;
 	}
-}
-
-/**
-* Make directories. For rustart() only.
-*
-* @param dirnames	:-separated list of paths
-* @param mode		file mode
-* @return		0 on success; -1 on failure
-*/
-static int
-_mkdirs(char *dirnames, int mode) {
-	struct stat	st;
-	char		*dname = NULL;
-	char		*p = NULL, *q = NULL;
-
-	if ((dirnames = strdup(dirnames)) == NULL) {
-		return -1;
-	}
-
-	/* test q before p */
-	for (q = dirnames, p = q; (q != NULL) && (*p != '\0'); p = q+1) {
-		if ((q = strchr(p, ':')) != NULL) {
-			*q = '\0';
-		}
-		dname = russ_spath_resolve(p);
-		if (stat(dname, &st) < 0) {
-			if (mkdir(dname, mode) < 0) {
-				goto fail;
-			}
-		} else if ((S_ISDIR(st.st_mode))
-			&& ((st.st_mode & 0777) != mode)) {
-			/* conflicting mode */
-			goto fail;
-		}
-	}
-	free(dirnames);
-	free(dname);
-	return 0;
-fail:
-	free(dirnames);
-	free(dname);
-	return -1;
 }
 
 /**
@@ -137,6 +96,92 @@ _russ_start_augment_path(int argc, char **argv) {
 		}
 	}
 	return 0;
+}
+
+/* See qsort man page */
+static int
+_russ_start_mkdirs_cmpstringp(const void *p1, const void *p2) {
+   return strcmp(* (char * const *) p1, * (char * const *) p2);
+}
+
+/**
+* Make directories specified in a section.
+*
+* The format is:
+*     <path>=[<uid>]:[<gid>]:<mode>
+*
+* The ordering of creation is undefined.
+*
+* @param conf		configuration object
+* @param secname	section name
+* @return		0 on success; -1 on failure
+*/
+static int
+_russ_start_mkdirs(struct russ_conf *conf, char *secname) {
+	struct stat	st;
+	char		*value = NULL;
+	char		**paths = NULL, *path = NULL;
+	char		group[32], user[32];
+	uid_t		uid, gid;
+	mode_t		mode;
+	int		i, npaths;
+
+	user[31] = '\0';
+	group[31] = '\0';
+
+	if (!russ_conf_has_section(conf, secname)) {
+		return 0;
+	}
+
+	if ((paths = russ_conf_options(conf, secname)) == NULL) {
+		return 0;
+	}
+	for (npaths = 0; paths[npaths] != NULL; npaths++);
+	qsort(path, npaths, sizeof(char *), _russ_start_mkdirs_cmpstringp);
+
+	for (i = 0; paths[i] != NULL; i++) {
+		path = paths[i];
+		if ((path[0] != '/')
+			|| ((value = russ_conf_get(conf, secname, path, NULL)) == NULL)
+			|| (sscanf(value, "%31[^:]:%31[^:]:%i", user, group, &mode) != 3)) {
+			goto cleanup;
+		}
+
+		if ((strcmp(user, "") == 0) || (strcmp(user, "-1") == 0)) {
+			uid = getuid();
+		} else if (russ_user2uid(user, &uid) < 0) {
+			goto cleanup;
+		}
+		if ((strcmp(group, "") == 0) || (strcmp(group, "-1") == 0)) {
+			gid = getgid();
+		} else if (russ_group2gid(group, &gid) < 0) {
+			goto cleanup;
+		}
+
+		if (((mkdir(path, mode) < 0) && (errno != EEXIST))
+			|| (stat(path, &st) < 0)
+			|| (!S_ISDIR(st.st_mode))) {
+			goto cleanup;
+		}
+		if (chmod(path, mode) < 0) {
+			/* try to restore it */
+			chmod(path, st.st_mode);
+			goto cleanup;
+		}
+		if (chown(path, uid, gid) < 0) {
+			/* no backout! */
+			goto cleanup;
+		}
+	}
+
+	value = russ_free(value);
+	paths = russ_sarray0_free(paths);
+	return 0;
+
+cleanup:
+	value = russ_free(value);
+	paths = russ_sarray0_free(paths);
+	return -1;
 }
 
 /**
@@ -408,8 +453,6 @@ russ_start(int starttype, struct russ_conf *conf) {
 	char			*main_cwd = NULL;
 	mode_t			main_file_mode;
 	char			*main_file_user = NULL, *main_file_group = NULL;
-	char			*main_mkdirs = NULL;
-	int			main_mkdirs_mode;
 	int			main_pgid;
 	char			*main_user = NULL, *main_group = NULL;
 	mode_t			main_umask;
@@ -490,8 +533,6 @@ russ_start(int starttype, struct russ_conf *conf) {
 		? russ_user2uid(main_user) : getuid();
 	gid = (main_group = russ_conf_get(conf, "main", "group", NULL)) \
 		? russ_group2gid(main_group) : getgid();
-	main_mkdirs = russ_conf_get(conf, "main", "mkdirs", NULL);
-	main_mkdirs_mode = russ_conf_getsint(conf, "main", "mkdirs_mode", 0755);
 
 	/* close fds > 2 */
 	russ_close_range(3, -1);
@@ -523,11 +564,9 @@ russ_start(int starttype, struct russ_conf *conf) {
 	}
 
 	/* create directories */
-	if (main_mkdirs) {
-		if (_mkdirs(main_mkdirs, main_mkdirs_mode) < 0) {
-			fprintf(stderr, "error: cannot make directories\n");
-			return NULL;
-		}
+	if (_russ_start_mkdirs(conf, "main.dirs") < 0) {
+		fprintf(stderr, "error: cannot make directories\n");
+		return NULL;		
 	}
 
 	/* set limits */
