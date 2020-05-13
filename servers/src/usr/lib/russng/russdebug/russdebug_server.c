@@ -70,7 +70,13 @@ const char		*HELP =
 "    Return with given exit value (between 0 and 255).\n"
 "\n"
 "/request[/...]\n"
-"    Outputs the request information at the server stdout.\n";
+"    Outputs the request information at the server stdout.\n"
+"\n"
+"/session[/...]\n"
+"    Write back the session information.\n"
+"\n"
+"/spath[/...]\n"
+"    Write back service path information.\n";
 //"\n"
 //"/whoami\n"
 //"    Outputs uid/gid and euid/egid information of running server\n"
@@ -333,6 +339,80 @@ svc_request_handler(struct russ_sess *sess) {
 }
 
 void
+svc_session_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	int			fd;
+	int			i;
+
+	sconn = sess->sconn;
+	req = sess->req;
+
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		fd = sconn->fds[1];
+
+		russ_dprintf(fd, "spath (%s)\n", sess->spath);
+		russ_dprintf(fd, "name (%s)\n", sess->name);
+		/* options */
+		if (sess->options == NULL) {
+			russ_dprintf(fd, "options (NULL)\n");
+		} else {
+			for (i = 0; sess->options[i] != NULL; i++) {
+				russ_dprintf(fd, "options[%d] (%s)\n", i, sess->options[i]);
+			}
+		}
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
+}
+
+void
+svc_spath_handler(struct russ_sess *sess) {
+	struct russ_sconn	*sconn = NULL;
+	struct russ_req		*req = NULL;
+	char			**options = NULL, *p = NULL;
+	int			fd;
+	int			i;
+
+	sconn = sess->sconn;
+	req = sess->req;
+
+	if (req->opnum == RUSS_OPNUM_EXECUTE) {
+		fd = sconn->fds[1];
+
+		russ_dprintf(fd, "req->spath (%s)\n", req->spath);
+		russ_dprintf(fd, "sess->spath (%s)\n", sess->spath);
+		options = russ_spath_getoptions(sess->spath);
+		/* options */
+		if (options == NULL) {
+			russ_dprintf(fd, "options (NULL)\n");
+		} else {
+			for (i = 0; options[i] != NULL; i++) {
+				russ_dprintf(fd, "options[%d] (%s)\n", i, options[i]);
+			}
+		}
+		options = russ_sarray0_free(options);
+
+		russ_dprintf(fd, "hasoption (%d)\n", russ_spath_hasoption(sess->spath));
+
+		p = russ_spath_getlast(sess->spath);
+		russ_dprintf(fd, "last (%s)\n", p);
+		p = russ_free(p);
+
+		p = russ_spath_getname(sess->spath);
+		russ_dprintf(fd, "name (%s)\n", p);
+		p = russ_free(p);
+
+		p = russ_spath_stripoptions(sess->spath);
+		russ_dprintf(fd, "stripped spath (%s)\n", p);
+		p = russ_free(p);
+
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		exit(0);
+	}
+}
+
+void
 svc_whoami_handler(struct russ_sess *sess) {
 	struct russ_sconn	*sconn = NULL;
 	struct russ_req		*req = NULL;
@@ -389,6 +469,10 @@ main(int argc, char **argv) {
 		|| (russ_svcnode_add(svr->root, "exit", svc_exit_handler) == NULL)
 		//|| (russ_svcnode_add(svr->root, "whoami", svc_whoami_handler) == NULL)
 		|| ((node = russ_svcnode_add(svr->root, "request", svc_request_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
+		|| ((node = russ_svcnode_add(svr->root, "session", svc_session_handler)) == NULL)
+		|| (russ_svcnode_set_virtual(node, 1) < 0)
+		|| ((node = russ_svcnode_add(svr->root, "spath", svc_spath_handler)) == NULL)
 		|| (russ_svcnode_set_virtual(node, 1) < 0)) {
 		fprintf(stderr, "error: cannot set up server\n");
 		exit(1);
