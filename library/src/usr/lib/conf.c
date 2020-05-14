@@ -372,14 +372,6 @@ russ_conf_load(int *argc, char **argv) {
 		}
 	}
 
-	/* (RUSSNG-899) copy "server" to "main" (remove in v7) */
-	if (!russ_conf_has_section(self, "main")
-		&& russ_conf_has_section(self, "server")) {
-		if (russ_conf_dup_section(self, "server", "main") < 0) {
-			goto free_conf;
-		}
-	}
-
 	/* move arguments to front */
 	for (j = 1; i < *argc; i++, j++) {
 		argv[j] = argv[i];
