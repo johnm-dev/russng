@@ -525,8 +525,8 @@ russ_start(int starttype, struct russ_conf *conf) {
 	main_pgid = russ_conf_getint(conf, "main", "pgid", -1);
 
 	main_cwd = russ_conf_get(conf, "main", "cwd", "/");
-	main_umask = (mode_t)russ_conf_getsint(conf, "main", "umask", 022);
-	main_file_mode = russ_conf_getsint(conf, "main", "file_mode", 0666);
+	main_umask = (mode_t)russ_conf_getint(conf, "main", "umask", 022);
+	main_file_mode = russ_conf_getint(conf, "main", "file_mode", 0666);
 
 	if ((main_file_user = russ_conf_get(conf, "main", "file_user", NULL)) != NULL) {
 		if (russ_user2uid(main_file_user, &file_uid) < 0) {

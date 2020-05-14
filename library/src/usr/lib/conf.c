@@ -658,7 +658,8 @@ russ_conf_get(struct russ_conf *self, const char *section_name, const char *opti
 
 /**
 * Get item value as long-size integer for section name and option or
-* default value if not found.
+* default value if not found. Supports prefixes: 0 for octal, 0x and
+* 0X for hexadecimal.
 *
 * @param self		russ_conf object
 * @param section_name	section name
@@ -672,7 +673,7 @@ russ_conf_getint(struct russ_conf *self, const char *section_name, const char *o
 	long			value;
 
 	if (((item = __russ_conf_get_item(self, section_name, option)) == NULL)
-		|| (sscanf(item->value, "%ld", &value) == 0)) {
+		|| (sscanf(item->value, "%li", &value) == 0)) {
 		return dvalue;
 	}
 	return value;
@@ -717,39 +718,6 @@ russ_conf_getref(struct russ_conf *self, const char *secname, const char *option
 		return NULL;
 	}
 	return item->value;
-}
-
-/**
-* Get item value as long-size integer for section name and option or
-* default value if not found. Option value determines integer type:
-* 0-prefix is octal, 0x-prefix is hex, otherwise integer.
-*
-* @param self		russ_conf object
-* @param section_name	section name
-* @param option		option name
-* @param dvalue		default value
-* @return		item value; dvalue if not found
-*/
-long
-russ_conf_getsint(struct russ_conf *self, const char *section_name, const char *option, long dvalue) {
-	struct russ_confitem	*item = NULL;
-	char			*fmt = NULL;
-	long			value;
-
-	if ((item = __russ_conf_get_item(self, section_name, option)) == NULL) {
-		return dvalue;
-	}
-	if (strncmp(item->value, "0x", 2) == 0) {
-		fmt = "%lx";
-	} else if (strncmp(item->value, "0", 1) == 0) {
-		fmt = "%lo";
-	} else {
-		fmt = "%ld";
-	}
-	if (sscanf(item->value, fmt, &value) == 0) {
-		return dvalue;
-	}
-	return value;
 }
 
 /**
