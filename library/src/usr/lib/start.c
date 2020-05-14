@@ -230,14 +230,15 @@ _russ_start_setenvs(struct russ_conf *conf, char *secname) {
 }
 
 /**
-* Set single resource (soft, hard) found in the main.limits section.
+* Set single resource (soft, hard) found in the named section.
 *
 * @param conf		configuration object
-* @param name		limit name in "main.limits" section
+* @param secname	section name
+* @param name		limit name in section
 * @return		0 on success; -1 on failure
 */
 static int
-_russ_start_setlimit(struct russ_conf *conf, char *limitname) {
+_russ_start_setlimit(struct russ_conf *conf, char *secname, char *limitname) {
 	struct rlimit	rlim;
 	char		*endptr = NULL, *hard = NULL, *soft = NULL;
 	char		hardname[32], softname[32];
@@ -313,8 +314,8 @@ _russ_start_setlimit(struct russ_conf *conf, char *limitname) {
 		|| (russ_snprintf(hardname, sizeof(hardname), "%s.hard", limitname) < 0)) {
 		goto fail;
 	}
-	soft = russ_conf_get(conf, "main.limits", softname, NULL);
-	hard = russ_conf_get(conf, "main.limits", hardname, NULL);
+	soft = russ_conf_get(conf, secname, softname, NULL);
+	hard = russ_conf_get(conf, secname, hardname, NULL);
 
 	if (RUSS_DEBUG__russ_start_setlimit) {
 		fprintf(stderr, "RUSS_DEBUG__russ_start_setlimit: name (%s) soft (%s) hard (%s)\n", limitname, soft, hard);
@@ -357,27 +358,28 @@ fail:
 }
 
 /**
-* Set process limits found in the main.limits section.
+* Set process limits found in the named section.
 *
 * Some limits may not be settable on the platform.
 *
 * @param conf		configuration object
+* @param secname	section name
 * @return		0 on success; -1 on failure
 */
 static int
-_russ_start_setlimits(struct russ_conf *conf) {
-	if ((_russ_start_setlimit(conf, "as") < 0)
-		|| (_russ_start_setlimit(conf, "rss") < 0)
-		|| (_russ_start_setlimit(conf, "data") < 0)
-		|| (_russ_start_setlimit(conf, "stack") < 0)
-		|| (_russ_start_setlimit(conf, "memlock") < 0)
+_russ_start_setlimits(struct russ_conf *conf, char *secname) {
+	if ((_russ_start_setlimit(conf, secname, "as") < 0)
+		|| (_russ_start_setlimit(conf, secname, "rss") < 0)
+		|| (_russ_start_setlimit(conf, secname, "data") < 0)
+		|| (_russ_start_setlimit(conf, secname, "stack") < 0)
+		|| (_russ_start_setlimit(conf, secname, "memlock") < 0)
 
-		|| (_russ_start_setlimit(conf, "core") < 0)
-		|| (_russ_start_setlimit(conf, "cpu") < 0)
-		|| (_russ_start_setlimit(conf, "fsize") < 0)
-		//|| (_russ_start_setlimit(conf, "locks") < 0)
-		|| (_russ_start_setlimit(conf, "nofile") < 0)
-		|| (_russ_start_setlimit(conf, "nproc") < 0)) {
+		|| (_russ_start_setlimit(conf, secname, "core") < 0)
+		|| (_russ_start_setlimit(conf, secname, "cpu") < 0)
+		|| (_russ_start_setlimit(conf, secname, "fsize") < 0)
+		//|| (_russ_start_setlimit(conf, secname, "locks") < 0)
+		|| (_russ_start_setlimit(conf, secname, "nofile") < 0)
+		|| (_russ_start_setlimit(conf, secname, "nproc") < 0)) {
 		return -1;
 	}
 	return 0;
@@ -591,7 +593,7 @@ russ_start(int starttype, struct russ_conf *conf) {
 	}
 
 	/* set limits */
-	if (_russ_start_setlimits(conf) < 0) {
+	if (_russ_start_setlimits(conf, "main.limits") < 0) {
 		fprintf(stderr, "error: cannot set limits\n");
 		return NULL;
 	}
