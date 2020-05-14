@@ -525,14 +525,35 @@ russ_start(int starttype, struct russ_conf *conf) {
 	main_cwd = russ_conf_get(conf, "main", "cwd", "/");
 	main_umask = (mode_t)russ_conf_getsint(conf, "main", "umask", 022);
 	main_file_mode = russ_conf_getsint(conf, "main", "file_mode", 0666);
-	file_uid = (main_file_user = russ_conf_get(conf, "main", "file_user", NULL)) \
-		? russ_user2uid(main_file_user) : getuid();
-	file_gid = (main_file_group = russ_conf_get(conf, "main", "file_group", NULL)) \
-		? russ_group2gid(main_file_group) : getgid();
-	uid = (main_user = russ_conf_get(conf, "main", "user", NULL)) \
-		? russ_user2uid(main_user) : getuid();
-	gid = (main_group = russ_conf_get(conf, "main", "group", NULL)) \
-		? russ_group2gid(main_group) : getgid();
+
+	if ((main_file_user = russ_conf_get(conf, "main", "file_user", NULL)) != NULL) {
+		if (russ_user2uid(main_file_user, &file_uid) < 0) {
+			goto fail;
+		}
+	} else {
+		file_uid = getuid();
+	}
+	if ((main_file_group = russ_conf_get(conf, "main", "file_group", NULL)) != NULL) {
+		if (russ_group2gid(main_file_group, &file_gid) < 0) {
+			goto fail;
+		}
+	} else {
+		file_gid = getgid();
+	}
+	if ((main_user = russ_conf_get(conf, "main", "user", NULL)) != NULL) {
+		if (russ_user2uid(main_user, &uid) < 0) {
+			goto fail;
+		}
+	} else {
+		uid = getuid();
+	}
+	if ((main_group = russ_conf_get(conf, "main", "group", NULL)) != NULL) {
+		if (russ_group2gid(main_group, &gid) < 0) {
+			goto fail;
+		}
+	} else {
+		gid = getgid();
+	}
 
 	/* close fds > 2 */
 	russ_close_range(3, -1);
