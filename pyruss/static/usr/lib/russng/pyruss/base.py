@@ -52,7 +52,7 @@ def list_of_strings_to_c_string_array(l):
             c_strings[i] = None
         else:
             # create_string_buffer() handles conversion
-            c_strings[i] = ctypes.create_string_buffer(s).value
+            c_strings[i] = ctypes.create_string_buffer(strtobytes(s)).value
     return c_strings
 
 def convert_dial_attrs_args(attrs, args):
