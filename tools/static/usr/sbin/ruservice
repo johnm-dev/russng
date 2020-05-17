@@ -289,9 +289,19 @@ function stop {
 }
 
 function sync {
-	local srcname
+	local srcname srcitemname srcitemdir
 
 	srcname=$1; shift 1
+
+	# split into srcname and srcitemname
+	srcitemname="${srcname#*:}"
+	if [ "${srcname}" = "${srcitemname}" ]; then
+		srcitemname=""
+	else
+		srcname="${srcname%%:*}"
+		# TODO: prevent .. in srcitemname a-la normpath
+	fi
+	srcitemdir=$(dirname "${srcitemname}")
 
 	if [ ! -e "${SOURCES_FILE}" ]; then
 		echoe "error: cannot find sources file (${SOURCES_FILE})"
@@ -311,16 +321,27 @@ function sync {
 		typ=${rest%%:*}
 
 		if [  "${srcname}" = "." -o "${name}" = "${srcname}" ]; then
+			if [ -n "${srcitemname}" ]; then
+				name="${name}:${srcitemname}"
+			fi
 			echo "[${typ}:${name}] SYNCING"
+
 			case "${typ}" in
 			dir)
 				path=${rest#*:}
 				path=$(russ_str_resolve "HOST=${fqhost}" "DOMAIN=${domain}" "${path}")
+				if [ -n "${srcitemname}" ]; then
+					path="${path}/${srcitemname}"
+				fi
 
-				if [ ! -d "${path}" ]; then
-					echoe "warning: cannot find dir (${path})"
+				if [ -d "${path}" ]; then
+					mkdir -p "${CONF_DIR}/${srcitemname}"
+					cp -r "${path}"/* "${CONF_DIR}/${srcitemname}"
+				elif [ -r "${path}.conf" ]; then
+					mkdir -p "${CONF_DIR}/${srcitemdir}"
+					cp "${path}.conf" "${CONF_DIR}/${srcitemdir}"
 				else
-					cp -r "${path}"/* "${CONF_DIR}"
+					echoe "warning: cannot find dir/item (${path})"
 				fi
 				;;
 			http|https)
