@@ -38,13 +38,15 @@ class Conf(RawConfigParser):
     optional default value parameter like dict.get().
     """
 
+    def __init__(self):
+        RawConfigParser.__init__(self)
+
     def init(self, args):
         """Given a list of conf option flags and values, update
         the Conf object and return a new list of args pruned of
         those used. "--" stops processing (and is not returned in
         args list).
         """
-        RawConfigParser.__init__(self)
         self.optionxform = lambda option: option
         args = args[:]
         while args:
@@ -87,7 +89,7 @@ class Conf(RawConfigParser):
 
         return args
 
-    def get(self, section, option, default=None):
+    def get(self, section, option, default=None, **kwargs):
         try:
             return RawConfigParser.get(self, section, option)
         except:
