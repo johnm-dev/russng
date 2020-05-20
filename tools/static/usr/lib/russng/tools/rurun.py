@@ -428,20 +428,20 @@ def main():
 
     rurun_debug = os.environ.get("RURUN_DEBUG") == "1"
     try:
-        rurun_nrunning_max = int(os.environ.get("RURUN_NRUNNING_MAX", RURUN_NRUNNING_MAX_DEFAULT))
+        rurun_nrunning_max = int(os.environ.get("RURUN_NRUNNING_MAX") or RURUN_NRUNNING_MAX_DEFAULT)
     except:
         rurun_nrunning_max = RURUN_NRUNNING_MAX_DEFAULT
         stderr.write('warning: falling back to RURUN_NRUNNING_MAX of "%s"' % (rurun_nrunning_max,))
 
     rurun_shell = None
-    rurun_exec_method = os.environ.get("RURUN_EXEC_METHOD", RURUN_EXEC_METHOD_DEFAULT)
-    rurun_relay = os.environ.get("RURUN_RELAY", RURUN_RELAY_DEFAULT)
+    rurun_exec_method = os.environ.get("RURUN_EXEC_METHOD") or RURUN_EXEC_METHOD_DEFAULT
+    rurun_relay = os.environ.get("RURUN_RELAY") or RURUN_RELAY_DEFAULT
     rurun_pnet_addr = os.environ.get("RURUN_PNET_ADDR")
     rurun_targetsfile = os.environ.get("RURUN_TARGETSFILE")
-    rurun_targetsfiletype = os.environ.get("RURUN_TARGETSFILETYPE", RURUN_TARGETSFILETYPE_DEFAULT)
+    rurun_targetsfiletype = os.environ.get("RURUN_TARGETSFILETYPE") or RURUN_TARGETSFILETYPE_DEFAULT
 
     try:
-        rurun_timeout = os.environ.get("RURUN_TIMEOUT", RURUN_TIMEOUT_DEFAULT)
+        rurun_timeout = os.environ.get("RURUN_TIMEOUT") or RURUN_TIMEOUT_DEFAULT
         if rurun_timeout != None:
             rurun_timeout = int(rurun_timeout)
     except:
