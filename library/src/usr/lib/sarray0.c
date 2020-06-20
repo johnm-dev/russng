@@ -290,6 +290,57 @@ free_dst:
 }
 
 /**
+* Extend array with elements of another array.
+*
+* arrp is updated. If arr2 is NULL, treat as noop. If freearr2 is
+* non-zero, arr2 will be freed on success or failure.
+*
+* @param arrp[inout]	pointer to string array
+* @param arr2		second string array
+* @param freearr2	free arr2 object
+* @return		0 on success; -1 on fail
+*/
+int
+russ_sarray0_extend(char ***arrp, char **arr2, int freearr2) {
+	char	**newarr = NULL;
+	int	i, arrlen, arr2len;
+
+	if (arrp == NULL) {
+		goto fail;
+	}
+	if (arr2 == NULL) {
+		return 0;
+	}
+
+	arrlen = russ_sarray0_count(*arrp, 1024);
+	arr2len = russ_sarray0_count(arr2, 1024);
+
+	if (*arrp == NULL) {
+		*arrp = russ_sarray0_dup(arr2, 1024);
+		goto success;
+	}
+	if ((newarr = realloc(*arrp, sizeof(char *)*(arrlen+arr2len+1))) == NULL) {
+		goto fail;
+	}
+	for (i = 0; i < arr2len; i++) {
+		newarr[i+arrlen] = strdup(arr2[i]);
+	}
+	newarr[i+arrlen] = NULL;
+	*arrp = newarr;
+
+success:
+	if (freearr2) {
+		arr2 = russ_free(arr2);
+	}
+	return 0;
+fail:
+	if (freearr2) {
+		arr2 = russ_free(arr2);
+	}
+	return -1;
+}
+
+/**
 * Find element matching string.
 *
 * @param arr		string array
@@ -379,6 +430,42 @@ russ_sarray0_insert(char ***arrp, int index, ...) {
 }
 
 /**
+* Move element to new position. The items between the source and
+* destination are moved to make space.
+*
+* The unerlying array size does not change.
+*
+* @param arr		string array
+* @param sidx		source index
+* @param didx		destination index
+* @return		0 on success; -1 on failure
+*/
+int
+russ_sarray0_move(char **arr, int sidx, int didx) {
+	char	*s;
+	int	i;
+
+	if (arr == NULL) {
+		return -1;
+	}
+	if (sidx == didx) {
+		return 0;
+	}
+	s = arr[sidx];
+	if (sidx < didx) {
+		for (i = sidx; i > didx; i++) {
+			arr[i] = arr[i+1];
+		}
+	} else {
+		for (i = didx; i < sidx; i--) {
+			arr[i] = arr[i-1];
+		}
+	}
+	arr[didx] = s;
+	return 0;
+}
+
+/**
 * Remove element at index; or, move elements above index to
 * positions one less than they are at.
 *
@@ -403,6 +490,29 @@ russ_sarray0_remove(char **arr, int index) {
 	for (; arr[i] != NULL; i++) {
 		arr[i] = arr[i+1];
 	}
+	return 0;
+}
+
+/**
+* Replace element at index.
+*
+* Note: no safety check is done!
+*
+* @param arr		string array
+* @param index		index of element to replace
+* @param s		new string
+* @return		0 on success; -1 on failure
+*/
+int
+russ_sarray0_replace(char **arr, int index, char *s) {
+	char	*old = NULL;
+
+	old = arr[index];
+	if ((arr[index] = strdup(s)) == NULL) {
+		arr[index] = old;
+		return -1;
+	}
+	old = russ_free(old);
 	return 0;
 }
 
