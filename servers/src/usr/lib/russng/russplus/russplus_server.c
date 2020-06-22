@@ -51,6 +51,7 @@ print_dir_list(struct russ_sconn *sconn, char *dirpath) {
 	char			path[RUSS_REQ_SPATH_MAX];
 	int			errfd, outfd;
 	int			cap, i, n;
+	int			dtypeunknown;
 
 	outfd = sconn->fds[1];
 	errfd = sconn->fds[2];
@@ -63,20 +64,28 @@ print_dir_list(struct russ_sconn *sconn, char *dirpath) {
 		n = 0;
 		names = malloc(sizeof(char *)*cap);
 
+
 		while ((dent = readdir(dir)) != NULL) {
 			if ((strcmp(dent->d_name, ".") == 0)
 				|| (strcmp(dent->d_name, "..") == 0)) {
 				continue;
 			}
-			if ((russ_snprintf(path, sizeof(path), "%s/%s", dirpath, dent->d_name) < 0)
-				|| (lstat(path, &st) < 0)) {
-				/* problem */
-				continue;
+#if defined(AIX)
+			dtypeunknown = 1;
+#else
+			dtypeunknown = (dent->d_type == DT_UNKNOWN) ? 1 : 0;
+#endif
+			if (dtypeunknown) {
+				if ((russ_snprintf(path, sizeof(path), "%s/%s", dirpath, dent->d_name) < 0)
+					|| (lstat(path, &st) < 0)) {
+					/* problem */
+					continue;
+				}
 			}
-			if (S_ISDIR(st.st_mode)
-				|| S_ISSOCK(st.st_mode)
-				|| russ_is_conffile(path)
-				|| S_ISLNK(st.st_mode)) {
+
+			/* removed check for russ_is_conffile(path) */
+			if ((!dtypeunknown && ((dent->d_type == DT_REG) || (dent->d_type == DT_LNK) || (dent->d_type == DT_SOCK)))
+				|| (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode) || S_ISLNK(st.st_mode))) {
 				if ((n == cap) || ((names[n++] = strdup(dent->d_name)) == NULL)) {
 					russ_dprintf(errfd, "error: too many entries\n");
 					cap = -1;
