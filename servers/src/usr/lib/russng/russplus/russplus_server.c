@@ -64,7 +64,6 @@ print_dir_list(struct russ_sconn *sconn, char *dirpath) {
 		n = 0;
 		names = malloc(sizeof(char *)*cap);
 
-
 		while ((dent = readdir(dir)) != NULL) {
 			if ((strcmp(dent->d_name, ".") == 0)
 				|| (strcmp(dent->d_name, "..") == 0)) {
@@ -103,10 +102,10 @@ print_dir_list(struct russ_sconn *sconn, char *dirpath) {
 		}
 	}
 free_names:
-	for (; n >= 0; n--) {
-		free(names[n]);
+	for (n--; n >= 0; n--) {
+		names[n] = russ_free(names[n]);
 	}
-	free(names);
+	names = russ_free(names);
 	if (cap < 0) {
 		return -1;
 	}
