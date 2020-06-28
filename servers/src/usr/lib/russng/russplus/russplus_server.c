@@ -158,11 +158,11 @@ resolve_plus_path(char *userhome, char *path) {
 		return russ_sarray0_new(1, path, NULL);
 	} else if (path[0] == ':') {
 		if (strcmp(path, ":override") == 0) {
-			if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/.russ/ruservice/bb/override/services", userhome) > 0) {
+			if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/.russ/bb/override/services", userhome) > 0) {
 				return russ_sarray0_new(1, pathbuf, NULL);
 			}
 		} else if (strcmp(path, ":fallback") == 0) {
-			if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/.russ/ruservice/bb/fallback/services", userhome) > 0) {
+			if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/.russ/bb/fallback/services", userhome) > 0) {
 				return russ_sarray0_new(1, pathbuf, NULL);
 			}
 		} else if (strcmp(path, ":system") == 0) {
@@ -175,12 +175,12 @@ resolve_plus_path(char *userhome, char *path) {
 /**
 * Get list of paths to search for "+" entries.
 *
-* The paths are given in ~/.russ/plus/paths, one per line. Lines
+* The paths are given in ~/.russ/plus/bb.paths, one per line. Lines
 * starting with "/" are treated as paths. Lines starting with ":"
 * are treated as symbolic names which point to specific, predefined
 * paths.
 *
-* If ~/.russ/plus/paths is not found a default set of paths is
+* If ~/.russ/plus/bb.paths is not found, a default set of paths is
 * used:
 *   :override
 *   :system
@@ -197,7 +197,7 @@ get_plus_paths(void) {
 	int	i;
 
 	if (((userhome = get_userhome(NULL)) == NULL)
-		|| (russ_snprintf(pathbuf, sizeof(pathbuf)-1, "%s/.russ/plus/paths", userhome) < 0)
+		|| (russ_snprintf(pathbuf, sizeof(pathbuf)-1, "%s/.russ/plus/bb.paths", userhome) < 0)
 		|| ((paths = russ_sarray0_new(32, NULL)) == NULL)) {
 		goto fail;
 	}
@@ -248,7 +248,7 @@ struct russ_conf	*conf = NULL;
 const char		*HELP = 
 "Plus server handling \"+\" component in the service path. Passes\n"
 "the request to another service with splicing of fds. Alternate\n"
-"locations to search are specified in ~/.russ/plus/paths.\n"
+"locations to search are specified in ~/.russ/plus/bb.paths.\n"
 "\n"
 "/<spath> <args>\n"
 "    Dial service at <spath>.\n";
