@@ -1,0 +1,3 @@
+# from v7 on
+# <bbname>:<tag>:<sourcetype>:<source>
+system:local:dir:/etc/russ/conf
