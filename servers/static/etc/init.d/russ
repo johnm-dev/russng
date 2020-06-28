@@ -14,7 +14,7 @@
 
 PLUS_CONF_FILE="/etc/russ/conf/plus.conf"
 RUN_DIR="/var/run/russ"
-RUSERVICE_SOURCES_FILE="/etc/russ/ruservice.sources"
+RUBB_SOURCES_FILE="/etc/russ/bb.sources"
 
 start() {
 	# ensure working directories
@@ -24,25 +24,25 @@ start() {
 	mkdir -m 0755 -p "${RUN_DIR}/services"
 
 	# load configuration
-	if [ ! -e "${RUSERVICE_SOURCES_FILE}" ]; then
+	if [ ! -e "${RUBB_SOURCES_FILE}" ]; then
 		# likely a new install of v7
 		echo "setting up for v7 ..." 1>&2
 
-		echo "installing default ruservice.sources ..." 1>&2
-		cp /etc/russ/samples/default-ruservice.sources "${RUSERVICE_SOURCES_FILE}"
+		echo "installing default bb.sources ..." 1>&2
+		cp /etc/russ/samples/rubb.sources "${RUBB_SOURCES_FILE}"
 		if [ ! -e "${PLUS_CONF_FILE}" ]; then
 			echo "installing plus.conf ..." 1>&2
 			cp /etc/russ/samples/conf/plus.conf "${PLUS_CONF_FILE}"
 		fi
 	fi
-	[ -e "${RUSERVICE_SOURCES_FILE}" ] && ruservice resync
+	[ -e "${RUBB_SOURCES_FILE}" ] && rubb resync
 
 	# start services
-	ruservice . start
+	rubb start
 }
 
 stop() {
-	ruservice . stop
+	rubb stop
 }
 
 case "$1" in
@@ -55,7 +55,7 @@ start)
 	start
 	;;
 status)
-	ruservice . status
+	rubb status
 	;;
 stop)
 	stop

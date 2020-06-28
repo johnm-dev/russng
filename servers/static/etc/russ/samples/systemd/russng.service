@@ -3,14 +3,14 @@
 #
 
 [Unit]
-Description=Run RUSS services
+Description=RUSS BB services
 
 [Service]
 LimitMEMLOCK=infinity
-ExecStartPre=/usr/sbin/ruservice resync
-ExecStart=/usr/sbin/ruservice . start
-ExecStop=/usr/sbin/ruservice . stop
-ExecReload=/usr/sbin/ruservice . restart
+ExecStartPre=/usr/bin/rubb resync
+ExecStart=/usr/bin/rubb start
+ExecStop=/usr/bin/rubb stop
+ExecReload=/usr/bin/rubb restart
 RemainAfterExit=yes
 
 [Install]

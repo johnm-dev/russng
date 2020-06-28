@@ -6,9 +6,7 @@
 HERE_FILE:="$(CURDIR)/$(strip $(MAKEFILE_LIST))"
 HERE_DIR:=$(shell dirname $(HERE_FILE))
 
-STATIC_FILES = usr/bin/rudial-bm usr/bin/rurun usr/bin/rurun-legacy \
-	usr/bin/rumpirun \
-	usr/bin/russ_converthosts.py \
+STATIC_FILES = usr/bin \
 	etc \
 	usr/lib \
 	usr/sbin \
