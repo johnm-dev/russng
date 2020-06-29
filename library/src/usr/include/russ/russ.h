@@ -332,6 +332,7 @@ void *russ_malloc(size_t);
 int __russ_waitpidfd(pid_t, int *, int, int);
 char *russ_get_services_dir(void);
 char *russ_mkstemp(char *);
+int russ_set_services_dir(char *);
 int russ_write_exit(int, int);
 
 /* optable.c */

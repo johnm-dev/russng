@@ -30,6 +30,8 @@
 
 #include "russ/priv.h"
 
+static char	*_services_dir = RUSS_SERVICES_DIR;
+
 /**
 * Wait for change in pid status or fd status.
 *
@@ -99,7 +101,11 @@ russ_get_services_dir(void) {
 	char	*path;
 
 	if ((path = getenv("RUSS_SERVICES_DIR")) == NULL) {
-		path = RUSS_SERVICES_DIR;
+		if (_services_dir == NULL) {
+			/* do not expect/handle failure */
+			russ_set_services_dir(RUSS_SERVICES_DIR);
+		}
+		path = _services_dir;
 	}
 	return path;
 }
@@ -165,6 +171,31 @@ russ_mkstemp(char *template) {
 
 	/* success */
 	return strdup(tmppath);
+}
+
+/**
+* Set the services directory value that will be returned by
+* russ_get_services_dir(). Should be called early to initialize
+* things properly.
+*
+* If the services dir cannot be set, the previous value remains in
+* place.
+*
+* _services_dir is *never* freed. This allows references to remain
+* valid for the lifetime of the program.
+*
+* @param		services directory
+* @return		0 on success; -1 on failure
+*/
+int
+russ_set_services_dir(char *path) {
+	char	*new_services_dir = NULL;
+
+	if ((new_services_dir = strdup(path)) == NULL) {
+		return -1;
+	}
+	_services_dir = new_services_dir;
+	return 0;
 }
 
 /**
