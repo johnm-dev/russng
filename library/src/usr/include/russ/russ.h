@@ -111,7 +111,7 @@ extern "C" {
 #define RUSS_SVR_TYPE_FORK	1
 #define RUSS_SVR_TYPE_THREAD	2
 
-#define RUSS_SERVICES_DIR	"/var/run/russ/services"
+#define RUSS_SERVICES_DIR	"/var/run/russ/bb/system/services"
 
 #define RUSS_WAIT_UNSET		1
 #define RUSS_WAIT_OK		0
