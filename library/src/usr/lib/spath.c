@@ -263,9 +263,21 @@ russ_find_socket_addr(const char *spath) {
 	return NULL;
 }
 
+/**
+* Return spath to plus server.
+*
+* @return	spath; NULL on failure
+*/
 char *
 russ_get_plusserver_path(void) {
-	return strdup(RUSS_SERVICES_DIR"/plus");
+	char	*path = NULL;
+
+	if (((path = russ_malloc(PATH_MAX)) == NULL)
+		|| (russ_snprintf(path, PATH_MAX, "%s/plus", russ_get_services_dir()) < 0)) {
+		path = russ_free(path);
+		return NULL;
+	}
+	return path;
 }
 
 /**
