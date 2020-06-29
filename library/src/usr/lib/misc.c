@@ -93,21 +93,17 @@ __russ_waitpidfd(pid_t pid, int *status, int fd, int timeout) {
 /**
 * Return reference to services directory path.
 *
-* @return		reference (dot not free) to services
+* @return		reference (do not free) to services
 *			directory path; NULL on failure
 */
 char *
 russ_get_services_dir(void) {
-	char	*path;
+	char	*path = NULL;
 
-	if ((path = getenv("RUSS_SERVICES_DIR")) == NULL) {
-		if (_services_dir == NULL) {
-			/* do not expect/handle failure */
-			russ_set_services_dir(RUSS_SERVICES_DIR);
-		}
-		path = _services_dir;
+	if ((path = getenv("RUSS_SERVICES_DIR")) != NULL) {
+		russ_set_services_dir(path);
 	}
-	return path;
+	return _services_dir;
 }
 
 /**
@@ -191,10 +187,12 @@ int
 russ_set_services_dir(char *path) {
 	char	*new_services_dir = NULL;
 
-	if ((new_services_dir = strdup(path)) == NULL) {
-		return -1;
+	if (strcmp(_services_dir, path) != 0) {
+		if ((new_services_dir = strdup(path)) == NULL) {
+			return -1;
+		}
+		_services_dir = new_services_dir;
 	}
-	_services_dir = new_services_dir;
 	return 0;
 }
 
