@@ -363,7 +363,7 @@ svc_subroot_handler(struct russ_sess *sess) {
 		exit(0);
 	}
 	if (pluscountidx != 0) {
-		russ_sarray0_insert(&req->attrv, 0, pluscountbuf);
+		russ_sarray0_insert(&req->attrv, 0, pluscountbuf, NULL);
 	} else {
 		russ_sarray0_replace(req->attrv, pluscountidx, pluscountbuf);
 	}
