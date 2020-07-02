@@ -104,6 +104,12 @@ _russ_sarray0_new(int n) {
 	char	**self = NULL;
 	int	i;
 
+	/* minimum size to reduce realloc costs */
+	if (n < 8) {
+		n = 8;
+	}
+
+	/* allocate and zero */
 	if ((self = russ_malloc(sizeof(char *)*(n+1))) == NULL) {
 		return NULL;
 	}

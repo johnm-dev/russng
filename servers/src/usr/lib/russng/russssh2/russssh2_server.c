@@ -302,7 +302,7 @@ execute(struct russ_sess *sess, char *userhostport, char **opts, char *new_spath
 		int	cfds[RUSS_CONN_NFDS], tmpfd;
 		char	*delim = NULL;
 		char	delimattr[1024];
-		int	delimsz;
+		int	delimpos, delimsz;
 
 		/* select tool exec */
 		if (conf_tool_exec) {
@@ -355,26 +355,18 @@ execute(struct russ_sess *sess, char *userhostport, char **opts, char *new_spath
 			goto answer_exit_callfailure;
 		}
 
-		if (strcmp(conf_tool_type, "tunnelr") == 0) {
-			/* augment request with delimiter attribute */
-			if ((req->attrv == NULL)
-				&& ((req->attrv = russ_sarray0_new(0)) == NULL)) {
-				goto answer_exit_callfailure;
-			}
+		/* remove old delimiter, if present */
+		if (((delimpos = russ_sarray0_find_prefix(req->attrv, "__SSHR_DELIM__=")) >= 0)
+			&& (russ_sarray0_remove(req->attrv, delimpos) < 0)) {
+			goto answer_exit_callfailure;
+		}
 
+		/* augment request with delimiter attribute as appropriate */
+		if (strcmp(conf_tool_type, "tunnelr") == 0) {
 			if (((delim = generate_delimiter()) == NULL)
 				|| ((delimsz = strlen(delim)) < 0)
 				|| (russ_snprintf(delimattr, sizeof(delimattr), "__SSHR_DELIM__=%s", delim) < 0)
 				|| (russ_sarray0_append(&req->attrv, delimattr, NULL) < 0)) {
-				goto answer_exit_callfailure;
-			}
-		} else {
-			int	i;
-
-			/* ensure __SSHR_DELIM__ is not in attrv */
-			if ((req->attrv)
-				&& ((i = russ_sarray0_find_prefix(req->attrv, "__SSHR_DELIM__=")) >= 0)
-				&& (russ_sarray0_remove(req->attrv, i) < 0)) {
 				goto answer_exit_callfailure;
 			}
 		}
