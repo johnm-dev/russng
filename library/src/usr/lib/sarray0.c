@@ -222,9 +222,14 @@ russ_sarray0_append(char ***arrp, ...) {
 	va_list	ap;
 	int	narrp, rv;
 
+	if ((*arrp == NULL) && ((*arrp = _russ_sarray0_new(1)) == NULL)) {
+		return -1;
+	}
+
 	/* count existing items */
 	for (narrp = 0; (*arrp)[narrp] != NULL; narrp++);
 
+	/* update */
 	va_start(ap, arrp);
 	rv = _russ_sarray0_insert(narrp, arrp, narrp, ap);
 	va_end(ap);
@@ -419,9 +424,14 @@ russ_sarray0_insert(char ***arrp, int index, ...) {
 	va_list	ap;
 	int	narrp, rv;
 
+	if ((*arrp == NULL) && ((*arrp = _russ_sarray0_new(1)) == NULL)) {
+		return -1;
+	}
+
 	/* count existing items */
 	for (narrp = 0; (*arrp)[narrp] != NULL; narrp++);
 
+	/* update */
 	va_start(ap, index);
 	rv = _russ_sarray0_insert(narrp, arrp, index, ap);
 	va_end(ap);
