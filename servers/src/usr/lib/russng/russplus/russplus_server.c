@@ -40,6 +40,8 @@ extern char **environ;
 
 #define PLUS_COUNT_MAX	16
 
+char	**default_searchpaths = NULL;
+
 int
 cmpstrp(const void *p0, const void *p1) {
 	return strcmp(*(char * const *)p0, *(char * const *)p1);
@@ -141,9 +143,11 @@ get_userhome(char *username) {
 /**
 * Resolve plus path.
 *
-* Path starting with "/" is treated as a path. Path starting with ":"
-* is treated as symbolic name which points to one or more specific,
-* predefined paths.
+* A path starting with "/" is treated as a path. A path not starting
+* with "/" is treated as symbolic name which points to one or more
+* specific, predefined paths. Symbolic paths are transformed as:
+* * sys/<name> - from system area: /var/run/russ/bb/<name>/services
+* * user/<name> - from user area: ~/.russ/bb/<name>/services
 *
 * @param userhome	path to user home
 * @param path		path to resolve
@@ -193,52 +197,58 @@ resolve_plus_path(char *userhome, char *path) {
 char **
 get_plus_paths(void) {
 	FILE	*f = NULL;
-	char	pathbuf[PATH_MAX];
-	char	**paths = NULL, *userhome = NULL;
-	int	i;
+	char	buf[4096], pathbuf[PATH_MAX];
+	char	*path = NULL, **paths = NULL, **fullpaths = NULL, *userhome = NULL;
+	int	i, ii, j;
 
 	if (((userhome = get_userhome(NULL)) == NULL)
-		|| (russ_snprintf(pathbuf, sizeof(pathbuf)-1, "%s/.russ/plus/bb.paths", userhome) < 0)
-		|| ((paths = russ_sarray0_new(32, NULL)) == NULL)) {
+		|| (russ_snprintf(pathbuf, sizeof(pathbuf)-1, "%s/.russ/plus/bb.paths", userhome) < 0)) {
 		goto fail;
 	}
 
-	if ((f = fopen(pathbuf, "r")) == NULL) {
-		if ((russ_sarray0_extend(&paths, resolve_plus_path(userhome, "user/override"), 1) < 0)
-			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "sys/system"), 1) < 0)
-			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "builtin"), 1) < 0)
-			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "user/fallback"), 1) < 0)) {
+	/* load bb.paths: user file or system conf */
+	if ((f = fopen(pathbuf, "r")) != NULL) {
+		if ((fscanf(f, "%4095[^\n]", buf) < 0)
+			|| ((paths = russ_sarray0_new_split(buf, ":", 0)) == NULL)) {
 			goto fail;
 		}
-	} else {
-		for (i = 0; i < 128; i++) {
-			if ((fscanf(f, "%128s", pathbuf) < 0)
-				|| (strcmp(pathbuf, "") == 0)) {
-				break;
-			}
-			if (strcmp(pathbuf, "clear") == 0) {
-				/* reset list */
-				paths[0] = NULL;
-			} else if (strcmp(pathbuf, "default") == 0) {
-				if ((russ_sarray0_extend(&paths, resolve_plus_path(userhome, "user/override"), 1) < 0)
-					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "sys/system"), 1) < 0)
-					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "builtin"), 1) < 0)
-					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "user/fallback"), 1) < 0)) {
-					goto fail;
-				}
-			} else if (russ_sarray0_extend(&paths, resolve_plus_path(userhome, pathbuf), 1) < 0) {
-				goto fail;
-			}
-		}
-
-		fclose(f);
+	} else if ((paths = russ_sarray0_dup(default_searchpaths, 128)) == NULL) {
+		goto fail;
 	}
 
+	if ((fullpaths = russ_sarray0_new(32, NULL)) == NULL) {
+		goto fail;
+	}
+
+	for (i = 0; (i < 32) && (paths[i] != NULL); i++) {
+		path = paths[i];
+		if (strcmp(path, "clear") == 0) {
+			fullpaths[0] = NULL;
+			continue;
+		} else if (strcmp(path, "default") == 0) {
+			for (j = 0; default_searchpaths[j] != NULL; j++) {
+				path = default_searchpaths[j];
+				if (russ_sarray0_extend(&fullpaths, resolve_plus_path(userhome, path), 1) < 0) {
+					goto fail;
+				}
+			}
+		} else if (russ_sarray0_extend(&fullpaths, resolve_plus_path(userhome, path), 1) < 0) {
+			goto fail;
+		}
+	}
+
+	if (f) {
+		fclose(f);
+	}
+	paths = russ_sarray0_free(paths);
 	userhome = russ_free(userhome);
-	return paths;
+	return fullpaths;
 
 fail:
-	fclose(f);
+	if (f) {
+		fclose(f);
+	}
+	fullpaths = russ_sarray0_free(paths);
 	paths = russ_sarray0_free(paths);
 	userhome = russ_free(userhome);
 	return NULL;
@@ -425,6 +435,7 @@ int
 main(int argc, char **argv) {
 	struct russ_svcnode	*root = NULL, *node = NULL;
 	struct russ_svr		*svr = NULL;
+	char			*bbpaths = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -435,6 +446,13 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot configure\n");
 		exit(1);
 	}
+
+	if (((bbpaths = russ_conf_get(conf, "bb", "paths", "user/override:sys/system:builtin:user/fallback")) == NULL)
+		|| ((default_searchpaths = russ_sarray0_new_split(bbpaths, ":", 0)) == NULL)) {
+		fprintf(stderr, "error: cannot configure\n");
+		exit(1);
+	}
+	bbpaths = russ_free(bbpaths);
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
