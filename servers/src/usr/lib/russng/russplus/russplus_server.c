@@ -144,32 +144,31 @@ get_userhome(char *username) {
 * Resolve plus path.
 *
 * A path starting with "/" is treated as a path. A path not starting
-* with "/" is treated as symbolic name which points to one or more
-* specific, predefined paths. Symbolic paths are transformed as:
+* with "/" is treated as symbolic name which points to a predefined
+* path. Symbolic paths are transformed as:
 * * sys/<name> - from system area: /var/run/russ/bb/<name>/services
 * * user/<name> - from user area: ~/.russ/bb/<name>/services
 *
 * @param userhome	path to user home
 * @param path		path to resolve
-* @return		sarray0 object (caller free); NULL on failure
+* @return		resolved path (caller free); NULL on nothing or failure
 */
-char **
+char *
 resolve_plus_path(char *userhome, char *path) {
-	char	**paths;
 	char	pathbuf[PATH_MAX];
 
 	if (path == NULL) {
 		return NULL;
 	} else if (path[0] == '/') {
-		return russ_sarray0_new(1, path, NULL);
+		return strdup(path);
 	} else if (strncmp(path, "sys/", 4) == 0) {
 		/* hack to get to system bbdir */
 		if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/../../%s/services", russ_get_services_dir(), &path[4]) > 0) {
-			return russ_sarray0_new(1, pathbuf, NULL);
+			return strdup(pathbuf);
 		}
 	} else if (strncmp(path, "user/", 5) == 0) {
 		if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/.russ/bb/%s/services", userhome, &path[5]) > 0) {
-			return russ_sarray0_new(1, pathbuf, NULL);
+			return strdup(pathbuf);
 		}
 	} else if (strcmp(path, "builtin") == 0) {
 		/* skip */
@@ -222,18 +221,26 @@ get_plus_paths(void) {
 
 	for (i = 0; (i < 32) && (paths[i] != NULL); i++) {
 		path = paths[i];
+
 		if (strcmp(path, "clear") == 0) {
 			fullpaths[0] = NULL;
 			continue;
 		} else if (strcmp(path, "default") == 0) {
 			for (j = 0; default_searchpaths[j] != NULL; j++) {
-				path = default_searchpaths[j];
-				if (russ_sarray0_extend(&fullpaths, resolve_plus_path(userhome, path), 1) < 0) {
+				if (((path = resolve_plus_path(userhome, default_searchpaths[j])) != NULL)
+					&& (russ_sarray0_append(&fullpaths, path, NULL) < 0)) {
+					path = russ_free(path);
 					goto fail;
 				}
+				path = russ_free(path);
 			}
-		} else if (russ_sarray0_extend(&fullpaths, resolve_plus_path(userhome, path), 1) < 0) {
-			goto fail;
+		} else {
+			if (((path = resolve_plus_path(userhome, path)) != NULL)
+				&& (russ_sarray0_append(&fullpaths, path, NULL) < 0)) {
+				path = russ_free(path);
+				goto fail;
+			}
+			path = russ_free(path);
 		}
 	}
 
