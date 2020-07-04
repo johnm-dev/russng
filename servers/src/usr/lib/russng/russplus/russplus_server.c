@@ -45,6 +45,8 @@ cmpstrp(const void *p0, const void *p1) {
 	return strcmp(*(char * const *)p0, *(char * const *)p1);
 }
 
+// test
+
 int
 print_dir_list(struct russ_sconn *sconn, char *dirpath) {
 	struct stat		st;
@@ -156,18 +158,18 @@ resolve_plus_path(char *userhome, char *path) {
 		return NULL;
 	} else if (path[0] == '/') {
 		return russ_sarray0_new(1, path, NULL);
-	} else if (path[0] == ':') {
-		if (strcmp(path, ":override") == 0) {
-			if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/.russ/bb/override/services", userhome) > 0) {
-				return russ_sarray0_new(1, pathbuf, NULL);
-			}
-		} else if (strcmp(path, ":fallback") == 0) {
-			if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/.russ/bb/fallback/services", userhome) > 0) {
-				return russ_sarray0_new(1, pathbuf, NULL);
-			}
-		} else if (strcmp(path, ":system") == 0) {
-			return russ_sarray0_new(1, russ_get_services_dir(), NULL);
+	} else if (strncmp(path, "sys/", 4) == 0) {
+		/* hack to get to system bbdir */
+		if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/../../%s/services", russ_get_services_dir(), &path[4]) > 0) {
+			return russ_sarray0_new(1, pathbuf, NULL);
 		}
+	} else if (strncmp(path, "user/", 5) == 0) {
+		if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/.russ/bb/%s/services", userhome, &path[5]) > 0) {
+			return russ_sarray0_new(1, pathbuf, NULL);
+		}
+	} else if (strcmp(path, "builtin") == 0) {
+		/* skip */
+		;
 	}
 	return NULL;
 }
@@ -176,16 +178,15 @@ resolve_plus_path(char *userhome, char *path) {
 * Get list of paths to search for "+" entries.
 *
 * The paths are given in ~/.russ/plus/bb.paths, one per line. Lines
-* starting with "/" are treated as paths. Lines starting with ":"
-* are treated as symbolic names which point to specific, predefined
-* paths.
+* starting with "/" are treated as paths, otherwise they are treated
+* as symbolic names which point to specific, predefined paths.
 *
 * If ~/.russ/plus/bb.paths is not found, a default set of paths is
 * used:
-*   :override
-*   :system
-*   :builtin
-*   :fallback
+*   user/override
+*   sys/system
+*   builtin
+*   user/fallback
 *
 * @return		array of strings; NULL on error
 */
@@ -203,10 +204,10 @@ get_plus_paths(void) {
 	}
 
 	if ((f = fopen(pathbuf, "r")) == NULL) {
-		if ((russ_sarray0_extend(&paths, resolve_plus_path(userhome, ":override"), 1) < 0)
-			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, ":system"), 1) < 0)
-			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, ":builtin"), 1) < 0)
-			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, ":fallback"), 1) < 0)) {
+		if ((russ_sarray0_extend(&paths, resolve_plus_path(userhome, "user/override"), 1) < 0)
+			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "sys/system"), 1) < 0)
+			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "builtin"), 1) < 0)
+			|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "user/fallback"), 1) < 0)) {
 			goto fail;
 		}
 	} else {
@@ -215,14 +216,14 @@ get_plus_paths(void) {
 				|| (strcmp(pathbuf, "") == 0)) {
 				break;
 			}
-			if (strcmp(pathbuf, ":clear") == 0) {
+			if (strcmp(pathbuf, "clear") == 0) {
 				/* reset list */
 				paths[0] = NULL;
-			} else if (strcmp(pathbuf, ":default") == 0) {
-				if ((russ_sarray0_extend(&paths, resolve_plus_path(userhome, ":override"), 1) < 0)
-					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, ":system"), 1) < 0)
-					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, ":builtin"), 1) < 0)
-					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, ":fallback"), 1) < 0)) {
+			} else if (strcmp(pathbuf, "default") == 0) {
+				if ((russ_sarray0_extend(&paths, resolve_plus_path(userhome, "user/override"), 1) < 0)
+					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "sys/system"), 1) < 0)
+					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "builtin"), 1) < 0)
+					|| (russ_sarray0_extend(&paths, resolve_plus_path(userhome, "user/fallback"), 1) < 0)) {
 					goto fail;
 				}
 			} else if (russ_sarray0_extend(&paths, resolve_plus_path(userhome, pathbuf), 1) < 0) {
