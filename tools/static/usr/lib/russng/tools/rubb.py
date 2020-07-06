@@ -4,6 +4,7 @@
 
 import os
 import os.path
+import pwd
 import shutil
 import signal
 import stat
@@ -21,10 +22,6 @@ SERVICES_DIR = "%s/services" % RUN_DIR
 SYSTEM_SOURCESFILE = "%s/bb.sources" % ETC_DIR
 SYSTEM_BBBASEDIR = "%s/bb" % RUN_DIR
 SYSTEM_SAFEPATHS = ["/run/russ/bb", "/var/run/russ/bb"]
-
-# user
-USER_BBBASEDIR = os.path.expanduser("~/.russ/bb")
-USER_SAFEPATHS = [USER_BBBASEDIR]
 
 DEVNULL = open("/dev/null", "w")
 
@@ -55,10 +52,11 @@ class BB:
         print("prepping bb (%s) ..." % (self.name,))
         for dirpath in [self.confdir, self.pidsdir, self.servicesdir]:
             if not os.path.isdir(dirpath):
-                print("makedir (%s)" % (dirpath,))
+                if verbose:
+                    print("makedir (%s)" % (dirpath,))
                 os.makedirs(dirpath)
 
-    def clean(self):
+    def clean(self, safepaths):
         """Clean areas associated with srcname.
         """
         print("cleaning bb (%s) ..." % (self.name,))
@@ -68,11 +66,15 @@ class BB:
                     if dirpath.startswith(safepath):
                         for name in os.listdir(dirpath):
                             path = os.path.join(dirpath, name)
+                            if verbose:
+                                print("removing (%s)" % (path,))
                             os.remove(path)
                 if not os.listdir(dirpath):
                     os.rmdir(dirpath)
         if os.path.exists(self.bbdir):
             if not os.listdir(self.bbdir):
+                if verbose:
+                    print("rmdir (%s)" % (self.bbdir,))
                 os.rmdir(self.bbdir)
 
     def get_confnames(self):
@@ -205,7 +207,7 @@ class BB:
                 for filename in filenames:
                     name = filename[:-5]
                     if filename in syncfilenames:
-                        stderr.write("error: cannot sync duplicate name (%s) from source (%s)\n" % (name, d["name"]))
+                        stderr.write("skipping. will not sync duplicate name (%s) from source (%s)\n" % (name, d["name"]))
                         continue
 
                     txt = open(os.path.join(srcpath, filename)).read()
@@ -307,7 +309,7 @@ class BBServer:
         """Return status information.
         """
         d = {
-            "bbname": bb.name,
+            "bbname": self.bb.name,
             "conffile": os.path.exists(self.conffile) and self.conffile or None,
             "isrunning": self.isrunning(),
             "name": self.name,
@@ -416,34 +418,37 @@ class SourcesFile:
             l.append(d2)
         self.d = d
 
-def get_bbdir(name=None):
+def get_bbdir(bbbasedir, bbname=None):
     """Return bbdir based on user and optional bb name.
 
     If name starts with "/", then return it as the bbdir. Otherwise,
     name cannot contain a "/".
     """
-    if name and name.startswith("/"):
-        return name
-    if name and "/" in name:
+    if bbname and bbname.startswith("/"):
+        return bbname
+    if bbname and "/" in bbname:
         return None
-    bbdir = os.path.join(bbbasedir, name)
-    return bbdir
+    return os.path.join(bbbasedir, bbname)
 
-def get_bbnames(bbbasedir):
+def get_bbnames(bbbasedir, bbnames=None):
     """Return list of BB names.
+
+    Filter bbnames if provided.
     """
-    _, bbnames, _ = next(os.walk(bbbasedir))
+    _, realbbnames, _ = next(os.walk(bbbasedir))
+    if bbnames == None:
+        bbnames = realbbnames
+    else:
+        realbbnames = set(realbbnames)
+        bbnames = [bbname for bbname in bbnames if bbname in realbbnames]
     return bbnames
 
 def print_usage():
     d = {
         "progname": os.path.basename(sys.argv[0]),
-        "bbbasedir": bbbasedir,
-        "confdir": confdir,
-        "sourcesfile": sourcesfile,
     }
     print("""\
-usage: %(progname)s [<options>] <cmd> [<cmdoptions>]
+usage: %(progname)s [<options>] <cmd> [...]
        %(progname)s -h|--help|help
 
 Manage system or user RUSS bulletin boards (BB). A BB hosts RUSS
@@ -454,90 +459,82 @@ user ("override", "fallback") BBs.
 
 System BBs can host services by either a socket (running) or
 configuration file (run on demand). The user BBs host services by
-configuration only.
+configuration file only.
 
-For system BBs, a bb.sources file is used to specify the
-configuration sources used to set up. Use the "sync" command to
-syncronize from the sources to the BB. The default sources file is
-at:
-    %(sourcesfile)s
+System BBs are configured using the "sync" command which uses the
+/etc/russ/bb.sources file which specifies configuration sources used
+to set up. Alternatively, the "install" and "remove" commands can
+also be used. However, for BBs that are managed using the sources
+file, the "sync" operation will overwrite/remove anything that was
+installed with "install".
 
-System BBs are located at:
-    %(bbbasedir)s
+User BBs are configured using the "install" and "remove" commands.
 
-For user BBs, configurations are installed using the the "install"
-command.
-
-Options:
---bb <bbname>   Operate on the named BB. System default is "system",
-                User default is "override".
+Common options:
+--bb <bbname>[,...]
+                Select named BBs. System default is "system". User
+                default is "override".
+--bb-all        Select all BBs.
+--debug         Print debugging information.
+-l              Print detailed information when applicable.
 --sources <path>
                 (system) Alternate path of the bb.sources file.
+--verbose       Print additional information.
 
-Operations:
+Commands:
 clean           Clean BB.
 install <filename> [<newname>]
                 Install configuration (filename ends with .conf). Use
                 <newname> to override name derived from <filename>.
-list [-l]       List BB entries. Use -l for details.
+list            List BB entries. Use -l for details.
 list-bb         List BBs.
 list-sources    (system) List sources from sources file.
 remove <name>   Remove configuration.
 restart [<name>,...]
                 Restart server(s).
-resync          (system) Call clean+sync.
+resync          (system) Clean and sync.
 show <name>     Show configuration.
 start [<name>,...]
                 Start server(s). Make available for use.
-status [-l] [<name>,...]
+status [<name>,...]
                 Report status of server(s). Use -l for details.
 stop [<name>,...]
                 Stop server(s). Make unavailable for use.
 sync [<tag>,...]
-                (system) Syncronize local configuration used sources
+                (system) Syncronize local configuration using sources
                 specified in a bb.sources file. Use <tag> to limit
                 sources to use.""" % d)
 
-if __name__ == "__main__":
-    if not os.path.exists(SYSTEM_SOURCESFILE):
-        stderr.write("error: missing bb.sources file\n")
-        sys.exit(1)
+def main(args):
+    global debug, verbose
 
     try:
-        args = sys.argv[1:]
-
+        bball = False
         bbbasedir = None
-        bbdir = None
-        bbname = None
+        bbnames = None
         cmd = None
-        confdir = None
         debug = os.environ.get("RUBB_DEBUG") == "1"
+        detail = False
         sf = None
         sourcesfile = None
+        username = None
         usertype = None
         verbose = os.environ.get("RUBB_VERBOSE") == "1"
 
         if os.getuid() == 0:
-            bbbasedir = SYSTEM_BBBASEDIR
-            bbname = "system"
-            safepaths = SYSTEM_SAFEPATHS
-            sourcesfile = SYSTEM_SOURCESFILE
-            sf = SourcesFile(sourcesfile) # after sourcesfile!
             usertype = "system"
         else:
-            bbbasedir = USER_BBBASEDIR
-            bbname = "override"
-            safepaths = USER_SAFEPATHS
             usertype = "user"
-
-        bbdir = get_bbdir(bbname)
-        bb = BB(bbdir)
 
         while args:
             arg = args.pop(0)
 
             if arg == "--bb" and args:
-                bbname = args.pop(0)
+                bbnames = args.pop(0).split(",")
+                bball = False
+            elif arg == "--bb-all":
+                bball = True
+                bbnames = None
             elif arg == "--bbbasedir" and args:
                 bbbasedir = args.pop(0)
             elif arg == "--debug":
@@ -545,23 +542,52 @@ if __name__ == "__main__":
             elif arg in ["-h", "--help", "help"]:
                 print_usage()
                 sys.exit(0)
+            elif arg == "-l":
+                detail = True
             elif arg == "--sources" and args:
                 sourcespath = args.pop(0)
-                sf = SourcesFile(sourcesfile)
+            elif arg == "--system":
+                usertype = "system"
+            elif arg == "--user" and args:
+                usertype = "user"
+                username = args.pop(0)
             elif arg == "--verbose":
                 verbose = True
             else:
                 cmd = arg
                 break
 
-        bbdir = get_bbdir(bbname)
-        if not bbdir:
-            stderr.write("error: bad bb name (%s)\n" % (bbname,))
-            sys.exit(1)
-        bb = BB(bbdir)
+        if username:
+            try:
+                pwd.getpwnam(username)
+            except:
+                stderr.write("error: bad username (%s)\n" % (username))
+                sys.exit(1)
+
+        if usertype == "system":
+            bbbasedir = bbbasedir or SYSTEM_BBBASEDIR
+            bbnames = bbnames or ["system"]
+            safepaths = SYSTEM_SAFEPATHS
+            sourcesfile = SYSTEM_SOURCESFILE
+        else:
+            if username:
+                bbbasedir = bbbasedir or os.path.expanduser("~%s/.russ/bb" % (username,))
+            else:
+                bbbasedir = bbbasedir or os.path.expanduser("~/.russ/bb")
+            bbnames = bbnames or ["override"]
+            safepaths = [bbbasedir]
+            sourcesfile = None
+
+        # validate
+        if not os.path.exists(bbbasedir):
+            pass
+
+        if sourcesfile and os.path.exists(sourcesfile):
+            sf = SourcesFile(sourcesfile)
 
         if not cmd:
             raise Exception()
+
     except SystemExit:
         raise
     except:
@@ -572,77 +598,115 @@ if __name__ == "__main__":
     try:
         if verbose:
             print("bb basedir (%s)" % (bbbasedir,))
-            print("bb name (%s)" % (bbname,))
-            print("bb dir (%s)" % (bbdir,))
+            print("bb names (%s)" % (bbnames,))
             print("sources file (%s)" % (sourcesfile,))
             print("cmd (%s)" % (cmd,))
 
-        if cmd == "clean" and not args:
-            names = sorted(bb.get_names())
-            bb.stop_servers(names)
-            bb.clean()
-        elif cmd == "install" and args:
-            filename = None
-            newname = None
+        if cmd in ["clean", "list", "restart", "resync", "start", "status", "stop", "sync"]:
+            # multi bbname commands
 
-            filename = args.pop(0)
-            if args:
-                newname = args.pop(0)
-            bb.install(filename, newname)
-        elif cmd == "list" and not args:
-            names = sorted(bb.get_names())
-            if names:
-                print("%s" % " ".join(names))
-        elif cmd == "list-bb":
-            bbnames = get_bbnames(bbbasedir)
-            if bbnames:
-                print(" ".join(bbnames))
-        elif cmd == "list-sources" and not args:
-            sources = sf.get_sources(bb.name)
-            if sources:
-                print("%s" % " ".join([d["name"] for d in sources]))
-        elif cmd == "remove" and len(args) == 1:
-            name = args.pop(0)
-            bb.remove(name)
-        elif cmd == "restart" and len(args) < 2:
-            names = args and [args.pop(0)] or sorted(bb.get_names())
-            bb.stop_servers(names)
-            bb.start_servers(names)
-        elif cmd == "resync":
-            names = sorted(bb.get_names())
-            bb.stop_servers(names)
-            bb.clean()
-            bb.sync(sf.get_sources(bb.name))
-        elif cmd == "show" and len(args) == 1:
-            name = args.pop(0)
-            bb.show(name)
-        elif cmd == "start" and len(args) < 2:
-            names = args and [args.pop(0)] or sorted(bb.get_names())
-            bb.start_servers(names)
-        elif cmd == "status" and len(args) < 2:
-            detail = False
+            if cmd in ["list", "restart", "start", "status", "stop"]:
+                if not bbbasedir or not os.path.exists(bbbasedir):
+                    stderr.write("error: bb basedir (%s) not found\n" % (bbbasedir,))
+                    sys.exit(1)
 
-            while args:
-                arg = args.pop(0)
-                if arg == "-l":
-                    detail = True
+            _args = args[:]
+            if bball:
+                bbnames = get_bbnames(bbbasedir)
+
+            for bbname in bbnames:
+                args = _args[:]
+                bbdir = get_bbdir(bbbasedir, bbname)
+                bb = BB(bbdir)
+                if cmd == "clean" and not args:
+                    names = sorted(bb.get_names())
+                    bb.stop_servers(names)
+                    bb.clean(safepaths)
+                elif cmd == "list" and not args:
+                    names = sorted(bb.get_names())
+                    if names:
+                        print("%s: %s" % (bbname, " ".join(names)))
+                elif cmd == "restart" and len(args) < 2:
+                    names = args and [args.pop(0)] or sorted(bb.get_names())
+                    bb.stop_servers(names)
+                    bb.start_servers(names)
+                elif cmd == "resync":
+                    names = sorted(bb.get_names())
+                    bb.stop_servers(names)
+                    sources = sf.get_sources(bb.name)
+                    if sources:
+                        bb.clean(safepaths)
+                        bb.sync(sources)
+                    else:
+                        print("skipping. no source for bb (%s)" % (bb.name,))
+                elif cmd == "status" and len(args) < 2:
+                    names = args and args.pop(0).split(",") or sorted(bb.get_names())
+                    bb.status_servers(names, detail)
+                elif cmd == "stop" and len(args) < 2:
+                    names = args and [args.pop(0)] or sorted(bb.get_names())
+                    bb.stop_servers(names)
+                elif cmd == "sync" and len(args) < 2:
+                    tags = tags and args.pop(0).split(",")
+                    sources = sf.get_sources(bb.name)
+                    if sources:
+                        bb.sync(sources, tags)
+                    else:
+                        print("skipping. no source for bb (%s)" % (bb.name,))
+                elif cmd == "start" and len(args) < 2:
+                    names = args and [args.pop(0)] or sorted(bb.get_names())
+                    bb.start_servers(names)
                 else:
-                    args.insert(0, arg)
-                    break
+                    stderr.write("error: bad/missing command or arguments\n")
+                    sys.exit(1)
 
-            names = args and [args.pop(0)] or sorted(bb.get_names())
-            bb.status_servers(names, detail)
-        elif cmd == "stop" and len(args) < 2:
-            names = args and [args.pop(0)] or sorted(bb.get_names())
-            bb.stop_servers(names)
-        elif cmd == "sync" and len(args) <= 1:
-            tags = None
-            if args:
-                tags = args.pop(0).split(",")
-            bb.sync(sf.get_sources(bb.name), tags)
+        elif cmd in ["install", "list-sources", "remove", "show"]:
+            # single bbname commands
+            if cmd in ["show"]:
+                if not bbbasedir or not os.path.exists(bbbasedir):
+                    stderr.write("error: bb basedir (%s) not found\n" % (bbbasedir,))
+                    sys.exit(1)
+
+            if bball:
+                bbnames = get_bbnames(bbbasedir)
+
+            bbname = bbnames[0]
+            bbdir = get_bbdir(bbbasedir, bbname)
+            bb = BB(bbdir)
+
+            if cmd == "install" and args:
+                filename = None
+                newname = None
+
+                filename = args.pop(0)
+                if args:
+                    newname = args.pop(0)
+                bb.install(filename, newname)
+            elif cmd == "list-sources" and not args:
+                sources = sf.get_sources(bb.name)
+                if sources:
+                    print("%s: %s" % (bbname, " ".join([d["name"] for d in sources])))
+            elif cmd == "remove" and len(args) == 1:
+                name = args.pop(0)
+                bb.remove(name)
+            elif cmd == "show" and len(args) == 1:
+                name = args.pop(0)
+                bb.show(name)
+            else:
+                stderr.write("error: bad/missing command or arguments\n")
+                sys.exit(1)
+
+        elif cmd in ["list-bb"]:
+            if cmd == "list-bb":
+                bbnames = get_bbnames(bbbasedir)
+                if bbnames:
+                    print(" ".join(bbnames))
+            else:
+                stderr.write("error: bad/missing command or arguments\n")
+                sys.exit(1)
         else:
             stderr.write("error: bad/missing command or arguments\n")
             sys.exit(1)
+
     except SystemExit:
         raise
     except:
@@ -652,3 +716,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     sys.exit(0)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
