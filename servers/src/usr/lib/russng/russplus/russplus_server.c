@@ -292,44 +292,46 @@ svc_root_handler(struct russ_sess *sess) {
 	sconn = sess->sconn;
 	req = sess->req;
 
-	/* load search paths */
-	if ((searchpaths = get_plus_paths()) == NULL) {
-		russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
-		russ_sconn_close(sconn);
-		exit(0);
-	}
+	if (req->opnum == RUSS_OPNUM_LIST) {
+		/* load search paths */
+		if ((searchpaths = get_plus_paths()) == NULL) {
+			russ_sconn_exit(sconn, RUSS_EXIT_FAILURE);
+			russ_sconn_close(sconn);
+			exit(0);
+		}
 
-	for (i = 0, searchpath = searchpaths[0]; searchpath != NULL; i++, searchpath = searchpaths[i]) {
-		russ_snprintf(spath, sizeof(spath), "%s/%s", searchpath, &req->spath[1]);
-		if ((stat(spath, &st) == 0) && (!S_ISSOCK(st.st_mode)) && (!russ_is_conffile(spath))) {
-			/* non-socket, non-conffile file or directory */
-			if (S_ISDIR(st.st_mode)) {
-				print_dir_list(sconn, spath);
-			}
-		} else {
-			/* get from server */
-			struct russ_cconn	*cconn = NULL;
-			char			buf[1<<20];
-			int			nread;
-
-			if ((cconn = russ_dialv(russ_to_deadline(10000), "list", spath, NULL, NULL)) != NULL) {
-				while (1) {
-					nread = russ_readn_deadline(russ_to_deadline(10000), cconn->fds[1], buf, sizeof(buf));
-					if (nread <= 0) {
-						break;
-					}
-					russ_writen(sconn->fds[1], buf, nread);
-					/* TODO: how to cleanly handle partial reads? or reads not ending in newline? */
+		for (i = 0, searchpath = searchpaths[0]; searchpath != NULL; i++, searchpath = searchpaths[i]) {
+			russ_snprintf(spath, sizeof(spath), "%s/%s", searchpath, &req->spath[1]);
+			if ((stat(spath, &st) == 0) && (!S_ISSOCK(st.st_mode)) && (!russ_is_conffile(spath))) {
+				/* non-socket, non-conffile file or directory */
+				if (S_ISDIR(st.st_mode)) {
+					print_dir_list(sconn, spath);
 				}
-				russ_cconn_close(cconn);
-				cconn = russ_cconn_free(cconn);
+			} else {
+				/* get from server */
+				struct russ_cconn	*cconn = NULL;
+				char			buf[1<<20];
+				int			nread;
+
+				if ((cconn = russ_dialv(russ_to_deadline(10000), "list", spath, NULL, NULL)) != NULL) {
+					while (1) {
+						nread = russ_readn_deadline(russ_to_deadline(10000), cconn->fds[1], buf, sizeof(buf));
+						if (nread <= 0) {
+							break;
+						}
+						russ_writen(sconn->fds[1], buf, nread);
+						/* TODO: how to cleanly handle partial reads? or reads not ending in newline? */
+					}
+					russ_cconn_close(cconn);
+					cconn = russ_cconn_free(cconn);
+				}
 			}
 		}
+		russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
+		russ_sconn_close(sconn);
+		searchpaths = russ_sarray0_free(searchpaths);
+		exit(0);
 	}
-	russ_sconn_exit(sconn, RUSS_EXIT_SUCCESS);
-	russ_sconn_close(sconn);
-	searchpaths = russ_sarray0_free(searchpaths);
-	exit(0);
 }
 
 /**
