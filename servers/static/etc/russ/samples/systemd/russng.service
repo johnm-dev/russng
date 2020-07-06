@@ -7,10 +7,10 @@ Description=RUSS BB services
 
 [Service]
 LimitMEMLOCK=infinity
-ExecStartPre=/usr/bin/rubb resync
-ExecStart=/usr/bin/rubb start
-ExecStop=/usr/bin/rubb stop
-ExecReload=/usr/bin/rubb restart
+ExecStartPre=/usr/bin/rubb --bb-all resync
+ExecStart=/usr/bin/rubb --bb-all start
+ExecStop=/usr/bin/rubb --bb-all stop
+ExecReload=/usr/bin/rubb --bb-all restart
 RemainAfterExit=yes
 
 [Install]

@@ -38,11 +38,11 @@ start() {
 	[ -e "${RUBB_SOURCES_FILE}" ] && rubb resync
 
 	# start services
-	rubb start
+	rubb --bb-all start
 }
 
 stop() {
-	rubb stop
+	rubb --bb-all stop
 }
 
 case "$1" in
@@ -55,7 +55,7 @@ start)
 	start
 	;;
 status)
-	rubb status
+	rubb --bb-all status
 	;;
 stop)
 	stop
