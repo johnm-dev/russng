@@ -40,7 +40,8 @@ extern char **environ;
 
 #define PLUS_COUNT_MAX	16
 
-char	**default_searchpaths = NULL;
+char	**bb_default_paths = NULL;
+char	**bb_base_paths = NULL;
 
 int
 cmpstrp(const void *p0, const void *p1) {
@@ -211,7 +212,7 @@ get_plus_paths(void) {
 			|| ((paths = russ_sarray0_new_split(buf, ":", 0)) == NULL)) {
 			goto fail;
 		}
-	} else if ((paths = russ_sarray0_dup(default_searchpaths, 128)) == NULL) {
+	} else if ((paths = russ_sarray0_dup(bb_default_paths, 128)) == NULL) {
 		goto fail;
 	}
 
@@ -225,9 +226,12 @@ get_plus_paths(void) {
 		if (strcmp(path, "clear") == 0) {
 			fullpaths[0] = NULL;
 			continue;
-		} else if (strcmp(path, "default") == 0) {
-			for (j = 0; default_searchpaths[j] != NULL; j++) {
-				if (((path = resolve_plus_path(userhome, default_searchpaths[j])) != NULL)
+		} else if ((strcmp(path, "base") == 0) || (strcmp(path, "default") == 0)) {
+			char	**bb_paths;
+
+			bb_paths = (strcmp(path, "base") == 0) ? bb_base_paths : bb_default_paths;
+			for (j = 0; bb_paths[j] != NULL; j++) {
+				if (((path = resolve_plus_path(userhome, bb_paths[j])) != NULL)
 					&& (russ_sarray0_append(&fullpaths, path, NULL) < 0)) {
 					path = russ_free(path);
 					goto fail;
@@ -444,7 +448,7 @@ int
 main(int argc, char **argv) {
 	struct russ_svcnode	*root = NULL, *node = NULL;
 	struct russ_svr		*svr = NULL;
-	char			*bbpaths = NULL;
+	char			*conf_bb_base = NULL, *conf_bb_default = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -456,12 +460,18 @@ main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (((bbpaths = russ_conf_get(conf, "bb", "paths", "user/override:sys/system:builtin:user/fallback")) == NULL)
-		|| ((default_searchpaths = russ_sarray0_new_split(bbpaths, ":", 0)) == NULL)) {
-		fprintf(stderr, "error: cannot configure\n");
+	if (((conf_bb_base = russ_conf_get(conf, "bb.paths", "base", "sys/system:builtin")) == NULL)
+		|| ((bb_base_paths = russ_sarray0_new_split(conf_bb_base, ":", 0)) == NULL)) {
+		fprintf(stderr, "error: cannot configure bb base paths\n");
 		exit(1);
 	}
-	bbpaths = russ_free(bbpaths);
+	if (((conf_bb_default = russ_conf_get(conf, "bb.paths", "default", "user/override:sys/system:builtin:user/fallback")) == NULL)
+		|| ((bb_default_paths = russ_sarray0_new_split(conf_bb_default, ":", 0)) == NULL)) {
+		fprintf(stderr, "error: cannot configure bb default paths\n");
+		exit(1);
+	}
+	conf_bb_base = russ_free(conf_bb_base);
+	conf_bb_default = russ_free(conf_bb_default);
 
 	if (((svr = russ_init(conf)) == NULL)
 		|| (russ_svr_set_type(svr, RUSS_SVR_TYPE_FORK) < 0)
