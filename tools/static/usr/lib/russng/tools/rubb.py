@@ -395,8 +395,8 @@ class SourcesFile:
         self.load()
         return self.d.get(bbname)
 
-    def get_names(self):
-        """Get names from sources file.
+    def get_bbnames(self):
+        """Get BB names from sources file.
         """
         self.load()
         return list(self.d.keys())
