@@ -202,8 +202,15 @@ class BB:
         for d in sources:
             srctype = d["type"]
             srcpath = d["source"]
-            if srctype == "dir":
-                filenames = [name for name in os.listdir(srcpath) if name.endswith(".conf")]
+            if srctype in ["dir", "file"]:
+                if srctype == "dir":
+                    filenames = os.listdir(srcpath)
+                else:
+                    filenames = [os.path.basename(srcpath)]
+                    srcpath = os.path.dirname(srcpath)
+
+                filenames = [name for name in filenames if name.endswith(".conf")]
+
                 for filename in filenames:
                     name = filename[:-5]
                     if filename in syncfilenames:
