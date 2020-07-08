@@ -613,7 +613,7 @@ def main(args):
             print("sources file (%s)" % (sourcesfile,))
             print("cmd (%s)" % (cmd,))
 
-        if cmd in ["clean", "list", "restart", "resync", "start", "status", "stop", "sync"]:
+        if cmd in ["clean", "list", "list-sources", "restart", "resync", "start", "status", "stop", "sync"]:
             # multi bbname commands
 
             if cmd in ["list", "restart", "start", "status", "stop"]:
@@ -622,7 +622,7 @@ def main(args):
                     sys.exit(1)
                 if bball:
                     bbnames = get_bbnames(bbbasedir)
-            elif cmd in ["resync", "sync"]:
+            elif cmd in ["list-sources", "resync", "sync"]:
                 if bball:
                     bbnames = sf.get_bbnames()
 
@@ -640,6 +640,14 @@ def main(args):
                     names = sorted(bb.get_names())
                     if names:
                         print("%s: %s" % (bbname, " ".join(names)))
+                elif cmd == "list-sources" and not args:
+                    sources = sf.get_sources(bbname)
+                    if sources:
+                        if detail:
+                            for d in sources:
+                                print("%s:%s" % (bbname, "%(name)s:%(type)s:%(source)s" % d))
+                        else:
+                            print("%s: %s" % (bbname, " ".join([d["name"] for d in sources])))
                 elif cmd == "restart" and len(args) < 2:
                     names = args and [args.pop(0)] or sorted(bb.get_names())
                     bb.stop_servers(names)
@@ -673,7 +681,7 @@ def main(args):
                     stderr.write("error: bad/missing command or arguments\n")
                     sys.exit(1)
 
-        elif cmd in ["install", "list-sources", "remove", "show"]:
+        elif cmd in ["install", "remove", "show"]:
             # single bbname commands
             if cmd in ["show"]:
                 if not bbbasedir or not os.path.exists(bbbasedir):
@@ -695,14 +703,6 @@ def main(args):
                 if args:
                     newname = args.pop(0)
                 bb.install(filename, newname)
-            elif cmd == "list-sources" and not args:
-                sources = sf.get_sources(bb.name)
-                if sources:
-                    if detail:
-                        for d in sources:
-                            print("%s:%s" % (bbname, "%(name)s:%(type)s:%(source)s" % d))
-                    else:
-                        print("%s: %s" % (bbname, " ".join([d["name"] for d in sources])))
             elif cmd == "remove" and len(args) == 1:
                 name = args.pop(0)
                 bb.remove(name)
