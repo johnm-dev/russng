@@ -602,7 +602,8 @@ def main(args):
     except SystemExit:
         raise
     except:
-        traceback.print_exc()
+        if debug:
+            traceback.print_exc()
         stderr.write("error: bad/missing arguments\n")
         sys.exit(1)
 
