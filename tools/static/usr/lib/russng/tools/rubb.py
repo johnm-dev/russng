@@ -620,10 +620,13 @@ def main(args):
                 if not bbbasedir or not os.path.exists(bbbasedir):
                     stderr.write("error: bb basedir (%s) not found\n" % (bbbasedir,))
                     sys.exit(1)
+                if bball:
+                    bbnames = get_bbnames(bbbasedir)
+            elif cmd in ["resync", "sync"]:
+                if bball:
+                    bbnames = sf.get_bbnames()
 
             _args = args[:]
-            if bball:
-                bbnames = get_bbnames(bbbasedir)
 
             for bbname in bbnames:
                 args = _args[:]
