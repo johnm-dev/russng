@@ -442,7 +442,11 @@ def get_bbnames(bbbasedir, bbnames=None):
 
     Filter bbnames if provided.
     """
-    _, realbbnames, _ = next(os.walk(bbbasedir))
+    try:
+        _, realbbnames, _ = next(os.walk(bbbasedir))
+    except:
+        realbbnames = []
+
     if bbnames == None:
         bbnames = realbbnames
     else:
