@@ -698,7 +698,11 @@ def main(args):
             elif cmd == "list-sources" and not args:
                 sources = sf.get_sources(bb.name)
                 if sources:
-                    print("%s: %s" % (bbname, " ".join([d["name"] for d in sources])))
+                    if detail:
+                        for d in sources:
+                            print("%s:%s" % (bbname, "%(name)s:%(type)s:%(source)s" % d))
+                    else:
+                        print("%s: %s" % (bbname, " ".join([d["name"] for d in sources])))
             elif cmd == "remove" and len(args) == 1:
                 name = args.pop(0)
                 bb.remove(name)
