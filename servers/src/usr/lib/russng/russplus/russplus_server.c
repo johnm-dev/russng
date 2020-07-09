@@ -23,6 +23,7 @@
 */
 
 #include <dirent.h>
+#include <libgen.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -163,8 +164,13 @@ resolve_plus_path(char *userhome, char *path) {
 	} else if (path[0] == '/') {
 		return strdup(path);
 	} else if (strncmp(path, "sys/", 4) == 0) {
-		/* hack to get to system bbdir */
-		if (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/../../%s/services", russ_get_services_dir(), &path[4]) > 0) {
+		char	bbdir[PATH_MAX];
+
+		/* use servicesdir to get BB-specific servicesdir */
+		if ((russ_snprintf(bbdir, sizeof(bbdir), "%s", russ_get_services_dir()) > 0)
+			&& (dirname(bbdir))
+			&& (dirname(bbdir))
+			&& (russ_snprintf(pathbuf, sizeof(pathbuf), "%s/%s/services", bbdir, &path[4]) > 0)) {
 			return strdup(pathbuf);
 		}
 	} else if (strncmp(path, "user/", 5) == 0) {
