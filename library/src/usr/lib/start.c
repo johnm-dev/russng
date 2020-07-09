@@ -328,7 +328,7 @@ _russ_start_setlimit(struct russ_conf *conf, char *secname, char *limitname) {
 	} else if (strcmp(soft, "unlimited") == 0) {
 		rlim.rlim_cur = RLIM_INFINITY;
 	} else {
-		rlim.rlim_cur = strtol(soft, NULL, 10);
+		rlim.rlim_cur = strtol(soft, &endptr, 10);
 		if (*endptr != '\0') {
 			goto fail;
 		}
@@ -338,7 +338,7 @@ _russ_start_setlimit(struct russ_conf *conf, char *secname, char *limitname) {
 	} else if (strcmp(hard, "unlimited") == 0) {
 		rlim.rlim_max = RLIM_INFINITY;
 	} else {
-		rlim.rlim_max = strtol(hard, NULL, 10);
+		rlim.rlim_max = strtol(hard, &endptr, 10);
 		if (*endptr != '\0') {
 			goto fail;
 		}
