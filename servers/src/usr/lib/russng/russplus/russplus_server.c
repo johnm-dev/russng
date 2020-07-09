@@ -41,8 +41,9 @@ extern char **environ;
 
 #define PLUS_COUNT_MAX	16
 
-char	**bb_default_paths = NULL;
 char	**bb_base_paths = NULL;
+char	**bb_default_paths = NULL;
+char	**bb_defaultbase_paths = NULL;
 
 int
 cmpstrp(const void *p0, const void *p1) {
@@ -232,10 +233,16 @@ get_plus_paths(void) {
 		if (strcmp(path, "clear") == 0) {
 			fullpaths[0] = NULL;
 			continue;
-		} else if ((strcmp(path, "base") == 0) || (strcmp(path, "default") == 0)) {
+		} else if ((strcmp(path, "base") == 0) || (strcmp(path, "default") == 0) || (strcmp(path, "default-base") == 0)) {
 			char	**bb_paths;
 
-			bb_paths = (strcmp(path, "base") == 0) ? bb_base_paths : bb_default_paths;
+			if (strcmp(path, "base") == 0) {
+				bb_paths = bb_base_paths;
+			} else if (strcmp(path, "default") == 0) {
+				bb_paths = bb_default_paths;
+			} else if (strcmp(path, "default-base") == 0) {
+				bb_paths = bb_defaultbase_paths;
+			}
 			for (j = 0; bb_paths[j] != NULL; j++) {
 				if (((path = resolve_plus_path(userhome, bb_paths[j])) != NULL)
 					&& (russ_sarray0_append(&fullpaths, path, NULL) < 0)) {
@@ -454,7 +461,7 @@ int
 main(int argc, char **argv) {
 	struct russ_svcnode	*root = NULL, *node = NULL;
 	struct russ_svr		*svr = NULL;
-	char			*conf_bb_base = NULL, *conf_bb_default = NULL;
+	char			*conf_bb_base = NULL, *conf_bb_default = NULL, *conf_bb_defaultbase = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -471,7 +478,12 @@ main(int argc, char **argv) {
 		fprintf(stderr, "error: cannot configure bb base paths\n");
 		exit(1);
 	}
-	if (((conf_bb_default = russ_conf_get(conf, "bb.paths", "default", "user/override:sys/system:builtin:user/fallback")) == NULL)
+	if (((conf_bb_defaultbase = russ_conf_get(conf, "bb.paths", "default-base", "user/override:sys/system:builtin:user/fallback")) == NULL)
+		|| ((bb_defaultbase_paths = russ_sarray0_new_split(conf_bb_defaultbase, ":", 0)) == NULL)) {
+		fprintf(stderr, "error: cannot configure bb default-base paths\n");
+		exit(1);
+	}
+	if (((conf_bb_default = russ_conf_get(conf, "bb.paths", "default", conf_bb_defaultbase)) == NULL)
 		|| ((bb_default_paths = russ_sarray0_new_split(conf_bb_default, ":", 0)) == NULL)) {
 		fprintf(stderr, "error: cannot configure bb default paths\n");
 		exit(1);
