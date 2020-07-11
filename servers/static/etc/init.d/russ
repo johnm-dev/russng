@@ -35,7 +35,7 @@ start() {
 			cp /etc/russ/samples/conf/plus.conf "${PLUS_CONF_FILE}"
 		fi
 	fi
-	[ -e "${RUBB_SOURCES_FILE}" ] && rubb resync
+	[ -e "${RUBB_SOURCES_FILE}" ] && rubb --bb-all resync
 
 	# start services
 	rubb --bb-all start
